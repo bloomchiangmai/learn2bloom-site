@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>How We Learn — Bloom Chiangmai</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#FDFAF5;color:#2C2C2A;width:100%;;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:10px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.logo{font-family:Georgia,serif;font-size:22px;font-weight:700;color:#2C2C2A;}
+.nav-links{display:flex;gap:28px;list-style:none;align-items:center;}
+.nav-links a{font-size:14px;color:#5F5E5A;text-decoration:none;}
+.nav-active{color:#2C2C2A!important;font-weight:600;}
+.nav-cta{background:#F5C842;color:#534AB7!important;padding:9px 22px;border-radius:20px;font-weight:700!important;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#2C2C2A;text-transform:uppercase;margin-bottom:14px;}
+
+.page-hero{position:relative;width:100%;height:380px;overflow:hidden;display:flex;align-items:flex-end;}
+.page-hero img.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;}
+.page-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(253,250,245,0.97) 0%,rgba(253,250,245,0.6) 40%,rgba(253,250,245,0.05) 100%);}
+.page-hero-content{position:relative;z-index:2;padding:0 max(48px, calc((100% - 1200px) / 2 + 48px)) 44px;width:100%;}
+.page-hero h1{font-family:Georgia,serif;font-size:46px;font-weight:700;line-height:1.18;color:#2C2C2A;letter-spacing:-0.5px;margin-bottom:16px;max-width:640px;}
+.page-hero h1 em{font-style:italic;color:#534AB7;}
+.page-hero-p{font-size:15px;line-height:1.7;margin-bottom:0;max-width:490px;}
+.readiness-card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:28px;}
+.readiness-card h3{font-family:Georgia,serif;font-size:17px;font-weight:700;color:#2C2C2A;margin-bottom:12px;}
+.readiness-card p{font-size:13px;line-height:1.7;margin-bottom:12px;}
+.readiness-card p:last-child{margin-bottom:0;}
+
+.zone-nav{display:flex;background:#F7F3EC;border-bottom:1px solid #E8E3D8;padding-left:max(48px, calc((100vw - 1200px) / 2 + 48px));}
+.ztab{flex:1;padding:18px 22px;border-right:1px solid #E8E3D8;display:flex;gap:12px;align-items:flex-start;min-height:80px;}
+.ztab:last-child{border-right:none;}
+.zage{font-size:11px;color:#888780;margin-bottom:3px;}
+.zname{font-family:Georgia,serif;font-size:14px;font-weight:700;color:#2C2C2A;}
+.zbar{height:3px;border-radius:2px;margin-top:7px;}
+.badge{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;color:#fff;}
+.badge-2027{width:32px;height:32px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;background:#FAEEDA;border:1.5px solid #FAC775;}
+.badge-2027 span:first-child{font-size:11px;font-weight:700;color:#854F0B;line-height:1;}
+.badge-2027 span:last-child{font-size:11px;color:#854F0B;font-weight:500;line-height:1;}
+.coming-pill{background:#FAEEDA;border:0.5px solid #FAC775;border-radius:20px;font-size:10px;font-weight:600;color:#854F0B;padding:2px 8px;margin-top:5px;display:inline-block;}
+
+.zone-section{padding:60px max(48px, calc((100% - 1200px) / 2 + 48px));border-bottom:1px solid #E8E3D8;background:#FDFAF5;}
+.zone-section.alt{background:#F7F3EC;}
+.zone-inner{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+.zone-inner.flip{direction:rtl;}
+.zone-inner.flip > *{direction:ltr;}
+.zone-photo{border-radius:12px;overflow:hidden;height:420px;}
+.zone-photo img{width:100%;height:100%;object-fit:cover;}
+.zone-color-bar{height:5px;border-radius:3px;width:48px;margin-bottom:16px;}
+.zone-content h2{font-family:Georgia,serif;font-size:30px;font-weight:700;color:#2C2C2A;margin-bottom:4px;letter-spacing:-0.3px;}
+.zone-age{font-size:13px;color:#888780;font-weight:400;margin-bottom:18px;}
+.zone-desc{font-size:14px;`0;line-height:1.8;margin-bottom:24px;}
+.zone-pillars{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.pillar{display:flex;align-items:flex-start;gap:10px;}
+.pillar-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.pillar-text{font-size:13px;`0;line-height:1.6;}
+.pillar-text strong{font-weight:600;color:#2C2C2A;}
+.zone-guide{background:#FDFAF5;border:1px solid #E8E3D8;border-radius:10px;padding:16px 18px;display:flex;gap:12px;align-items:flex-start;}
+.guide-icon{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.guide-title{font-size:13px;font-weight:600;color:#2C2C2A;margin-bottom:3px;}
+.guide-desc{font-size:13px;color:#888780;font-weight:400;line-height:1.5;}
+
+.coming-section{padding:40px max(48px, calc((100% - 1200px) / 2 + 48px));background:#F7F3EC;border-bottom:1px solid #E8E3D8;display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:center;}
+.coming-badge{background:#FAEEDA;border:1px solid #FAC775;border-radius:10px;padding:20px 28px;text-align:center;flex-shrink:0;}
+.coming-badge-year{font-family:Georgia,serif;font-size:22px;font-weight:700;color:#854F0B;}
+.coming-badge-label{font-size:11px;color:#BA7517;font-weight:500;letter-spacing:0.5px;margin-top:2px;}
+.coming-content h3{font-family:Georgia,serif;font-size:22px;font-weight:700;color:#2C2C2A;margin-bottom:6px;}
+.coming-age{font-size:13px;color:#888780;font-weight:400;margin-bottom:10px;}
+.coming-desc{font-size:14px;`0;line-height:1.75;}
+
+.pathways-section{padding:56px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.pathways-section h2{font-family:Georgia,serif;font-size:28px;font-weight:700;color:#2C2C2A;margin-bottom:8px;}
+.pathways-intro{font-size:14px;`0;line-height:1.7;margin-bottom:32px;max-width:600px;}
+.pathways-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.pathway-card{border:1px solid #E8E3D8;border-radius:12px;padding:28px;background:#F7F3EC;}
+.pathway-flag{font-size:28px;margin-bottom:14px;}
+.pathway-name{font-family:Georgia,serif;font-size:18px;font-weight:700;color:#2C2C2A;margin-bottom:6px;}
+.pathway-sub{font-size:13px;color:#888780;font-weight:400;margin-bottom:3px;}
+.pathway-desc{font-size:13px;`0;line-height:1.7;margin-bottom:16px;}
+.pathway-tags{display:flex;flex-wrap:wrap;gap:8px;}
+.pathway-tag{background:#FDFAF5;border:1px solid #E8E3D8;border-radius:20px;font-size:12px;color:#5F5E5A;padding:4px 12px;font-weight:300;}
+
+.cta-band{background:#F5C842;padding:52px max(48px, calc((100% - 1200px) / 2 + 48px));display:flex;justify-content:space-between;align-items:center;gap:40px;}
+.cta-band h2{font-family:Georgia,serif;font-size:26px;font-weight:700;color:#3C3489;margin-bottom:8px;}
+.cta-band p{font-size:14px;color:#5a4e20;}
+.cta-btns{display:flex;gap:12px;flex-shrink:0;}
+.btn-purple{background:#3C3489;color:#EEEDFE;border:none;padding:13px 28px;border-radius:20px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;}
+.btn-outline{background:transparent;color:#3C3489;border:2px solid #3C3489;padding:13px 28px;border-radius:20px;font-size:14px;font-family:inherit;font-weight:600;cursor:pointer;}
+
+footer{background:#F7F3EC;padding:22px max(48px, calc((100% - 1200px) / 2 + 48px));display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;border-top:1px solid #E8E3D8;}.footer-copy{width:100%;text-align:center;border-top:1px solid #E8E3D8;margin-top:16px;padding-top:14px;}
+.footer-logo{font-family:Georgia,serif;font-size:17px;font-weight:700;color:#2C2C2A;}
+.footer-links{display:flex;gap:24px;list-style:none;}
+.footer-links a{font-size:14px;color:#5F5E5A;text-decoration:none;font-weight:400;}
+</style>
+
+<style>
+@media (max-width: 768px) {
+  body { width: 100% !important; overflow-x: hidden; }
+  
+  /* NAV */
+  nav { padding: 14px 20px; flex-wrap: wrap; gap: 10px; }
+  .nav-links { display: none; }
+  .nav-cta { display: block; padding: 8px 16px; font-size: 13px; }
+  .logo, .footer-logo { font-size: 18px; }
+
+  /* HERO */
+  .page-hero { height: 380px; }
+  .page-hero-content { padding: 0 20px 32px; }
+  .page-hero-content h1 { font-size: 28px; }
+  .page-hero-content p { font-size: 13px; }
+  .lp-hero-content, .hero-content { padding: 0 20px 32px; }
+
+  /* GRIDS, stack to single column */
+  .page-hero, .what, .zone-inner, .zone-inner.flip,
+  .day-section, .inner-section, .ai-section,
+  .coaches-grid, .pathways-grid, .extra-fees,
+  .founding-inner, .contact-grid, .register-section,
+  .community-section, .parent-prog, .visit-section,
+  .about-section, .location-section, .coming-pair,
+  .levels-split, .intro-section { 
+    grid-template-columns: 1fr !important; 
+    direction: ltr !important;
+  }
+
+  /* ZONE STRIP */
+  .zone-nav, .zone-strip, .lp-zones { 
+    overflow-x: auto; 
+    flex-wrap: nowrap;
+  }
+  .ztab, .zone-tab, .lp-zone-tab { min-width: 140px; }
+
+  /* TRUST BAR */
+  .lp-trust, .trust { 
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 10px 20px;
+    gap: 20px;
+  }
+
+  /* STATS */
+  .lp-stats, .stats, .about-stats { 
+    grid-template-columns: 1fr 1fr !important; 
+  }
+  .lp-stat, .stat { padding: 16px 10px; }
+  .lp-stat-n, .stat-n { font-size: 24px; }
+
+  /* SECTIONS, padding */
+  .page-hero-left, .about-section, .location-section,
+  .coaches-section, .day-section, .inner-section,
+  .ai-section, .pathways-section, .events-section,
+  .faq-section, .community-section, .parent-prog,
+  .comms-section, .coming-pair, .levels-section,
+  .practical-section, .calendar-section, .gallery-section,
+  .intro-section, .register-section, .programmes-section,
+  .camps-section, .messaging-section, .visit-section { 
+    padding: 36px 20px !important; 
+  }
+
+  /* HEADINGS */
+  h1 { font-size: 28px !important; letter-spacing: -0.3px !important; }
+  h2 { font-size: 22px !important; }
+  .founding-title { font-size: 24px !important; }
+
+  /* PHOTOS */
+  .parent-photo, .inner-photo, .ai-photo, .visit-photo,
+  .community-photo, .intro-photo, .zone-photo,
+  .page-hero-right, .photo-right { 
+    height: 260px !important; 
+    border-radius: 10px;
+  }
+
+  /* PROCESS STEPS */
+  .process-steps { 
+    grid-template-columns: 1fr 1fr !important;
+    gap: 20px !important;
+  }
+  .process-steps::before { display: none; }
+
+  /* FEES TABLE */
+  .fees-table th:last-child, .fees-table td:last-child { display: none; }
+  .fees-table th:nth-child(4), .fees-table td:nth-child(4) { display: none; }
+  .fees-table td, .fees-table th { padding: 12px 10px; font-size: 12px; }
+
+  /* EVENTS & COMMS GRIDS */
+  .events-grid, .comms-grid, .practical-grid,
+  .camps-grid, .pathways-grid, .messaging-buttons { 
+    grid-template-columns: 1fr !important; 
+  }
+
+  /* EXTRA FEES */
+  .extra-fees { grid-template-columns: 1fr 1fr !important; }
+
+  /* GALLERY */
+  .photo-grid, .gallery-grid { 
+    grid-template-columns: 1fr !important; 
+    height: auto !important;
+  }
+  .gallery-main, .gallery-tall { 
+    height: 220px !important; 
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+  .gallery-sm { height: 180px !important; }
+
+  /* CTA BANDS */
+  .cta-band, .cta, .visit-band, .founding-section { 
+    flex-direction: column !important; 
+    padding: 32px 20px !important;
+    gap: 20px !important;
+  }
+  .cta-btns { flex-direction: column; width: 100%; }
+  .btn-purple, .btn-outline, .btn-cta-purple, .btn-cta-outline,
+  .btn-apply-big, .btn-visit-big, .btn-submit, .btn-register,
+  .btn-notify, .btn-visit { 
+    width: 100% !important; 
+    text-align: center;
+  }
+
+  /* FOUNDING URGENCY */
+  .founding-urgency { padding: 20px !important; }
+  .founding-spots-big { font-size: 36px !important; }
+
+  /* CALENDAR */
+  .cal-grid { grid-template-columns: 1fr !important; }
+  .band-milestones { grid-template-columns: 1fr 1fr !important; }
+
+  /* COMING ITEMS */
+  .coming-item, .coming-section { 
+    grid-template-columns: auto 1fr !important; 
+    padding: 24px 20px !important;
+  }
+
+  /* PORTABILITY BANNER */
+  div[style*="grid-template-columns:4px 1fr auto"] {
+    grid-template-columns: 4px 1fr !important;
+  }
+  div[style*="grid-template-columns:4px 1fr auto"] a {
+    grid-column: 2;
+    margin-top: 10px;
+  }
+
+  /* FOOTER */
+  footer { 
+    flex-direction: column !important; 
+    gap: 16px !important;
+    padding: 24px 20px !important;
+    text-align: center;
+  }
+  .footer-links { flex-wrap: wrap; justify-content: center; gap: 12px !important; }
+
+  /* HOURS */
+  .hours-grid { grid-template-columns: 1fr !important; }
+
+  /* PROG STRIP */
+  div[style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ZONE NAV BAR */
+  .zone-nav { overflow-x: scroll; }
+
+  /* MAP */
+  .location-map, .map-placeholder { height: 220px !important; }
+
+  /* ABOUT STATS */
+  .about-stats { gap: 10px; }
+  .about-stat-row { padding: 14px 16px; }
+
+  /* FORM */
+  .form-input, .form-select, .form-textarea { font-size: 16px; }
+
+  /* WHATSAPP FLOAT */
+  .lp-wa-float, .lp-wa { 
+    bottom: 20px !important; 
+    right: 16px !important;
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  /* HERO VIDEO */
+  video { object-position: center; width:100%; }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 24px !important; }
+  h2 { font-size: 20px !important; }
+  .lp-stat-n, .stat-n { font-size: 22px !important; }
+  .process-steps { grid-template-columns: 1fr !important; }
+  .extra-fees { grid-template-columns: 1fr !important; }
+  .band-milestones { grid-template-columns: 1fr !important; }
+  .about-stats { grid-template-columns: 1fr !important; }
+}
+</style>
+
+<style>
+/* ============ MOBILE FIXES ============ */
+@media (max-width: 768px) {
+  nav { padding: 14px 20px; }
+  .nav-links { display: none; }
+  .hero { height: 480px !important; }
+  .hero video, .hero img { object-position: center top !important; }
+  .hero-content { padding: 0 20px 32px !important; }
+  .hero-content h1 { font-size: 26px !important; line-height: 1.2 !important; }
+  .page-hero { height: 360px !important; }
+  .page-hero-content { padding: 0 20px 28px !important; }
+  .page-hero-content h1 { font-size: 28px !important; }
+  .zones, .zone-nav { overflow-x: auto !important; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; }
+  .ztab { min-width: 140px !important; padding: 14px 16px !important; flex-shrink: 0 !important; }
+  .zname { font-size: 13px !important; white-space: nowrap !important; }
+  .zage { white-space: nowrap !important; }
+  .lp-trust, .trust-bar { overflow-x: auto !important; flex-wrap: nowrap !important; gap: 20px !important; padding: 12px 20px !important; }
+  .lp-trust-item { flex-shrink: 0 !important; white-space: nowrap !important; }
+  .lp-what, .lp-coaches, .about-section, .location-section, .visit-section, .community-section, .parent-prog, .intro-section, .register-section, .contact-grid, .founding-inner { grid-template-columns: 1fr !important; gap: 24px !important; }
+  .calendar-section, .coaches-section, .pathways-section, .practical-section, .about-section, .location-section, .gallery-section, .events-section, .faq-section, .community-section, .parent-prog, .comms-section, .intro-section, .programmes-section, .camps-section, .messaging-section, .coming-pair, .register-section, .founding-section, .process-section, .fees-section, .visit-section { padding: 32px 20px !important; }
+  h1 { font-size: 26px !important; }
+  h2 { font-size: 22px !important; }
+  .cal-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .process-steps { grid-template-columns: 1fr 1fr !important; gap: 16px !important; }
+  .process-steps::before { display: none !important; }
+  .fees-table th, .fees-table td { padding: 10px 8px !important; font-size: 11px !important; }
+  .fees-table th:nth-child(5), .fees-table td:nth-child(5) { display: none !important; }
+  .extra-fees { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+  .events-grid, .comms-grid, .practical-grid, .camps-grid, .messaging-buttons { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .pathways-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .gallery-grid { grid-template-columns: 1fr !important; }
+  .gallery-main, .gallery-tall { grid-column: 1 !important; grid-row: auto !important; height: 220px !important; }
+  .gallery-sm { height: 180px !important; }
+  .parent-photo, .intro-photo, .visit-photo, .community-photo { height: 240px !important; }
+  .cta-band, .visit-band { flex-direction: column !important; padding: 28px 20px !important; gap: 16px !important; }
+  .cta-btns { flex-direction: column !important; width: 100% !important; gap: 10px !important; }
+  .btn-purple, .btn-outline, .btn-cta-purple, .btn-cta-outline, .btn-apply-big, .btn-visit-big, .btn-submit, .btn-register, .btn-notify, .btn-visit, .btn-y, .btn-o { width: 100% !important; text-align: center !important; padding: 14px 20px !important; }
+  .founding-inner { grid-template-columns: 1fr !important; }
+  .founding-spots-big { font-size: 40px !important; }
+  .coach-footer { white-space: normal !important; font-size: 12px !important; }
+  footer { flex-direction: column !important; gap: 14px !important; padding: 20px !important; text-align: center !important; }
+  .footer-links { flex-wrap: wrap !important; justify-content: center !important; gap: 12px !important; }
+  .form-input, .form-select, .form-textarea { font-size: 16px !important; }
+}
+@media (max-width: 480px) {
+  h1 { font-size: 22px !important; }
+  h2 { font-size: 19px !important; }
+  .process-steps { grid-template-columns: 1fr !important; }
+  .extra-fees { grid-template-columns: 1fr !important; }
+  .messaging-buttons { grid-template-columns: 1fr !important; }
+}
+</style>
+<style>
+/* Full bleed layout */
+body { width: 100% !important; margin: 0; padding: 0; }
+nav { max-width: 100%; }
+.content-wrap { max-width: 1200px; margin: 0 auto; }
+
+/* Each section stretches full width, content inside is centered */
+.hero, .zones, .trust, .what, .space-section, .stats, .day, .cta,
+.page-hero, .gallery-section, .about-section, .calendar-section,
+.location-section, .practical-section, .community-section,
+.coaches-section, .pathways-section, .day-section, .inner-section,
+.ai-section, .process-section, .fees-section, .founding-section,
+.visit-section, .faq-section, .events-section, .comms-section,
+.parent-prog, .coming-pair, .messaging-section, .contact-grid,
+.register-section, .intro-section, .programmes-section,
+.camps-section, .coming-section, .map-section, .visit-band,
+.cta-band, footer { width: 100% !important; }
+
+/* Nav inner content centered */
+nav { padding: 10px calc((100% - 1200px) / 2 + 48px) !important; }
+
+/* Section content centered via padding */
+.trust { padding-left: calc((100% - 1104px) / 2) !important; padding-right: calc((100% - 1104px) / 2) !important; }
+.what, .space-section, .day, .cta, .about-section, .calendar-section,
+.location-section, .practical-section, .community-section,
+.coaches-section, .pathways-section, .day-section, .inner-section,
+.ai-section, .process-section, .fees-section, .founding-section,
+.visit-section, .faq-section, .events-section, .comms-section,
+.parent-prog, .coming-pair, .messaging-section,
+.register-section, .intro-section, .programmes-section,
+.camps-section, .map-section, .visit-band, .cta-band,
+.gallery-section { 
+    padding-left: max(48px, calc((100% - 1104px) / 2)) !important; 
+    padding-right: max(48px, calc((100% - 1104px) / 2)) !important; 
+}
+footer { 
+    padding-left: max(48px, calc((100% - 1104px) / 2)) !important; 
+    padding-right: max(48px, calc((100% - 1104px) / 2)) !important; 
+}
+
+.hamburger{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:#2C2C2A;padding:4px 8px;}
+.mobile-menu{display:none;position:fixed;top:57px;left:0;right:0;background:#FDFAF5;border-bottom:1px solid #E8E3D8;z-index:999;flex-direction:column;padding:16px 24px;gap:4px;}
+.mobile-menu a{font-size:15px;color:#5F5E5A;text-decoration:none;padding:12px 0;border-bottom:0.5px solid #E8E3D8;display:block;}
+.mobile-menu a:last-child{border-bottom:none;}
+.mobile-menu .mobile-cta{color:#534AB7;font-weight:700;border-bottom:none;}
+.mobile-menu.open{display:flex;}
+@media(max-width:768px){.hamburger{display:block;}.nav-links{display:none!important;}}
+
+@media(max-width:768px){
+  .what,.space-section,.day,.cta,.about-section,.calendar-section,.location-section,.practical-section,.community-section,.coaches-section,.pathways-section,.day-section,.inner-section,.ai-section,.process-section,.fees-section,.founding-section,.visit-section,.faq-section,.events-section,.comms-section,.parent-prog,.coming-pair,.messaging-section,.register-section,.intro-section,.programmes-section,.camps-section,.map-section,.visit-band,.cta-band,.gallery-section,footer{padding-left:20px!important;padding-right:20px!important;}
+  .photo-grid{height:auto!important;}
+  .day-cards{flex-direction:column!important;width:100%!important;}
+  .day-card{width:100%!important;min-width:unset!important;}
+  .page-hero{min-width:unset!important;min-height:unset!important;}
+  .page-hero-left{min-height:300px!important;}
+  nav{padding-left:20px!important;padding-right:20px!important;}
+}
+
+@media(max-width:768px){
+  /* OVERFLOW PREVENTION */
+  *{box-sizing:border-box;}
+  body{overflow-x:hidden!important;width:100%!important;}
+  
+  /* ZONE TABS - horizontal scroll contained */
+  .zones,.zone-nav,.lp-zones{display:grid!important;grid-template-columns:1fr 1fr!important;width:100%!important;overflow:visible!important;padding-left:0!important;padding-right:0!important;}
+  .ztab,.lp-zone-tab,.zone-tab{flex-shrink:unset!important;min-width:unset!important;border-right:none!important;border-bottom:1px solid #E8E3D8!important;}
+  .ztab:nth-child(odd),.zone-tab:nth-child(odd){border-right:1px solid #E8E3D8!important;}
+  .ztab:nth-last-child(-n+2),.zone-tab:nth-last-child(-n+2){border-bottom:none!important;}
+  .zones{background:#FDFAF5!important;}
+  .ztab,.lp-zone-tab,.zone-tab{flex-shrink:0!important;min-width:140px!important;padding:14px 16px!important;}
+
+  /* TRUST BAR */
+  .trust,.lp-trust,.trust-bar{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;flex-wrap:nowrap!important;}
+  .lp-trust-item,.trust-item{flex-shrink:0!important;white-space:nowrap!important;}
+
+  /* DAY CARDS - stack vertically */
+  .day-cards{display:flex!important;flex-direction:column!important;width:100%!important;gap:12px!important;}
+  .day-card{width:100%!important;min-width:unset!important;flex-shrink:unset!important;}
+
+  /* HERO SPLIT - stack properly */
+  .page-hero{display:block!important;min-width:unset!important;}
+  .page-hero-left{padding:36px 20px!important;}
+  .page-hero-right{height:240px!important;overflow:hidden!important;}
+  .page-hero-right img{width:100%!important;height:100%!important;object-fit:cover!important;}
+
+  /* PULLQUOTE - fix z-index overlap */
+  .pullquote{position:relative!important;z-index:2!important;}
+
+  /* FOUNDER SECTION */
+  .founder-section{display:block!important;padding:36px 20px!important;}
+  .founder-photo{margin:0 auto 20px!important;}
+  .founder-bio{max-width:100%!important;}
+
+  /* ADMISSIONS HERO CARD - stack below text */
+  .page-hero-content{display:block!important;padding:20px!important;}
+  .founding-hero-card{margin-top:16px!important;width:100%!important;min-width:unset!important;}
+
+  /* CALENDAR MILESTONE CARDS */
+  .cal-grid,.milestone-row,.cal-milestones{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;}
+  .cal-milestone,.milestone-card{flex-shrink:0!important;min-width:160px!important;}
+
+  /* LEFT BORDER BARS - fix detached on mobile */
+  .comms-item,.prog-item,.comm-card{padding-left:16px!important;border-left-width:3px!important;}
+
+  /* GENERAL GRID FIXES */
+  .day-section,.inner-section,.ai-section{display:block!important;padding:36px 20px!important;}
+  
+  /* PHOTO GRID */
+  .photo-grid{height:auto!important;grid-template-columns:1fr!important;}
+  
+  /* MESSAGING CARDS - stack */
+  .messaging-buttons{grid-template-columns:1fr!important;}
+  /* PROCESS STEPS */
+  .process-steps{grid-template-columns:1fr!important;gap:24px!important;}
+  .process-steps::before{display:none!important;}
+  /* FOUNDING SECTION */
+  .founding-inner{grid-template-columns:1fr!important;}
+  /* STATS 2x2 */
+  .stats{display:grid!important;grid-template-columns:1fr 1fr!important;}
+  .stat{padding:20px 16px!important;}
+  /* LEADER CARDS - fix inline grid on mobile */
+  div[style*="grid-template-columns:100px 1fr"]{grid-template-columns:1fr!important;gap:16px!important;}
+  div[style*="grid-template-columns:100px 1fr"] img{margin:0 auto!important;display:block!important;}
+
+  /* ABOUT SECTION - prevent overflow */
+  .about-section{overflow:hidden!important;}
+  div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;gap:24px!important;}
+  div[style*="grid-template-columns:4px 1fr auto"]{grid-template-columns:4px 1fr!important;}
+  div[style*="grid-template-columns:4px 1fr auto"] a{display:none!important;}
+
+  /* TIMELINE - horizontal scroll */
+  .cal-grid,.milestone-row,.timeline-row{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;}
+  .milestone-card,.cal-milestone{min-width:160px!important;flex-shrink:0!important;}
+
+  /* DAY SECTION label */
+  .day-eyebrow,.eyebrow{font-size:10px!important;}
+
+  /* HERO HEIGHT - reduce on mobile */
+  .page-hero{height:320px!important;}
+  /* HERO OVERLAY - stronger on mobile */
+  .page-hero-overlay,.hero-overlay{background:linear-gradient(to top,rgba(253,250,245,1.0) 0%,rgba(253,250,245,0.97) 40%,rgba(253,250,245,0.7) 65%,rgba(253,250,245,0.1) 100%)!important;}
+  /* ALL SECTIONS PADDING */
+  .what,.space-section,.day,.cta,.about-section,.calendar-section,.location-section,.practical-section,.community-section,.coaches-section,.pathways-section,.day-section,.inner-section,.ai-section,.process-section,.fees-section,.founding-section,.visit-section,.faq-section,.events-section,.comms-section,.parent-prog,.coming-pair,.messaging-section,.register-section,.intro-section,.programmes-section,.camps-section,.map-section,.visit-band,.cta-band,.gallery-section,footer,nav{padding-left:20px!important;padding-right:20px!important;}
+}
+@media(max-width:480px){
+  .page-hero-right{height:200px!important;}
+  .founder-photo{width:90px!important;height:90px!important;}
+}
+
+@media(max-width:768px){
+  .zone-inner{display:block!important;padding:36px 20px!important;}
+  .zone-photo{height:240px!important;margin-bottom:24px!important;border-radius:10px!important;overflow:hidden!important;}
+  .zone-photo img{width:100%!important;height:100%!important;object-fit:cover!important;}
+  .coming-section{grid-template-columns:1fr!important;gap:16px!important;padding:28px 20px!important;}
+  .coming-badge{display:none!important;}
+  .zone-section{padding:32px 20px!important;}
+  div[style*="grid-template-columns:1fr 1fr 1fr 1fr"]{display:flex!important;flex-direction:column!important;gap:0!important;}
+  div[style*="grid-template-columns:1fr 1fr 1fr 1fr"] > div{border-right:none!important;border-bottom:1px solid #E8E3D8!important;border-left:3px solid currentColor;padding:14px 16px 14px 14px!important;margin-bottom:0!important;}
+  div[style*="grid-template-columns:1fr 1fr 1fr 1fr"] > div:last-child{border-bottom:none!important;}
+  .pathway-card{padding:18px!important;}
+  .zone-inner{grid-template-columns:1fr!important;gap:24px!important;}
+  .zone-inner.flip{direction:ltr!important;}
+  .zone-photo{height:240px!important;}
+  .zone-content{padding:0!important;}
+  .zone-readiness{flex-direction:column!important;gap:12px!important;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" style="text-decoration:none;"><img src="images/bcm-logo.png" alt="Bloom Chiangmai" style="height:80px;width:auto;display:block;"></a>
+  <ul class="nav-links">
+    <li><a href="our-approach.html">Our approach</a></li>
+    <li><a href="how-we-learn.html">How we learn</a></li>
+    <li><a href="our-hub.html">Our hub</a></li>
+    <li><a href="for-families.html">For families</a></li>
+    <li><a href="admissions.html">Admissions</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="contact.html#message-form" class="nav-cta">Book a visit</a></li>
+  </ul>
+  <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">&#9776;</button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="our-approach.html">Our approach</a>
+  <a href="how-we-learn.html">How we learn</a>
+  <a href="our-hub.html">Our hub</a>
+  <a href="for-families.html">For families</a>
+  <a href="admissions.html">Admissions</a>
+  <a href="contact.html">Contact</a>
+  <a href="contact.html" class="mobile-cta">Book a visit</a>
+</div>
+
+<div class="page-hero">
+  <img class="hero-bg" src="images/learn-hero_1200x520.jpg" alt="">
+  <div class="page-hero-overlay"></div>
+  <div class="page-hero-content">
+    <p class="eyebrow">How we learn</p>
+    <h1>Learning that moves<br>at your child's <em>pace</em>,<br>not the class's.</h1>
+    <p class="page-hero-p">At Bloom Chiangmai, children don't move up by age. They move forward when they're ready. Each zone is built around a distinct stage of development, with its own environment, coaching style, and academic focus.</p>
+  </div>
+</div>
+
+
+<div class="zone-nav">
+  <div class="ztab" style="">
+    <div style="width:32px;height:32px;border-radius:50%;background:#534AB7;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;color:#fff;">01</div>
+    <div><p class="zage">Ages 2-4</p><p class="zname">Nest</p><div class="zbar" style="background:#534AB7;"></div></div>
+  </div>
+  <div class="ztab">
+    <div style="width:32px;height:32px;border-radius:50%;background:#D85A30;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;color:#fff;">02</div>
+    <div><p class="zage">Ages 5-8</p><p class="zname">Early Explorers</p><div class="zbar" style="background:#D85A30;"></div></div>
+  </div>
+  <div class="ztab">
+    <div style="width:32px;height:32px;border-radius:50%;background:#0F6E56;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;color:#fff;">03</div>
+    <div><p class="zage">Ages 9-11</p><p class="zname">Builders</p><div class="zbar" style="background:#0F6E56;"></div></div>
+  </div>
+  <div class="ztab">
+    <div style="width:32px;height:32px;border-radius:50%;background:#E8941E;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;color:#fff;">04</div>
+    <div><p class="zage">Ages 12-18</p><p class="zname">Navigators</p><div class="zbar" style="background:#E8941E;"></div></div>
+  </div>
+</div>
+
+<div class="zone-section">
+  <div class="zone-inner">
+    <div class="zone-photo"><img src="images/learn-zone-ee_560x400.jpg" alt="Early Explorers at Bloom Chiangmai"></div>
+    <div class="zone-content">
+      <div class="zone-color-bar" style="background:#D85A30;"></div>
+      <h2>Early Explorers</h2>
+      <p class="zone-age">Ages 5–8 &nbsp;&nbsp;·&nbsp;&nbsp; Zone 02</p>
+      <p class="zone-desc">The Early Explorers zone is where curiosity becomes a habit. Children at this stage are natural questioners, Bloom Chiangmai builds on that energy with structured discovery, foundational academic skills, and a deep emphasis on how to learn, not just what to learn.</p>
+      <div class="zone-pillars">
+        <div class="pillar"><div class="pillar-dot" style="background:#D85A30;"></div><p class="pillar-text"><strong>Foundational literacy and numeracy</strong>, built through exploration, not repetition</p></div>
+        <div class="pillar"><div class="pillar-dot" style="background:#D85A30;"></div><p class="pillar-text"><strong>Curiosity-led projects</strong>, children investigate topics that genuinely interest them</p></div>
+        <div class="pillar"><div class="pillar-dot" style="background:#D85A30;"></div><p class="pillar-text"><strong>Self-regulation and emotional skills</strong>, woven into every day, not a separate lesson</p></div>
+      </div>
+      <div class="zone-guide">
+        
+        <div><p class="guide-title">Guided by learning coaches</p><p class="guide-desc">Small groups, close relationships, and a pace that adjusts to each child, not the other way around.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="zone-section alt">
+  <div class="zone-inner flip">
+    <div class="zone-photo"><img src="images/learn-zone-builders_560x400.jpg" alt="Builders at Bloom Chiangmai"></div>
+    <div class="zone-content">
+      <div class="zone-color-bar" style="background:#D85A30;"></div>
+      <h2>Builders</h2>
+      <p class="zone-age">Ages 9–11 &nbsp;&nbsp;·&nbsp;&nbsp; Zone 03</p>
+      <p class="zone-desc">Builders are ready for real challenges. This zone moves from foundational skills into applied knowledge, projects with stakes, problems worth solving, and work that connects to the world outside the classroom.</p>
+      <div class="zone-pillars">
+        <div class="pillar"><div class="pillar-dot" style="background:#D85A30;"></div><p class="pillar-text"><strong>Project-based learning</strong>, cross-disciplinary, real-world, and student-directed</p></div>
+        <div class="pillar"><div class="pillar-dot" style="background:#D85A30;"></div><p class="pillar-text"><strong>Academic depth</strong>, preparing for UK and US pathway entry in the Navigator zone</p></div>
+        <div class="pillar"><div class="pillar-dot" style="background:#D85A30;"></div><p class="pillar-text"><strong>Independent thinking</strong>, learning to argue, question, and defend ideas with evidence</p></div>
+      </div>
+      <div class="zone-guide">
+        
+        <div><p class="guide-title">Guided by subject coaches and learning guides</p><p class="guide-desc">Academic rigour and personal development working in parallel, two coaches, two roles, one child at the centre.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="zone-section">
+  <div class="zone-inner">
+    <div class="zone-photo"><img src="images/learn-zone-navigators_560x400.jpg" alt="Navigators at Bloom Chiangmai"></div>
+    <div class="zone-content">
+      <div class="zone-color-bar" style="background:#E8941E;"></div>
+      <h2>Navigators</h2>
+      <p class="zone-age">Ages 12–18 &nbsp;&nbsp;·&nbsp;&nbsp; Zone 04</p>
+      <p class="zone-desc">Navigators are independent learners pursuing globally recognised UK or US qualifications alongside real-world experience. This zone prepares learners for university, entrepreneurship, and future pathways with the academic credentials to support them.</p>
+      <div class="zone-pillars">
+        <div class="pillar"><div class="pillar-dot" style="background:#E8941E;"></div><p class="pillar-text"><strong>Globally recognised UK or US pathways</strong>, including IGCSEs, A-Levels, and US diploma options</p></div>
+        <div class="pillar"><div class="pillar-dot" style="background:#E8941E;"></div><p class="pillar-text"><strong>Self-directed study</strong>, learners own their schedule and their goals</p></div>
+        <div class="pillar"><div class="pillar-dot" style="background:#E8941E;"></div><p class="pillar-text"><strong>Real-world application</strong>, entrepreneurship, community, and creative projects</p></div>
+      </div>
+      <div class="zone-guide">
+        
+        <div><p class="guide-title">Guided by specialist mentors, coaches, and university pathway support</p><p class="guide-desc">Deep subject expertise, university application support, and a learning guide who knows the whole person, not just the learner.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="coming-section">
+  <div class="coming-content">
+    <h3>Nest</h3>
+    <p class="coming-age">Ages 2–4 &nbsp;&nbsp;·&nbsp;&nbsp; Zone 01</p>
+    <p style="font-size:12px;color:#E8941E;font-weight:500;margin:0 0 14px;letter-spacing:0.3px;">Opening 2027</p>
+    <p class="coming-desc">The Nest zone will open in 2027 for our youngest learners. Designed around emotional security, sensory exploration, and the foundations of curiosity, it will allow families to start at Bloom Chiangmai from age 2 and stay all the way through. Register your interest to be notified when places open.</p>
+  </div>
+</div>
+
+<div class="pathways-section">
+  <p class="eyebrow">Academic pathways</p>
+  <h2>Where the learning leads.</h2>
+  <p class="pathways-intro">From Early Explorers through to Navigators, the Bloom Chiangmai learning journey builds toward two internationally recognised academic pathways. Here is how it works and what your child walks away with.</p>
+
+  <div style="background:#F7F3EC;border:1px solid #E8E3D8;border-radius:10px;overflow:hidden;margin-bottom:28px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;">
+      <div style="padding:18px 20px;border-right:1px solid #E8E3D8;">
+        <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#D85A30;margin-bottom:4px;">Early Explorers</p>
+        <p style="font-family:Georgia,serif;font-size:13px;font-weight:700;color:#2C2C2A;margin-bottom:6px;">Ages 5–8</p>
+        <p style="font-size:11px;color:#888780;font-weight:400;line-height:1.5;">Foundations, literacy, numeracy, curiosity habits</p>
+      </div>
+      <div style="padding:18px 20px;border-right:1px solid #E8E3D8;">
+        <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#D85A30;margin-bottom:4px;">Builders</p>
+        <p style="font-family:Georgia,serif;font-size:13px;font-weight:700;color:#2C2C2A;margin-bottom:6px;">Ages 9–11</p>
+        <p style="font-size:11px;color:#888780;font-weight:400;line-height:1.5;">Applied learning, project-based, pathway preparation</p>
+      </div>
+      <div style="padding:18px 20px;border-right:1px solid #E8E3D8;">
+        <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#BA7517;margin-bottom:4px;">Navigators</p>
+        <p style="font-family:Georgia,serif;font-size:13px;font-weight:700;color:#2C2C2A;margin-bottom:6px;">Ages 12–18</p>
+        <p style="font-size:11px;color:#888780;font-weight:400;line-height:1.5;">Full curriculum, UK or US pathway, qualifications</p>
+      </div>
+      <div style="padding:18px 20px;background:#FDFAF5;">
+        <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#534AB7;margin-bottom:4px;">Outcome</p>
+        <p style="font-family:Georgia,serif;font-size:13px;font-weight:700;color:#2C2C2A;margin-bottom:6px;">Post-18</p>
+        <p style="font-size:11px;color:#888780;font-weight:400;line-height:1.5;">University, entrepreneurship, professional pathways</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="pathways-grid">
+    <div class="pathway-card">
+      <div style="padding:28px 28px 24px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
+          <span style="font-size:24px;">🇬🇧</span>
+          <div>
+            <p class="pathway-name">UK Curriculum</p>
+            <p class="pathway-sub">IGCSE &amp; A-Levels via Brave Generation Academy (BGA)</p>
+            <p style="font-size:11px;color:#888;margin:4px 0 0;line-height:1.5;">Pearson Edexcel aligned pathway</p>
+          </div>
+        </div>
+        <div style="height:3px;border-radius:2px;width:32px;background:#534AB7;margin-bottom:16px;"></div>
+        <p style="font-size:13px;`0;line-height:1.75;margin-bottom:18px;">The UK pathway follows the Cambridge IGCSE and A-Level structure, one of the most widely recognised qualification frameworks in the world. Accepted by universities in the UK, Australia, Europe, Southeast Asia, and beyond.</p>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+          <div style="display:flex;align-items:flex-start;gap:8px;"><div style="width:5px;height:5px;border-radius:50%;background:#534AB7;flex-shrink:0;margin-top:6px;"></div><p style="font-size:12px;`0;line-height:1.6;"><strong style="font-weight:600;color:#2C2C2A;">Starts formally</strong> in the Navigator zone, age 12+</p></div>
+          <div style="display:flex;align-items:flex-start;gap:8px;"><div style="width:5px;height:5px;border-radius:50%;background:#534AB7;flex-shrink:0;margin-top:6px;"></div><p style="font-size:12px;`0;line-height:1.6;"><strong style="font-weight:600;color:#2C2C2A;">Exit qualification</strong>, IGCSE and A-Level grades (Cambridge)</p></div>
+          <div style="display:flex;align-items:flex-start;gap:8px;"><div style="width:5px;height:5px;border-radius:50%;background:#534AB7;flex-shrink:0;margin-top:6px;"></div><p style="font-size:12px;`0;line-height:1.6;"><strong style="font-weight:600;color:#2C2C2A;">Recognised by</strong> universities in 160+ countries</p></div>
+        </div>
+        <a href="BGA_UK_Overview_V1.pdf" download style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#534AB7;text-decoration:none;padding:8px 14px;background:#EEEDFE;border-radius:20px;border:0.5px solid #AFA9EC;">↓ Download UK pathway overview</a>
+      </div>
+      <div style="padding:16px 28px;border-top:1px solid #E8E3D8;background:#F7F3EC;display:flex;justify-content:space-between;align-items:center;">
+        <div><p style="font-size:11px;color:#888780;font-weight:300;margin-bottom:3px;letter-spacing:0.3px;text-transform:uppercase;">Best for families heading to</p><p style="font-size:13px;color:#2C2C2A;font-weight:400;font-family:Georgia,serif;">UK, Australia, Europe, Singapore, Hong Kong</p></div>
+      </div>
+    </div>
+
+    <div class="pathway-card">
+      <div style="padding:28px 28px 24px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
+          <span style="font-size:24px;">🇺🇸</span>
+          <div>
+            <p class="pathway-name">US Curriculum</p>
+            <p class="pathway-sub">American Core via Brave Generation Academy (BGA)</p>
+            <p style="font-size:11px;color:#888;margin:4px 0 0;line-height:1.5;">Cognia aligned US diploma pathway</p>
+          </div>
+        </div>
+        <div style="height:3px;border-radius:2px;width:32px;background:#D85A30;margin-bottom:16px;"></div>
+        <p style="font-size:13px;`0;line-height:1.75;margin-bottom:18px;">The US pathway operates on a credit-based system, giving learners more flexibility in how they build their academic profile. Produces a transcript recognised by US universities and many institutions worldwide. Accepted by universities across the US, Canada, and international schools globally.</p>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+          <div style="display:flex;align-items:flex-start;gap:8px;"><div style="width:5px;height:5px;border-radius:50%;background:#D85A30;flex-shrink:0;margin-top:6px;"></div><p style="font-size:12px;`0;line-height:1.6;"><strong style="font-weight:600;color:#2C2C2A;">Starts formally</strong> in the Navigator zone, age 12+</p></div>
+          <div style="display:flex;align-items:flex-start;gap:8px;"><div style="width:5px;height:5px;border-radius:50%;background:#D85A30;flex-shrink:0;margin-top:6px;"></div><p style="font-size:12px;`0;line-height:1.6;"><strong style="font-weight:600;color:#2C2C2A;">Exit qualification</strong>, US High School Diploma with official transcript</p></div>
+          <div style="display:flex;align-items:flex-start;gap:8px;"><div style="width:5px;height:5px;border-radius:50%;background:#D85A30;flex-shrink:0;margin-top:6px;"></div><p style="font-size:12px;`0;line-height:1.6;"><strong style="font-weight:600;color:#2C2C2A;">Recognised by</strong> US universities and international institutions globally</p></div>
+        </div>
+        <a href="BGA_US_Overview_V1.pdf" download style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#534AB7;text-decoration:none;padding:8px 14px;background:#EEEDFE;border-radius:20px;border:0.5px solid #AFA9EC;">↓ Download US pathway overview</a>
+      </div>
+      <div style="padding:16px 28px;border-top:1px solid #E8E3D8;background:#F7F3EC;display:flex;justify-content:space-between;align-items:center;">
+        <div><p style="font-size:11px;color:#888780;font-weight:300;margin-bottom:3px;letter-spacing:0.3px;text-transform:uppercase;">Best for families heading to</p><p style="font-size:13px;color:#2C2C2A;font-weight:400;font-family:Georgia,serif;">USA, Canada, Thailand, international schools globally</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;background:#EEEDFE;border:0.5px solid #AFA9EC;border-radius:10px;padding:28px 32px;">
+    <p style="font-family:Georgia,serif;font-size:17px;font-weight:700;color:#26215C;margin-bottom:12px;">Credentials that travel with your family.</p>
+    <p style="font-size:14px;color:#534AB7;font-weight:400;line-height:1.75;">Through Brave Generation Academy (BGA), learners are connected to internationally recognised UK and US pathways designed to move with modern families. If your family relocates, your child's credentials and learning journey can continue without disruption or lost progress.</p>
+  </div>
+</div>
+
+<div class="cta-band">
+  <div>
+    <h2>Ready to find the right zone<br>for your child?</h2>
+    <p>Book a visit or start your application today.</p>
+  </div>
+  <div class="cta-btns">
+    <button class="btn-purple" onclick="window.location.href='contact.html#message-form'">Register your interest</button>
+    <button class="btn-outline" onclick="window.location.href='contact.html#contact-form'">Book a visit</button>
+  </div>
+</div>
+
+<footer>
+  <a href="index.html" style="text-decoration:none;"><img src="images/bcm-logo.png" alt="Bloom Chiangmai" style="height:60px;width:auto;display:block;"></a>
+  <ul class="footer-links">
+    <li><a href="how-we-learn.html">How we learn</a></li>
+    <li><a href="admissions.html">Admissions</a></li>
+    <li><a href="for-families.html">For families</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+
+  <p class="footer-copy" style="font-size:12px;color:#888780;">© 2026 Bloom Chiangmai Learning Hub. All rights reserved.</p>
+</footer>
+
+
+
+<script>function toggleMenu(){var m=document.getElementById("mobileMenu");m.classList.toggle("open");}</script>
+</body>
+</html>

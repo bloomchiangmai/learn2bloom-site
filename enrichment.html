@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Enrichment — Bloom Chiangmai</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#FDFAF5;color:#2C2C2A;width:100%;;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:10px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.logo{font-family:Georgia,serif;font-size:22px;font-weight:700;color:#2C2C2A;}
+.nav-links{display:flex;gap:24px;list-style:none;align-items:center;}
+.nav-links a{font-size:14px;color:#5F5E5A;text-decoration:none;}
+.nav-active{color:#2C2C2A!important;font-weight:600;}
+.nav-cta{background:#F5C842;color:#534AB7!important;padding:9px 22px;border-radius:20px;font-weight:700!important;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#2C2C2A;text-transform:uppercase;margin-bottom:14px;}
+h2{font-family:Georgia,serif;font-size:28px;font-weight:700;color:#2C2C2A;margin-bottom:8px;line-height:1.25;}
+
+.page-hero{position:relative;width:100%;height:460px;overflow:hidden;display:flex;align-items:flex-end;}
+.page-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.page-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(253,250,245,0.97) 0%,rgba(253,250,245,0.5) 45%,rgba(253,250,245,0.0) 100%);}
+.page-hero-content{position:relative;z-index:2;padding:0 max(48px, calc((100% - 1200px) / 2 + 48px)) 44px;}
+.page-hero-content h1{font-family:Georgia,serif;font-size:44px;font-weight:700;color:#2C2C2A;line-height:1.18;letter-spacing:-0.5px;margin-bottom:10px;}
+.page-hero-content h1 em{font-style:italic;color:#534AB7;}
+.page-hero-content p{font-size:15px;`0;line-height:1.7;max-width:520px;}
+
+.intro-section{padding:60px max(48px, calc((100% - 1200px) / 2 + 48px));display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.intro-p{font-size:14px;`0;line-height:1.85;margin-bottom:16px;}
+.bloom-badge{background:#F1EFE8;border:1px solid #E8E3D8;border-radius:10px;padding:20px 24px;margin-top:8px;}
+.bloom-badge-label{font-size:11px;color:#888780;font-weight:300;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;}
+.bloom-badge-title{font-family:Georgia,serif;font-size:16px;font-weight:700;color:#2C2C2A;margin-bottom:6px;}
+.bloom-badge-desc{font-size:13px;`0;line-height:1.6;}
+.bloom-badge-discount{display:inline-block;margin-top:10px;background:#F5C842;color:#3C3489;font-size:12px;font-weight:700;padding:5px 14px;border-radius:20px;}
+.intro-photo{border-radius:12px;overflow:hidden;height:380px;}
+.intro-photo img{width:100%;height:100%;object-fit:cover;}
+
+.programmes-section{padding:60px max(48px, calc((100% - 1200px) / 2 + 48px));background:#F7F3EC;border-bottom:1px solid #E8E3D8;}
+.programmes-section h2{margin-bottom:8px;}
+.programmes-intro{font-size:14px;`0;line-height:1.7;margin-bottom:36px;max-width:580px;}
+.prog-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.prog-card{background:#FDFAF5;border:1px solid #E8E3D8;border-radius:12px;overflow:hidden;}
+.prog-card-top{padding:28px 28px 24px;}
+.prog-color-bar{height:4px;border-radius:2px;width:36px;margin-bottom:18px;}
+.prog-title{font-family:Georgia,serif;font-size:20px;font-weight:700;color:#2C2C2A;margin-bottom:6px;}
+.prog-schedule{font-size:12px;color:#888780;font-weight:400;margin-bottom:16px;letter-spacing:0.3px;text-transform:uppercase;}
+.prog-desc{font-size:13px;`0;line-height:1.75;margin-bottom:18px;}
+.prog-activities{display:flex;flex-wrap:wrap;gap:8px;}
+.prog-tag{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:20px;font-size:12px;color:#5F5E5A;padding:4px 12px;font-weight:300;}
+.prog-card-footer{padding:16px 28px;border-top:1px solid #E8E3D8;background:#F7F3EC;display:flex;justify-content:space-between;align-items:center;}
+.prog-footer-label{font-size:12px;color:#888780;font-weight:400;}
+.prog-footer-discount{font-size:12px;font-weight:700;color:#534AB7;}
+
+.camps-section{padding:60px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.camps-section h2{margin-bottom:8px;}
+.camps-intro{font-size:14px;`0;line-height:1.7;margin-bottom:36px;max-width:580px;}
+.camps-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.camp-card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:10px;padding:24px;}
+.camp-bar{height:3px;border-radius:2px;width:28px;margin-bottom:14px;}
+.camp-title{font-family:Georgia,serif;font-size:16px;font-weight:700;color:#2C2C2A;margin-bottom:6px;}
+.camp-timing{font-size:11px;color:#888780;font-weight:300;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:10px;}
+.camp-desc{font-size:13px;`0;line-height:1.65;}
+
+.coming-section{padding:48px;background:#FAEEDA;border-top:1px solid #FAC775;border-bottom:1px solid #FAC775;display:grid;grid-template-columns:auto 1fr auto;gap:28px;align-items:center;}
+.coming-badge{background:#F5C842;border-radius:10px;padding:16px 22px;text-align:center;flex-shrink:0;}
+.coming-badge-label{font-size:11px;color:#854F0B;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;}
+.coming-badge-year{font-family:Georgia,serif;font-size:22px;font-weight:700;color:#3C3489;}
+.coming-content h3{font-family:Georgia,serif;font-size:20px;font-weight:700;color:#2C2C2A;margin-bottom:6px;}
+.coming-content p{font-size:14px;color:#5a4e20;font-weight:300;line-height:1.7;}
+.btn-notify{background:#3C3489;color:#EEEDFE;border:none;padding:12px 24px;border-radius:20px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;}
+
+.register-section{padding:56px max(48px, calc((100% - 1200px) / 2 + 48px));background:#F7F3EC;border-bottom:1px solid #E8E3D8;display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start;}
+.register-section h2{margin-bottom:8px;}
+.register-p{font-size:14px;`0;line-height:1.75;margin-bottom:8px;}
+.form-field{margin-bottom:16px;}
+.form-label{font-size:11px;font-weight:700;color:#5F5E5A;letter-spacing:0.3px;margin-bottom:6px;display:block;text-transform:uppercase;}
+.form-input{width:100%;padding:12px 16px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;color:#2C2C2A;background:#FDFAF5;font-family:inherit;font-weight:300;}
+.form-select{width:100%;padding:12px 16px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;color:#2C2C2A;background:#FDFAF5;font-family:inherit;font-weight:300;}
+.btn-register{background:#3C3489;color:#EEEDFE;border:none;padding:13px 28px;border-radius:20px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;width:100%;margin-top:4px;}
+
+.cta-band{background:#F5C842;padding:48px max(48px, calc((100% - 1200px) / 2 + 48px));display:flex;justify-content:space-between;align-items:center;gap:40px;}
+.cta-band h2{color:#3C3489;margin-bottom:8px;}
+.cta-band p{font-size:14px;color:#5a4e20;}
+.cta-btns{display:flex;gap:12px;flex-shrink:0;}
+.btn-purple{background:#3C3489;color:#EEEDFE;border:none;padding:13px 28px;border-radius:20px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;}
+.btn-outline{background:transparent;color:#3C3489;border:2px solid #3C3489;padding:13px 28px;border-radius:20px;font-size:14px;font-family:inherit;font-weight:600;cursor:pointer;}
+
+footer{background:#F7F3EC;padding:22px max(48px, calc((100% - 1200px) / 2 + 48px));display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;border-top:1px solid #E8E3D8;}.footer-copy{width:100%;text-align:center;border-top:1px solid #E8E3D8;margin-top:16px;padding-top:14px;}
+.footer-logo{font-family:Georgia,serif;font-size:17px;font-weight:700;color:#2C2C2A;}
+.footer-links{display:flex;gap:24px;list-style:none;}
+.footer-links a{font-size:14px;color:#5F5E5A;text-decoration:none;font-weight:400;}
+</style>
+
+<style>
+@media (max-width: 768px) {
+  body { width: 100% !important; overflow-x: hidden; }
+  
+  /* NAV */
+  nav { padding: 14px 20px; flex-wrap: wrap; gap: 10px; }
+  .nav-links { display: none; }
+  .nav-cta { display: block; padding: 8px 16px; font-size: 13px; }
+  .logo, .footer-logo { font-size: 18px; }
+
+  /* HERO */
+  .page-hero { height: 380px; }
+  .page-hero-content { padding: 0 20px 32px; }
+  .page-hero-content h1 { font-size: 28px; }
+  .page-hero-content p { font-size: 13px; }
+  .lp-hero-content, .hero-content { padding: 0 20px 32px; }
+
+  /* GRIDS, stack to single column */
+  .page-hero, .what, .zone-inner, .zone-inner.flip,
+  .day-section, .inner-section, .ai-section,
+  .coaches-grid, .pathways-grid, .extra-fees,
+  .founding-inner, .contact-grid, .register-section,
+  .community-section, .parent-prog, .visit-section,
+  .about-section, .location-section, .coming-pair,
+  .levels-split, .intro-section { 
+    grid-template-columns: 1fr !important; 
+    direction: ltr !important;
+  }
+
+  /* ZONE STRIP */
+  .zone-nav, .zone-strip, .lp-zones { 
+    overflow-x: auto; 
+    flex-wrap: nowrap;
+  }
+  .ztab, .zone-tab, .lp-zone-tab { min-width: 140px; }
+
+  /* TRUST BAR */
+  .lp-trust, .trust { 
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 10px 20px;
+    gap: 20px;
+  }
+
+  /* STATS */
+  .lp-stats, .stats, .about-stats { 
+    grid-template-columns: 1fr 1fr !important; 
+  }
+  .lp-stat, .stat { padding: 16px 10px; }
+  .lp-stat-n, .stat-n { font-size: 24px; }
+
+  /* SECTIONS, padding */
+  .page-hero-left, .about-section, .location-section,
+  .coaches-section, .day-section, .inner-section,
+  .ai-section, .pathways-section, .events-section,
+  .faq-section, .community-section, .parent-prog,
+  .comms-section, .coming-pair, .levels-section,
+  .practical-section, .calendar-section, .gallery-section,
+  .intro-section, .register-section, .programmes-section,
+  .camps-section, .messaging-section, .visit-section { 
+    padding: 36px 20px !important; 
+  }
+
+  /* HEADINGS */
+  h1 { font-size: 28px !important; letter-spacing: -0.3px !important; }
+  h2 { font-size: 22px !important; }
+  .founding-title { font-size: 24px !important; }
+
+  /* PHOTOS */
+  .parent-photo, .inner-photo, .ai-photo, .visit-photo,
+  .community-photo, .intro-photo, .zone-photo,
+  .page-hero-right, .photo-right { 
+    height: 260px !important; 
+    border-radius: 10px;
+  }
+
+  /* PROCESS STEPS */
+  .process-steps { 
+    grid-template-columns: 1fr 1fr !important;
+    gap: 20px !important;
+  }
+  .process-steps::before { display: none; }
+
+  /* FEES TABLE */
+  .fees-table th:last-child, .fees-table td:last-child { display: none; }
+  .fees-table th:nth-child(4), .fees-table td:nth-child(4) { display: none; }
+  .fees-table td, .fees-table th { padding: 12px 10px; font-size: 12px; }
+
+  /* EVENTS & COMMS GRIDS */
+  .events-grid, .comms-grid, .practical-grid,
+  .camps-grid, .pathways-grid, .messaging-buttons { 
+    grid-template-columns: 1fr !important; 
+  }
+
+  /* EXTRA FEES */
+  .extra-fees { grid-template-columns: 1fr 1fr !important; }
+
+  /* GALLERY */
+  .photo-grid, .gallery-grid { 
+    grid-template-columns: 1fr !important; 
+    height: auto !important;
+  }
+  .gallery-main, .gallery-tall { 
+    height: 220px !important; 
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+  .gallery-sm { height: 180px !important; }
+
+  /* CTA BANDS */
+  .cta-band, .cta, .visit-band, .founding-section { 
+    flex-direction: column !important; 
+    padding: 32px 20px !important;
+    gap: 20px !important;
+  }
+  .cta-btns { flex-direction: column; width: 100%; }
+  .btn-purple, .btn-outline, .btn-cta-purple, .btn-cta-outline,
+  .btn-apply-big, .btn-visit-big, .btn-submit, .btn-register,
+  .btn-notify, .btn-visit { 
+    width: 100% !important; 
+    text-align: center;
+  }
+
+  /* FOUNDING URGENCY */
+  .founding-urgency { padding: 20px !important; }
+  .founding-spots-big { font-size: 36px !important; }
+
+  /* CALENDAR */
+  .cal-grid { grid-template-columns: 1fr !important; }
+  .band-milestones { grid-template-columns: 1fr 1fr !important; }
+
+  /* COMING ITEMS */
+  .coming-item, .coming-section { 
+    grid-template-columns: auto 1fr !important; 
+    padding: 24px 20px !important;
+  }
+
+  /* PORTABILITY BANNER */
+  div[style*="grid-template-columns:4px 1fr auto"] {
+    grid-template-columns: 4px 1fr !important;
+  }
+  div[style*="grid-template-columns:4px 1fr auto"] a {
+    grid-column: 2;
+    margin-top: 10px;
+  }
+
+  /* FOOTER */
+  footer { 
+    flex-direction: column !important; 
+    gap: 16px !important;
+    padding: 24px 20px !important;
+    text-align: center;
+  }
+  .footer-links { flex-wrap: wrap; justify-content: center; gap: 12px !important; }
+
+  /* HOURS */
+  .hours-grid { grid-template-columns: 1fr !important; }
+
+  /* PROG STRIP */
+  div[style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ZONE NAV BAR */
+  .zone-nav { overflow-x: scroll; }
+
+  /* MAP */
+  .location-map, .map-placeholder { height: 220px !important; }
+
+  /* ABOUT STATS */
+  .about-stats { gap: 10px; }
+  .about-stat-row { padding: 14px 16px; }
+
+  /* FORM */
+  .form-input, .form-select, .form-textarea { font-size: 16px; }
+
+  /* WHATSAPP FLOAT */
+  .lp-wa-float, .lp-wa { 
+    bottom: 20px !important; 
+    right: 16px !important;
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  /* HERO VIDEO */
+  video { object-position: center; width:100%; }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 24px !important; }
+  h2 { font-size: 20px !important; }
+  .lp-stat-n, .stat-n { font-size: 22px !important; }
+  .process-steps { grid-template-columns: 1fr !important; }
+  .extra-fees { grid-template-columns: 1fr !important; }
+  .band-milestones { grid-template-columns: 1fr !important; }
+  .about-stats { grid-template-columns: 1fr !important; }
+}
+</style>
+
+<style>
+/* ============ MOBILE FIXES ============ */
+@media (max-width: 768px) {
+  nav { padding: 14px 20px; }
+  .nav-links { display: none; }
+  .hero { height: 480px !important; }
+  .hero video, .hero img { object-position: center top !important; }
+  .hero-content { padding: 0 20px 32px !important; }
+  .hero-content h1 { font-size: 26px !important; line-height: 1.2 !important; }
+  .page-hero { height: 360px !important; }
+  .page-hero-content { padding: 0 20px 28px !important; }
+  .page-hero-content h1 { font-size: 28px !important; }
+  .zones, .zone-nav { overflow-x: auto !important; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; }
+  .ztab { min-width: 140px !important; padding: 14px 16px !important; flex-shrink: 0 !important; }
+  .zname { font-size: 13px !important; white-space: nowrap !important; }
+  .zage { white-space: nowrap !important; }
+  .lp-trust, .trust-bar { overflow-x: auto !important; flex-wrap: nowrap !important; gap: 20px !important; padding: 12px 20px !important; }
+  .lp-trust-item { flex-shrink: 0 !important; white-space: nowrap !important; }
+  .lp-what, .lp-coaches, .about-section, .location-section, .visit-section, .community-section, .parent-prog, .intro-section, .register-section, .contact-grid, .founding-inner { grid-template-columns: 1fr !important; gap: 24px !important; }
+  .calendar-section, .coaches-section, .pathways-section, .practical-section, .about-section, .location-section, .gallery-section, .events-section, .faq-section, .community-section, .parent-prog, .comms-section, .intro-section, .programmes-section, .camps-section, .messaging-section, .coming-pair, .register-section, .founding-section, .process-section, .fees-section, .visit-section { padding: 32px 20px !important; }
+  h1 { font-size: 26px !important; }
+  h2 { font-size: 22px !important; }
+  .cal-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .process-steps { grid-template-columns: 1fr 1fr !important; gap: 16px !important; }
+  .process-steps::before { display: none !important; }
+  .fees-table th, .fees-table td { padding: 10px 8px !important; font-size: 11px !important; }
+  .fees-table th:nth-child(5), .fees-table td:nth-child(5) { display: none !important; }
+  .extra-fees { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+  .events-grid, .comms-grid, .practical-grid, .camps-grid, .messaging-buttons { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .pathways-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .gallery-grid { grid-template-columns: 1fr !important; }
+  .gallery-main, .gallery-tall { grid-column: 1 !important; grid-row: auto !important; height: 220px !important; }
+  .gallery-sm { height: 180px !important; }
+  .parent-photo, .intro-photo, .visit-photo, .community-photo { height: 240px !important; }
+  .cta-band, .visit-band { flex-direction: column !important; padding: 28px 20px !important; gap: 16px !important; }
+  .cta-btns { flex-direction: column !important; width: 100% !important; gap: 10px !important; }
+  .btn-purple, .btn-outline, .btn-cta-purple, .btn-cta-outline, .btn-apply-big, .btn-visit-big, .btn-submit, .btn-register, .btn-notify, .btn-visit, .btn-y, .btn-o { width: 100% !important; text-align: center !important; padding: 14px 20px !important; }
+  .founding-inner { grid-template-columns: 1fr !important; }
+  .founding-spots-big { font-size: 40px !important; }
+  .coach-footer { white-space: normal !important; font-size: 12px !important; }
+  footer { flex-direction: column !important; gap: 14px !important; padding: 20px !important; text-align: center !important; }
+  .footer-links { flex-wrap: wrap !important; justify-content: center !important; gap: 12px !important; }
+  .form-input, .form-select, .form-textarea { font-size: 16px !important; }
+}
+@media (max-width: 480px) {
+  h1 { font-size: 22px !important; }
+  h2 { font-size: 19px !important; }
+  .process-steps { grid-template-columns: 1fr !important; }
+  .extra-fees { grid-template-columns: 1fr !important; }
+  .messaging-buttons { grid-template-columns: 1fr !important; }
+}
+</style>
+<style>
+/* Full bleed layout */
+body { width: 100% !important; margin: 0; padding: 0; }
+nav { max-width: 100%; }
+.content-wrap { max-width: 1200px; margin: 0 auto; }
+
+/* Each section stretches full width, content inside is centered */
+.hero, .zones, .trust, .what, .space-section, .stats, .day, .cta,
+.page-hero, .gallery-section, .about-section, .calendar-section,
+.location-section, .practical-section, .community-section,
+.coaches-section, .pathways-section, .day-section, .inner-section,
+.ai-section, .process-section, .fees-section, .founding-section,
+.visit-section, .faq-section, .events-section, .comms-section,
+.parent-prog, .coming-pair, .messaging-section, .contact-grid,
+.register-section, .intro-section, .programmes-section,
+.camps-section, .coming-section, .map-section, .visit-band,
+.cta-band, footer { width: 100% !important; }
+
+/* Nav inner content centered */
+nav { padding: 10px calc((100% - 1200px) / 2 + 48px) !important; }
+
+/* Section content centered via padding */
+.trust { padding-left: calc((100% - 1104px) / 2) !important; padding-right: calc((100% - 1104px) / 2) !important; }
+.what, .space-section, .day, .cta, .about-section, .calendar-section,
+.location-section, .practical-section, .community-section,
+.coaches-section, .pathways-section, .day-section, .inner-section,
+.ai-section, .process-section, .fees-section, .founding-section,
+.visit-section, .faq-section, .events-section, .comms-section,
+.parent-prog, .coming-pair, .messaging-section,
+.register-section, .intro-section, .programmes-section,
+.camps-section, .map-section, .visit-band, .cta-band,
+.gallery-section { 
+    padding-left: max(48px, calc((100% - 1104px) / 2)) !important; 
+    padding-right: max(48px, calc((100% - 1104px) / 2)) !important; 
+}
+footer { 
+    padding-left: max(48px, calc((100% - 1104px) / 2)) !important; 
+    padding-right: max(48px, calc((100% - 1104px) / 2)) !important; 
+}
+
+.hamburger{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:#2C2C2A;padding:4px 8px;}
+.mobile-menu{display:none;position:fixed;top:57px;left:0;right:0;background:#FDFAF5;border-bottom:1px solid #E8E3D8;z-index:999;flex-direction:column;padding:16px 24px;gap:4px;}
+.mobile-menu a{font-size:15px;color:#5F5E5A;text-decoration:none;padding:12px 0;border-bottom:0.5px solid #E8E3D8;display:block;}
+.mobile-menu a:last-child{border-bottom:none;}
+.mobile-menu .mobile-cta{color:#534AB7;font-weight:700;border-bottom:none;}
+.mobile-menu.open{display:flex;}
+@media(max-width:768px){.hamburger{display:block;}.nav-links{display:none!important;}}
+
+@media(max-width:768px){
+  .what,.space-section,.day,.cta,.about-section,.calendar-section,.location-section,.practical-section,.community-section,.coaches-section,.pathways-section,.day-section,.inner-section,.ai-section,.process-section,.fees-section,.founding-section,.visit-section,.faq-section,.events-section,.comms-section,.parent-prog,.coming-pair,.messaging-section,.register-section,.intro-section,.programmes-section,.camps-section,.map-section,.visit-band,.cta-band,.gallery-section,footer{padding-left:20px!important;padding-right:20px!important;}
+  .photo-grid{height:auto!important;}
+  .day-cards{flex-direction:column!important;width:100%!important;}
+  .day-card{width:100%!important;min-width:unset!important;}
+  .page-hero{min-width:unset!important;min-height:unset!important;}
+  .page-hero-left{min-height:300px!important;}
+  nav{padding-left:20px!important;padding-right:20px!important;}
+}
+
+@media(max-width:768px){
+  /* OVERFLOW PREVENTION */
+  *{box-sizing:border-box;}
+  body{overflow-x:hidden!important;width:100%!important;}
+  
+  /* ZONE TABS - horizontal scroll contained */
+  .zones,.zone-nav,.lp-zones{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;flex-wrap:nowrap!important;padding-left:0!important;padding-right:0!important;}
+  .zones{background:#FDFAF5!important;}
+  .ztab,.lp-zone-tab,.zone-tab{flex-shrink:0!important;min-width:140px!important;padding:14px 16px!important;}
+
+  /* TRUST BAR */
+  .trust,.lp-trust,.trust-bar{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;flex-wrap:nowrap!important;}
+  .lp-trust-item,.trust-item{flex-shrink:0!important;white-space:nowrap!important;}
+
+  /* DAY CARDS - stack vertically */
+  .day-cards{display:flex!important;flex-direction:column!important;width:100%!important;gap:12px!important;}
+  .day-card{width:100%!important;min-width:unset!important;flex-shrink:unset!important;}
+
+  /* HERO SPLIT - stack properly */
+  .page-hero{display:block!important;min-width:unset!important;}
+  .page-hero-left{padding:36px 20px!important;}
+  .page-hero-right{height:240px!important;overflow:hidden!important;}
+  .page-hero-right img{width:100%!important;height:100%!important;object-fit:cover!important;}
+
+  /* PULLQUOTE - fix z-index overlap */
+  .pullquote{position:relative!important;z-index:2!important;}
+
+  /* FOUNDER SECTION */
+  .founder-section{display:block!important;padding:36px 20px!important;}
+  .founder-photo{margin:0 auto 20px!important;}
+  .founder-bio{max-width:100%!important;}
+
+  /* ADMISSIONS HERO CARD - stack below text */
+  .page-hero-content{display:block!important;padding:20px!important;}
+  .founding-hero-card{margin-top:16px!important;width:100%!important;min-width:unset!important;}
+
+  /* CALENDAR MILESTONE CARDS */
+  .cal-grid,.milestone-row,.cal-milestones{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;}
+  .cal-milestone,.milestone-card{flex-shrink:0!important;min-width:160px!important;}
+
+  /* LEFT BORDER BARS - fix detached on mobile */
+  .comms-item,.prog-item,.comm-card{padding-left:16px!important;border-left-width:3px!important;}
+
+  /* GENERAL GRID FIXES */
+  .day-section,.inner-section,.ai-section{display:block!important;padding:36px 20px!important;}
+  
+  /* PHOTO GRID */
+  .photo-grid{height:auto!important;grid-template-columns:1fr!important;}
+  
+  /* MESSAGING CARDS - stack */
+  .messaging-buttons{grid-template-columns:1fr!important;}
+  /* PROCESS STEPS */
+  .process-steps{grid-template-columns:1fr!important;gap:24px!important;}
+  .process-steps::before{display:none!important;}
+  /* FOUNDING SECTION */
+  .founding-inner{grid-template-columns:1fr!important;}
+  /* STATS 2x2 */
+  .stats{display:grid!important;grid-template-columns:1fr 1fr!important;}
+  .stat{padding:20px 16px!important;}
+  /* LEADER CARDS - fix inline grid on mobile */
+  div[style*="grid-template-columns:100px 1fr"]{grid-template-columns:1fr!important;gap:16px!important;}
+  div[style*="grid-template-columns:100px 1fr"] img{margin:0 auto!important;display:block!important;}
+
+  /* ABOUT SECTION - prevent overflow */
+  .about-section{overflow:hidden!important;}
+  div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;gap:24px!important;}
+  div[style*="grid-template-columns:4px 1fr auto"]{grid-template-columns:4px 1fr!important;}
+  div[style*="grid-template-columns:4px 1fr auto"] a{display:none!important;}
+
+  /* TIMELINE - horizontal scroll */
+  .cal-grid,.milestone-row,.timeline-row{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;}
+  .milestone-card,.cal-milestone{min-width:160px!important;flex-shrink:0!important;}
+
+  /* DAY SECTION label */
+  .day-eyebrow,.eyebrow{font-size:10px!important;}
+
+  /* HERO HEIGHT - reduce on mobile */
+  .page-hero{height:320px!important;}
+  /* HERO OVERLAY - stronger on mobile */
+  .page-hero-overlay,.hero-overlay{background:linear-gradient(to top,rgba(253,250,245,1.0) 0%,rgba(253,250,245,0.97) 40%,rgba(253,250,245,0.7) 65%,rgba(253,250,245,0.1) 100%)!important;}
+  /* ALL SECTIONS PADDING */
+  .what,.space-section,.day,.cta,.about-section,.calendar-section,.location-section,.practical-section,.community-section,.coaches-section,.pathways-section,.day-section,.inner-section,.ai-section,.process-section,.fees-section,.founding-section,.visit-section,.faq-section,.events-section,.comms-section,.parent-prog,.coming-pair,.messaging-section,.register-section,.intro-section,.programmes-section,.camps-section,.map-section,.visit-band,.cta-band,.gallery-section,footer,nav{padding-left:20px!important;padding-right:20px!important;}
+}
+@media(max-width:480px){
+  .page-hero-right{height:200px!important;}
+  .founder-photo{width:90px!important;height:90px!important;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" style="text-decoration:none;"><img src="images/bcm-logo.png" alt="Bloom Chiangmai" style="height:80px;width:auto;display:block;"></a>
+  <ul class="nav-links">
+    <li><a href="our-approach.html">Our approach</a></li>
+    <li><a href="how-we-learn.html">How we learn</a></li>
+    <li><a href="our-hub.html">Our hub</a></li>
+    <li><a href="for-families.html">For families</a></li>
+    <li><a href="admissions.html">Admissions</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="contact.html#message-form" class="nav-cta">Book a visit</a></li>
+  </ul>
+  <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">&#9776;</button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="our-approach.html">Our approach</a>
+  <a href="how-we-learn.html">How we learn</a>
+  <a href="our-hub.html">Our hub</a>
+  <a href="for-families.html">For families</a>
+  <a href="admissions.html">Admissions</a>
+  <a href="contact.html">Contact</a>
+  <a href="contact.html" class="mobile-cta">Book a visit</a>
+</div>
+
+<div class="page-hero">
+  <img src="images/enrichment-hero_1200x520.jpg" alt="Bloom Chiangmai enrichment">
+  <div class="page-hero-overlay"></div>
+  <div class="page-hero-content">
+    <h1>Learning that continues<br><em>beyond</em> the school day.</h1>
+    <p>After-school programmes and Saturday camps run by Bloom Space, open to Bloom Chiangmai learners and the wider community. Bloom Chiangmai families receive a 15% discount on all programmes.</p>
+  </div>
+</div>
+
+<div class="intro-section" style="align-items:stretch;">
+  <div>
+    <p class="eyebrow">About enrichment at Bloom Chiangmai</p>
+    <h2>More to explore, more to create.</h2>
+    <p class="intro-p">The learning day at Bloom Chiangmai runs from 10:00 to 16:00. But learning doesn't stop there. Through our partnership with Bloom Space, Bloom Chiangmai families have access to a full programme of after-school activities and weekend camps, covering art, music, dance, and more.</p>
+    <p class="intro-p">These programmes are run by Bloom Space and are open to all children in the community, not just Bloom Chiangmai learners. They're designed to complement the Bloom Chiangmai day, providing creative and social outlets in a familiar, trusted environment.</p>
+    <div class="bloom-badge">
+      <p class="bloom-badge-label">In partnership with</p>
+      <p class="bloom-badge-title">Bloom Space, Hang Dong</p>
+      <p class="bloom-badge-desc">A creative community space offering classes and workshops in art, music, dance, and beyond for all ages.</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #E8E3D8;margin-top:14px;padding-top:14px;">
+        <span class="bloom-badge-discount">Bloom Chiangmai families — 15% off all programmes</span>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <a href="https://www.facebook.com/bloomspace.chiangmai" target="_blank" style="width:32px;height:32px;border-radius:50%;background:#1877F2;display:flex;align-items:center;justify-content:center;text-decoration:none;" title="Bloom Space on Facebook">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+          <a href="https://www.instagram.com/bloomspace.cnx" target="_blank" style="width:32px;height:32px;border-radius:50%;background:#E1306C;display:flex;align-items:center;justify-content:center;text-decoration:none;" title="Bloom Space on Instagram">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="intro-photo" style="height:auto;min-height:300px;">
+    <img src="images/enrichment-photo_560x380.jpg" alt="Enrichment at Bloom Space">
+  </div>
+</div>
+
+<div class="programmes-section">
+  <p class="eyebrow">Regular programmes</p>
+  <h2>After school and weekends.</h2>
+  <p class="programmes-intro">Two ongoing programme formats run throughout the academic year. Enrolment is open to Bloom Chiangmai learners and the wider community.</p>
+  <div class="prog-grid">
+    <div class="prog-card">
+      <div class="prog-card-top">
+        <div class="prog-color-bar" style="background:#7F77DD;"></div>
+        <p class="prog-title">After-School Programme</p>
+        <p class="prog-schedule">Monday – Friday · 16:00 – 18:00</p>
+        <p class="prog-desc">A structured but relaxed after-school session for children who want to keep creating after the Bloom Chiangmai day ends. Activities rotate across art, music, movement, and guided creative projects.</p>
+        <div class="prog-activities">
+          <span class="prog-tag">Art</span>
+          <span class="prog-tag">Music</span>
+          <span class="prog-tag">Dance</span>
+          <span class="prog-tag">Creative projects</span>
+          <span class="prog-tag">Movement</span>
+        </div>
+      </div>
+      <div class="prog-card-footer" style="display:flex;justify-content:space-between;align-items:center;padding:14px 28px;border-top:1px solid #E8E3D8;background:#F7F3EC;"><span style="font-size:12px;color:#888780;font-weight:400;">Bloom Chiangmai families</span><span style="font-size:12px;color:#888780;font-weight:400;">15% off standard rate</span></div>
+    </div>
+    <div class="prog-card">
+      <div class="prog-card-top">
+        <div class="prog-color-bar" style="background:#F0997B;"></div>
+        <p class="prog-title">Saturday Camp</p>
+        <p class="prog-schedule">Every Saturday · Morning session</p>
+        <p class="prog-desc">A fun and meaningful weekend activity for children to learn, play, and grow together. Each Saturday camp has a theme, from visual arts to performance to hands-on making.</p>
+        <div class="prog-activities">
+          <span class="prog-tag">Themed sessions</span>
+          <span class="prog-tag">Visual arts</span>
+          <span class="prog-tag">Performance</span>
+          <span class="prog-tag">Making</span>
+          <span class="prog-tag">Community</span>
+        </div>
+      </div>
+      <div class="prog-card-footer" style="display:flex;justify-content:space-between;align-items:center;padding:14px 28px;border-top:1px solid #E8E3D8;background:#F7F3EC;"><span style="font-size:12px;color:#888780;font-weight:400;">Bloom Chiangmai families</span><span style="font-size:12px;color:#888780;font-weight:400;">15% off standard rate</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="camps-section">
+  <p class="eyebrow">Holiday camps</p>
+  <h2>Something for every break.</h2>
+  <p class="camps-intro">Bloom Space runs holiday camps during school breaks throughout the year. Details and dates are announced each term.</p>
+  <div class="camps-grid">
+    <div class="camp-card">
+      <div class="camp-bar" style="background:#5DCAA5;"></div>
+      <p class="camp-title">Term break camps</p>
+      <p class="camp-timing">January & February</p>
+      <p class="camp-desc">Short intensive camps during the break between Term 1 and Term 2. Creative and active programming for all age groups.</p>
+    </div>
+    <div class="camp-card">
+      <div class="camp-bar" style="background:#7F77DD;"></div>
+      <p class="camp-title">Songkran camp</p>
+      <p class="camp-timing">April</p>
+      <p class="camp-desc">A special camp around the Thai New Year. Cultural activities, outdoor programming, and community celebration.</p>
+    </div>
+    <div class="camp-card">
+      <div class="camp-bar" style="background:#F5C842;"></div>
+      <p class="camp-title">Summer camp</p>
+      <p class="camp-timing">July & August</p>
+      <p class="camp-desc">The biggest camp of the year. Multi-week programmes across art, music, movement, and creative exploration.</p>
+    </div>
+  </div>
+</div>
+
+
+
+<div class="register-section">
+  <div>
+    <p class="eyebrow">Register your interest</p>
+    <h2>Stay informed about enrichment at Bloom Chiangmai.</h2>
+    <p class="register-p">Enrichment programme schedules and pricing are managed by Bloom Space and updated each term. Leave your details below and we will send you the current schedule and let you know when new programmes are announced.</p>
+    <p class="register-p" style="font-size:13px;color:#888780;">Bloom Chiangmai families receive a 15% discount automatically, just mention you are a Bloom Chiangmai family when booking.</p>
+  </div>
+  <div>
+    <form name="enrichment-schedule" method="POST" data-netlify="true" action="/success">
+      <input type="hidden" name="form-name" value="enrichment-schedule">
+      <div class="form-field">
+        <label class="form-label">Your name</label>
+        <input class="form-input" type="text" name="name" placeholder="Full name" required>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Email address</label>
+        <input class="form-input" type="email" name="email" placeholder="your@email.com" required>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Child's age range</label>
+        <select class="form-select" name="age_range">
+          <option>Select age range</option>
+          <option>2–4 years</option>
+          <option>5–8 years</option>
+          <option>9–11 years</option>
+          <option>12–18 years</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Interested in</label>
+        <select class="form-select" name="programme_type">
+          <option>Select programme type</option>
+          <option>After-school programme</option>
+          <option>Saturday camp</option>
+          <option>Holiday camps</option>
+          <option>All programmes</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-register">Send me the schedule</button>
+    </form>
+  </div>
+</div>
+
+<div class="cta-band">
+  <div>
+    <h2>Ready to enroll at Bloom Chiangmai?</h2>
+    <p>Enrichment programmes are a bonus. The core learning journey starts here.</p>
+  </div>
+  <div class="cta-btns">
+    <button class="btn-purple" onclick="window.location.href='contact.html#message-form'">Register your interest</button>
+    <button class="btn-outline" onclick="window.location.href='contact.html#contact-form'">Book a visit</button>
+  </div>
+</div>
+
+<footer>
+  <a href="index.html" style="text-decoration:none;"><img src="images/bcm-logo.png" alt="Bloom Chiangmai" style="height:60px;width:auto;display:block;"></a>
+  <ul class="footer-links">
+    <li><a href="how-we-learn.html">How we learn</a></li>
+    <li><a href="admissions.html">Admissions</a></li>
+    <li><a href="for-families.html">For families</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+
+  <p class="footer-copy" style="font-size:12px;color:#888780;">© 2026 Bloom Chiangmai Learning Hub. All rights reserved.</p>
+</footer>
+
+
+
+<script>function toggleMenu(){var m=document.getElementById("mobileMenu");m.classList.toggle("open");}</script>
+</body>
+</html>

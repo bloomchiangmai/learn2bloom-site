@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Contact — Bloom Chiangmai</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#FDFAF5;color:#2C2C2A;width:100%;;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:10px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.logo{font-family:Georgia,serif;font-size:22px;font-weight:700;color:#2C2C2A;}
+.nav-links{display:flex;gap:28px;list-style:none;align-items:center;}
+.nav-links a{font-size:14px;color:#5F5E5A;text-decoration:none;}
+.nav-active{color:#2C2C2A!important;font-weight:600;}
+.nav-cta{background:#F5C842;color:#534AB7!important;padding:9px 22px;border-radius:20px;font-weight:700!important;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#2C2C2A;text-transform:uppercase;margin-bottom:14px;}
+h2{font-family:Georgia,serif;font-size:28px;font-weight:700;color:#2C2C2A;margin-bottom:8px;line-height:1.25;}
+
+.page-hero{position:relative;width:100%;height:460px;overflow:hidden;display:flex;align-items:flex-end;}
+.page-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.page-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(253,250,245,0.97) 0%,rgba(253,250,245,0.5) 45%,rgba(253,250,245,0.0) 100%);}
+.page-hero-content{position:relative;z-index:2;padding:0 max(48px, calc((100% - 1200px) / 2 + 48px)) 44px;}
+.page-hero-content h1{font-family:Georgia,serif;font-size:44px;font-weight:700;color:#2C2C2A;line-height:1.18;letter-spacing:-0.5px;margin-bottom:10px;}
+.page-hero-content h1 em{font-style:italic;color:#534AB7;}
+.page-hero-content p{font-size:15px;`0;line-height:1.7;max-width:480px;}
+
+.messaging-section{padding:56px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.messaging-section h2{margin-bottom:8px;}
+.messaging-intro{font-size:14px;`0;line-height:1.7;margin-bottom:32px;max-width:560px;}
+.messaging-buttons{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:40px;}
+.msg-btn{border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:10px;border:1px solid #E8E3D8;text-decoration:none;}
+.msg-btn-primary{background:#06C755;border-color:#06C755;}
+.msg-btn-secondary{background:#FDFAF5;}
+.msg-btn-tertiary{background:#FDFAF5;}
+.msg-platform{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;}
+.msg-btn-primary .msg-platform{color:rgba(255,255,255,0.8);}
+.msg-btn-secondary .msg-platform{color:#888780;}
+.msg-btn-tertiary .msg-platform{color:#888780;}
+.msg-title{font-family:Georgia,serif;font-size:18px;font-weight:700;}
+.msg-btn-primary .msg-title{color:#fff;}
+.msg-btn-secondary .msg-title{color:#2C2C2A;}
+.msg-btn-tertiary .msg-title{color:#2C2C2A;}
+.msg-desc{font-size:13px;font-weight:300;line-height:1.6;}
+.msg-btn-primary .msg-desc{color:rgba(255,255,255,0.85);}
+.msg-btn-secondary .msg-desc{color:#5F5E5A;}
+.msg-btn-tertiary .msg-desc{color:#5F5E5A;}
+.msg-action{font-size:13px;font-weight:700;margin-top:4px;}
+.msg-btn-primary .msg-action{color:#fff;}
+.msg-btn-secondary .msg-action{color:#534AB7;}
+.msg-btn-tertiary .msg-action{color:#534AB7;}
+
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start;}
+.form-section h3{font-family:Georgia,serif;font-size:20px;font-weight:700;color:#2C2C2A;margin-bottom:6px;}
+.form-intro{font-size:13px;color:#888780;font-weight:400;line-height:1.6;margin-bottom:24px;}
+.form-field{margin-bottom:18px;}
+.form-label{font-size:12px;font-weight:600;color:#5F5E5A;letter-spacing:0.3px;margin-bottom:6px;display:block;text-transform:uppercase;font-size:11px;}
+.form-input{width:100%;padding:13px 16px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;color:#2C2C2A;background:#FDFAF5;font-family:inherit;font-weight:300;}
+.form-select{width:100%;padding:13px 16px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;color:#2C2C2A;background:#FDFAF5;font-family:inherit;font-weight:300;appearance:none;}
+.form-textarea{width:100%;padding:13px 16px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;color:#2C2C2A;background:#FDFAF5;font-family:inherit;font-weight:300;height:80px;resize:none;}
+.btn-submit{background:#3C3489;color:#EEEDFE;border:none;padding:14px 32px;border-radius:20px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;width:100%;margin-top:4px;}
+
+.info-section h3{font-family:Georgia,serif;font-size:20px;font-weight:700;color:#2C2C2A;margin-bottom:24px;}
+.info-block{margin-bottom:28px;}
+.info-label{font-size:11px;font-weight:700;letter-spacing:1.4px;color:#888780;text-transform:uppercase;margin-bottom:8px;}
+.info-val{font-size:14px;color:#2C2C2A;font-weight:400;line-height:1.7;}
+.info-val a{color:#534AB7;text-decoration:none;}
+.info-divider{height:0.5px;background:#E8E3D8;margin:20px 0;}
+.hours-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.hours-row{display:flex;justify-content:space-between;font-size:13px;`0;padding:8px 0;border-bottom:0.5px solid #F1EFE8;}
+.hours-day{color:#2C2C2A;font-weight:400;}
+
+.map-section{padding:0 48px 56px;background:#FDFAF5;}
+.map-placeholder{background:#E8E3D8;border-radius:12px;height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid #E8E3D8;}
+.map-label{font-size:13px;color:#888780;font-style:italic;}
+.map-address{font-size:12px;color:#5F5E5A;font-weight:400;}
+
+.visit-band{background:#F1EFE8;padding:36px max(48px, calc((100% - 1200px) / 2 + 48px));border-top:1px solid #E8E3D8;border-bottom:1px solid #E8E3D8;display:flex;justify-content:space-between;align-items:center;gap:40px;}
+.visit-band-text h3{font-family:Georgia,serif;font-size:20px;font-weight:700;color:#2C2C2A;margin-bottom:6px;}
+.visit-band-text p{font-size:14px;`0;}
+.btn-visit{background:#3C3489;color:#EEEDFE;border:none;padding:13px 28px;border-radius:20px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;}
+
+footer{background:#F7F3EC;padding:22px max(48px, calc((100% - 1200px) / 2 + 48px));display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;border-top:1px solid #E8E3D8;}.footer-copy{width:100%;text-align:center;border-top:1px solid #E8E3D8;margin-top:16px;padding-top:14px;}
+.footer-logo{font-family:Georgia,serif;font-size:17px;font-weight:700;color:#2C2C2A;}
+.footer-links{display:flex;gap:24px;list-style:none;}
+.footer-links a{font-size:14px;color:#5F5E5A;text-decoration:none;font-weight:400;}
+</style>
+
+<style>
+@media (max-width: 768px) {
+  body { width: 100% !important; overflow-x: hidden; }
+  
+  /* NAV */
+  nav { padding: 14px 20px; flex-wrap: wrap; gap: 10px; }
+  .nav-links { display: none; }
+  .nav-cta { display: block; padding: 8px 16px; font-size: 13px; }
+  .logo, .footer-logo { font-size: 18px; }
+
+  /* HERO */
+  .page-hero { height: 380px; }
+  .page-hero-content { padding: 0 20px 32px; }
+  .page-hero-content h1 { font-size: 28px; }
+  .page-hero-content p { font-size: 13px; }
+  .lp-hero-content, .hero-content { padding: 0 20px 32px; }
+
+  /* GRIDS, stack to single column */
+  .page-hero, .what, .zone-inner, .zone-inner.flip,
+  .day-section, .inner-section, .ai-section,
+  .coaches-grid, .pathways-grid, .extra-fees,
+  .founding-inner, .contact-grid, .register-section,
+  .community-section, .parent-prog, .visit-section,
+  .about-section, .location-section, .coming-pair,
+  .levels-split, .intro-section { 
+    grid-template-columns: 1fr !important; 
+    direction: ltr !important;
+  }
+
+  /* ZONE STRIP */
+  .zone-nav, .zone-strip, .lp-zones { 
+    overflow-x: auto; 
+    flex-wrap: nowrap;
+  }
+  .ztab, .zone-tab, .lp-zone-tab { min-width: 140px; }
+
+  /* TRUST BAR */
+  .lp-trust, .trust { 
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 10px 20px;
+    gap: 20px;
+  }
+
+  /* STATS */
+  .lp-stats, .stats, .about-stats { 
+    grid-template-columns: 1fr 1fr !important; 
+  }
+  .lp-stat, .stat { padding: 16px 10px; }
+  .lp-stat-n, .stat-n { font-size: 24px; }
+
+  /* SECTIONS, padding */
+  .page-hero-left, .about-section, .location-section,
+  .coaches-section, .day-section, .inner-section,
+  .ai-section, .pathways-section, .events-section,
+  .faq-section, .community-section, .parent-prog,
+  .comms-section, .coming-pair, .levels-section,
+  .practical-section, .calendar-section, .gallery-section,
+  .intro-section, .register-section, .programmes-section,
+  .camps-section, .messaging-section, .visit-section { 
+    padding: 36px 20px !important; 
+  }
+
+  /* HEADINGS */
+  h1 { font-size: 28px !important; letter-spacing: -0.3px !important; }
+  h2 { font-size: 22px !important; }
+  .founding-title { font-size: 24px !important; }
+
+  /* PHOTOS */
+  .parent-photo, .inner-photo, .ai-photo, .visit-photo,
+  .community-photo, .intro-photo, .zone-photo,
+  .page-hero-right, .photo-right { 
+    height: 260px !important; 
+    border-radius: 10px;
+  }
+
+  /* PROCESS STEPS */
+  .process-steps { 
+    grid-template-columns: 1fr 1fr !important;
+    gap: 20px !important;
+  }
+  .process-steps::before { display: none; }
+
+  /* FEES TABLE */
+  .fees-table th:last-child, .fees-table td:last-child { display: none; }
+  .fees-table th:nth-child(4), .fees-table td:nth-child(4) { display: none; }
+  .fees-table td, .fees-table th { padding: 12px 10px; font-size: 12px; }
+
+  /* EVENTS & COMMS GRIDS */
+  .events-grid, .comms-grid, .practical-grid,
+  .camps-grid, .pathways-grid, .messaging-buttons { 
+    grid-template-columns: 1fr !important; 
+  }
+
+  /* EXTRA FEES */
+  .extra-fees { grid-template-columns: 1fr 1fr !important; }
+
+  /* GALLERY */
+  .photo-grid, .gallery-grid { 
+    grid-template-columns: 1fr !important; 
+    height: auto !important;
+  }
+  .gallery-main, .gallery-tall { 
+    height: 220px !important; 
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+  .gallery-sm { height: 180px !important; }
+
+  /* CTA BANDS */
+  .cta-band, .cta, .visit-band, .founding-section { 
+    flex-direction: column !important; 
+    padding: 32px 20px !important;
+    gap: 20px !important;
+  }
+  .cta-btns { flex-direction: column; width: 100%; }
+  .btn-purple, .btn-outline, .btn-cta-purple, .btn-cta-outline,
+  .btn-apply-big, .btn-visit-big, .btn-submit, .btn-register,
+  .btn-notify, .btn-visit { 
+    width: 100% !important; 
+    text-align: center;
+  }
+
+  /* FOUNDING URGENCY */
+  .founding-urgency { padding: 20px !important; }
+  .founding-spots-big { font-size: 36px !important; }
+
+  /* CALENDAR */
+  .cal-grid { grid-template-columns: 1fr !important; }
+  .band-milestones { grid-template-columns: 1fr 1fr !important; }
+
+  /* COMING ITEMS */
+  .coming-item, .coming-section { 
+    grid-template-columns: auto 1fr !important; 
+    padding: 24px 20px !important;
+  }
+
+  /* PORTABILITY BANNER */
+  div[style*="grid-template-columns:4px 1fr auto"] {
+    grid-template-columns: 4px 1fr !important;
+  }
+  div[style*="grid-template-columns:4px 1fr auto"] a {
+    grid-column: 2;
+    margin-top: 10px;
+  }
+
+  /* FOOTER */
+  footer { 
+    flex-direction: column !important; 
+    gap: 16px !important;
+    padding: 24px 20px !important;
+    text-align: center;
+  }
+  .footer-links { flex-wrap: wrap; justify-content: center; gap: 12px !important; }
+
+  /* HOURS */
+  .hours-grid { grid-template-columns: 1fr !important; }
+
+  /* PROG STRIP */
+  div[style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ZONE NAV BAR */
+  .zone-nav { overflow-x: scroll; }
+
+  /* MAP */
+  .location-map, .map-placeholder { height: 220px !important; }
+
+  /* ABOUT STATS */
+  .about-stats { gap: 10px; }
+  .about-stat-row { padding: 14px 16px; }
+
+  /* FORM */
+  .form-input, .form-select, .form-textarea { font-size: 16px; }
+
+  /* WHATSAPP FLOAT */
+  .lp-wa-float, .lp-wa { 
+    bottom: 20px !important; 
+    right: 16px !important;
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  /* HERO VIDEO */
+  video { object-position: center; width:100%; }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 24px !important; }
+  h2 { font-size: 20px !important; }
+  .lp-stat-n, .stat-n { font-size: 22px !important; }
+  .process-steps { grid-template-columns: 1fr !important; }
+  .extra-fees { grid-template-columns: 1fr !important; }
+  .band-milestones { grid-template-columns: 1fr !important; }
+  .about-stats { grid-template-columns: 1fr !important; }
+}
+</style>
+
+<style>
+/* ============ MOBILE FIXES ============ */
+@media (max-width: 768px) {
+  nav { padding: 14px 20px; }
+  .nav-links { display: none; }
+  .hero { height: 480px !important; }
+  .hero video, .hero img { object-position: center top !important; }
+  .hero-content { padding: 0 20px 32px !important; }
+  .hero-content h1 { font-size: 26px !important; line-height: 1.2 !important; }
+  .page-hero { height: 360px !important; }
+  .page-hero-content { padding: 0 20px 28px !important; }
+  .page-hero-content h1 { font-size: 28px !important; }
+  .zones, .zone-nav { overflow-x: auto !important; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; }
+  .ztab { min-width: 140px !important; padding: 14px 16px !important; flex-shrink: 0 !important; }
+  .zname { font-size: 13px !important; white-space: nowrap !important; }
+  .zage { white-space: nowrap !important; }
+  .lp-trust, .trust-bar { overflow-x: auto !important; flex-wrap: nowrap !important; gap: 20px !important; padding: 12px 20px !important; }
+  .lp-trust-item { flex-shrink: 0 !important; white-space: nowrap !important; }
+  .lp-what, .lp-coaches, .about-section, .location-section, .visit-section, .community-section, .parent-prog, .intro-section, .register-section, .contact-grid, .founding-inner { grid-template-columns: 1fr !important; gap: 24px !important; }
+  .calendar-section, .coaches-section, .pathways-section, .practical-section, .about-section, .location-section, .gallery-section, .events-section, .faq-section, .community-section, .parent-prog, .comms-section, .intro-section, .programmes-section, .camps-section, .messaging-section, .coming-pair, .register-section, .founding-section, .process-section, .fees-section, .visit-section { padding: 32px 20px !important; }
+  h1 { font-size: 26px !important; }
+  h2 { font-size: 22px !important; }
+  .cal-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .process-steps { grid-template-columns: 1fr 1fr !important; gap: 16px !important; }
+  .process-steps::before { display: none !important; }
+  .fees-table th, .fees-table td { padding: 10px 8px !important; font-size: 11px !important; }
+  .fees-table th:nth-child(5), .fees-table td:nth-child(5) { display: none !important; }
+  .extra-fees { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+  .events-grid, .comms-grid, .practical-grid, .camps-grid, .messaging-buttons { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .pathways-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .gallery-grid { grid-template-columns: 1fr !important; }
+  .gallery-main, .gallery-tall { grid-column: 1 !important; grid-row: auto !important; height: 220px !important; }
+  .gallery-sm { height: 180px !important; }
+  .parent-photo, .intro-photo, .visit-photo, .community-photo { height: 240px !important; }
+  .cta-band, .visit-band { flex-direction: column !important; padding: 28px 20px !important; gap: 16px !important; }
+  .cta-btns { flex-direction: column !important; width: 100% !important; gap: 10px !important; }
+  .btn-purple, .btn-outline, .btn-cta-purple, .btn-cta-outline, .btn-apply-big, .btn-visit-big, .btn-submit, .btn-register, .btn-notify, .btn-visit, .btn-y, .btn-o { width: 100% !important; text-align: center !important; padding: 14px 20px !important; }
+  .founding-inner { grid-template-columns: 1fr !important; }
+  .founding-spots-big { font-size: 40px !important; }
+  .coach-footer { white-space: normal !important; font-size: 12px !important; }
+  footer { flex-direction: column !important; gap: 14px !important; padding: 20px !important; text-align: center !important; }
+  .footer-links { flex-wrap: wrap !important; justify-content: center !important; gap: 12px !important; }
+  .form-input, .form-select, .form-textarea { font-size: 16px !important; }
+}
+@media (max-width: 480px) {
+  h1 { font-size: 22px !important; }
+  h2 { font-size: 19px !important; }
+  .process-steps { grid-template-columns: 1fr !important; }
+  .extra-fees { grid-template-columns: 1fr !important; }
+  .messaging-buttons { grid-template-columns: 1fr !important; }
+}
+</style>
+<style>
+/* Full bleed layout */
+body { width: 100% !important; margin: 0; padding: 0; }
+nav { max-width: 100%; }
+.content-wrap { max-width: 1200px; margin: 0 auto; }
+
+/* Each section stretches full width, content inside is centered */
+.hero, .zones, .trust, .what, .space-section, .stats, .day, .cta,
+.page-hero, .gallery-section, .about-section, .calendar-section,
+.location-section, .practical-section, .community-section,
+.coaches-section, .pathways-section, .day-section, .inner-section,
+.ai-section, .process-section, .fees-section, .founding-section,
+.visit-section, .faq-section, .events-section, .comms-section,
+.parent-prog, .coming-pair, .messaging-section, .contact-grid,
+.register-section, .intro-section, .programmes-section,
+.camps-section, .coming-section, .map-section, .visit-band,
+.cta-band, footer { width: 100% !important; }
+
+/* Nav inner content centered */
+nav { padding: 10px calc((100% - 1200px) / 2 + 48px) !important; }
+
+/* Section content centered via padding */
+.trust { padding-left: calc((100% - 1104px) / 2) !important; padding-right: calc((100% - 1104px) / 2) !important; }
+.what, .space-section, .day, .cta, .about-section, .calendar-section,
+.location-section, .practical-section, .community-section,
+.coaches-section, .pathways-section, .day-section, .inner-section,
+.ai-section, .process-section, .fees-section, .founding-section,
+.visit-section, .faq-section, .events-section, .comms-section,
+.parent-prog, .coming-pair, .messaging-section,
+.register-section, .intro-section, .programmes-section,
+.camps-section, .map-section, .visit-band, .cta-band,
+.gallery-section { 
+    padding-left: max(48px, calc((100% - 1104px) / 2)) !important; 
+    padding-right: max(48px, calc((100% - 1104px) / 2)) !important; 
+}
+footer { 
+    padding-left: max(48px, calc((100% - 1104px) / 2)) !important; 
+    padding-right: max(48px, calc((100% - 1104px) / 2)) !important; 
+}
+
+.hamburger{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:#2C2C2A;padding:4px 8px;}
+.mobile-menu{display:none;position:fixed;top:57px;left:0;right:0;background:#FDFAF5;border-bottom:1px solid #E8E3D8;z-index:999;flex-direction:column;padding:16px 24px;gap:4px;}
+.mobile-menu a{font-size:15px;color:#5F5E5A;text-decoration:none;padding:12px 0;border-bottom:0.5px solid #E8E3D8;display:block;}
+.mobile-menu a:last-child{border-bottom:none;}
+.mobile-menu .mobile-cta{color:#534AB7;font-weight:700;border-bottom:none;}
+.mobile-menu.open{display:flex;}
+@media(max-width:768px){.hamburger{display:block;}.nav-links{display:none!important;}}
+
+@media(max-width:768px){
+  .what,.space-section,.day,.cta,.about-section,.calendar-section,.location-section,.practical-section,.community-section,.coaches-section,.pathways-section,.day-section,.inner-section,.ai-section,.process-section,.fees-section,.founding-section,.visit-section,.faq-section,.events-section,.comms-section,.parent-prog,.coming-pair,.messaging-section,.register-section,.intro-section,.programmes-section,.camps-section,.map-section,.visit-band,.cta-band,.gallery-section,footer{padding-left:20px!important;padding-right:20px!important;}
+  .photo-grid{height:auto!important;}
+  .day-cards{flex-direction:column!important;width:100%!important;}
+  .day-card{width:100%!important;min-width:unset!important;}
+  .page-hero{min-width:unset!important;min-height:unset!important;}
+  .page-hero-left{min-height:300px!important;}
+  nav{padding-left:20px!important;padding-right:20px!important;}
+}
+
+@media(max-width:768px){
+  /* OVERFLOW PREVENTION */
+  *{box-sizing:border-box;}
+  body{overflow-x:hidden!important;width:100%!important;}
+  
+  /* ZONE TABS - horizontal scroll contained */
+  .zones,.zone-nav,.lp-zones{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;flex-wrap:nowrap!important;padding-left:0!important;padding-right:0!important;}
+  .zones{background:#FDFAF5!important;}
+  .ztab,.lp-zone-tab,.zone-tab{flex-shrink:0!important;min-width:140px!important;padding:14px 16px!important;}
+
+  /* TRUST BAR */
+  .trust,.lp-trust,.trust-bar{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;flex-wrap:nowrap!important;}
+  .lp-trust-item,.trust-item{flex-shrink:0!important;white-space:nowrap!important;}
+
+  /* DAY CARDS - stack vertically */
+  .day-cards{display:flex!important;flex-direction:column!important;width:100%!important;gap:12px!important;}
+  .day-card{width:100%!important;min-width:unset!important;flex-shrink:unset!important;}
+
+  /* HERO SPLIT - stack properly */
+  .page-hero{display:block!important;min-width:unset!important;}
+  .page-hero-left{padding:36px 20px!important;}
+  .page-hero-right{height:240px!important;overflow:hidden!important;}
+  .page-hero-right img{width:100%!important;height:100%!important;object-fit:cover!important;}
+
+  /* PULLQUOTE - fix z-index overlap */
+  .pullquote{position:relative!important;z-index:2!important;}
+
+  /* FOUNDER SECTION */
+  .founder-section{display:block!important;padding:36px 20px!important;}
+  .founder-photo{margin:0 auto 20px!important;}
+  .founder-bio{max-width:100%!important;}
+
+  /* ADMISSIONS HERO CARD - stack below text */
+  .page-hero-content{display:block!important;padding:20px!important;}
+  .founding-hero-card{margin-top:16px!important;width:100%!important;min-width:unset!important;}
+
+  /* CALENDAR MILESTONE CARDS */
+  .cal-grid,.milestone-row,.cal-milestones{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;}
+  .cal-milestone,.milestone-card{flex-shrink:0!important;min-width:160px!important;}
+
+  /* LEFT BORDER BARS - fix detached on mobile */
+  .comms-item,.prog-item,.comm-card{padding-left:16px!important;border-left-width:3px!important;}
+
+  /* GENERAL GRID FIXES */
+  .day-section,.inner-section,.ai-section{display:block!important;padding:36px 20px!important;}
+  
+  /* PHOTO GRID */
+  .photo-grid{height:auto!important;grid-template-columns:1fr!important;}
+  
+  /* MESSAGING CARDS - stack */
+  .messaging-buttons{grid-template-columns:1fr!important;}
+  /* PROCESS STEPS */
+  .process-steps{grid-template-columns:1fr!important;gap:24px!important;}
+  .process-steps::before{display:none!important;}
+  /* FOUNDING SECTION */
+  .founding-inner{grid-template-columns:1fr!important;}
+  /* STATS 2x2 */
+  .stats{display:grid!important;grid-template-columns:1fr 1fr!important;}
+  .stat{padding:20px 16px!important;}
+  /* LEADER CARDS - fix inline grid on mobile */
+  div[style*="grid-template-columns:100px 1fr"]{grid-template-columns:1fr!important;gap:16px!important;}
+  div[style*="grid-template-columns:100px 1fr"] img{margin:0 auto!important;display:block!important;}
+
+  /* ABOUT SECTION - prevent overflow */
+  .about-section{overflow:hidden!important;}
+  div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;gap:24px!important;}
+  div[style*="grid-template-columns:4px 1fr auto"]{grid-template-columns:4px 1fr!important;}
+  div[style*="grid-template-columns:4px 1fr auto"] a{display:none!important;}
+
+  /* TIMELINE - horizontal scroll */
+  .cal-grid,.milestone-row,.timeline-row{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;}
+  .milestone-card,.cal-milestone{min-width:160px!important;flex-shrink:0!important;}
+
+  /* DAY SECTION label */
+  .day-eyebrow,.eyebrow{font-size:10px!important;}
+
+  /* HERO HEIGHT - reduce on mobile */
+  .page-hero{height:320px!important;}
+  /* HERO OVERLAY - stronger on mobile */
+  .page-hero-overlay,.hero-overlay{background:linear-gradient(to top,rgba(253,250,245,1.0) 0%,rgba(253,250,245,0.97) 40%,rgba(253,250,245,0.7) 65%,rgba(253,250,245,0.1) 100%)!important;}
+  /* ALL SECTIONS PADDING */
+  .what,.space-section,.day,.cta,.about-section,.calendar-section,.location-section,.practical-section,.community-section,.coaches-section,.pathways-section,.day-section,.inner-section,.ai-section,.process-section,.fees-section,.founding-section,.visit-section,.faq-section,.events-section,.comms-section,.parent-prog,.coming-pair,.messaging-section,.register-section,.intro-section,.programmes-section,.camps-section,.map-section,.visit-band,.cta-band,.gallery-section,footer,nav{padding-left:20px!important;padding-right:20px!important;}
+}
+@media(max-width:480px){
+  .page-hero-right{height:200px!important;}
+  .founder-photo{width:90px!important;height:90px!important;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" style="text-decoration:none;"><img src="images/bcm-logo.png" alt="Bloom Chiangmai" style="height:80px;width:auto;display:block;"></a>
+  <ul class="nav-links">
+    <li><a href="our-approach.html">Our approach</a></li>
+    <li><a href="how-we-learn.html">How we learn</a></li>
+    <li><a href="our-hub.html">Our hub</a></li>
+    <li><a href="for-families.html">For families</a></li>
+    <li><a href="admissions.html">Admissions</a></li>
+    <li><a href="#contact-form">Contact</a></li>
+    <li><a href="contact.html#message-form" class="nav-cta">Book a visit</a></li>
+  </ul>
+  <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">&#9776;</button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="our-approach.html">Our approach</a>
+  <a href="how-we-learn.html">How we learn</a>
+  <a href="our-hub.html">Our hub</a>
+  <a href="for-families.html">For families</a>
+  <a href="admissions.html">Admissions</a>
+  <a href="contact.html">Contact</a>
+  <a href="contact.html" class="mobile-cta">Book a visit</a>
+</div>
+
+<div class="page-hero">
+  <img src="images/contact-hero_1200x420.jpg" alt="Contact Bloom Chiangmai">
+  <div class="page-hero-overlay"></div>
+  <div class="page-hero-content">
+    <h1>Get in touch.<br>We'd love to <em>hear</em> from you.</h1>
+    <p>Message us on Line, WhatsApp, or WeChat, or send us an email. We respond to all enquiries within 24 hours.</p>
+  </div>
+</div>
+
+<div class="messaging-section">
+  <p class="eyebrow">Message us directly</p>
+  <h2>The fastest way to reach us.</h2>
+  <p class="messaging-intro">Most families find it easiest to message us directly. Pick whichever platform works best for you, we are active on all three.</p>
+  <div class="messaging-buttons">
+    <a href="line.html" target="_blank" class="msg-btn msg-btn-primary">
+      <p class="msg-platform">Line, Primary</p>
+      <p class="msg-title">Line</p>
+      <p class="msg-desc">The easiest way to reach us. We respond quickly and can arrange visits directly over Line.</p>
+      <p class="msg-action">Message us on Line →</p>
+    </a>
+    <a href="whatsapp.html" target="_blank" class="msg-btn msg-btn-secondary">
+      <p class="msg-platform">WhatsApp</p>
+      <p class="msg-title">WhatsApp</p>
+      <p class="msg-desc">Preferred by many international families. Same fast response, use whichever you prefer.</p>
+      <p class="msg-action">Message us on WhatsApp →</p>
+    </a>
+    <a href="wechat.html" target="_blank" class="msg-btn msg-btn-tertiary">
+      <p class="msg-platform">WeChat</p>
+      <p class="msg-title">WeChat</p>
+      <p class="msg-desc">Available for families based in China or who prefer WeChat for international communication.</p>
+      <p class="msg-action">Message us on WeChat →</p>
+    </a>
+  </div>
+
+  <div class="contact-grid" id="contact-form">
+    <div class="form-section">
+      <h3>Send us a message</h3>
+      <p class="form-intro">Prefer email? Fill in the form below and we will get back to you within 24 hours.</p>
+      <form name="contact" method="POST" data-netlify="true" action="/success">
+        <input type="hidden" name="form-name" value="contact">
+        <div class="form-field">
+          <label class="form-label">Your name</label>
+          <input class="form-input" type="text" name="name" placeholder="Full name" required>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Email address</label>
+          <input class="form-input" type="email" name="email" placeholder="your@email.com" required>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Child's age range</label>
+          <select class="form-select" name="zone">
+            <option>Select a zone</option>
+            <option>Early Explorers (ages 5–8)</option>
+            <option>Builders (ages 9–11)</option>
+            <option>Navigators (ages 12–18)</option>
+            <option>Nest, interested for 2027 (ages 2–4)</option>
+            <option>General enquiry</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Your message</label>
+          <textarea class="form-textarea" name="message" placeholder="Tell us a little about your family and what you are looking for..."></textarea>
+        </div>
+        <button type="submit" class="btn-submit">Send message</button>
+      </form>
+    </div>
+
+    <div class="info-section">
+      <h3>Bloom Chiangmai contact details</h3>
+      <div class="info-block">
+        <p class="info-label">Email</p>
+        <p class="info-val"><a href="mailto:hello@learn2bloom.org">hello@learn2bloom.org</a></p>
+      </div>
+      <div class="info-divider"></div>
+      <div class="info-block">
+        <p class="info-label">Address</p>
+        <p class="info-val">Bloom Space, Nong Kwai<br>Hang Dong District<br>Chiang Mai 50230<br>Thailand</p>
+      </div>
+      <div class="info-divider"></div>
+      <div class="info-block">
+        <p class="info-label">Office hours</p>
+        <div>
+          <div class="hours-row"><span class="hours-day">Monday – Friday</span><span>10:00 – 16:00</span></div>
+          <div class="hours-row"><span class="hours-day">Saturday</span><span>By appointment</span></div>
+          <div class="hours-row"><span class="hours-day">Sunday</span><span>Closed</span></div>
+        </div>
+      </div>
+      <div class="info-divider"></div>
+      <div class="info-block">
+        <p class="info-label">Response time</p>
+        <p class="info-val">We respond to all enquiries within 24 hours on weekdays. For urgent questions please message us on Line.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="max-width:1200px;margin:0 auto;width:100%;height:300px;border-radius:12px;overflow:hidden;border:1px solid #E8E3D8;">
+  <iframe src="https://maps.google.com/maps?q=Bloom+Space+Chiang+Mai&output=embed" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+</div>
+</div>
+
+<div class="visit-band">
+  <div class="visit-band-text">
+    <h3>Rather come and see us?</h3>
+    <p>Book a visit and we will show you around the Hub. Weekdays, no obligation, bring your child if you would like.</p>
+  </div>
+  <button class="btn-visit" onclick="window.location.href='contact.html#contact-form'">Book a visit via Line</button>
+</div>
+
+<footer>
+  <a href="index.html" style="text-decoration:none;"><img src="images/bcm-logo.png" alt="Bloom Chiangmai" style="height:60px;width:auto;display:block;"></a>
+  <ul class="footer-links">
+    <li><a href="how-we-learn.html">How we learn</a></li>
+    <li><a href="admissions.html">Admissions</a></li>
+    <li><a href="for-families.html">For families</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+
+  <p class="footer-copy" style="font-size:12px;color:#888780;">© 2026 Bloom Chiangmai Learning Hub. All rights reserved.</p>
+</footer>
+
+
+
+<script>function toggleMenu(){var m=document.getElementById("mobileMenu");m.classList.toggle("open");}</script>
+</body>
+</html>

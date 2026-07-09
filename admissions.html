@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admissions — Bloom Chiangmai</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#FDFAF5;color:#2C2C2A;width:100%;;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:10px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.logo{font-family:Georgia,serif;font-size:22px;font-weight:700;color:#2C2C2A;}
+.nav-links{display:flex;gap:28px;list-style:none;align-items:center;}
+.nav-links a{font-size:14px;color:#5F5E5A;text-decoration:none;}
+.nav-active{color:#2C2C2A!important;font-weight:600;}
+.nav-cta{background:#F5C842;color:#534AB7!important;padding:9px 22px;border-radius:20px;font-weight:700!important;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#2C2C2A;text-transform:uppercase;margin-bottom:14px;}
+h2{font-family:Georgia,serif;font-size:28px;font-weight:700;color:#2C2C2A;margin-bottom:8px;line-height:1.25;}
+
+.page-hero{position:relative;width:100%;height:460px;overflow:hidden;display:flex;align-items:flex-end;}
+.page-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.page-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(253,250,245,0.97) 0%,rgba(253,250,245,0.5) 45%,rgba(253,250,245,0.0) 100%);}
+.page-hero-content{position:relative;z-index:2;padding:0 max(48px, calc((100% - 1200px) / 2 + 48px)) 44px;width:100%;display:grid;grid-template-columns:1fr auto;gap:40px;align-items:flex-end;}
+.page-hero-content h1{font-family:Georgia,serif;font-size:44px;font-weight:700;color:#2C2C2A;line-height:1.18;letter-spacing:-0.5px;margin-bottom:10px;}
+.page-hero-content h1 em{font-style:italic;color:#534AB7;}
+.page-hero-content p{font-size:15px;`0;line-height:1.7;max-width:480px;}
+.founding-hero-card{background:#F5C842;border-radius:12px;padding:22px 28px;flex-shrink:0;min-width:260px;}
+.founding-hero-spots{font-size:13px;font-weight:700;color:#993C1D;margin-bottom:6px;}
+.founding-hero-title{font-family:Georgia,serif;font-size:17px;font-weight:700;color:#3C3489;margin-bottom:6px;}
+.founding-hero-desc{font-size:12px;color:#5a4e20;font-weight:300;line-height:1.5;}
+
+.founding-section{padding:56px max(48px, calc((100% - 1200px) / 2 + 48px));background:#EEEDFE;border-bottom:1px solid #AFA9EC;}
+.founding-inner{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;}
+.founding-title{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#26215C;margin-bottom:12px;line-height:1.2;}
+.founding-p{font-size:14px;color:#534AB7;font-weight:300;line-height:1.8;margin-bottom:16px;}
+.founding-items{display:flex;flex-direction:column;gap:10px;}
+.founding-item{display:flex;align-items:flex-start;gap:10px;}
+.founding-dot{width:6px;height:6px;border-radius:50%;background:#534AB7;flex-shrink:0;margin-top:6px;}
+.founding-text{font-size:13px;color:#534AB7;font-weight:300;line-height:1.6;}
+.founding-text strong{font-weight:600;color:#26215C;}
+.founding-urgency{background:#FDFAF5;border:1px solid #AFA9EC;border-radius:12px;padding:28px;}
+.founding-spots-big{font-family:Georgia,serif;font-size:48px;font-weight:700;color:#D85A30;line-height:1;margin-bottom:4px;}
+.founding-spots-label{font-size:13px;color:#888780;font-weight:400;margin-bottom:20px;}
+.founding-deadline{background:#F7F3EC;border-radius:8px;padding:14px 16px;margin-bottom:20px;}
+.founding-deadline-label{font-size:11px;color:#888780;font-weight:300;margin-bottom:3px;letter-spacing:0.5px;text-transform:uppercase;}
+.founding-deadline-val{font-size:14px;color:#2C2C2A;font-weight:600;font-family:Georgia,serif;}
+.btn-apply-big{background:#3C3489;color:#EEEDFE;border:none;padding:15px 32px;border-radius:20px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;width:100%;margin-bottom:10px;}
+.btn-visit-big{background:transparent;color:#3C3489;border:2px solid #3C3489;padding:14px 32px;border-radius:20px;font-size:14px;font-family:inherit;font-weight:600;cursor:pointer;width:100%;}
+
+.process-section{padding:60px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.process-section h2{margin-bottom:8px;}
+.process-intro{font-size:14px;`0;line-height:1.7;margin-bottom:36px;max-width:580px;}
+.process-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;position:relative;}
+.process-steps::before{content:'';position:absolute;top:20px;left:10%;right:10%;height:1px;background:#E8E3D8;z-index:0;}
+.step{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 12px;position:relative;z-index:1;}
+.step-num{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;margin-bottom:14px;flex-shrink:0;}
+.step-title{font-family:Georgia,serif;font-size:14px;font-weight:700;color:#2C2C2A;margin-bottom:6px;}
+.step-desc{font-size:13px;`0;line-height:1.6;}
+
+.fees-section{padding:60px max(48px, calc((100% - 1200px) / 2 + 48px));background:#F7F3EC;border-bottom:1px solid #E8E3D8;}
+.fees-section h2{margin-bottom:8px;}
+.fees-intro{font-size:14px;`0;line-height:1.7;margin-bottom:8px;max-width:680px;}
+.fees-context{font-size:13px;color:#888780;font-weight:400;font-style:italic;margin-bottom:32px;}
+.fees-table{width:100%;border-collapse:collapse;background:#FDFAF5;border-radius:12px;overflow:hidden;border:1px solid #E8E3D8;margin-bottom:24px;}
+.fees-table th{padding:14px 20px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#888780;background:#F7F3EC;border-bottom:1px solid #E8E3D8;}
+.fees-table td{padding:16px 20px;font-size:14px;color:#2C2C2A;border-bottom:1px solid #E8E3D8;}
+.fees-table tr:last-child td{border-bottom:none;}
+.fees-table .zone-name{font-family:Georgia,serif;font-weight:700;}
+.fees-table .zone-age{font-size:12px;color:#888780;font-weight:400;margin-top:2px;}
+.zone-bar-cell{width:4px;padding:0!important;}
+.fees-note{font-size:12px;color:#888780;font-weight:400;font-style:italic;}
+.extra-fees{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;}
+.extra-card{background:#FDFAF5;border:1px solid #E8E3D8;border-radius:10px;padding:18px 20px;}
+.extra-title{font-size:13px;font-weight:700;color:#2C2C2A;margin-bottom:4px;font-family:Georgia,serif;}
+.extra-amount{font-size:16px;font-weight:700;color:#534AB7;font-family:Georgia,serif;margin-bottom:4px;}
+.extra-desc{font-size:12px;color:#888780;font-weight:400;line-height:1.5;}
+
+.calendar-section{padding:56px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.calendar-section h2{margin-bottom:8px;}
+.cal-intro{font-size:14px;`0;line-height:1.7;margin-bottom:32px;max-width:580px;}
+
+
+
+
+
+
+
+
+
+
+
+.visit-section{padding:60px max(48px, calc((100% - 1200px) / 2 + 48px));display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;background:#F7F3EC;border-bottom:1px solid #E8E3D8;}
+.visit-p{font-size:14px;`0;line-height:1.85;margin-bottom:16px;}
+.visit-points{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.visit-point{display:flex;align-items:flex-start;gap:10px;}
+.vp-dot{width:6px;height:6px;border-radius:50%;background:#534AB7;flex-shrink:0;margin-top:6px;}
+.vp-text{font-size:13px;`0;line-height:1.6;}
+.visit-photo{border-radius:12px;overflow:hidden;height:380px;}
+.visit-photo img{width:100%;height:100%;object-fit:cover;}
+.btn-purple{background:#3C3489;color:#EEEDFE;border:none;padding:13px 28px;border-radius:20px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;}
+
+.faq-section{padding:60px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.faq-section h2{margin-bottom:8px;}
+.faq-intro{font-size:14px;`0;line-height:1.7;margin-bottom:32px;max-width:580px;}
+.faq-list{display:flex;flex-direction:column;gap:0;max-width:780px;}
+.faq-item{padding:20px 0;border-bottom:1px solid #E8E3D8;}
+.faq-item:last-child{border-bottom:none;}
+.faq-q{font-family:Georgia,serif;font-size:15px;font-weight:700;color:#2C2C2A;margin-bottom:10px;}
+.faq-a{font-size:14px;`0;line-height:1.75;}
+
+.cta-band{background:#F5C842;padding:52px max(48px, calc((100% - 1200px) / 2 + 48px));display:flex;justify-content:space-between;align-items:center;gap:40px;}
+.cta-band h2{color:#3C3489;margin-bottom:8px;}
+.cta-band p{font-size:14px;color:#5a4e20;}
+.cta-btns{display:flex;gap:12px;flex-shrink:0;}
+.btn-cta-purple{background:#3C3489;color:#EEEDFE;border:none;padding:13px 28px;border-radius:20px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;}
+.btn-cta-outline{background:transparent;color:#3C3489;border:2px solid #3C3489;padding:13px 28px;border-radius:20px;font-size:14px;font-family:inherit;font-weight:600;cursor:pointer;}
+
+footer{background:#F7F3EC;padding:22px max(48px, calc((100% - 1200px) / 2 + 48px));display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;border-top:1px solid #E8E3D8;}.footer-copy{width:100%;text-align:center;border-top:1px solid #E8E3D8;margin-top:16px;padding-top:14px;}
+.footer-logo{font-family:Georgia,serif;font-size:17px;font-weight:700;color:#2C2C2A;}
+.footer-links{display:flex;gap:24px;list-style:none;}
+.footer-links a{font-size:14px;color:#5F5E5A;text-decoration:none;font-weight:400;}
+</style>
+
+<style>
+@media (max-width: 768px) {
+  body { width: 100% !important; overflow-x: hidden; }
+  
+  /* NAV */
+  nav { padding: 14px 20px; flex-wrap: wrap; gap: 10px; }
+  .nav-links { display: none; }
+  .nav-cta { display: block; padding: 8px 16px; font-size: 13px; }
+  .logo, .footer-logo { font-size: 18px; }
+
+  /* HERO */
+  .page-hero { height: 380px; }
+  .page-hero-content { padding: 0 20px 32px; }
+  .page-hero-content h1 { font-size: 28px; }
+  .page-hero-content p { font-size: 13px; }
+  .lp-hero-content, .hero-content { padding: 0 20px 32px; }
+
+  /* GRIDS, stack to single column */
+  .page-hero, .what, .zone-inner, .zone-inner.flip,
+  .day-section, .inner-section, .ai-section,
+  .coaches-grid, .pathways-grid, .extra-fees,
+  .founding-inner, .contact-grid, .register-section,
+  .community-section, .parent-prog, .visit-section,
+  .about-section, .location-section, .coming-pair,
+  .levels-split, .intro-section { 
+    grid-template-columns: 1fr !important; 
+    direction: ltr !important;
+  }
+
+  /* ZONE STRIP */
+  .zone-nav, .zone-strip, .lp-zones { 
+    overflow-x: auto; 
+    flex-wrap: nowrap;
+  }
+  .ztab, .zone-tab, .lp-zone-tab { min-width: 140px; }
+
+  /* TRUST BAR */
+  .lp-trust, .trust { 
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 10px 20px;
+    gap: 20px;
+  }
+
+  /* STATS */
+  .lp-stats, .stats, .about-stats { 
+    grid-template-columns: 1fr 1fr !important; 
+  }
+  .lp-stat, .stat { padding: 16px 10px; }
+  .lp-stat-n, .stat-n { font-size: 24px; }
+
+  /* SECTIONS, padding */
+  .page-hero-left, .about-section, .location-section,
+  .coaches-section, .day-section, .inner-section,
+  .ai-section, .pathways-section, .events-section,
+  .faq-section, .community-section, .parent-prog,
+  .comms-section, .coming-pair, .levels-section,
+  .practical-section, .calendar-section, .gallery-section,
+  .intro-section, .register-section, .programmes-section,
+  .camps-section, .messaging-section, .visit-section { 
+    padding: 36px 20px !important; 
+  }
+
+  /* HEADINGS */
+  h1 { font-size: 28px !important; letter-spacing: -0.3px !important; }
+  h2 { font-size: 22px !important; }
+  .founding-title { font-size: 24px !important; }
+
+  /* PHOTOS */
+  .parent-photo, .inner-photo, .ai-photo, .visit-photo,
+  .community-photo, .intro-photo, .zone-photo,
+  .page-hero-right, .photo-right { 
+    height: 260px !important; 
+    border-radius: 10px;
+  }
+
+  /* PROCESS STEPS */
+  .process-steps { 
+    grid-template-columns: 1fr 1fr !important;
+    gap: 20px !important;
+  }
+  .process-steps::before { display: none; }
+
+  /* FEES TABLE */
+  .fees-table th:last-child, .fees-table td:last-child { display: none; }
+  .fees-table th:nth-child(4), .fees-table td:nth-child(4) { display: none; }
+  .fees-table td, .fees-table th { padding: 12px 10px; font-size: 12px; }
+
+  /* EVENTS & COMMS GRIDS */
+  .events-grid, .comms-grid, .practical-grid,
+  .camps-grid, .pathways-grid, .messaging-buttons { 
+    grid-template-columns: 1fr !important; 
+  }
+
+  /* EXTRA FEES */
+  .extra-fees { grid-template-columns: 1fr 1fr !important; }
+
+  /* GALLERY */
+  .photo-grid, .gallery-grid { 
+    grid-template-columns: 1fr !important; 
+    height: auto !important;
+  }
+  .gallery-main, .gallery-tall { 
+    height: 220px !important; 
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+  .gallery-sm { height: 180px !important; }
+
+  /* CTA BANDS */
+  .cta-band, .cta, .visit-band, .founding-section { 
+    flex-direction: column !important; 
+    padding: 32px 20px !important;
+    gap: 20px !important;
+  }
+  .cta-btns { flex-direction: column; width: 100%; }
+  .btn-purple, .btn-outline, .btn-cta-purple, .btn-cta-outline,
+  .btn-apply-big, .btn-visit-big, .btn-submit, .btn-register,
+  .btn-notify, .btn-visit { 
+    width: 100% !important; 
+    text-align: center;
+  }
+
+  /* FOUNDING URGENCY */
+  .founding-urgency { padding: 20px !important; }
+  .founding-spots-big { font-size: 36px !important; }
+
+  /* CALENDAR */
+  .cal-grid { grid-template-columns: 1fr !important; }
+  .band-milestones { grid-template-columns: 1fr 1fr !important; }
+
+  /* COMING ITEMS */
+  .coming-item, .coming-section { 
+    grid-template-columns: auto 1fr !important; 
+    padding: 24px 20px !important;
+  }
+
+  /* PORTABILITY BANNER */
+  div[style*="grid-template-columns:4px 1fr auto"] {
+    grid-template-columns: 4px 1fr !important;
+  }
+  div[style*="grid-template-columns:4px 1fr auto"] a {
+    grid-column: 2;
+    margin-top: 10px;
+  }
+
+  /* FOOTER */
+  footer { 
+    flex-direction: column !important; 
+    gap: 16px !important;
+    padding: 24px 20px !important;
+    text-align: center;
+  }
+  .footer-links { flex-wrap: wrap; justify-content: center; gap: 12px !important; }
+
+  /* HOURS */
+  .hours-grid { grid-template-columns: 1fr !important; }
+
+  /* PROG STRIP */
+  div[style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ZONE NAV BAR */
+  .zone-nav { overflow-x: scroll; }
+
+  /* MAP */
+  .location-map, .map-placeholder { height: 220px !important; }
+
+  /* ABOUT STATS */
+  .about-stats { gap: 10px; }
+  .about-stat-row { padding: 14px 16px; }
+
+  /* FORM */
+  .form-input, .form-select, .form-textarea { font-size: 16px; }
+
+  /* WHATSAPP FLOAT */
+  .lp-wa-float, .lp-wa { 
+    bottom: 20px !important; 
+    right: 16px !important;
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  /* HERO VIDEO */
+  video { object-position: center; width:100%; }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 24px !important; }
+  h2 { font-size: 20px !important; }
+  .lp-stat-n, .stat-n { font-size: 22px !important; }
+  .process-steps { grid-template-columns: 1fr !important; }
+  .extra-fees { grid-template-columns: 1fr !important; }
+  .band-milestones { grid-template-columns: 1fr !important; }
+  .about-stats { grid-template-columns: 1fr !important; }
+}
+</style>
+
+<style>
+/* ============ MOBILE FIXES ============ */
+@media (max-width: 768px) {
+  nav { padding: 14px 20px; }
+  .nav-links { display: none; }
+  .hero { height: 480px !important; }
+  .hero video, .hero img { object-position: center top !important; }
+  .hero-content { padding: 0 20px 32px !important; }
+  .hero-content h1 { font-size: 26px !important; line-height: 1.2 !important; }
+  .page-hero { height: 360px !important; }
+  .page-hero-content { padding: 0 20px 28px !important; }
+  .page-hero-content h1 { font-size: 28px !important; }
+  .zones, .zone-nav { overflow-x: auto !important; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; }
+  .ztab { min-width: 140px !important; padding: 14px 16px !important; flex-shrink: 0 !important; }
+  .zname { font-size: 13px !important; white-space: nowrap !important; }
+  .zage { white-space: nowrap !important; }
+  .lp-trust, .trust-bar { overflow-x: auto !important; flex-wrap: nowrap !important; gap: 20px !important; padding: 12px 20px !important; }
+  .lp-trust-item { flex-shrink: 0 !important; white-space: nowrap !important; }
+  .lp-what, .lp-coaches, .about-section, .location-section, .visit-section, .community-section, .parent-prog, .intro-section, .register-section, .contact-grid, .founding-inner { grid-template-columns: 1fr !important; gap: 24px !important; }
+  .calendar-section, .coaches-section, .pathways-section, .practical-section, .about-section, .location-section, .gallery-section, .events-section, .faq-section, .community-section, .parent-prog, .comms-section, .intro-section, .programmes-section, .camps-section, .messaging-section, .coming-pair, .register-section, .founding-section, .process-section, .fees-section, .visit-section { padding: 32px 20px !important; }
+  h1 { font-size: 26px !important; }
+  h2 { font-size: 22px !important; }
+  .cal-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .process-steps { grid-template-columns: 1fr 1fr !important; gap: 16px !important; }
+  .process-steps::before { display: none !important; }
+  .fees-table th, .fees-table td { padding: 10px 8px !important; font-size: 11px !important; }
+  .fees-table th:nth-child(5), .fees-table td:nth-child(5) { display: none !important; }
+  .extra-fees { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+  .events-grid, .comms-grid, .practical-grid, .camps-grid, .messaging-buttons { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .pathways-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .gallery-grid { grid-template-columns: 1fr !important; }
+  .gallery-main, .gallery-tall { grid-column: 1 !important; grid-row: auto !important; height: 220px !important; }
+  .gallery-sm { height: 180px !important; }
+  .parent-photo, .intro-photo, .visit-photo, .community-photo { height: 240px !important; }
+  .cta-band, .visit-band { flex-direction: column !important; padding: 28px 20px !important; gap: 16px !important; }
+  .cta-btns { flex-direction: column !important; width: 100% !important; gap: 10px !important; }
+  .btn-purple, .btn-outline, .btn-cta-purple, .btn-cta-outline, .btn-apply-big, .btn-visit-big, .btn-submit, .btn-register, .btn-notify, .btn-visit, .btn-y, .btn-o { width: 100% !important; text-align: center !important; padding: 14px 20px !important; }
+  .founding-inner { grid-template-columns: 1fr !important; }
+  .founding-spots-big { font-size: 40px !important; }
+  .coach-footer { white-space: normal !important; font-size: 12px !important; }
+  footer { flex-direction: column !important; gap: 14px !important; padding: 20px !important; text-align: center !important; }
+  .footer-links { flex-wrap: wrap !important; justify-content: center !important; gap: 12px !important; }
+  .form-input, .form-select, .form-textarea { font-size: 16px !important; }
+}
+@media (max-width: 480px) {
+  h1 { font-size: 22px !important; }
+  h2 { font-size: 19px !important; }
+  .process-steps { grid-template-columns: 1fr !important; }
+  .extra-fees { grid-template-columns: 1fr !important; }
+  .messaging-buttons { grid-template-columns: 1fr !important; }
+}
+</style>
+<style>
+/* Full bleed layout */
+body { width: 100% !important; margin: 0; padding: 0; }
+nav { max-width: 100%; }
+.content-wrap { max-width: 1200px; margin: 0 auto; }
+
+/* Each section stretches full width, content inside is centered */
+.hero, .zones, .trust, .what, .space-section, .stats, .day, .cta,
+.page-hero, .gallery-section, .about-section, .calendar-section,
+.location-section, .practical-section, .community-section,
+.coaches-section, .pathways-section, .day-section, .inner-section,
+.ai-section, .process-section, .fees-section, .founding-section,
+.visit-section, .faq-section, .events-section, .comms-section,
+.parent-prog, .coming-pair, .messaging-section, .contact-grid,
+.register-section, .intro-section, .programmes-section,
+.camps-section, .coming-section, .map-section, .visit-band,
+.cta-band, footer { width: 100% !important; }
+
+/* Nav inner content centered */
+nav { padding: 10px calc((100% - 1200px) / 2 + 48px) !important; }
+
+/* Section content centered via padding */
+.trust { padding-left: calc((100% - 1104px) / 2) !important; padding-right: calc((100% - 1104px) / 2) !important; }
+.what, .space-section, .day, .cta, .about-section, .calendar-section,
+.location-section, .practical-section, .community-section,
+.coaches-section, .pathways-section, .day-section, .inner-section,
+.ai-section, .process-section, .fees-section, .founding-section,
+.visit-section, .faq-section, .events-section, .comms-section,
+.parent-prog, .coming-pair, .messaging-section,
+.register-section, .intro-section, .programmes-section,
+.camps-section, .map-section, .visit-band, .cta-band,
+.gallery-section { 
+    padding-left: max(48px, calc((100% - 1104px) / 2)) !important; 
+    padding-right: max(48px, calc((100% - 1104px) / 2)) !important; 
+}
+footer { 
+    padding-left: max(48px, calc((100% - 1104px) / 2)) !important; 
+    padding-right: max(48px, calc((100% - 1104px) / 2)) !important; 
+}
+
+.hamburger{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:#2C2C2A;padding:4px 8px;}
+.mobile-menu{display:none;position:fixed;top:57px;left:0;right:0;background:#FDFAF5;border-bottom:1px solid #E8E3D8;z-index:999;flex-direction:column;padding:16px 24px;gap:4px;}
+.mobile-menu a{font-size:15px;color:#5F5E5A;text-decoration:none;padding:12px 0;border-bottom:0.5px solid #E8E3D8;display:block;}
+.mobile-menu a:last-child{border-bottom:none;}
+.mobile-menu .mobile-cta{color:#534AB7;font-weight:700;border-bottom:none;}
+.mobile-menu.open{display:flex;}
+@media(max-width:768px){.hamburger{display:block;}.nav-links{display:none!important;}}
+
+@media(max-width:768px){
+  .what,.space-section,.day,.cta,.about-section,.calendar-section,.location-section,.practical-section,.community-section,.coaches-section,.pathways-section,.day-section,.inner-section,.ai-section,.process-section,.fees-section,.founding-section,.visit-section,.faq-section,.events-section,.comms-section,.parent-prog,.coming-pair,.messaging-section,.register-section,.intro-section,.programmes-section,.camps-section,.map-section,.visit-band,.cta-band,.gallery-section,footer{padding-left:20px!important;padding-right:20px!important;}
+  .photo-grid{height:auto!important;}
+  .day-cards{flex-direction:column!important;width:100%!important;}
+  .day-card{width:100%!important;min-width:unset!important;}
+  .page-hero{min-width:unset!important;min-height:unset!important;}
+  .page-hero-left{min-height:300px!important;}
+  nav{padding-left:20px!important;padding-right:20px!important;}
+}
+
+@media(max-width:768px){
+  /* OVERFLOW PREVENTION */
+  *{box-sizing:border-box;}
+  body{overflow-x:hidden!important;width:100%!important;}
+  
+  /* ZONE TABS - horizontal scroll contained */
+  .zones,.zone-nav,.lp-zones{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;flex-wrap:nowrap!important;padding-left:0!important;padding-right:0!important;}
+  .zones{background:#FDFAF5!important;}
+  .ztab,.lp-zone-tab,.zone-tab{flex-shrink:0!important;min-width:140px!important;padding:14px 16px!important;}
+
+  /* TRUST BAR */
+  .trust,.lp-trust,.trust-bar{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;flex-wrap:nowrap!important;}
+  .lp-trust-item,.trust-item{flex-shrink:0!important;white-space:nowrap!important;}
+
+  /* DAY CARDS - stack vertically */
+  .day-cards{display:flex!important;flex-direction:column!important;width:100%!important;gap:12px!important;}
+  .day-card{width:100%!important;min-width:unset!important;flex-shrink:unset!important;}
+
+  /* HERO SPLIT - stack properly */
+  .page-hero{display:block!important;min-width:unset!important;}
+  .page-hero-left{padding:36px 20px!important;}
+  .page-hero-right{height:240px!important;overflow:hidden!important;}
+  .page-hero-right img{width:100%!important;height:100%!important;object-fit:cover!important;}
+
+  /* PULLQUOTE - fix z-index overlap */
+  .pullquote{position:relative!important;z-index:2!important;}
+
+  /* FOUNDER SECTION */
+  .founder-section{display:block!important;padding:36px 20px!important;}
+  .founder-photo{margin:0 auto 20px!important;}
+  .founder-bio{max-width:100%!important;}
+
+  /* ADMISSIONS HERO CARD - stack below text */
+  .page-hero-content{display:block!important;padding:20px!important;}
+  .founding-hero-card{margin-top:16px!important;width:100%!important;min-width:unset!important;}
+
+  /* CALENDAR MILESTONE CARDS */
+  .cal-grid,.milestone-row,.cal-milestones{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;}
+  .cal-milestone,.milestone-card{flex-shrink:0!important;min-width:160px!important;}
+  div[style*="grid-template-columns:repeat(4,1fr)"]{grid-template-columns:1fr!important;gap:16px!important;}
+  div[style*="grid-template-columns:repeat(4, 1fr)"]{grid-template-columns:1fr!important;gap:16px!important;}
+  div[style*="grid-template-columns:repeat(12,1fr)"]{gap:4px!important;}
+  div[style*="grid-template-columns:repeat(12, 1fr)"]{gap:4px!important;}
+
+  /* LEFT BORDER BARS - fix detached on mobile */
+  .comms-item,.prog-item,.comm-card{padding-left:16px!important;border-left-width:3px!important;}
+
+  /* GENERAL GRID FIXES */
+  .day-section,.inner-section,.ai-section{display:block!important;padding:36px 20px!important;}
+  
+  /* PHOTO GRID */
+  .photo-grid{height:auto!important;grid-template-columns:1fr!important;}
+  
+  /* MESSAGING CARDS - stack */
+  .messaging-buttons{grid-template-columns:1fr!important;}
+  /* PROCESS STEPS */
+  .process-steps{grid-template-columns:1fr!important;gap:24px!important;}
+  .process-steps::before{display:none!important;}
+  /* FOUNDING SECTION */
+  .founding-inner{grid-template-columns:1fr!important;}
+  /* STATS 2x2 */
+  .stats{display:grid!important;grid-template-columns:1fr 1fr!important;}
+  .stat{padding:20px 16px!important;}
+  /* LEADER CARDS - fix inline grid on mobile */
+  div[style*="grid-template-columns:100px 1fr"]{grid-template-columns:1fr!important;gap:16px!important;}
+  div[style*="grid-template-columns:100px 1fr"] img{margin:0 auto!important;display:block!important;}
+
+  /* ABOUT SECTION - prevent overflow */
+  .about-section{overflow:hidden!important;}
+  div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;gap:24px!important;}
+  div[style*="grid-template-columns:4px 1fr auto"]{grid-template-columns:4px 1fr!important;}
+  div[style*="grid-template-columns:4px 1fr auto"] a{display:none!important;}
+
+  /* TIMELINE - horizontal scroll */
+  .cal-grid,.milestone-row,.timeline-row{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;}
+  .milestone-card,.cal-milestone{min-width:160px!important;flex-shrink:0!important;}
+
+  /* DAY SECTION label */
+  .day-eyebrow,.eyebrow{font-size:10px!important;}
+
+  /* HERO HEIGHT - reduce on mobile */
+  .page-hero{height:320px!important;}
+  /* HERO OVERLAY - stronger on mobile */
+  .page-hero-overlay,.hero-overlay{background:linear-gradient(to top,rgba(253,250,245,1.0) 0%,rgba(253,250,245,0.97) 40%,rgba(253,250,245,0.7) 65%,rgba(253,250,245,0.1) 100%)!important;}
+  /* ALL SECTIONS PADDING */
+  .what,.space-section,.day,.cta,.about-section,.calendar-section,.location-section,.practical-section,.community-section,.coaches-section,.pathways-section,.day-section,.inner-section,.ai-section,.process-section,.fees-section,.founding-section,.visit-section,.faq-section,.events-section,.comms-section,.parent-prog,.coming-pair,.messaging-section,.register-section,.intro-section,.programmes-section,.camps-section,.map-section,.visit-band,.cta-band,.gallery-section,footer,nav{padding-left:20px!important;padding-right:20px!important;}
+}
+@media(max-width:480px){
+  .page-hero-right{height:200px!important;}
+  .founder-photo{width:90px!important;height:90px!important;}
+}
+
+@media(max-width:768px){
+  .page-hero-content{grid-template-columns:1fr!important;gap:16px!important;padding:20px 20px 28px!important;}
+  .founding-hero-card{min-width:unset!important;width:100%!important;}
+  .page-hero-content h1{font-size:28px!important;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" style="text-decoration:none;"><img src="images/bcm-logo.png" alt="Bloom Chiangmai" style="height:80px;width:auto;display:block;"></a>
+  <ul class="nav-links">
+    <li><a href="our-approach.html">Our approach</a></li>
+    <li><a href="how-we-learn.html">How we learn</a></li>
+    <li><a href="our-hub.html">Our hub</a></li>
+    <li><a href="for-families.html">For families</a></li>
+    <li><a href="admissions.html">Admissions</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="contact.html#message-form" class="nav-cta">Book a visit</a></li>
+  </ul>
+  <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">&#9776;</button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="our-approach.html">Our approach</a>
+  <a href="how-we-learn.html">How we learn</a>
+  <a href="our-hub.html">Our hub</a>
+  <a href="for-families.html">For families</a>
+  <a href="admissions.html">Admissions</a>
+  <a href="contact.html">Contact</a>
+  <a href="contact.html" class="mobile-cta">Book a visit</a>
+</div>
+
+<div class="page-hero">
+  <img src="images/admissions-hero_1200x520.jpg" alt="Bloom Chiangmai admissions">
+  <div class="page-hero-overlay"></div>
+  <div class="page-hero-content">
+    <div>
+      <h1>Start your child's<br><em>journey</em> at Bloom Chiangmai.</h1>
+      <p>Applications are open for September 2026. Secure your 2-year rate lock before founding places are filled.</p>
+    </div>
+    <div class="founding-hero-card">
+      
+      <p class="founding-hero-title">Founding Family Offer</p>
+      <p class="founding-hero-desc">First 15 families only. Tuition rate locked for 2 years from enrollment. Enrollment fee applies.</p>
+    </div>
+  </div>
+</div>
+
+<div class="founding-section">
+  <div class="founding-inner">
+    <div>
+      <p class="eyebrow">Founding family offer</p>
+      <h2 class="founding-title">Lock your rate for 2 years.<br>Be part of what we're building.</h2>
+      <p class="founding-p">The first 15 families to enroll at Bloom Chiangmai join as founding families. As a thank you for that early commitment, your tuition rate is locked for two full years from the date of enrollment, regardless of any future fee increases.</p>
+      <p class="founding-p">This is our way of rewarding the families who take a chance on something new and help shape what Bloom Chiangmai becomes.</p>
+      <div class="founding-items">
+        <div class="founding-item"><div class="founding-dot"></div><p class="founding-text"><strong>2-year tuition rate lock</strong>, your monthly fee stays fixed for two academic years</p></div>
+        <div class="founding-item"><div class="founding-dot"></div><p class="founding-text"><strong>First 15 families only</strong>, once these places are taken, the founding offer closes permanently</p></div>
+        <div class="founding-item"><div class="founding-dot"></div><p class="founding-text"><strong>Enrollment fee applies</strong>, ฿ 20,000 one-time, non-refundable, due on acceptance</p></div>
+        <div class="founding-item"><div class="founding-dot"></div><p class="founding-text"><strong>All zones eligible</strong>, founding offer applies to Early Explorers, Builders, and Navigators</p></div>
+      </div>
+    </div>
+    <div class="founding-urgency">
+      <p class="founding-spots-label">Founding family places are limited</p>
+      <div class="founding-deadline">
+        <p class="founding-deadline-label">Opening date</p>
+        <p class="founding-deadline-val">September 2026</p>
+      </div>
+      <div class="founding-deadline" style="margin-bottom:20px;">
+        <p class="founding-deadline-label">Founding offer closes</p>
+        <p class="founding-deadline-val">When 15 places are filled</p>
+      </div>
+      <button class="btn-apply-big" onclick="window.location.href='contact.html#contact-form'" onclick="window.location.href='contact.html#contact-form'">Register your interest</button>
+      <button class="btn-visit-big" onclick="window.location.href='contact.html#contact-form'">Book a visit first</button>
+    </div>
+  </div>
+</div>
+
+<div class="process-section">
+  <p class="eyebrow">How to apply</p>
+  <h2>Five steps from enquiry to offer.</h2>
+  <p class="process-intro">The application process is designed to be straightforward. Most families complete it within two to three weeks.</p>
+  <div class="process-steps">
+    <div class="step">
+      <div class="step-num" style="background:#D85A30;">01</div>
+      <p class="step-title">Enquire</p>
+      <p class="step-desc">Submit your interest via the form below or message us on WhatsApp. We will respond within 24 hours.</p>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:#5DCAA5;">02</div>
+      <p class="step-title">Visit</p>
+      <p class="step-desc">Come and see the Hub. Meet the coaches, see the space, and ask everything you want to know.</p>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:#F0997B;">03</div>
+      <p class="step-title">Apply</p>
+      <p class="step-desc">Complete the application form. We will ask about your child's background, learning style, and what you are looking for.</p>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:#D85A30;">04</div>
+      <p class="step-title">Meeting</p>
+      <p class="step-desc">A relaxed conversation between your family, your child, and our lead coach. Not a test, a chance to get to know each other.</p>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:#534AB7;">05</div>
+      <p class="step-title">Offer</p>
+      <p class="step-desc">If it is a good fit for both sides, we extend a formal offer. Enrollment is confirmed on receipt of the enrollment fee and deposit.</p>
+    </div>
+  </div>
+</div>
+
+<div class="fees-section">
+  <p class="eyebrow">Fees</p>
+  <h2>Clear, predictable pricing.</h2>
+  <p class="fees-intro">Tuition covers learning and snacks. Bloom Chiangmai is committed to keeping fees accessible for families, sitting below major international schools while offering more flexibility and personalisation.</p>
+  <p class="fees-context">All fees shown are standard rates and exclude 7% VAT. Founding families are guaranteed the same rate for 2 years.</p>
+  <table class="fees-table">
+    <thead>
+      <tr>
+        <th style="width:4px;padding:0;"></th>
+        <th>Zone</th>
+        <th>Ages</th>
+        <th>Term Fee<br><span style="font-size:9px;font-weight:400;text-transform:none;letter-spacing:0;color:#AFA9AE;">(2 terms per year)</span></th>
+        <th>Annual</th>
+        <th>What's included</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="zone-bar-cell"><div style="width:4px;height:100%;background:#D85A30;"></div></td>
+        <td><p class="zone-name">Early Explorers</p></td>
+        <td style="color:#888780;font-size:13px;">5–8</td>
+        <td style="font-family:Georgia,serif;font-weight:700;font-size:16px;">฿ 97,500</td>
+        <td style="font-family:Georgia,serif;font-weight:700;font-size:16px;color:#534AB7;">฿ 195,000</td>
+        <td style="font-size:12px;">Tuition and snacks</td>
+      </tr>
+      <tr>
+        <td class="zone-bar-cell"><div style="width:4px;height:100%;background:#D85A30;"></div></td>
+        <td><p class="zone-name">Builders</p></td>
+        <td style="color:#888780;font-size:13px;">9–11</td>
+        <td style="font-family:Georgia,serif;font-weight:700;font-size:16px;">฿ 97,500</td>
+        <td style="font-family:Georgia,serif;font-weight:700;font-size:16px;color:#534AB7;">฿ 195,000</td>
+        <td style="font-size:12px;">Tuition and snacks</td>
+      </tr>
+      <tr>
+        <td class="zone-bar-cell"><div style="width:4px;height:100%;background:#E8941E;"></div></td>
+        <td><p class="zone-name">Navigators — UK</p></td>
+        <td style="color:#888780;font-size:13px;">12–18</td>
+        <td style="font-family:Georgia,serif;font-weight:700;font-size:16px;">฿ 97,500</td>
+        <td style="font-family:Georgia,serif;font-weight:700;font-size:16px;color:#534AB7;">฿ 195,000</td>
+        <td style="font-size:12px;">Tuition, snacks, BGA accredited curriculum</td>
+      </tr>
+      <tr>
+        <td class="zone-bar-cell"><div style="width:4px;height:100%;background:#E8941E;"></div></td>
+        <td><p class="zone-name">Navigators — US</p></td>
+        <td style="color:#888780;font-size:13px;">12–18</td>
+        <td style="font-family:Georgia,serif;font-weight:700;font-size:16px;">฿ 115,000</td>
+        <td style="font-family:Georgia,serif;font-weight:700;font-size:16px;color:#534AB7;">฿ 230,000</td>
+        <td style="font-size:12px;">Tuition, snacks, BGA accredited curriculum</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="fees-note">Lunch is charged separately at ฿ 100 per day. Nest (ages 2–4) fees will be published when the zone opens in 2027.</p>
+  <div class="extra-fees">
+    <div class="extra-card">
+      <p class="extra-title">Enrollment fee</p>
+      <p class="extra-amount">฿ 20,000</p>
+      <p class="extra-desc">One-time, non-refundable. Due on acceptance of offer.</p>
+    </div>
+    <div class="extra-card">
+      <p class="extra-title">Refundable deposit</p>
+      <p class="extra-amount">1 month's tuition</p>
+      <p class="extra-desc">Held as security. Returned in full on exit with adequate notice.</p>
+    </div>
+    <div class="extra-card">
+      <p class="extra-title">Sibling discount</p>
+      <p class="extra-amount">10% off</p>
+      <p class="extra-desc">Applied to term tuition for second and subsequent children from the same family.</p>
+    </div>
+    <div class="extra-card">
+      <p class="extra-title">Annual payment discount</p>
+      <p class="extra-amount">5% off</p>
+      <p class="extra-desc">For families who pay the full academic year upfront.</p>
+    </div>
+    <div class="extra-card">
+      <p class="extra-title">Materials fee</p>
+      <p class="extra-amount">TBC</p>
+      <p class="extra-desc">Annual materials and learning resources fee. Amount to be confirmed.</p>
+    </div>
+    <div class="extra-card">
+      <p class="extra-title">Meal fee</p>
+      <p class="extra-amount">฿ 100/day</p>
+      <p class="extra-desc">Optional daily meal. Billed monthly based on attendance.</p>
+    </div>
+  </div>
+</div>
+
+<div class="calendar-section">
+  <p class="eyebrow">Academic calendar 2026–2027</p>
+  <h2>Key dates for Year 1.</h2>
+  <p class="cal-intro">Plan ahead with the full academic calendar and enrollment milestones for the first year at Bloom Chiangmai.</p>
+  <div style="background:#FDFAF5;border:1px solid #E8E3D8;border-radius:12px;padding:32px 32px 28px;">
+    <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px;margin-bottom:20px;">
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#E8941E;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Jan</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#E8E3D8;opacity:0.4;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Feb</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#E8E3D8;opacity:0.4;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Mar</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#E8E3D8;opacity:0.4;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Apr</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#E8E3D8;opacity:0.4;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">May</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#E8941E;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Jun</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#E8941E;opacity:0.5;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Jul</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#5DCAA5;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Aug</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#D85A30;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Sep</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#D85A30;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Oct</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#D85A30;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Nov</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#D85A30;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Dec</span></div>
+    </div>
+    <div style="height:0.5px;background:#F1EFE8;margin-bottom:24px;"></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+      <div style="border-left:2px solid #F5C842;padding-left:14px;">
+        <p style="font-size:11px;color:#5F5E5A;font-weight:400;margin-bottom:4px;letter-spacing:0.3px;">Now open</p>
+        <p style="font-family:Georgia,serif;font-size:14px;font-weight:700;color:#2C2C2A;margin-bottom:4px;">Applications open</p>
+        <p style="font-size:12px;color:#888780;font-weight:400;line-height:1.5;">Founding rate lock available, first 15 families</p>
+      </div>
+      <div style="border-left:2px solid #5DCAA5;padding-left:14px;">
+        <p style="font-size:11px;color:#5F5E5A;font-weight:400;margin-bottom:4px;letter-spacing:0.3px;">July 2026</p>
+        <p style="font-family:Georgia,serif;font-size:14px;font-weight:700;color:#2C2C2A;margin-bottom:4px;">Enrollment closes</p>
+        <p style="font-size:12px;color:#888780;font-weight:400;line-height:1.5;">Offer letters issued by end of July</p>
+      </div>
+      <div style="border-left:2px solid #5DCAA5;padding-left:14px;">
+        <p style="font-size:11px;color:#5F5E5A;font-weight:400;margin-bottom:4px;letter-spacing:0.3px;">August 2026</p>
+        <p style="font-family:Georgia,serif;font-size:14px;font-weight:700;color:#2C2C2A;margin-bottom:4px;">Orientation week</p>
+        <p style="font-size:12px;color:#888780;font-weight:400;line-height:1.5;">Meet coaches and settle in before Term 1</p>
+      </div>
+      <div style="border-left:2px solid #7F77DD;padding-left:14px;">
+        <p style="font-size:11px;color:#5F5E5A;font-weight:400;margin-bottom:4px;letter-spacing:0.3px;">September 2026</p>
+        <p style="font-family:Georgia,serif;font-size:14px;font-weight:700;color:#2C2C2A;margin-bottom:4px;">Term 1 begins</p>
+        <p style="font-size:12px;color:#888780;font-weight:400;line-height:1.5;">First day. Bloom Chiangmai opens.</p>
+      </div>
+    </div>
+    <div style="height:0.5px;background:#F1EFE8;margin:24px 0 20px;"></div>
+    <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px;margin-bottom:20px;">
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#D85A30;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Jan</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#D85A30;opacity:0.7;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Feb</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#D85A30;opacity:0.7;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Mar</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#D85A30;opacity:0.7;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Apr</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#D85A30;opacity:0.7;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">May</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#D85A30;opacity:0.7;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Jun</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#E8E3D8;opacity:0.4;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Jul</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#E8E3D8;opacity:0.4;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Aug</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#E8E3D8;opacity:0.4;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Sep</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#E8E3D8;opacity:0.4;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Oct</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#E8E3D8;opacity:0.4;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Nov</span></div>
+      <div style="text-align:center;"><div style="height:6px;border-radius:3px;background:#E8E3D8;opacity:0.4;margin-bottom:8px;"></div><span style="font-size:10px;color:#5F5E5A;font-weight:400;">Dec</span></div>
+    </div>
+    <div style="height:0.5px;background:#F1EFE8;margin-bottom:20px;"></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+      <div style="border-left:2px solid #7F77DD;padding-left:14px;">
+        <p style="font-size:11px;color:#5F5E5A;font-weight:400;margin-bottom:4px;letter-spacing:0.3px;">January 2027</p>
+        <p style="font-family:Georgia,serif;font-size:14px;font-weight:700;color:#2C2C2A;margin-bottom:4px;">Term 1 ends</p>
+        <p style="font-size:12px;color:#888780;font-weight:400;line-height:1.5;">End of term reports issued</p>
+      </div>
+      <div style="border-left:2px solid #D85A30;padding-left:14px;">
+        <p style="font-size:11px;color:#5F5E5A;font-weight:400;margin-bottom:4px;letter-spacing:0.3px;">February 2027</p>
+        <p style="font-family:Georgia,serif;font-size:14px;font-weight:700;color:#2C2C2A;margin-bottom:4px;">Term 2 begins</p>
+        <p style="font-size:12px;color:#888780;font-weight:400;line-height:1.5;">Second term of the academic year</p>
+      </div>
+      <div style="border-left:2px solid #D85A30;padding-left:14px;">
+        <p style="font-size:11px;color:#5F5E5A;font-weight:400;margin-bottom:4px;letter-spacing:0.3px;">June 2027</p>
+        <p style="font-family:Georgia,serif;font-size:14px;font-weight:700;color:#2C2C2A;margin-bottom:4px;">Term 2 ends</p>
+        <p style="font-size:12px;color:#888780;font-weight:400;line-height:1.5;">End of Year 1. Community Day celebration.</p>
+      </div>
+      <div style="border-left:2px solid #5DCAA5;padding-left:14px;">
+        <p style="font-size:11px;color:#5F5E5A;font-weight:400;margin-bottom:4px;letter-spacing:0.3px;">Year 2</p>
+        <p style="font-family:Georgia,serif;font-size:14px;font-weight:700;color:#2C2C2A;margin-bottom:4px;">Re-enrollment opens</p>
+        <p style="font-size:12px;color:#888780;font-weight:400;line-height:1.5;">Founding families retain locked rate for Year 2</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="visit-section">
+  <div>
+    <p class="eyebrow">Book a visit</p>
+    <h2>See it before you decide.</h2>
+    <p class="visit-p">The best way to know if Bloom Chiangmai is right for your family is to come and see it. Every family we have spoken to has left a visit feeling the difference, not just in the space, but in the people.</p>
+    <p class="visit-p">Visits are relaxed and informal. Bring your child if you would like. There is no obligation and no sales pitch.</p>
+    <div class="visit-points">
+      <div class="visit-point"><div class="vp-dot"></div><p class="vp-text">Meet the lead coach and learning guides</p></div>
+      <div class="visit-point"><div class="vp-dot"></div><p class="vp-text">See the learning zones and outdoor spaces</p></div>
+      <div class="visit-point"><div class="vp-dot"></div><p class="vp-text">Ask everything you want to know</p></div>
+      <div class="visit-point"><div class="vp-dot"></div><p class="vp-text">Available weekdays, message us to book a time</p></div>
+    </div>
+    <button class="btn-purple">Book a visit via WhatsApp</button>
+  </div>
+  <div class="visit-photo">
+    <img src="images/admissions-visit_560x380.jpg" alt="Visit Bloom Chiangmai">
+  </div>
+</div>
+
+<div class="faq-section">
+  <p class="eyebrow">Admissions FAQ</p>
+  <h2>Questions about the process.</h2>
+  <p class="faq-intro">If your question is not here, message us directly on WhatsApp or Line.</p>
+  <div class="faq-list">
+    <div class="faq-item">
+      <p class="faq-q">How long does the application process take?</p>
+      <p class="faq-a">Most families complete the process in two to three weeks from initial enquiry to offer. We try to move quickly, we know families are planning ahead and need certainty.</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">What does the family meeting involve?</p>
+      <p class="faq-a">It is a relaxed conversation, not a test or assessment. We want to understand your child, your family's values, and what you are hoping for. Your child is welcome to come along, we find it helpful to meet them in an informal setting before they start.</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">Can siblings apply at the same time?</p>
+      <p class="faq-a">Yes, and we encourage it. Siblings can apply together and attend different zones at the same Hub. A 10% sibling discount applies to the monthly tuition of the second and subsequent children.</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">What if my child has special learning needs?</p>
+      <p class="faq-a">We assess each child individually. The zone-based, coach-led model at Bloom Chiangmai is well-suited to children who learn differently, but we are honest about what we can and cannot support. We will discuss this openly during the application process.</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">Is the enrollment fee refundable if we change our minds?</p>
+      <p class="faq-a">The enrollment fee of ฿ 20,000 is non-refundable once paid. The refundable deposit (one month's tuition) is returned in full on exit with adequate notice.</p>
+    </div>
+    <div class="faq-item">
+      <p class="faq-q">Can we join mid-year?</p>
+      <p class="faq-a">Mid-year enrollment is considered on a case-by-case basis subject to available places. Contact us directly to discuss your situation.</p>
+    </div>
+  </div>
+</div>
+
+<div class="cta-band">
+  <div>
+    <h2>Ready to apply?</h2>
+    <p>Founding family places are limited. Rate lock for 2 years. Applications open now.</p>
+  </div>
+  <div class="cta-btns">
+    <button class="btn-cta-purple" onclick="window.location.href='contact.html#contact-form'" onclick="window.location.href='contact.html#contact-form'">Register your interest</button>
+    <button class="btn-cta-outline" onclick="window.location.href='contact.html#contact-form'">Book a visit</button>
+  </div>
+</div>
+
+<footer>
+  <a href="index.html" style="text-decoration:none;"><img src="images/bcm-logo.png" alt="Bloom Chiangmai" style="height:60px;width:auto;display:block;"></a>
+  <ul class="footer-links">
+    <li><a href="how-we-learn.html">How we learn</a></li>
+    <li><a href="admissions.html">Admissions</a></li>
+    <li><a href="for-families.html">For families</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+
+  <p class="footer-copy" style="font-size:12px;color:#888780;">© 2026 Bloom Chiangmai Learning Hub. All rights reserved.</p>
+</footer>
+
+
+
+<script>function toggleMenu(){var m=document.getElementById("mobileMenu");m.classList.toggle("open");}</script>
+</body>
+</html>

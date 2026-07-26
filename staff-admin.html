@@ -257,12 +257,17 @@ async function loadStudents(){
       <td>${s.class_group || '—'}</td>
       <td><span class="status-badge status-${s.status}">${s.status.replace('_',' ')}</span></td>
       <td>${s.activation_code ? `<span class="code-box">${s.activation_code}</span>` : (s.activated_at ? 'Activated' : '—')}</td>
-      <td>${!s.activation_code && !s.activated_at ? `<button class="btn-primary" style="padding:6px 12px;font-size:12px;" onclick="issueCode('${s.id}')">Issue code</button>` : ''}</td>
+      <td>${!s.activation_code && !s.activated_at && s.status === 'enrolled' ? `<button class="btn-primary" style="padding:6px 12px;font-size:12px;" onclick="issueCode('${s.id}')">Issue code</button>` : (s.status !== 'enrolled' ? `<span style="font-size:12px;color:#888780;">Not enrolled yet</span>` : '')}</td>
     </tr>
   `).join('');
 }
 
 async function issueCode(studentId){
+  const { data: student } = await sb.from('students').select('status').eq('id', studentId).single();
+  if(!student || student.status !== 'enrolled'){
+    showToast('Only enrolled students can be issued an activation code.');
+    return;
+  }
   const code = genCode();
   const { error } = await sb.from('students').update({ activation_code: code }).eq('id', studentId);
   if(error){ showToast('Error: ' + error.message); return; }

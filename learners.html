@@ -103,6 +103,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
       <table>
         <thead>
           <tr>
+            <th>#</th>
             <th>Learner ID</th>
             <th>Name</th>
             <th>Family</th>
@@ -112,7 +113,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
           </tr>
         </thead>
         <tbody id="studentsTable">
-          <tr><td colspan="6" style="color:#888780;">Loading…</td></tr>
+          <tr><td colspan="7" style="color:#888780;">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -211,17 +212,18 @@ async function loadStudents(){
     .order('created_at', { ascending: false });
 
   if(error){
-    tbody.innerHTML = `<tr><td colspan="6" style="color:#B23A3A;">${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="color:#B23A3A;">${error.message}</td></tr>`;
     return;
   }
   allData = data;
   if(!data.length){
-    tbody.innerHTML = `<tr><td colspan="6" style="color:#888780;">No enrolled learners yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="color:#888780;">No enrolled learners yet.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = data.map(s => `
+  tbody.innerHTML = data.map((s, i) => `
     <tr>
+      <td>${i + 1}</td>
       <td>${s.student_id_code || '—'}</td>
       <td>${s.first_name} ${s.last_name}</td>
       <td>${s.families ? s.families.family_name : '—'}</td>

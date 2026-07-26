@@ -38,6 +38,12 @@ table{width:100%;border-collapse:collapse;font-size:14px;}
 th{text-align:left;padding:10px 12px;border-bottom:2px solid #E8E3D8;color:#5F5E5A;font-size:12px;text-transform:uppercase;letter-spacing:.5px;}
 td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
 .code-box{font-family:monospace;background:#fff;border:1px dashed #534AB7;border-radius:6px;padding:4px 10px;font-size:13px;color:#534AB7;}
+.pay-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.pay-paid{background:#D8F0DE;color:#1F6B36;}
+.pay-partially_paid{background:#FDF1D6;color:#8A6416;}
+.pay-pending{background:#F0E0E0;color:#8A3B3B;}
+.pay-unpaid{background:#F0E0E0;color:#8A3B3B;}
+.pay-cancelled{background:#E8E3D8;color:#5F5E5A;}
 
 .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
 .signout-link{font-size:13px;color:#888780;cursor:pointer;text-decoration:underline;}
@@ -120,12 +126,13 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
             <th>Age</th>
             <th>Zone</th>
             <th>Family</th>
+            <th>Payment</th>
             <th>Activation code</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="studentsTable">
-          <tr><td colspan="8" style="color:#888780;">Loading…</td></tr>
+          <tr><td colspan="9" style="color:#888780;">Loading…</td></tr>
         </tbody>
       </table>
 
@@ -168,6 +175,15 @@ function showToast(msg){
   t.textContent = msg;
   t.style.display = 'block';
   setTimeout(()=>{ t.style.display='none'; }, 3000);
+}
+
+function paymentBadge(payments){
+  if(!payments || !payments.length) return '—';
+  // use the most recent payment record
+  const sorted = [...payments].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  const status = sorted[0].status;
+  const label = status.replace('_',' ');
+  return `<span class="pay-badge pay-${status}">${label}</span>`;
 }
 
 function calcAge(dob){
@@ -241,12 +257,12 @@ async function loadStudents(){
   const tbody = document.getElementById('studentsTable');
   const { data, error } = await sb
     .from('students')
-    .select('*, families(family_name, contact_email, contact_phone, intake_data)')
+    .select('*, families(family_name, contact_email, contact_phone, intake_data), payments(status, amount, category, note, created_at)')
     .eq('status', 'enrolled')
     .order('created_at', { ascending: false });
 
   if(error){
-    tbody.innerHTML = `<tr><td colspan="8" style="color:#B23A3A;">${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="color:#B23A3A;">${error.message}</td></tr>`;
     return;
   }
   allData = data;
@@ -276,7 +292,7 @@ function applyFiltersAndRender(){
   });
 
   if(!filtered.length){
-    tbody.innerHTML = `<tr><td colspan="8" style="color:#888780;">${query ? 'No matching learners.' : 'No enrolled learners yet.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="color:#888780;">${query ? 'No matching learners.' : 'No enrolled learners yet.'}</td></tr>`;
     document.getElementById('pageInfo').textContent = '';
     document.getElementById('prevPageBtn').disabled = true;
     document.getElementById('nextPageBtn').disabled = true;
@@ -292,10 +308,11 @@ function applyFiltersAndRender(){
     <tr>
       <td>${start + i + 1}</td>
       <td>${s.student_id_code || '—'}</td>
-      <td>${s.first_name} ${s.last_name}</td>
+      <td>${s.first_name}</td>
       <td>${calcAge(s.date_of_birth)}</td>
       <td>${s.class_group || '—'}</td>
       <td>${s.families ? s.families.family_name : '—'}</td>
+      <td>${paymentBadge(s.payments)}</td>
       <td>${s.activation_code ? `<span class="code-box">${s.activation_code}</span>` : (s.activated_at ? 'Activated' : '—')}</td>
       <td style="display:flex;gap:8px;">
         ${!s.activation_code && !s.activated_at ? `<button class="btn-small" onclick="issueCode('${s.id}')">Issue code</button>` : ''}

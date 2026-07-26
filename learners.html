@@ -298,6 +298,8 @@ function renderModal(studentId, editMode){
       ${field('Nationality', studIntake.nationality, `<input class="detail-input" id="f-nationality" value="${studIntake.nationality || ''}">`)}
       ${field('First language', studIntake.first_language, `<input class="detail-input" id="f-first-language" value="${studIntake.first_language || ''}">`)}
       ${field('Other languages', studIntake.other_languages, `<input class="detail-input" id="f-other-languages" value="${studIntake.other_languages || ''}">`)}
+      ${field('Current school', studIntake.current_school, `<input class="detail-input" id="f-current-school" value="${studIntake.current_school || ''}">`)}
+      ${field('Previous school', studIntake.previous_school, `<input class="detail-input" id="f-previous-school" value="${studIntake.previous_school || ''}">`)}
       ${field('Health / learning notes', studIntake.health_learning_notes, `<input class="detail-input" id="f-health-notes" value="${studIntake.health_learning_notes || ''}">`)}
     </div>
 
@@ -314,6 +316,7 @@ function renderModal(studentId, editMode){
           <option ${famIntake.preferred_contact==='WeChat'?'selected':''}>WeChat</option>
           <option ${famIntake.preferred_contact==='Email'?'selected':''}>Email</option>
         </select>`)}
+      ${field('Line / WeChat ID', famIntake.line_wechat_id, `<input class="detail-input" id="f-line-wechat" value="${famIntake.line_wechat_id || ''}">`)}
     </div>
 
     <div class="detail-section">
@@ -321,6 +324,21 @@ function renderModal(studentId, editMode){
       ${field('Name', famIntake.emergency_name, `<input class="detail-input" id="f-emergency-name" value="${famIntake.emergency_name || ''}">`)}
       ${field('Relationship', famIntake.emergency_relationship, `<input class="detail-input" id="f-emergency-relationship" value="${famIntake.emergency_relationship || ''}">`)}
       ${field('Number', ((famIntake.emergency_country_code || '') + ' ' + (famIntake.emergency_number || '')).trim(), `<input class="detail-input" id="f-emergency-number" value="${(famIntake.emergency_country_code || '') + ' ' + (famIntake.emergency_number || '')}">`)}
+    </div>
+
+    <div class="detail-section">
+      <h3>Interest &amp; learning hopes</h3>
+      ${field('What interests them', famIntake.bcm_interest, `<input class="detail-input" id="f-bcm-interest" value="${famIntake.bcm_interest || ''}">`)}
+      ${field('More on interest', famIntake.bcm_interest_more, `<input class="detail-input" id="f-bcm-interest-more" value="${famIntake.bcm_interest_more || ''}">`)}
+      ${field('Learning hopes', famIntake.learning_hopes, `<input class="detail-input" id="f-learning-hopes" value="${famIntake.learning_hopes || ''}">`)}
+      ${field('More on learning hopes', famIntake.learning_hopes_more, `<input class="detail-input" id="f-learning-hopes-more" value="${famIntake.learning_hopes_more || ''}">`)}
+      ${field('Photo permission', famIntake.photo_permission, `
+        <select class="detail-input" id="f-photo-permission">
+          <option value="" ${!famIntake.photo_permission?'selected':''}>— Select —</option>
+          <option ${famIntake.photo_permission==='Yes'?'selected':''}>Yes</option>
+          <option ${famIntake.photo_permission==='No'?'selected':''}>No</option>
+        </select>`)}
+      ${field('Additional notes', famIntake.additional_notes, `<input class="detail-input" id="f-additional-notes" value="${famIntake.additional_notes || ''}">`)}
     </div>
 
     <div class="modal-save-bar">
@@ -339,6 +357,8 @@ async function saveModal(studentId){
   const s = allData.find(x => x.id === studentId);
   if(!s) return;
   const v = id => document.getElementById(id).value.trim();
+  const studIntake = s.intake_data || {};
+  const famIntake = (s.families && s.families.intake_data) || {};
 
   const studentUpdate = {
     first_name: v('f-first-name'),
@@ -347,10 +367,13 @@ async function saveModal(studentId){
     class_group: v('f-class-group') || null,
     staff_notes: v('f-staff-notes') || null,
     intake_data: {
+      ...studIntake,
       gender: v('f-gender') || null,
       nationality: v('f-nationality') || null,
       first_language: v('f-first-language') || null,
       other_languages: v('f-other-languages') || null,
+      current_school: v('f-current-school') || null,
+      previous_school: v('f-previous-school') || null,
       health_learning_notes: v('f-health-notes') || null
     }
   };
@@ -360,10 +383,18 @@ async function saveModal(studentId){
     contact_email: v('f-email') || null,
     contact_phone: v('f-phone') || null,
     intake_data: {
+      ...famIntake,
       preferred_contact: v('f-preferred-contact') || null,
+      line_wechat_id: v('f-line-wechat') || null,
       emergency_name: v('f-emergency-name') || null,
       emergency_relationship: v('f-emergency-relationship') || null,
-      emergency_number: v('f-emergency-number') || null
+      emergency_number: v('f-emergency-number') || null,
+      bcm_interest: v('f-bcm-interest') || null,
+      bcm_interest_more: v('f-bcm-interest-more') || null,
+      learning_hopes: v('f-learning-hopes') || null,
+      learning_hopes_more: v('f-learning-hopes-more') || null,
+      photo_permission: v('f-photo-permission') || null,
+      additional_notes: v('f-additional-notes') || null
     }
   };
 

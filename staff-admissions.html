@@ -479,6 +479,8 @@ async function saveModal(studentId){
   const s = allData.find(x => x.id === studentId);
   if(!s) return;
   const v = id => document.getElementById(id).value.trim();
+  const studIntake = s.intake_data || {};
+  const famIntake = (s.families && s.families.intake_data) || {};
 
   const studentUpdate = {
     first_name: v('f-first-name'),
@@ -487,6 +489,7 @@ async function saveModal(studentId){
     class_group: v('f-class-group') || null,
     staff_notes: v('f-staff-notes') || null,
     intake_data: {
+      ...studIntake,
       gender: v('f-gender') || null,
       nationality: v('f-nationality') || null,
       first_language: v('f-first-language') || null,
@@ -502,6 +505,7 @@ async function saveModal(studentId){
     contact_email: v('f-email') || null,
     contact_phone: v('f-phone') || null,
     intake_data: {
+      ...famIntake,
       preferred_contact: v('f-preferred-contact') || null,
       line_wechat_id: v('f-line-wechat') || null,
       emergency_name: v('f-emergency-name') || null,

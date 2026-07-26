@@ -127,12 +127,10 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
             <th>Zone</th>
             <th>Family</th>
             <th>Payment</th>
-            <th>Activation code</th>
-            <th></th>
           </tr>
         </thead>
         <tbody id="studentsTable">
-          <tr><td colspan="9" style="color:#888780;">Loading…</td></tr>
+          <tr><td colspan="7" style="color:#888780;">Loading…</td></tr>
         </tbody>
       </table>
 
@@ -314,7 +312,7 @@ async function loadStudents(){
     .order('created_at', { ascending: false });
 
   if(error){
-    tbody.innerHTML = `<tr><td colspan="9" style="color:#B23A3A;">${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="color:#B23A3A;">${error.message}</td></tr>`;
     return;
   }
   allData = data;
@@ -344,7 +342,7 @@ function applyFiltersAndRender(){
   });
 
   if(!filtered.length){
-    tbody.innerHTML = `<tr><td colspan="9" style="color:#888780;">${query ? 'No matching learners.' : 'No enrolled learners yet.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="color:#888780;">${query ? 'No matching learners.' : 'No enrolled learners yet.'}</td></tr>`;
     document.getElementById('pageInfo').textContent = '';
     document.getElementById('prevPageBtn').disabled = true;
     document.getElementById('nextPageBtn').disabled = true;
@@ -360,17 +358,11 @@ function applyFiltersAndRender(){
     <tr>
       <td>${start + i + 1}</td>
       <td>${s.student_id_code || '—'}</td>
-      <td>${s.first_name}</td>
+      <td><a href="javascript:void(0)" onclick="openModal('${s.id}')" style="color:#534AB7;font-weight:600;text-decoration:none;">${s.first_name}</a></td>
       <td>${calcAge(s.date_of_birth)}</td>
       <td>${s.class_group || '—'}</td>
       <td>${s.families ? s.families.family_name : '—'}</td>
       <td>${paymentBadge(s.payments)}</td>
-      <td>${s.activation_code ? `<span class="code-box">${s.activation_code}</span>` : (s.activated_at ? 'Activated' : '—')}</td>
-      <td style="display:flex;gap:8px;">
-        ${!s.activation_code && !s.activated_at ? `<button class="btn-small" onclick="issueCode('${s.id}')">Issue code</button>` : ''}
-        <button class="btn-small-outline" onclick="openModal('${s.id}')">View</button>
-        <button class="btn-small-outline" style="border-color:#B23A3A;color:#B23A3A;" onclick="archiveStudent('${s.id}', '${s.student_id_code || ''}')">Delete</button>
-      </td>
     </tr>
   `).join('');
 
@@ -396,6 +388,7 @@ async function issueCode(studentId){
   const { error } = await sb.from('students').update({ activation_code: activationCode }).eq('id', studentId);
   if(error){ showToast('Error: ' + error.message); return; }
   showToast('Activation code issued: ' + activationCode);
+  closeModal();
   loadStudents();
 }
 
@@ -490,11 +483,21 @@ function renderModal(studentId, editMode){
       ${field('Additional notes', famIntake.additional_notes, `<input class="detail-input" id="f-additional-notes" value="${famIntake.additional_notes || ''}">`)}
     </div>
 
+    <div class="detail-section">
+      <h3>Enrollment status</h3>
+      <div class="detail-row">
+        <div class="detail-label">Activation code</div>
+        <div class="detail-value">${s.activation_code ? `<span class="code-box">${s.activation_code}</span>` : (s.activated_at ? 'Activated' : 'Not issued yet')}</div>
+      </div>
+    </div>
+
     <div class="modal-save-bar">
       ${editMode
         ? `<button class="btn-small-outline" onclick="renderModal('${s.id}', false)">Cancel</button>
            <button class="btn-primary" onclick="saveModal('${s.id}')">Save changes</button>`
         : `<button class="btn-small-outline" onclick="closeModal()">Close</button>
+           ${!s.activation_code && !s.activated_at ? `<button class="btn-small-outline" onclick="issueCode('${s.id}')">Issue code</button>` : ''}
+           <button class="btn-small-outline" style="border-color:#B23A3A;color:#B23A3A;" onclick="closeModal(); archiveStudent('${s.id}', '${s.student_id_code || ''}')">Delete</button>
            <button class="btn-primary" onclick="renderModal('${s.id}', true)">Edit</button>`
       }
     </div>

@@ -247,11 +247,10 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
             <th>Family</th>
             <th>Class</th>
             <th>Status</th>
-            <th></th>
           </tr>
         </thead>
         <tbody id="studentsTable">
-          <tr><td colspan="6" style="color:#888780;">Loading…</td></tr>
+          <tr><td colspan="5" style="color:#888780;">Loading…</td></tr>
         </tbody>
       </table>
 
@@ -377,7 +376,7 @@ async function loadStudents(){
     .order('created_at', { ascending: false });
 
   if(error){
-    tbody.innerHTML = `<tr><td colspan="6" style="color:#B23A3A;">${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="color:#B23A3A;">${error.message}</td></tr>`;
     return;
   }
   allData = data;
@@ -406,7 +405,7 @@ function applyFiltersAndRender(){
   // 'recent' keeps the original created_at desc order from the query
 
   if(!filtered.length){
-    tbody.innerHTML = `<tr><td colspan="6" style="color:#888780;">${query ? 'No matching applications.' : 'No applications in the pipeline.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="color:#888780;">${query ? 'No matching applications.' : 'No applications in the pipeline.'}</td></tr>`;
     document.getElementById('pageInfo').textContent = '';
     document.getElementById('prevPageBtn').disabled = true;
     document.getElementById('nextPageBtn').disabled = true;
@@ -421,17 +420,13 @@ function applyFiltersAndRender(){
   tbody.innerHTML = pageData.map((s, i) => `
     <tr>
       <td>${start + i + 1}</td>
-      <td>${s.first_name} ${s.last_name}</td>
+      <td><a href="javascript:void(0)" onclick="openModal('${s.id}')" style="color:#534AB7;font-weight:600;text-decoration:none;">${s.first_name} ${s.last_name}</a></td>
       <td>${s.families ? s.families.family_name : '—'}</td>
       <td>${s.class_group || '—'}</td>
       <td>
         <select class="status-select" onchange="updateStatus('${s.id}', this.value)">
           ${statuses.map(st => `<option value="${st}" ${st===s.status?'selected':''}>${st.replace('_',' ')}</option>`).join('')}
         </select>
-      </td>
-      <td style="display:flex;gap:8px;">
-        <button class="btn-small-outline" onclick="openModal('${s.id}')">View</button>
-        <button class="btn-small-outline" style="border-color:#B23A3A;color:#B23A3A;" onclick="archiveStudent('${s.id}', '${s.first_name} ${s.last_name}')">Delete</button>
       </td>
     </tr>
   `).join('');
@@ -586,6 +581,7 @@ function renderModal(studentId, editMode){
         ? `<button class="btn-small-outline" onclick="renderModal('${s.id}', false)">Cancel</button>
            <button class="btn-primary" onclick="saveModal('${s.id}')">Save changes</button>`
         : `<button class="btn-small-outline" onclick="closeModal()">Close</button>
+           <button class="btn-small-outline" style="border-color:#B23A3A;color:#B23A3A;" onclick="closeModal(); archiveStudent('${s.id}', '${s.first_name} ${s.last_name}')">Delete</button>
            <button class="btn-primary" onclick="renderModal('${s.id}', true)">Edit</button>`
       }
     </div>

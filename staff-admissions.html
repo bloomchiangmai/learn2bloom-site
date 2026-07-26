@@ -284,15 +284,15 @@ function showToast(msg){
 }
 
 function nextStudentIdCode(existingCodes){
-  const year = new Date().getFullYear();
+  const yy = String(new Date().getFullYear()).slice(-2);
   let n = 1;
-  const prefix = `BCM-${year}-`;
+  const prefix = `BMS${yy}`;
   const nums = existingCodes
     .filter(c => c && c.startsWith(prefix))
-    .map(c => parseInt(c.replace(prefix,''),10))
+    .map(c => parseInt(c.slice(prefix.length),10))
     .filter(x => !isNaN(x));
   if(nums.length) n = Math.max(...nums) + 1;
-  return prefix + String(n).padStart(4,'0');
+  return prefix + String(n).padStart(3,'0');
 }
 
 async function checkStaffAndInit(){

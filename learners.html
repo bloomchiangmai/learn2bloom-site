@@ -104,10 +104,10 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
         <thead>
           <tr>
             <th>#</th>
-            <th>Learner ID</th>
             <th>Name</th>
+            <th>Age</th>
+            <th>Zone</th>
             <th>Family</th>
-            <th>Class</th>
             <th>Activation code</th>
             <th></th>
           </tr>
@@ -146,6 +146,17 @@ function showToast(msg){
   t.textContent = msg;
   t.style.display = 'block';
   setTimeout(()=>{ t.style.display='none'; }, 3000);
+}
+
+function calcAge(dob){
+  if(!dob) return '—';
+  const birth = new Date(dob);
+  if(isNaN(birth)) return '—';
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if(m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
 }
 
 function genCode(len=6){
@@ -224,10 +235,10 @@ async function loadStudents(){
   tbody.innerHTML = data.map((s, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td>${s.student_id_code || '—'}</td>
       <td>${s.first_name} ${s.last_name}</td>
-      <td>${s.families ? s.families.family_name : '—'}</td>
+      <td>${calcAge(s.date_of_birth)}</td>
       <td>${s.class_group || '—'}</td>
+      <td>${s.families ? s.families.family_name : '—'}</td>
       <td>${s.activation_code ? `<span class="code-box">${s.activation_code}</span>` : (s.activated_at ? 'Activated' : '—')}</td>
       <td style="display:flex;gap:8px;">
         ${!s.activation_code && !s.activated_at ? `<button class="btn-small" onclick="issueCode('${s.id}')">Issue code</button>` : ''}

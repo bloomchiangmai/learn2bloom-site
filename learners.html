@@ -251,69 +251,85 @@ async function issueCode(studentId){
 }
 
 function openModal(studentId){
+  renderModal(studentId, false);
+}
+
+function renderModal(studentId, editMode){
   const s = allData.find(x => x.id === studentId);
   if(!s) return;
   const fam = s.families || {};
   const famIntake = fam.intake_data || {};
   const studIntake = s.intake_data || {};
 
+  const field = (label, value, inputHtml) => `
+    <div class="detail-row">
+      <div class="detail-label">${label}</div>
+      ${editMode ? inputHtml : `<div class="detail-value">${value || '—'}</div>`}
+    </div>`;
+
   document.getElementById('modalContent').innerHTML = `
     <h2>${s.first_name} ${s.last_name}</h2>
     <p class="modal-sub">${fam.family_name || 'No family on file'} · ${s.student_id_code || 'No ID assigned'}</p>
 
     <div class="detail-section">
+      <h3>Internal notes (staff only)</h3>
+      ${field('Notes', s.staff_notes, `<textarea class="detail-input" id="f-staff-notes" rows="3" style="resize:vertical;">${s.staff_notes || ''}</textarea>`)}
+    </div>
+
+    <div class="detail-section">
       <h3>Learner details</h3>
-      <div class="detail-row"><div class="detail-label">First name</div><input class="detail-input" id="f-first-name" value="${s.first_name || ''}"></div>
-      <div class="detail-row"><div class="detail-label">Last name</div><input class="detail-input" id="f-last-name" value="${s.last_name || ''}"></div>
-      <div class="detail-row"><div class="detail-label">Date of birth</div><input class="detail-input" type="date" id="f-dob" value="${s.date_of_birth || ''}"></div>
-      <div class="detail-row"><div class="detail-label">Class group</div>
+      ${field('First name', s.first_name, `<input class="detail-input" id="f-first-name" value="${s.first_name || ''}">`)}
+      ${field('Last name', s.last_name, `<input class="detail-input" id="f-last-name" value="${s.last_name || ''}">`)}
+      ${field('Date of birth', s.date_of_birth, `<input class="detail-input" type="date" id="f-dob" value="${s.date_of_birth || ''}">`)}
+      ${field('Class group', s.class_group, `
         <select class="detail-input" id="f-class-group">
           <option value="" ${!s.class_group?'selected':''}>— Select —</option>
           <option ${s.class_group==='Nest'?'selected':''}>Nest</option>
           <option ${s.class_group==='Early Explorers'?'selected':''}>Early Explorers</option>
           <option ${s.class_group==='Builders'?'selected':''}>Builders</option>
           <option ${s.class_group==='Navigators'?'selected':''}>Navigators</option>
-        </select>
-      </div>
-      <div class="detail-row"><div class="detail-label">Gender</div>
+        </select>`)}
+      ${field('Gender', studIntake.gender, `
         <select class="detail-input" id="f-gender">
           <option value="" ${!studIntake.gender?'selected':''}>— Select —</option>
           <option ${studIntake.gender==='Male'?'selected':''}>Male</option>
           <option ${studIntake.gender==='Female'?'selected':''}>Female</option>
-        </select>
-      </div>
-      <div class="detail-row"><div class="detail-label">Nationality</div><input class="detail-input" id="f-nationality" value="${studIntake.nationality || ''}"></div>
-      <div class="detail-row"><div class="detail-label">First language</div><input class="detail-input" id="f-first-language" value="${studIntake.first_language || ''}"></div>
-      <div class="detail-row"><div class="detail-label">Other languages</div><input class="detail-input" id="f-other-languages" value="${studIntake.other_languages || ''}"></div>
-      <div class="detail-row"><div class="detail-label">Health / learning notes</div><input class="detail-input" id="f-health-notes" value="${studIntake.health_learning_notes || ''}"></div>
+        </select>`)}
+      ${field('Nationality', studIntake.nationality, `<input class="detail-input" id="f-nationality" value="${studIntake.nationality || ''}">`)}
+      ${field('First language', studIntake.first_language, `<input class="detail-input" id="f-first-language" value="${studIntake.first_language || ''}">`)}
+      ${field('Other languages', studIntake.other_languages, `<input class="detail-input" id="f-other-languages" value="${studIntake.other_languages || ''}">`)}
+      ${field('Health / learning notes', studIntake.health_learning_notes, `<input class="detail-input" id="f-health-notes" value="${studIntake.health_learning_notes || ''}">`)}
     </div>
 
     <div class="detail-section">
       <h3>Parent / family contact</h3>
-      <div class="detail-row"><div class="detail-label">Family name</div><input class="detail-input" id="f-family-name" value="${fam.family_name || ''}"></div>
-      <div class="detail-row"><div class="detail-label">Email</div><input class="detail-input" id="f-email" value="${fam.contact_email || ''}"></div>
-      <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="f-phone" value="${fam.contact_phone || ''}"></div>
-      <div class="detail-row"><div class="detail-label">Preferred contact</div>
+      ${field('Family name', fam.family_name, `<input class="detail-input" id="f-family-name" value="${fam.family_name || ''}">`)}
+      ${field('Email', fam.contact_email, `<input class="detail-input" id="f-email" value="${fam.contact_email || ''}">`)}
+      ${field('Phone', fam.contact_phone, `<input class="detail-input" id="f-phone" value="${fam.contact_phone || ''}">`)}
+      ${field('Preferred contact', famIntake.preferred_contact, `
         <select class="detail-input" id="f-preferred-contact">
           <option value="" ${!famIntake.preferred_contact?'selected':''}>— Select —</option>
           <option ${famIntake.preferred_contact==='Line'?'selected':''}>Line</option>
           <option ${famIntake.preferred_contact==='WhatsApp'?'selected':''}>WhatsApp</option>
           <option ${famIntake.preferred_contact==='WeChat'?'selected':''}>WeChat</option>
           <option ${famIntake.preferred_contact==='Email'?'selected':''}>Email</option>
-        </select>
-      </div>
+        </select>`)}
     </div>
 
     <div class="detail-section">
       <h3>Emergency contact</h3>
-      <div class="detail-row"><div class="detail-label">Name</div><input class="detail-input" id="f-emergency-name" value="${famIntake.emergency_name || ''}"></div>
-      <div class="detail-row"><div class="detail-label">Relationship</div><input class="detail-input" id="f-emergency-relationship" value="${famIntake.emergency_relationship || ''}"></div>
-      <div class="detail-row"><div class="detail-label">Number</div><input class="detail-input" id="f-emergency-number" value="${(famIntake.emergency_country_code || '') + ' ' + (famIntake.emergency_number || '')}"></div>
+      ${field('Name', famIntake.emergency_name, `<input class="detail-input" id="f-emergency-name" value="${famIntake.emergency_name || ''}">`)}
+      ${field('Relationship', famIntake.emergency_relationship, `<input class="detail-input" id="f-emergency-relationship" value="${famIntake.emergency_relationship || ''}">`)}
+      ${field('Number', ((famIntake.emergency_country_code || '') + ' ' + (famIntake.emergency_number || '')).trim(), `<input class="detail-input" id="f-emergency-number" value="${(famIntake.emergency_country_code || '') + ' ' + (famIntake.emergency_number || '')}">`)}
     </div>
 
     <div class="modal-save-bar">
-      <button class="btn-small-outline" onclick="closeModal()">Cancel</button>
-      <button class="btn-primary" onclick="saveModal('${s.id}')">Save changes</button>
+      ${editMode
+        ? `<button class="btn-small-outline" onclick="renderModal('${s.id}', false)">Cancel</button>
+           <button class="btn-primary" onclick="saveModal('${s.id}')">Save changes</button>`
+        : `<button class="btn-small-outline" onclick="closeModal()">Close</button>
+           <button class="btn-primary" onclick="renderModal('${s.id}', true)">Edit</button>`
+      }
     </div>
   `;
   document.getElementById('detailModal').classList.add('open');
@@ -329,6 +345,7 @@ async function saveModal(studentId){
     last_name: v('f-last-name'),
     date_of_birth: v('f-dob') || null,
     class_group: v('f-class-group') || null,
+    staff_notes: v('f-staff-notes') || null,
     intake_data: {
       gender: v('f-gender') || null,
       nationality: v('f-nationality') || null,

@@ -105,7 +105,12 @@ function closeDeleteModal(){
 
 async function confirmDelete(){
   if(!pendingDeleteId) return;
-  const { error } = await sb.from('students').update({ status: 'archived' }).eq('id', pendingDeleteId);
+
+  // Remember their current status so Restore can send them back to it later
+  const { data: current } = await sb.from('students').select('status').eq('id', pendingDeleteId).maybeSingle();
+  const priorStatus = current ? current.status : 'enquiry';
+
+  const { error } = await sb.from('students').update({ status: 'archived', previous_status: priorStatus }).eq('id', pendingDeleteId);
   if(error){ showToast('Error archiving: ' + error.message); return; }
   showToast('Archived');
   closeDeleteModal();

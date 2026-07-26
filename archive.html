@@ -166,9 +166,11 @@ function applyFiltersAndRender(){
 }
 
 async function restoreStudent(studentId){
-  const { error } = await sb.from('students').update({ status: 'enquiry' }).eq('id', studentId);
+  const s = allData.find(x => x.id === studentId);
+  const restoreTo = (s && s.previous_status) || 'enquiry';
+  const { error } = await sb.from('students').update({ status: restoreTo, previous_status: null }).eq('id', studentId);
   if(error){ showToast('Error restoring: ' + error.message); return; }
-  showToast('Restored to Admissions as a new enquiry');
+  showToast(`Restored as ${restoreTo.replace('_',' ')}`);
   loadStudents();
 }
 

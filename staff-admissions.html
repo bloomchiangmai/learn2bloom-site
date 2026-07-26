@@ -82,7 +82,9 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
 
 <main>
 
-  <div id="loginView" class="login-box">
+  <div id="authLoading" style="text-align:center;padding:80px 20px;color:#888780;font-size:14px;">Loading…</div>
+
+  <div id="loginView" class="login-box" style="display:none;">
     <div class="eyebrow">Staff Access</div>
     <h1>Sign in</h1>
     <p class="sub">Staff accounts only.</p>
@@ -316,6 +318,7 @@ function nextStudentIdCode(existingCodes){
 
 async function checkStaffAndInit(){
   const { data: { session } } = await sb.auth.getSession();
+  document.getElementById('authLoading').style.display = 'none';
   if(!session){
     document.getElementById('loginView').style.display = 'block';
     document.getElementById('adminView').style.display = 'none';

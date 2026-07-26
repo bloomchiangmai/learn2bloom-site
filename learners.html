@@ -115,6 +115,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
         <select id="sortMode" onchange="applyFiltersAndRender()" style="padding:10px 12px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;background:#fff;">
           <option value="id">Sort: Learner ID</option>
           <option value="name">Sort: Name (A–Z)</option>
+          <option value="payment">Sort: Payment status</option>
         </select>
       </div>
 
@@ -181,6 +182,14 @@ let allData = [];
 let currentPage = 1;
 const pageSize = 15;
 
+function paymentRank(payments){
+  if(!payments || !payments.length) return 3; // no payment record = last
+  const sorted = [...payments].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  const status = sorted[0].status;
+  const order = { paid: 0, partially_paid: 1, pending: 2, unpaid: 2, cancelled: 3 };
+  return order[status] !== undefined ? order[status] : 2;
+}
+
 function paymentBadge(payments){
   if(!payments || !payments.length) return '—';
   // use the most recent payment record
@@ -244,6 +253,11 @@ function applyFiltersAndRender(){
   filtered.sort((a, b) => {
     if(sortMode === 'name'){
       return (a.first_name || '').localeCompare(b.first_name || '');
+    }
+    if(sortMode === 'payment'){
+      const rankDiff = paymentRank(a.payments) - paymentRank(b.payments);
+      if(rankDiff !== 0) return rankDiff;
+      return (a.student_id_code || '').localeCompare(b.student_id_code || '');
     }
     return (a.student_id_code || '').localeCompare(b.student_id_code || '');
   });

@@ -111,6 +111,18 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
           <input type="text" id="lastName" placeholder="Smith">
         </div>
         <div>
+          <label>Date of birth</label>
+          <input type="date" id="dob">
+        </div>
+        <div>
+          <label>Gender</label>
+          <select id="gender">
+            <option value="">— Select —</option>
+            <option>Male</option>
+            <option>Female</option>
+          </select>
+        </div>
+        <div>
           <label>Class group</label>
           <select id="classGroup">
             <option value="">— Select —</option>
@@ -129,17 +141,76 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
             <option value="approved">Approved</option>
             <option value="offer_sent">Offer sent</option>
             <option value="payment_received">Payment received</option>
+            <option value="withdrawn">Withdrawn</option>
           </select>
         </div>
+        <div>
+          <label>Nationality</label>
+          <input type="text" id="nationality" placeholder="e.g. Thai">
+        </div>
+        <div>
+          <label>First language</label>
+          <input type="text" id="firstLanguage" placeholder="e.g. Thai">
+        </div>
+        <div>
+          <label>Other languages</label>
+          <input type="text" id="otherLanguages" placeholder="e.g. English, Chinese">
+        </div>
+        <div>
+          <label>Current school</label>
+          <input type="text" id="currentSchool" placeholder="N/A if none">
+        </div>
+        <div class="full-width">
+          <label>Previous school</label>
+          <input type="text" id="previousSchool" placeholder="Optional">
+        </div>
+        <div class="full-width">
+          <label>Health / learning notes</label>
+          <input type="text" id="healthNotes" placeholder="Optional — anything staff should know">
+        </div>
+      </div>
+
+      <div class="form-grid" style="margin-top:8px;">
         <div class="full-width">
           <label>Family name</label>
           <input type="text" id="familyName" placeholder="Smith Family">
         </div>
-        <div class="full-width">
+        <div>
           <label>Family contact email</label>
           <input type="email" id="familyEmail" placeholder="parent@example.com">
         </div>
+        <div>
+          <label>Family contact phone</label>
+          <input type="text" id="familyPhone" placeholder="+66 812345678">
+        </div>
+        <div>
+          <label>Preferred contact method</label>
+          <select id="preferredContact">
+            <option value="">— Select —</option>
+            <option>Line</option>
+            <option>WhatsApp</option>
+            <option>WeChat</option>
+            <option>Email</option>
+          </select>
+        </div>
+        <div>
+          <label>Line / WeChat ID</label>
+          <input type="text" id="lineWechatId" placeholder="Optional">
+        </div>
+        <div>
+          <label>Emergency contact name</label>
+          <input type="text" id="emergencyName" placeholder="Optional">
+        </div>
+        <div>
+          <label>Emergency contact relationship</label>
+          <input type="text" id="emergencyRelationship" placeholder="e.g. Parent / Guardian">
+        </div>
+        <div>
+          <label>Emergency contact number</label>
+          <input type="text" id="emergencyNumber" placeholder="Optional">
+        </div>
       </div>
+
       <button class="btn-primary" onclick="createStudent()">Add application</button>
       <div id="createMsg" style="margin-top:12px;font-size:13px;"></div>
     </div>
@@ -258,7 +329,7 @@ async function loadStudents(){
     return;
   }
 
-  const statuses = ['enquiry','application','interview','approved','offer_sent','payment_received'];
+  const statuses = ['enquiry','application','interview','approved','offer_sent','payment_received','withdrawn'];
 
   tbody.innerHTML = data.map(s => `
     <tr>
@@ -342,10 +413,26 @@ function closeModal(){
 async function createStudent(){
   const firstName = document.getElementById('firstName').value.trim();
   const lastName = document.getElementById('lastName').value.trim();
+  const dob = document.getElementById('dob').value;
+  const gender = document.getElementById('gender').value;
   const classGroup = document.getElementById('classGroup').value;
   const status = document.getElementById('status').value;
+  const nationality = document.getElementById('nationality').value.trim();
+  const firstLanguage = document.getElementById('firstLanguage').value.trim();
+  const otherLanguages = document.getElementById('otherLanguages').value.trim();
+  const currentSchool = document.getElementById('currentSchool').value.trim();
+  const previousSchool = document.getElementById('previousSchool').value.trim();
+  const healthNotes = document.getElementById('healthNotes').value.trim();
+
   const familyName = document.getElementById('familyName').value.trim();
   const familyEmail = document.getElementById('familyEmail').value.trim();
+  const familyPhone = document.getElementById('familyPhone').value.trim();
+  const preferredContact = document.getElementById('preferredContact').value;
+  const lineWechatId = document.getElementById('lineWechatId').value.trim();
+  const emergencyName = document.getElementById('emergencyName').value.trim();
+  const emergencyRelationship = document.getElementById('emergencyRelationship').value.trim();
+  const emergencyNumber = document.getElementById('emergencyNumber').value.trim();
+
   const msgEl = document.getElementById('createMsg');
   msgEl.style.color = '#5F5E5A';
   msgEl.textContent = '';
@@ -362,10 +449,30 @@ async function createStudent(){
   const { data: existingFamily } = await sb.from('families').select('id').eq('family_name', familyName).maybeSingle();
   if(existingFamily){
     familyId = existingFamily.id;
+    // update contact/intake info on the existing family record
+    await sb.from('families').update({
+      contact_email: familyEmail || null,
+      contact_phone: familyPhone || null,
+      intake_data: {
+        preferred_contact: preferredContact || null,
+        line_wechat_id: lineWechatId || null,
+        emergency_name: emergencyName || null,
+        emergency_relationship: emergencyRelationship || null,
+        emergency_number: emergencyNumber || null
+      }
+    }).eq('id', familyId);
   } else {
     const { data: newFamily, error: famErr } = await sb.from('families').insert({
       family_name: familyName,
-      contact_email: familyEmail || null
+      contact_email: familyEmail || null,
+      contact_phone: familyPhone || null,
+      intake_data: {
+        preferred_contact: preferredContact || null,
+        line_wechat_id: lineWechatId || null,
+        emergency_name: emergencyName || null,
+        emergency_relationship: emergencyRelationship || null,
+        emergency_number: emergencyNumber || null
+      }
     }).select('id').single();
     if(famErr){ msgEl.style.color = '#B23A3A'; msgEl.textContent = famErr.message; return; }
     familyId = newFamily.id;
@@ -379,8 +486,18 @@ async function createStudent(){
     student_id_code: code,
     first_name: firstName,
     last_name: lastName,
+    date_of_birth: dob || null,
     class_group: classGroup || null,
-    status: status
+    status: status,
+    intake_data: {
+      gender: gender || null,
+      nationality: nationality || null,
+      first_language: firstLanguage || null,
+      other_languages: otherLanguages || null,
+      current_school: currentSchool || null,
+      previous_school: previousSchool || null,
+      health_learning_notes: healthNotes || null
+    }
   });
 
   if(studErr){ msgEl.style.color = '#B23A3A'; msgEl.textContent = studErr.message; return; }
@@ -388,11 +505,11 @@ async function createStudent(){
   msgEl.style.color = '#2E7D46';
   msgEl.textContent = `Added ${firstName} ${lastName} as ${code}.`;
 
-  document.getElementById('firstName').value = '';
-  document.getElementById('lastName').value = '';
+  document.querySelectorAll('#firstName, #lastName, #dob, #nationality, #firstLanguage, #otherLanguages, #currentSchool, #previousSchool, #healthNotes, #familyName, #familyEmail, #familyPhone, #lineWechatId, #emergencyName, #emergencyRelationship, #emergencyNumber')
+    .forEach(el => el.value = '');
+  document.getElementById('gender').value = '';
   document.getElementById('classGroup').value = '';
-  document.getElementById('familyName').value = '';
-  document.getElementById('familyEmail').value = '';
+  document.getElementById('preferredContact').value = '';
 
   loadStudents();
 }

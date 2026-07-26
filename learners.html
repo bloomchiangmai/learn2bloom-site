@@ -100,10 +100,20 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
 
     <div class="card">
       <h2>Enrolled learners</h2>
+
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+        <input type="text" id="searchInput" placeholder="Search by name, family, or Learner ID…" oninput="applyFiltersAndRender()" style="flex:1;min-width:220px;padding:10px 12px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;background:#fff;">
+        <select id="sortMode" onchange="applyFiltersAndRender()" style="padding:10px 12px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;background:#fff;">
+          <option value="id">Sort: Learner ID</option>
+          <option value="name">Sort: Name (A–Z)</option>
+        </select>
+      </div>
+
       <table>
         <thead>
           <tr>
             <th>#</th>
+            <th>Learner ID</th>
             <th>Name</th>
             <th>Age</th>
             <th>Zone</th>
@@ -113,9 +123,17 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
           </tr>
         </thead>
         <tbody id="studentsTable">
-          <tr><td colspan="7" style="color:#888780;">Loading…</td></tr>
+          <tr><td colspan="8" style="color:#888780;">Loading…</td></tr>
         </tbody>
       </table>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;">
+        <span id="pageInfo" style="font-size:13px;color:#888780;"></span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-small-outline" id="prevPageBtn" onclick="changePage(-1)">Previous</button>
+          <button class="btn-small-outline" id="nextPageBtn" onclick="changePage(1)">Next</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -140,6 +158,8 @@ const SUPABASE_KEY = 'sb_publishable_EzlLIeKJDqtMs0mKD0gfgA_C86iHZal';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allData = [];
+let currentPage = 1;
+const pageSize = 15;
 
 function showToast(msg){
   const t = document.getElementById('toast');
@@ -223,18 +243,52 @@ async function loadStudents(){
     .order('created_at', { ascending: false });
 
   if(error){
-    tbody.innerHTML = `<tr><td colspan="7" style="color:#B23A3A;">${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="color:#B23A3A;">${error.message}</td></tr>`;
     return;
   }
   allData = data;
-  if(!data.length){
-    tbody.innerHTML = `<tr><td colspan="7" style="color:#888780;">No enrolled learners yet.</td></tr>`;
+  currentPage = 1;
+  applyFiltersAndRender();
+}
+
+function applyFiltersAndRender(){
+  const tbody = document.getElementById('studentsTable');
+  const query = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+  const sortMode = document.getElementById('sortMode').value;
+
+  let filtered = allData.filter(s => {
+    if(!query) return true;
+    const haystack = [
+      s.first_name, s.last_name, s.student_id_code,
+      s.families ? s.families.family_name : ''
+    ].join(' ').toLowerCase();
+    return haystack.includes(query);
+  });
+
+  filtered.sort((a, b) => {
+    if(sortMode === 'name'){
+      return (a.first_name || '').localeCompare(b.first_name || '');
+    }
+    return (a.student_id_code || '').localeCompare(b.student_id_code || '');
+  });
+
+  if(!filtered.length){
+    tbody.innerHTML = `<tr><td colspan="8" style="color:#888780;">${query ? 'No matching learners.' : 'No enrolled learners yet.'}</td></tr>`;
+    document.getElementById('pageInfo').textContent = '';
+    document.getElementById('prevPageBtn').disabled = true;
+    document.getElementById('nextPageBtn').disabled = true;
     return;
   }
 
-  tbody.innerHTML = data.map((s, i) => `
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  if(currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * pageSize;
+  const pageData = filtered.slice(start, start + pageSize);
+
+  tbody.innerHTML = pageData.map((s, i) => `
     <tr>
-      <td>${i + 1}</td>
+      <td>${start + i + 1}</td>
+      <td>${s.student_id_code || '—'}</td>
       <td>${s.first_name} ${s.last_name}</td>
       <td>${calcAge(s.date_of_birth)}</td>
       <td>${s.class_group || '—'}</td>
@@ -243,6 +297,20 @@ async function loadStudents(){
       <td style="display:flex;gap:8px;">
         ${!s.activation_code && !s.activated_at ? `<button class="btn-small" onclick="issueCode('${s.id}')">Issue code</button>` : ''}
         <button class="btn-small-outline" onclick="openModal('${s.id}')">View</button>
+      </td>
+    </tr>
+  `).join('');
+
+  document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages} · ${filtered.length} learner${filtered.length === 1 ? '' : 's'}`;
+  document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+  document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+}
+
+function changePage(delta){
+  currentPage += delta;
+  applyFiltersAndRender();
+}
+
       </td>
     </tr>
   `).join('');

@@ -41,10 +41,25 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
 .signout-link{font-size:13px;color:#888780;cursor:pointer;text-decoration:underline;}
 .toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
 
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(44,44,42,0.5);z-index:100;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:#FDFAF5;border-radius:12px;max-width:720px;width:100%;max-height:85vh;overflow-y:auto;padding:32px;position:relative;}
+.modal-close{position:absolute;top:20px;right:20px;background:none;border:none;font-size:20px;cursor:pointer;color:#888780;}
+.modal-box h2{font-family:Georgia,serif;font-size:24px;margin-bottom:4px;}
+.modal-box .modal-sub{font-size:13px;color:#888780;margin-bottom:24px;}
+.detail-section{margin-bottom:24px;}
+.detail-section h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#534AB7;margin-bottom:10px;border-bottom:1px solid #E8E3D8;padding-bottom:6px;}
+.detail-row{display:flex;gap:16px;margin-bottom:8px;font-size:14px;}
+.detail-label{width:180px;flex-shrink:0;color:#5F5E5A;}
+.detail-value{color:#2C2C2A;flex:1;}
+.modal-save-bar{position:sticky;bottom:0;background:#FDFAF5;padding-top:16px;margin-top:8px;border-top:1px solid #E8E3D8;display:flex;justify-content:flex-end;gap:10px;}
+
 @media (max-width: 768px) {
   nav{flex-direction:column;gap:10px;padding:14px 20px;}
   table{font-size:12px;}
   th,td{padding:8px 6px;}
+  .detail-label{width:120px;}
+  .modal-box{padding:20px;}
 }
 </style>
 </head>
@@ -86,8 +101,13 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
     <div class="card">
       <h2>Archived records</h2>
 
-      <div style="margin-bottom:16px;">
-        <input type="text" id="searchInput" placeholder="Search by name or family…" oninput="applyFiltersAndRender()" style="width:100%;padding:10px 12px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;background:#fff;">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+        <input type="text" id="searchInput" placeholder="Search by name, family, or Learner ID…" oninput="applyFiltersAndRender()" style="flex:1;min-width:220px;padding:10px 12px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;background:#fff;">
+        <select id="sortMode" onchange="applyFiltersAndRender()" style="padding:10px 12px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;background:#fff;">
+          <option value="recent">Sort: Most recent</option>
+          <option value="id">Sort: Learner ID</option>
+          <option value="name">Sort: Name (A–Z)</option>
+        </select>
       </div>
 
       <table>
@@ -105,6 +125,14 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
           <tr><td colspan="6" style="color:#888780;">Loading…</td></tr>
         </tbody>
       </table>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;">
+        <span id="pageInfo" style="font-size:13px;color:#888780;"></span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-small-outline" id="prevPageBtn" onclick="changePage(-1)">Previous</button>
+          <button class="btn-small-outline" id="nextPageBtn" onclick="changePage(1)">Next</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -116,14 +144,23 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
 
 <div class="toast" id="toast"></div>
 
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div id="modalContent">Loading…</div>
+  </div>
+</div>
+
 <script>
 let allData = [];
+let currentPage = 1;
+const pageSize = 15;
 
 async function loadStudents(){
   const tbody = document.getElementById('studentsTable');
   const { data, error } = await sb
     .from('students')
-    .select('*, families(family_name)')
+    .select('*, families(family_name, contact_email, contact_phone, intake_data)')
     .eq('status', 'archived')
     .order('created_at', { ascending: false });
 
@@ -132,37 +169,63 @@ async function loadStudents(){
     return;
   }
   allData = data;
+  currentPage = 1;
   applyFiltersAndRender();
 }
 
 function applyFiltersAndRender(){
   const tbody = document.getElementById('studentsTable');
   const query = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+  const sortMode = document.getElementById('sortMode').value;
 
-  const filtered = allData.filter(s => {
+  let filtered = allData.filter(s => {
     if(!query) return true;
     const haystack = [
-      s.first_name, s.last_name,
+      s.first_name, s.last_name, s.student_id_code,
       s.families ? s.families.family_name : ''
     ].join(' ').toLowerCase();
     return haystack.includes(query);
   });
 
+  if(sortMode === 'name'){
+    filtered.sort((a, b) => (a.first_name || '').localeCompare(b.first_name || ''));
+  } else if(sortMode === 'id'){
+    filtered.sort((a, b) => (a.student_id_code || '').localeCompare(b.student_id_code || ''));
+  }
+  // 'recent' keeps the original created_at desc order from the query
+
   if(!filtered.length){
     tbody.innerHTML = `<tr><td colspan="6" style="color:#888780;">${query ? 'No matching archived records.' : 'Nothing archived yet.'}</td></tr>`;
+    document.getElementById('pageInfo').textContent = '';
+    document.getElementById('prevPageBtn').disabled = true;
+    document.getElementById('nextPageBtn').disabled = true;
     return;
   }
 
-  tbody.innerHTML = filtered.map((s, i) => `
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  if(currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * pageSize;
+  const pageData = filtered.slice(start, start + pageSize);
+
+  tbody.innerHTML = pageData.map((s, i) => `
     <tr>
-      <td>${i + 1}</td>
+      <td>${start + i + 1}</td>
       <td>${s.student_id_code || '—'}</td>
-      <td>${s.first_name} ${s.last_name}</td>
+      <td><a href="javascript:void(0)" onclick="openModal('${s.id}')" style="color:#534AB7;font-weight:600;text-decoration:none;">${s.first_name}</a></td>
       <td>${s.families ? s.families.family_name : '—'}</td>
       <td>${s.class_group || '—'}</td>
       <td><button class="btn-small-outline" onclick="restoreStudent('${s.id}')">Restore</button></td>
     </tr>
   `).join('');
+
+  document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages} · ${filtered.length} record${filtered.length === 1 ? '' : 's'}`;
+  document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+  document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+}
+
+function changePage(delta){
+  currentPage += delta;
+  applyFiltersAndRender();
 }
 
 async function restoreStudent(studentId){
@@ -171,7 +234,66 @@ async function restoreStudent(studentId){
   const { error } = await sb.from('students').update({ status: restoreTo, previous_status: null }).eq('id', studentId);
   if(error){ showToast('Error restoring: ' + error.message); return; }
   showToast(`Restored as ${restoreTo.replace('_',' ')}`);
+  closeModal();
   loadStudents();
+}
+
+function openModal(studentId){
+  const s = allData.find(x => x.id === studentId);
+  if(!s) return;
+  const fam = s.families || {};
+  const famIntake = fam.intake_data || {};
+  const studIntake = s.intake_data || {};
+
+  document.getElementById('modalContent').innerHTML = `
+    <h2>${s.first_name} ${s.last_name}</h2>
+    <p class="modal-sub">${fam.family_name || 'No family on file'} · ${s.student_id_code || 'No ID assigned'} · Archived (was: ${(s.previous_status || 'unknown').replace('_',' ')})</p>
+
+    <div class="detail-section">
+      <h3>Learner details</h3>
+      <div class="detail-row"><div class="detail-label">Date of birth</div><div class="detail-value">${s.date_of_birth || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Class group</div><div class="detail-value">${s.class_group || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Gender</div><div class="detail-value">${studIntake.gender || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Nationality</div><div class="detail-value">${studIntake.nationality || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">First language</div><div class="detail-value">${studIntake.first_language || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Other languages</div><div class="detail-value">${studIntake.other_languages || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Current school</div><div class="detail-value">${studIntake.current_school || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Previous school</div><div class="detail-value">${studIntake.previous_school || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Health / learning notes</div><div class="detail-value">${studIntake.health_learning_notes || '—'}</div></div>
+    </div>
+
+    <div class="detail-section">
+      <h3>Parent / family contact</h3>
+      <div class="detail-row"><div class="detail-label">Family name</div><div class="detail-value">${fam.family_name || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value">${fam.contact_email || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Phone</div><div class="detail-value">${fam.contact_phone || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Preferred contact</div><div class="detail-value">${famIntake.preferred_contact || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Line / WeChat ID</div><div class="detail-value">${famIntake.line_wechat_id || '—'}</div></div>
+    </div>
+
+    <div class="detail-section">
+      <h3>Emergency contact</h3>
+      <div class="detail-row"><div class="detail-label">Name</div><div class="detail-value">${famIntake.emergency_name || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Relationship</div><div class="detail-value">${famIntake.emergency_relationship || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Number</div><div class="detail-value">${((famIntake.emergency_country_code || '') + ' ' + (famIntake.emergency_number || '')).trim() || '—'}</div></div>
+    </div>
+
+    ${s.staff_notes ? `
+    <div class="detail-section">
+      <h3>Internal notes (staff only)</h3>
+      <div class="detail-row"><div class="detail-value">${s.staff_notes}</div></div>
+    </div>` : ''}
+
+    <div class="modal-save-bar">
+      <button class="btn-small-outline" onclick="closeModal()">Close</button>
+      <button class="btn-primary" onclick="restoreStudent('${s.id}')">Restore</button>
+    </div>
+  `;
+  document.getElementById('detailModal').classList.add('open');
+}
+
+function closeModal(){
+  document.getElementById('detailModal').classList.remove('open');
 }
 
 checkStaffAndInit();

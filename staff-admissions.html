@@ -280,6 +280,21 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
   </div>
 </div>
 
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box" style="max-width:480px;">
+    <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+    <h2 style="color:#B23A3A;">Archive application</h2>
+    <p class="modal-sub" id="deleteModalSub"></p>
+    <p style="font-size:14px;margin-bottom:16px;">This removes them from the pipeline. Their record stays saved for history and can be restored later.</p>
+    <p style="font-size:13px;color:#5F5E5A;margin-bottom:8px;">Type <strong id="deleteMatchLabel"></strong> to confirm:</p>
+    <input type="text" id="deleteConfirmInput" class="detail-input" style="margin-bottom:16px;" oninput="checkDeleteMatch()" autocomplete="off">
+    <div class="modal-save-bar" style="position:static;border-top:none;padding-top:0;">
+      <button class="btn-small-outline" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn-primary" id="confirmDeleteBtn" style="background:#B23A3A;opacity:.5;pointer-events:none;" onclick="confirmDelete()">Archive</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://ndlcfgkhxjoancdvmgmr.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_EzlLIeKJDqtMs0mKD0gfgA_C86iHZal';
@@ -431,13 +446,40 @@ function changePage(delta){
   applyFiltersAndRender();
 }
 
-async function archiveStudent(studentId, label){
-  const confirmed = confirm(`Archive ${label}? They will be removed from the pipeline, but their record stays saved for history. This can be reversed by a staff member editing their status directly.`);
-  if(!confirmed) return;
+let pendingDeleteId = null;
+let pendingDeleteMatch = null;
 
-  const { error } = await sb.from('students').update({ status: 'archived' }).eq('id', studentId);
+function archiveStudent(studentId, label){
+  pendingDeleteId = studentId;
+  pendingDeleteMatch = label;
+  document.getElementById('deleteModalSub').textContent = label || '';
+  document.getElementById('deleteMatchLabel').textContent = pendingDeleteMatch;
+  document.getElementById('deleteConfirmInput').value = '';
+  document.getElementById('confirmDeleteBtn').style.opacity = '.5';
+  document.getElementById('confirmDeleteBtn').style.pointerEvents = 'none';
+  document.getElementById('deleteModal').classList.add('open');
+}
+
+function checkDeleteMatch(){
+  const val = document.getElementById('deleteConfirmInput').value.trim();
+  const btn = document.getElementById('confirmDeleteBtn');
+  const matches = val === pendingDeleteMatch;
+  btn.style.opacity = matches ? '1' : '.5';
+  btn.style.pointerEvents = matches ? 'auto' : 'none';
+}
+
+function closeDeleteModal(){
+  document.getElementById('deleteModal').classList.remove('open');
+  pendingDeleteId = null;
+  pendingDeleteMatch = null;
+}
+
+async function confirmDelete(){
+  if(!pendingDeleteId) return;
+  const { error } = await sb.from('students').update({ status: 'archived' }).eq('id', pendingDeleteId);
   if(error){ showToast('Error archiving: ' + error.message); return; }
-  showToast(`${label} archived`);
+  showToast('Archived');
+  closeDeleteModal();
   loadStudents();
 }
 

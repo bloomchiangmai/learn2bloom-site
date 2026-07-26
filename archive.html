@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Archive — Bloom Chiangmai</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="staff-shared.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#FDFAF5;color:#2C2C2A;width:100%;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:10px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.logo{font-family:Georgia,serif;font-size:22px;font-weight:700;color:#2C2C2A;text-decoration:none;}
+.nav-tabs{display:flex;gap:8px;}
+.nav-tab{font-size:13px;font-weight:600;padding:8px 16px;border-radius:8px;text-decoration:none;color:#5F5E5A;}
+.nav-tab.active{background:#534AB7;color:#fff;}
+
+main{max-width:1100px;margin:0 auto;padding:60px 24px 100px;min-height:70vh;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#534AB7;text-transform:uppercase;margin-bottom:14px;}
+h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin-bottom:8px;}
+.sub{font-size:15px;color:#5F5E5A;margin-bottom:40px;}
+
+.card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:28px;margin-bottom:32px;}
+.card h2{font-family:Georgia,serif;font-size:20px;font-weight:700;margin-bottom:20px;color:#2C2C2A;}
+
+.login-box{max-width:420px;margin:80px auto;text-align:center;}
+.login-box input{width:100%;padding:12px 14px;border:1px solid #E8E3D8;border-radius:8px;font-size:15px;margin-bottom:12px;background:#fff;}
+.login-box button{width:100%;padding:12px;border:none;border-radius:8px;background:#534AB7;color:#fff;font-size:15px;font-weight:600;cursor:pointer;}
+.login-box button:hover{background:#443c99;}
+.error-msg{color:#B23A3A;font-size:13px;margin-top:10px;}
+
+.btn-primary{padding:12px 24px;border:none;border-radius:8px;background:#534AB7;color:#fff;font-size:14px;font-weight:600;cursor:pointer;}
+.btn-primary:hover{background:#443c99;}
+.btn-small-outline{padding:6px 12px;font-size:12px;border:1px solid #534AB7;border-radius:6px;background:#fff;color:#534AB7;cursor:pointer;}
+
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th{text-align:left;padding:10px 12px;border-bottom:2px solid #E8E3D8;color:#5F5E5A;font-size:12px;text-transform:uppercase;letter-spacing:.5px;}
+td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
+
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+.signout-link{font-size:13px;color:#888780;cursor:pointer;text-decoration:underline;}
+.toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
+
+@media (max-width: 768px) {
+  nav{flex-direction:column;gap:10px;padding:14px 20px;}
+  table{font-size:12px;}
+  th,td{padding:8px 6px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Bloom Chiangmai</a>
+  <div class="nav-tabs">
+    <a href="staff-admissions.html" class="nav-tab">Admissions</a>
+    <a href="learners.html" class="nav-tab">Learners</a>
+    <a href="archive.html" class="nav-tab active">Archive</a>
+  </div>
+</nav>
+
+<main>
+
+  <div id="authLoading" style="text-align:center;padding:80px 20px;color:#888780;font-size:14px;">Loading…</div>
+
+  <div id="loginView" class="login-box" style="display:none;">
+    <div class="eyebrow">Staff Access</div>
+    <h1>Sign in</h1>
+    <p class="sub">Staff accounts only.</p>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="doLogin()">Sign in</button>
+    <div class="error-msg" id="loginError"></div>
+  </div>
+
+  <div id="adminView" style="display:none;">
+    <div class="top-bar">
+      <div>
+        <div class="eyebrow">Staff Admin</div>
+        <h1>Archive</h1>
+        <p class="sub" style="margin-bottom:0;">Learners and applications removed from active views. Restore anyone who returns.</p>
+      </div>
+      <span class="signout-link" onclick="doLogout()">Sign out</span>
+    </div>
+
+    <div class="card">
+      <h2>Archived records</h2>
+
+      <div style="margin-bottom:16px;">
+        <input type="text" id="searchInput" placeholder="Search by name or family…" oninput="applyFiltersAndRender()" style="width:100%;padding:10px 12px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;background:#fff;">
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Learner ID</th>
+            <th>Name</th>
+            <th>Family</th>
+            <th>Class</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="studentsTable">
+          <tr><td colspan="6" style="color:#888780;">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer style="background:#F7F3EC;padding:22px max(48px, calc((100% - 1200px) / 2 + 48px)) 40px;border-top:1px solid #E8E3D8;">
+  <p style="text-align:center;font-size:12px;color:#888780;">© 2026 Bloom Chiangmai Learning Hub. All rights reserved.</p>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let allData = [];
+
+async function loadStudents(){
+  const tbody = document.getElementById('studentsTable');
+  const { data, error } = await sb
+    .from('students')
+    .select('*, families(family_name)')
+    .eq('status', 'archived')
+    .order('created_at', { ascending: false });
+
+  if(error){
+    tbody.innerHTML = `<tr><td colspan="6" style="color:#B23A3A;">${error.message}</td></tr>`;
+    return;
+  }
+  allData = data;
+  applyFiltersAndRender();
+}
+
+function applyFiltersAndRender(){
+  const tbody = document.getElementById('studentsTable');
+  const query = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+
+  const filtered = allData.filter(s => {
+    if(!query) return true;
+    const haystack = [
+      s.first_name, s.last_name,
+      s.families ? s.families.family_name : ''
+    ].join(' ').toLowerCase();
+    return haystack.includes(query);
+  });
+
+  if(!filtered.length){
+    tbody.innerHTML = `<tr><td colspan="6" style="color:#888780;">${query ? 'No matching archived records.' : 'Nothing archived yet.'}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((s, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${s.student_id_code || '—'}</td>
+      <td>${s.first_name} ${s.last_name}</td>
+      <td>${s.families ? s.families.family_name : '—'}</td>
+      <td>${s.class_group || '—'}</td>
+      <td><button class="btn-small-outline" onclick="restoreStudent('${s.id}')">Restore</button></td>
+    </tr>
+  `).join('');
+}
+
+async function restoreStudent(studentId){
+  const { error } = await sb.from('students').update({ status: 'enquiry' }).eq('id', studentId);
+  if(error){ showToast('Error restoring: ' + error.message); return; }
+  showToast('Restored to Admissions as a new enquiry');
+  loadStudents();
+}
+
+checkStaffAndInit();
+</script>
+
+</body>
+</html>

@@ -54,9 +54,11 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
 .modal-box .modal-sub{font-size:13px;color:#888780;margin-bottom:24px;}
 .detail-section{margin-bottom:24px;}
 .detail-section h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#534AB7;margin-bottom:10px;border-bottom:1px solid #E8E3D8;padding-bottom:6px;}
-.detail-row{display:flex;gap:16px;margin-bottom:8px;font-size:14px;}
+.detail-row{display:flex;gap:16px;margin-bottom:8px;font-size:14px;align-items:center;}
 .detail-label{width:180px;flex-shrink:0;color:#5F5E5A;}
 .detail-value{color:#2C2C2A;flex:1;}
+.detail-input{flex:1;padding:8px 10px;border:1px solid #E8E3D8;border-radius:6px;font-size:14px;background:#fff;font-family:inherit;}
+.modal-save-bar{position:sticky;bottom:0;background:#FDFAF5;padding-top:16px;margin-top:8px;border-top:1px solid #E8E3D8;display:flex;justify-content:flex-end;gap:10px;}
 
 @media (max-width: 768px) {
   nav{flex-direction:column;gap:10px;padding:14px 20px;}
@@ -366,44 +368,132 @@ function openModal(studentId){
 
     <div class="detail-section">
       <h3>Learner details</h3>
-      <div class="detail-row"><div class="detail-label">Date of birth</div><div class="detail-value">${s.date_of_birth || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Class group</div><div class="detail-value">${s.class_group || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Gender</div><div class="detail-value">${studIntake.gender || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Nationality</div><div class="detail-value">${studIntake.nationality || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">First language</div><div class="detail-value">${studIntake.first_language || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Other languages</div><div class="detail-value">${studIntake.other_languages || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Current school</div><div class="detail-value">${studIntake.current_school || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Previous school</div><div class="detail-value">${studIntake.previous_school || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Health / learning notes</div><div class="detail-value">${studIntake.health_learning_notes || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">First name</div><input class="detail-input" id="f-first-name" value="${s.first_name || ''}"></div>
+      <div class="detail-row"><div class="detail-label">Last name</div><input class="detail-input" id="f-last-name" value="${s.last_name || ''}"></div>
+      <div class="detail-row"><div class="detail-label">Date of birth</div><input class="detail-input" type="date" id="f-dob" value="${s.date_of_birth || ''}"></div>
+      <div class="detail-row"><div class="detail-label">Class group</div>
+        <select class="detail-input" id="f-class-group">
+          <option value="" ${!s.class_group?'selected':''}>— Select —</option>
+          <option ${s.class_group==='Nest'?'selected':''}>Nest</option>
+          <option ${s.class_group==='Early Explorers'?'selected':''}>Early Explorers</option>
+          <option ${s.class_group==='Builders'?'selected':''}>Builders</option>
+          <option ${s.class_group==='Navigators'?'selected':''}>Navigators</option>
+        </select>
+      </div>
+      <div class="detail-row"><div class="detail-label">Gender</div>
+        <select class="detail-input" id="f-gender">
+          <option value="" ${!studIntake.gender?'selected':''}>— Select —</option>
+          <option ${studIntake.gender==='Male'?'selected':''}>Male</option>
+          <option ${studIntake.gender==='Female'?'selected':''}>Female</option>
+        </select>
+      </div>
+      <div class="detail-row"><div class="detail-label">Nationality</div><input class="detail-input" id="f-nationality" value="${studIntake.nationality || ''}"></div>
+      <div class="detail-row"><div class="detail-label">First language</div><input class="detail-input" id="f-first-language" value="${studIntake.first_language || ''}"></div>
+      <div class="detail-row"><div class="detail-label">Other languages</div><input class="detail-input" id="f-other-languages" value="${studIntake.other_languages || ''}"></div>
+      <div class="detail-row"><div class="detail-label">Current school</div><input class="detail-input" id="f-current-school" value="${studIntake.current_school || ''}"></div>
+      <div class="detail-row"><div class="detail-label">Previous school</div><input class="detail-input" id="f-previous-school" value="${studIntake.previous_school || ''}"></div>
+      <div class="detail-row"><div class="detail-label">Health / learning notes</div><input class="detail-input" id="f-health-notes" value="${studIntake.health_learning_notes || ''}"></div>
     </div>
 
     <div class="detail-section">
       <h3>Parent / family contact</h3>
-      <div class="detail-row"><div class="detail-label">Family name</div><div class="detail-value">${fam.family_name || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value">${fam.contact_email || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Phone</div><div class="detail-value">${fam.contact_phone || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Preferred contact</div><div class="detail-value">${famIntake.preferred_contact || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Line / WeChat ID</div><div class="detail-value">${famIntake.line_wechat_id || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Family name</div><input class="detail-input" id="f-family-name" value="${fam.family_name || ''}"></div>
+      <div class="detail-row"><div class="detail-label">Email</div><input class="detail-input" id="f-email" value="${fam.contact_email || ''}"></div>
+      <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="f-phone" value="${fam.contact_phone || ''}"></div>
+      <div class="detail-row"><div class="detail-label">Preferred contact</div>
+        <select class="detail-input" id="f-preferred-contact">
+          <option value="" ${!famIntake.preferred_contact?'selected':''}>— Select —</option>
+          <option ${famIntake.preferred_contact==='Line'?'selected':''}>Line</option>
+          <option ${famIntake.preferred_contact==='WhatsApp'?'selected':''}>WhatsApp</option>
+          <option ${famIntake.preferred_contact==='WeChat'?'selected':''}>WeChat</option>
+          <option ${famIntake.preferred_contact==='Email'?'selected':''}>Email</option>
+        </select>
+      </div>
+      <div class="detail-row"><div class="detail-label">Line / WeChat ID</div><input class="detail-input" id="f-line-wechat" value="${famIntake.line_wechat_id || ''}"></div>
     </div>
 
     <div class="detail-section">
       <h3>Emergency contact</h3>
-      <div class="detail-row"><div class="detail-label">Name</div><div class="detail-value">${famIntake.emergency_name || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Relationship</div><div class="detail-value">${famIntake.emergency_relationship || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Number</div><div class="detail-value">${famIntake.emergency_country_code || ''} ${famIntake.emergency_number || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Name</div><input class="detail-input" id="f-emergency-name" value="${famIntake.emergency_name || ''}"></div>
+      <div class="detail-row"><div class="detail-label">Relationship</div><input class="detail-input" id="f-emergency-relationship" value="${famIntake.emergency_relationship || ''}"></div>
+      <div class="detail-row"><div class="detail-label">Number</div><input class="detail-input" id="f-emergency-number" value="${(famIntake.emergency_country_code || '') + ' ' + (famIntake.emergency_number || '')}"></div>
     </div>
 
     <div class="detail-section">
       <h3>Interest &amp; learning hopes</h3>
-      <div class="detail-row"><div class="detail-label">What interests them</div><div class="detail-value">${famIntake.bcm_interest || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">More on interest</div><div class="detail-value">${famIntake.bcm_interest_more || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Learning hopes</div><div class="detail-value">${famIntake.learning_hopes || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">More on learning hopes</div><div class="detail-value">${famIntake.learning_hopes_more || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Photo permission</div><div class="detail-value">${famIntake.photo_permission || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Additional notes</div><div class="detail-value">${famIntake.additional_notes || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">What interests them</div><input class="detail-input" id="f-bcm-interest" value="${famIntake.bcm_interest || ''}"></div>
+      <div class="detail-row"><div class="detail-label">More on interest</div><input class="detail-input" id="f-bcm-interest-more" value="${famIntake.bcm_interest_more || ''}"></div>
+      <div class="detail-row"><div class="detail-label">Learning hopes</div><input class="detail-input" id="f-learning-hopes" value="${famIntake.learning_hopes || ''}"></div>
+      <div class="detail-row"><div class="detail-label">More on learning hopes</div><input class="detail-input" id="f-learning-hopes-more" value="${famIntake.learning_hopes_more || ''}"></div>
+      <div class="detail-row"><div class="detail-label">Photo permission</div>
+        <select class="detail-input" id="f-photo-permission">
+          <option value="" ${!famIntake.photo_permission?'selected':''}>— Select —</option>
+          <option ${famIntake.photo_permission==='Yes'?'selected':''}>Yes</option>
+          <option ${famIntake.photo_permission==='No'?'selected':''}>No</option>
+        </select>
+      </div>
+      <div class="detail-row"><div class="detail-label">Additional notes</div><input class="detail-input" id="f-additional-notes" value="${famIntake.additional_notes || ''}"></div>
+    </div>
+
+    <div class="modal-save-bar">
+      <button class="btn-small-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveModal('${s.id}')">Save changes</button>
     </div>
   `;
   document.getElementById('detailModal').classList.add('open');
+}
+
+async function saveModal(studentId){
+  const s = allData.find(x => x.id === studentId);
+  if(!s) return;
+  const v = id => document.getElementById(id).value.trim();
+
+  const studentUpdate = {
+    first_name: v('f-first-name'),
+    last_name: v('f-last-name'),
+    date_of_birth: v('f-dob') || null,
+    class_group: v('f-class-group') || null,
+    intake_data: {
+      gender: v('f-gender') || null,
+      nationality: v('f-nationality') || null,
+      first_language: v('f-first-language') || null,
+      other_languages: v('f-other-languages') || null,
+      current_school: v('f-current-school') || null,
+      previous_school: v('f-previous-school') || null,
+      health_learning_notes: v('f-health-notes') || null
+    }
+  };
+
+  const familyUpdate = {
+    family_name: v('f-family-name'),
+    contact_email: v('f-email') || null,
+    contact_phone: v('f-phone') || null,
+    intake_data: {
+      preferred_contact: v('f-preferred-contact') || null,
+      line_wechat_id: v('f-line-wechat') || null,
+      emergency_name: v('f-emergency-name') || null,
+      emergency_relationship: v('f-emergency-relationship') || null,
+      emergency_number: v('f-emergency-number') || null,
+      bcm_interest: v('f-bcm-interest') || null,
+      bcm_interest_more: v('f-bcm-interest-more') || null,
+      learning_hopes: v('f-learning-hopes') || null,
+      learning_hopes_more: v('f-learning-hopes-more') || null,
+      photo_permission: v('f-photo-permission') || null,
+      additional_notes: v('f-additional-notes') || null
+    }
+  };
+
+  const { error: studErr } = await sb.from('students').update(studentUpdate).eq('id', studentId);
+  if(studErr){ showToast('Error saving learner: ' + studErr.message); return; }
+
+  if(s.family_id){
+    const { error: famErr } = await sb.from('families').update(familyUpdate).eq('id', s.family_id);
+    if(famErr){ showToast('Error saving family: ' + famErr.message); return; }
+  }
+
+  showToast('Changes saved');
+  closeModal();
+  loadStudents();
 }
 
 function closeModal(){

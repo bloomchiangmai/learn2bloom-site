@@ -126,12 +126,13 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
             <th>Name</th>
             <th>Age</th>
             <th>Zone</th>
+            <th>Health/Allergy</th>
             <th>Family</th>
             <th>Payment</th>
           </tr>
         </thead>
         <tbody id="studentsTable">
-          <tr><td colspan="7" style="color:#888780;">Loading…</td></tr>
+          <tr><td colspan="8" style="color:#888780;">Loading…</td></tr>
         </tbody>
       </table>
 
@@ -189,6 +190,13 @@ function paymentBadge(payments){
   return `<span class="pay-badge pay-${status}">${label}</span>`;
 }
 
+function healthNote(intakeData){
+  const note = intakeData && intakeData.health_learning_notes;
+  if(!note || note.trim() === '' || note.trim().toUpperCase() === 'N/A') return '—';
+  const short = note.length > 24 ? note.slice(0, 24) + '…' : note;
+  return `<span title="${note.replace(/"/g,'&quot;')}" style="cursor:help;border-bottom:1px dotted #B23A3A;color:#B23A3A;">${short}</span>`;
+}
+
 function calcAge(dob){
   if(!dob) return '—';
   const birth = new Date(dob);
@@ -209,7 +217,7 @@ async function loadStudents(){
     .order('created_at', { ascending: false });
 
   if(error){
-    tbody.innerHTML = `<tr><td colspan="7" style="color:#B23A3A;">${error.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="color:#B23A3A;">${error.message}</td></tr>`;
     return;
   }
   allData = data;
@@ -239,7 +247,7 @@ function applyFiltersAndRender(){
   });
 
   if(!filtered.length){
-    tbody.innerHTML = `<tr><td colspan="7" style="color:#888780;">${query ? 'No matching learners.' : 'No enrolled learners yet.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="color:#888780;">${query ? 'No matching learners.' : 'No enrolled learners yet.'}</td></tr>`;
     document.getElementById('pageInfo').textContent = '';
     document.getElementById('prevPageBtn').disabled = true;
     document.getElementById('nextPageBtn').disabled = true;
@@ -258,6 +266,7 @@ function applyFiltersAndRender(){
       <td><a href="javascript:void(0)" onclick="openModal('${s.id}')" style="color:#534AB7;font-weight:600;text-decoration:none;">${s.first_name}</a></td>
       <td>${calcAge(s.date_of_birth)}</td>
       <td>${s.class_group || '—'}</td>
+      <td>${healthNote(s.intake_data)}</td>
       <td>${s.families ? s.families.family_name : '—'}</td>
       <td>${paymentBadge(s.payments)}</td>
     </tr>

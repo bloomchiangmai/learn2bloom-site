@@ -79,9 +79,10 @@ let pendingDeleteId = null;
 let pendingDeleteMatch = null;
 
 function archiveStudent(studentId, label){
+  const cleanLabel = (label || '').trim() || 'DELETE';
   pendingDeleteId = studentId;
-  pendingDeleteMatch = label || 'DELETE';
-  document.getElementById('deleteModalSub').textContent = label || '';
+  pendingDeleteMatch = cleanLabel;
+  document.getElementById('deleteModalSub').textContent = cleanLabel;
   document.getElementById('deleteMatchLabel').textContent = pendingDeleteMatch;
   document.getElementById('deleteConfirmInput').value = '';
   document.getElementById('confirmDeleteBtn').style.opacity = '.5';

@@ -192,12 +192,11 @@ function paymentBadge(payments){
 
 function healthNote(intakeData){
   const note = intakeData && intakeData.health_learning_notes;
-  if(!note) return '—';
+  if(!note || note.trim() === '') return '—';
   const cleaned = note.trim().toLowerCase().replace(/[.\-–]/g, '');
-  const noInfoValues = ['', 'na', 'n a', 'no', 'n', 'none', 'nil', 'nothing', 'no allergy', 'no allergies'];
-  if(noInfoValues.includes(cleaned)) return '—';
-  const short = note.length > 24 ? note.slice(0, 24) + '…' : note;
-  return `<span title="${note.replace(/"/g,'&quot;')}" style="border-bottom:1px dotted #B23A3A;color:#B23A3A;">${short}</span>`;
+  const noInfoValues = ['na', 'n a', 'no', 'n', 'none', 'nil', 'nothing', 'no allergy', 'no allergies'];
+  if(noInfoValues.includes(cleaned)) return 'No';
+  return `<span title="${note.replace(/"/g,'&quot;')}" style="border-bottom:1px dotted #B23A3A;color:#B23A3A;font-weight:600;">Yes</span>`;
 }
 
 function calcAge(dob){

@@ -42,6 +42,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;}
 .status-interview{background:#DCEAF7;color:#2C6E9E;}
 .status-approved{background:#E1F2E4;color:#2E7D46;}
 .status-offer_sent{background:#FCE8DC;color:#B0530F;}
+.status-payment_received{background:#DEF2EE;color:#1D7A6B;}
 .status-enrolled{background:#D8F0DE;color:#1F6B36;}
 .status-withdrawn{background:#F0E0E0;color:#8A3B3B;}
 
@@ -87,13 +88,13 @@ footer{background:#F7F3EC;padding:22px max(48px, calc((100% - 1200px) / 2 + 48px
     <div class="top-bar">
       <div>
         <div class="eyebrow">Staff Admin</div>
-        <h1>Students</h1>
+        <h1>Learners</h1>
       </div>
       <span class="signout-link" onclick="doLogout()">Sign out</span>
     </div>
 
     <div class="card">
-      <h2>Add a new student</h2>
+      <h2>Add a new learner</h2>
       <div class="form-grid">
         <div>
           <label>First name</label>
@@ -121,6 +122,7 @@ footer{background:#F7F3EC;padding:22px max(48px, calc((100% - 1200px) / 2 + 48px
             <option value="interview">Interview</option>
             <option value="approved">Approved</option>
             <option value="offer_sent">Offer sent</option>
+            <option value="payment_received">Payment received</option>
             <option value="enrolled">Enrolled</option>
           </select>
         </div>
@@ -133,16 +135,16 @@ footer{background:#F7F3EC;padding:22px max(48px, calc((100% - 1200px) / 2 + 48px
           <input type="email" id="familyEmail" placeholder="parent@example.com">
         </div>
       </div>
-      <button class="btn-primary" onclick="createStudent()">Add student</button>
+      <button class="btn-primary" onclick="createStudent()">Add learner</button>
       <div id="createMsg" style="margin-top:12px;font-size:13px;"></div>
     </div>
 
     <div class="card">
-      <h2>All students</h2>
+      <h2>All learners</h2>
       <table>
         <thead>
           <tr>
-            <th>Student ID</th>
+            <th>Learner ID</th>
             <th>Name</th>
             <th>Class</th>
             <th>Status</th>

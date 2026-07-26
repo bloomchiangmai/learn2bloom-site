@@ -197,7 +197,7 @@ function healthNote(intakeData){
   const noInfoValues = ['', 'na', 'n a', 'no', 'n', 'none', 'nil', 'nothing', 'no allergy', 'no allergies'];
   if(noInfoValues.includes(cleaned)) return '—';
   const short = note.length > 24 ? note.slice(0, 24) + '…' : note;
-  return `<span title="${note.replace(/"/g,'&quot;')}" style="cursor:help;border-bottom:1px dotted #B23A3A;color:#B23A3A;">${short}</span>`;
+  return `<span title="${note.replace(/"/g,'&quot;')}" style="border-bottom:1px dotted #B23A3A;color:#B23A3A;">${short}</span>`;
 }
 
 function calcAge(dob){

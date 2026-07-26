@@ -250,11 +250,11 @@ function restoreStudent(studentId){
   const s = allData.find(x => x.id === studentId);
   if(!s) return;
   const restoreTo = (s.previous_status || 'enquiry').replace('_',' ');
-  const label = s.student_id_code || `${s.first_name} ${s.last_name}`;
+  const label = (s.student_id_code || `${s.first_name} ${s.last_name}`).trim();
 
   pendingRestoreId = studentId;
   pendingRestoreMatch = label;
-  document.getElementById('restoreModalSub').textContent = `${s.first_name} ${s.last_name}`;
+  document.getElementById('restoreModalSub').textContent = `${s.first_name} ${s.last_name}`.trim();
   document.getElementById('restoreModalExplain').textContent = `This sends them back to "${restoreTo}" — the status they had before being archived.`;
   document.getElementById('restoreMatchLabel').textContent = label;
   document.getElementById('restoreConfirmInput').value = '';

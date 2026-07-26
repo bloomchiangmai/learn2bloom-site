@@ -80,7 +80,12 @@ create table students (
   intake_data jsonb,
   -- intake_data holds: gender, nationality, first_language, other_languages,
   -- current_school, previous_school, health_learning_notes
-  staff_notes text            -- internal-only notes, never shown to parents
+  staff_notes text,           -- internal-only notes, never shown to parents
+  previous_status text        -- status held just before being archived, used
+                               -- by archive.html's Restore button to send
+                               -- someone back to where they were (e.g. straight
+                               -- back to 'enrolled' rather than resetting to
+                               -- 'enquiry')
 );
 
 alter table students enable row level security;
@@ -134,6 +139,9 @@ create policy "parent view own payments" on payments
 -- 2026-07-26  Added pending to payments.status check
 -- 2026-07-26  Added staff_notes to students
 -- 2026-07-26  Added archived to students.status check
+-- 2026-07-26  Added previous_status to students, used by Archive page's
+--             Restore button to send someone back to their prior status
+--             instead of always resetting to 'enquiry'
 --
 -- When making a future schema change: add the migration SQL above this line,
 -- update the relevant table definition above, and add a dated entry here.

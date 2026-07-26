@@ -151,6 +151,21 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
   </div>
 </div>
 
+<div class="modal-overlay" id="restoreModal">
+  <div class="modal-box" style="max-width:480px;">
+    <button class="modal-close" onclick="closeRestoreModal()">&times;</button>
+    <h2 style="color:#534AB7;">Restore learner</h2>
+    <p class="modal-sub" id="restoreModalSub"></p>
+    <p style="font-size:14px;margin-bottom:16px;" id="restoreModalExplain"></p>
+    <p style="font-size:13px;color:#5F5E5A;margin-bottom:8px;">Type <strong id="restoreMatchLabel"></strong> to confirm:</p>
+    <input type="text" id="restoreConfirmInput" class="detail-input" style="margin-bottom:16px;width:100%;padding:8px 10px;border:1px solid #E8E3D8;border-radius:6px;font-size:14px;" oninput="checkRestoreMatch()" autocomplete="off">
+    <div class="modal-save-bar" style="position:static;border-top:none;padding-top:0;">
+      <button class="btn-small-outline" onclick="closeRestoreModal()">Cancel</button>
+      <button class="btn-primary" id="confirmRestoreBtn" style="opacity:.5;pointer-events:none;" onclick="confirmRestore()">Restore</button>
+    </div>
+  </div>
+</div>
+
 <script>
 let allData = [];
 let currentPage = 1;
@@ -228,12 +243,48 @@ function changePage(delta){
   applyFiltersAndRender();
 }
 
-async function restoreStudent(studentId){
+let pendingRestoreId = null;
+let pendingRestoreMatch = null;
+
+function restoreStudent(studentId){
   const s = allData.find(x => x.id === studentId);
+  if(!s) return;
+  const restoreTo = (s.previous_status || 'enquiry').replace('_',' ');
+  const label = s.student_id_code || `${s.first_name} ${s.last_name}`;
+
+  pendingRestoreId = studentId;
+  pendingRestoreMatch = label;
+  document.getElementById('restoreModalSub').textContent = `${s.first_name} ${s.last_name}`;
+  document.getElementById('restoreModalExplain').textContent = `This sends them back to "${restoreTo}" — the status they had before being archived.`;
+  document.getElementById('restoreMatchLabel').textContent = label;
+  document.getElementById('restoreConfirmInput').value = '';
+  document.getElementById('confirmRestoreBtn').style.opacity = '.5';
+  document.getElementById('confirmRestoreBtn').style.pointerEvents = 'none';
+  document.getElementById('restoreModal').classList.add('open');
+}
+
+function checkRestoreMatch(){
+  const val = document.getElementById('restoreConfirmInput').value.trim();
+  const btn = document.getElementById('confirmRestoreBtn');
+  const matches = val === pendingRestoreMatch;
+  btn.style.opacity = matches ? '1' : '.5';
+  btn.style.pointerEvents = matches ? 'auto' : 'none';
+}
+
+function closeRestoreModal(){
+  document.getElementById('restoreModal').classList.remove('open');
+  pendingRestoreId = null;
+  pendingRestoreMatch = null;
+}
+
+async function confirmRestore(){
+  if(!pendingRestoreId) return;
+  const s = allData.find(x => x.id === pendingRestoreId);
   const restoreTo = (s && s.previous_status) || 'enquiry';
-  const { error } = await sb.from('students').update({ status: restoreTo, previous_status: null }).eq('id', studentId);
+  const { error } = await sb.from('students').update({ status: restoreTo, previous_status: null }).eq('id', pendingRestoreId);
   if(error){ showToast('Error restoring: ' + error.message); return; }
   showToast(`Restored as ${restoreTo.replace('_',' ')}`);
+  closeRestoreModal();
   closeModal();
   loadStudents();
 }

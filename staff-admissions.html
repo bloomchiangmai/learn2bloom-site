@@ -624,12 +624,8 @@ async function createStudent(){
     familyId = newFamily.id;
   }
 
-  const { data: allStudents } = await sb.from('students').select('student_id_code');
-  const code = nextStudentIdCode((allStudents||[]).map(s=>s.student_id_code));
-
   const { error: studErr } = await sb.from('students').insert({
     family_id: familyId,
-    student_id_code: code,
     first_name: firstName,
     last_name: lastName,
     date_of_birth: dob || null,
@@ -649,7 +645,7 @@ async function createStudent(){
   if(studErr){ msgEl.style.color = '#B23A3A'; msgEl.textContent = studErr.message; return; }
 
   msgEl.style.color = '#2E7D46';
-  msgEl.textContent = `Added ${firstName} ${lastName} as ${code}.`;
+  msgEl.textContent = `Added ${firstName} ${lastName}. A Learner ID will be assigned once they're enrolled.`;
 
   document.querySelectorAll('#firstName, #lastName, #dob, #nationality, #firstLanguage, #otherLanguages, #currentSchool, #previousSchool, #healthNotes, #familyName, #familyEmail, #familyPhone, #lineWechatId, #emergencyName, #emergencyRelationship, #emergencyNumber')
     .forEach(el => el.value = '');

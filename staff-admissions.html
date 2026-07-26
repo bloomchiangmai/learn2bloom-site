@@ -112,17 +112,13 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
           <label>Last name</label>
           <input type="text" id="lastName" placeholder="Smith">
         </div>
-        <div>
-          <label>Date of birth</label>
-          <input type="date" id="dob">
+        <div class="full-width">
+          <label>Family name</label>
+          <input type="text" id="familyName" placeholder="Smith Family">
         </div>
         <div>
-          <label>Gender</label>
-          <select id="gender">
-            <option value="">— Select —</option>
-            <option>Male</option>
-            <option>Female</option>
-          </select>
+          <label>Family contact email</label>
+          <input type="email" id="familyEmail" placeholder="parent@example.com">
         </div>
         <div>
           <label>Class group</label>
@@ -146,70 +142,83 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
             <option value="withdrawn">Withdrawn</option>
           </select>
         </div>
-        <div>
-          <label>Nationality</label>
-          <input type="text" id="nationality" placeholder="e.g. Thai">
-        </div>
-        <div>
-          <label>First language</label>
-          <input type="text" id="firstLanguage" placeholder="e.g. Thai">
-        </div>
-        <div>
-          <label>Other languages</label>
-          <input type="text" id="otherLanguages" placeholder="e.g. English, Chinese">
-        </div>
-        <div>
-          <label>Current school</label>
-          <input type="text" id="currentSchool" placeholder="N/A if none">
-        </div>
-        <div class="full-width">
-          <label>Previous school</label>
-          <input type="text" id="previousSchool" placeholder="Optional">
-        </div>
-        <div class="full-width">
-          <label>Health / learning notes</label>
-          <input type="text" id="healthNotes" placeholder="Optional — anything staff should know">
-        </div>
       </div>
 
-      <div class="form-grid" style="margin-top:8px;">
-        <div class="full-width">
-          <label>Family name</label>
-          <input type="text" id="familyName" placeholder="Smith Family">
+      <div id="moreDetailsToggle" style="margin:4px 0 20px;">
+        <span class="signout-link" onclick="toggleMoreDetails()" id="moreDetailsLabel">+ Add more details (optional)</span>
+      </div>
+
+      <div id="moreDetailsSection" style="display:none;">
+        <div class="form-grid">
+          <div>
+            <label>Date of birth</label>
+            <input type="date" id="dob">
+          </div>
+          <div>
+            <label>Gender</label>
+            <select id="gender">
+              <option value="">— Select —</option>
+              <option>Male</option>
+              <option>Female</option>
+            </select>
+          </div>
+          <div>
+            <label>Nationality</label>
+            <input type="text" id="nationality" placeholder="e.g. Thai">
+          </div>
+          <div>
+            <label>First language</label>
+            <input type="text" id="firstLanguage" placeholder="e.g. Thai">
+          </div>
+          <div>
+            <label>Other languages</label>
+            <input type="text" id="otherLanguages" placeholder="e.g. English, Chinese">
+          </div>
+          <div>
+            <label>Current school</label>
+            <input type="text" id="currentSchool" placeholder="N/A if none">
+          </div>
+          <div class="full-width">
+            <label>Previous school</label>
+            <input type="text" id="previousSchool" placeholder="Optional">
+          </div>
+          <div class="full-width">
+            <label>Health / learning notes</label>
+            <input type="text" id="healthNotes" placeholder="Optional — anything staff should know">
+          </div>
         </div>
-        <div>
-          <label>Family contact email</label>
-          <input type="email" id="familyEmail" placeholder="parent@example.com">
-        </div>
-        <div>
-          <label>Family contact phone</label>
-          <input type="text" id="familyPhone" placeholder="+66 812345678">
-        </div>
-        <div>
-          <label>Preferred contact method</label>
-          <select id="preferredContact">
-            <option value="">— Select —</option>
-            <option>Line</option>
-            <option>WhatsApp</option>
-            <option>WeChat</option>
-            <option>Email</option>
-          </select>
-        </div>
-        <div>
-          <label>Line / WeChat ID</label>
-          <input type="text" id="lineWechatId" placeholder="Optional">
-        </div>
-        <div>
-          <label>Emergency contact name</label>
-          <input type="text" id="emergencyName" placeholder="Optional">
-        </div>
-        <div>
-          <label>Emergency contact relationship</label>
-          <input type="text" id="emergencyRelationship" placeholder="e.g. Parent / Guardian">
-        </div>
-        <div>
-          <label>Emergency contact number</label>
-          <input type="text" id="emergencyNumber" placeholder="Optional">
+
+        <div class="form-grid" style="margin-top:8px;">
+          <div>
+            <label>Family contact phone</label>
+            <input type="text" id="familyPhone" placeholder="+66 812345678">
+          </div>
+          <div>
+            <label>Preferred contact method</label>
+            <select id="preferredContact">
+              <option value="">— Select —</option>
+              <option>Line</option>
+              <option>WhatsApp</option>
+              <option>WeChat</option>
+              <option>Email</option>
+            </select>
+          </div>
+          <div>
+            <label>Line / WeChat ID</label>
+            <input type="text" id="lineWechatId" placeholder="Optional">
+          </div>
+          <div>
+            <label>Emergency contact name</label>
+            <input type="text" id="emergencyName" placeholder="Optional">
+          </div>
+          <div>
+            <label>Emergency contact relationship</label>
+            <input type="text" id="emergencyRelationship" placeholder="e.g. Parent / Guardian">
+          </div>
+          <div>
+            <label>Emergency contact number</label>
+            <input type="text" id="emergencyNumber" placeholder="Optional">
+          </div>
         </div>
       </div>
 
@@ -257,6 +266,14 @@ const SUPABASE_KEY = 'sb_publishable_EzlLIeKJDqtMs0mKD0gfgA_C86iHZal';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allData = [];
+
+function toggleMoreDetails(){
+  const section = document.getElementById('moreDetailsSection');
+  const label = document.getElementById('moreDetailsLabel');
+  const isHidden = section.style.display === 'none';
+  section.style.display = isHidden ? 'block' : 'none';
+  label.textContent = isHidden ? '– Hide extra details' : '+ Add more details (optional)';
+}
 
 function showToast(msg){
   const t = document.getElementById('toast');

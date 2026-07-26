@@ -177,6 +177,17 @@ function showToast(msg){
   setTimeout(()=>{ t.style.display='none'; }, 3000);
 }
 
+async function archiveStudent(studentId, learnerIdCode){
+  const label = learnerIdCode ? `${learnerIdCode}` : 'this learner';
+  const confirmed = confirm(`Archive ${label}? They will be removed from the active roster, but their record and Learner ID stay saved for history. This can be reversed by a staff member editing their status directly.`);
+  if(!confirmed) return;
+
+  const { error } = await sb.from('students').update({ status: 'archived' }).eq('id', studentId);
+  if(error){ showToast('Error archiving: ' + error.message); return; }
+  showToast(`${label} archived`);
+  loadStudents();
+}
+
 function paymentBadge(payments){
   if(!payments || !payments.length) return '—';
   // use the most recent payment record
@@ -317,6 +328,7 @@ function applyFiltersAndRender(){
       <td style="display:flex;gap:8px;">
         ${!s.activation_code && !s.activated_at ? `<button class="btn-small" onclick="issueCode('${s.id}')">Issue code</button>` : ''}
         <button class="btn-small-outline" onclick="openModal('${s.id}')">View</button>
+        <button class="btn-small-outline" style="border-color:#B23A3A;color:#B23A3A;" onclick="archiveStudent('${s.id}', '${s.student_id_code || ''}')">Delete</button>
       </td>
     </tr>
   `).join('');

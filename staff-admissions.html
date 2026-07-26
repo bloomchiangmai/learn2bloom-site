@@ -358,7 +358,7 @@ async function loadStudents(){
   const { data, error } = await sb
     .from('students')
     .select('*, families(family_name, contact_email, contact_phone, intake_data)')
-    .neq('status', 'enrolled')
+    .not('status', 'in', '(enrolled,archived)')
     .order('created_at', { ascending: false });
 
   if(error){
@@ -414,7 +414,10 @@ function applyFiltersAndRender(){
           ${statuses.map(st => `<option value="${st}" ${st===s.status?'selected':''}>${st.replace('_',' ')}</option>`).join('')}
         </select>
       </td>
-      <td><button class="btn-small-outline" onclick="openModal('${s.id}')">View</button></td>
+      <td style="display:flex;gap:8px;">
+        <button class="btn-small-outline" onclick="openModal('${s.id}')">View</button>
+        <button class="btn-small-outline" style="border-color:#B23A3A;color:#B23A3A;" onclick="archiveStudent('${s.id}', '${s.first_name} ${s.last_name}')">Delete</button>
+      </td>
     </tr>
   `).join('');
 
@@ -426,6 +429,16 @@ function applyFiltersAndRender(){
 function changePage(delta){
   currentPage += delta;
   applyFiltersAndRender();
+}
+
+async function archiveStudent(studentId, label){
+  const confirmed = confirm(`Archive ${label}? They will be removed from the pipeline, but their record stays saved for history. This can be reversed by a staff member editing their status directly.`);
+  if(!confirmed) return;
+
+  const { error } = await sb.from('students').update({ status: 'archived' }).eq('id', studentId);
+  if(error){ showToast('Error archiving: ' + error.message); return; }
+  showToast(`${label} archived`);
+  loadStudents();
 }
 
 async function updateStatus(studentId, newStatus){

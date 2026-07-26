@@ -311,11 +311,6 @@ function changePage(delta){
   applyFiltersAndRender();
 }
 
-      </td>
-    </tr>
-  `).join('');
-}
-
 async function issueCode(studentId){
   const s = allData.find(x => x.id === studentId);
   if(!s || !s.student_id_code){

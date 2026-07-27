@@ -174,6 +174,14 @@ create policy "parent view own payments" on payments
 --             email. No sync needed for other fields (phone, emergency
 --             contact, family name) since the Portal writes directly into
 --             the same families table staff already view.
+-- 2026-07-27  Portal login changed from email-based to Student ID-based.
+--             New Edge Function "resolve-login-identity" looks up a
+--             student_id_code -> family -> the real auth email, so the
+--             login page can accept a Student ID and sign in transparently
+--             with the underlying email. Underlying auth mechanism is
+--             unchanged (still email+password); Student ID is just the
+--             parent-facing identity to avoid needing a custom email
+--             delivery service for password resets.
 --
 -- When making a future schema change: add the migration SQL above this line,
 -- update the relevant table definition above, and add a dated entry here.

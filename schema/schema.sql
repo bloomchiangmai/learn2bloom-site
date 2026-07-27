@@ -39,6 +39,23 @@ create policy "parent update own family" on families
   -- emergency contact) from the Parent Portal dashboard. Learner details
   -- (DOB, health notes, etc.) remain staff-only after initial registration.
 
+-- Keeps families.contact_email in sync whenever a parent changes their
+-- login email via the Portal (auth.users.email is a separate system table).
+create or replace function sync_family_email_on_auth_change()
+returns trigger as $$
+begin
+  if new.email is distinct from old.email then
+    update families set contact_email = new.email where auth_user_id = new.id;
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_email_change
+after update on auth.users
+for each row
+execute function sync_family_email_on_auth_change();
+
 
 -- ============================================================
 -- STAFF
@@ -151,6 +168,12 @@ create policy "parent view own payments" on payments
 --             instead of always resetting to 'enquiry'
 -- 2026-07-27  Added parent update RLS policy on families, so parents can
 --             edit their own contact info from the Parent Portal dashboard
+-- 2026-07-27  Added trigger: when a parent changes their login email via
+--             the Portal (auth.users.email), families.contact_email is
+--             automatically kept in sync, so staff always see the current
+--             email. No sync needed for other fields (phone, emergency
+--             contact, family name) since the Portal writes directly into
+--             the same families table staff already view.
 --
 -- When making a future schema change: add the migration SQL above this line,
 -- update the relevant table definition above, and add a dated entry here.

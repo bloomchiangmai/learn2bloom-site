@@ -474,6 +474,21 @@ async function saveModal(studentId){
     }
   };
 
+  if(!canAccess('students', 'edit')){
+    showToast('You do not have permission to edit learners.');
+    return;
+  }
+
+  if(requiresApproval('students')){
+    const { error } = await submitForApproval('students', 'update', 'students', studentId, {
+      student_id: studentId, family_id: s.family_id, student_update: studentUpdate, family_update: familyUpdate
+    });
+    if(error){ showToast('Error submitting for approval: ' + error.message); return; }
+    showToast('Submitted for approval — an admin will review these changes.');
+    closeModal();
+    return;
+  }
+
   const { error: studErr } = await sb.from('students').update(studentUpdate).eq('id', studentId);
   if(studErr){ showToast('Error saving learner: ' + studErr.message); return; }
 

@@ -106,7 +106,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
       <span class="signout-link" onclick="doLogout()">Sign out</span>
     </div>
 
-    <div class="card">
+    <div class="card" id="addApplicationCard">
       <h2>Add a new application</h2>
       <div class="form-grid">
         <div>
@@ -385,6 +385,22 @@ function changePage(delta){
 }
 
 async function updateStatus(studentId, newStatus){
+  if(!canAccess('students', 'edit')){
+    showToast('You do not have permission to change learner status.');
+    loadStudents();
+    return;
+  }
+
+  if(requiresApproval('students')){
+    const { error } = await submitForApproval('students', 'update', 'students', studentId, {
+      student_id: studentId, requested_action: 'status_change', new_status: newStatus
+    });
+    if(error){ showToast('Error submitting for approval: ' + error.message); return; }
+    showToast('Submitted for approval — an admin will review this status change.');
+    loadStudents();
+    return;
+  }
+
   const { error } = await sb.from('students').update({ status: newStatus }).eq('id', studentId);
   if(error){ showToast('Error: ' + error.message); return; }
   showToast('Status updated to ' + newStatus.replace('_',' '));
@@ -540,6 +556,21 @@ async function saveModal(studentId){
     }
   };
 
+  if(!canAccess('students', 'edit')){
+    showToast('You do not have permission to edit learners.');
+    return;
+  }
+
+  if(requiresApproval('students')){
+    const { error } = await submitForApproval('students', 'update', 'students', studentId, {
+      student_id: studentId, family_id: s.family_id, student_update: studentUpdate, family_update: familyUpdate
+    });
+    if(error){ showToast('Error submitting for approval: ' + error.message); return; }
+    showToast('Submitted for approval — an admin will review these changes.');
+    closeModal();
+    return;
+  }
+
   const { error: studErr } = await sb.from('students').update(studentUpdate).eq('id', studentId);
   if(studErr){ showToast('Error saving learner: ' + studErr.message); return; }
 
@@ -558,6 +589,12 @@ function closeModal(){
 }
 
 async function createStudent(){
+  if(!canAccess('students', 'edit') || !canAccess('families', 'edit')){
+    document.getElementById('createMsg').style.color = '#B23A3A';
+    document.getElementById('createMsg').textContent = 'You do not have permission to add applications.';
+    return;
+  }
+
   const firstName = document.getElementById('firstName').value.trim();
   const lastName = document.getElementById('lastName').value.trim();
   const dob = document.getElementById('dob').value;
@@ -655,6 +692,13 @@ async function createStudent(){
   document.getElementById('preferredContact').value = '';
 
   loadStudents();
+}
+
+function onStaffReady(){
+  const card = document.getElementById('addApplicationCard');
+  if(card && !(canAccess('students','edit') && canAccess('families','edit'))){
+    card.style.display = 'none';
+  }
 }
 
 checkStaffAndInit();

@@ -282,6 +282,24 @@ async function confirmRestore(){
   if(!pendingRestoreId) return;
   const s = allData.find(x => x.id === pendingRestoreId);
   const restoreTo = (s && s.previous_status) || 'enquiry';
+
+  if(!canAccess('students', 'edit')){
+    showToast('You do not have permission to restore learners.');
+    closeRestoreModal();
+    return;
+  }
+
+  if(requiresApproval('students')){
+    const { error } = await submitForApproval('students', 'update', 'students', pendingRestoreId, {
+      student_id: pendingRestoreId, requested_action: 'restore', restore_to_status: restoreTo
+    });
+    if(error){ showToast('Error submitting for approval: ' + error.message); return; }
+    showToast('Submitted for approval — an admin will review this restore request.');
+    closeRestoreModal();
+    closeModal();
+    return;
+  }
+
   const { error } = await sb.from('students').update({ status: restoreTo, previous_status: null }).eq('id', pendingRestoreId);
   if(error){ showToast('Error restoring: ' + error.message); return; }
   showToast(`Restored as ${restoreTo.replace('_',' ')}`);

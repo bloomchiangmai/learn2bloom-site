@@ -164,6 +164,22 @@ function closeDeleteModal(){
 async function confirmDelete(){
   if(!pendingDeleteId) return;
 
+  if(!canAccess('students', 'edit')){
+    showToast('You do not have permission to archive learners.');
+    closeDeleteModal();
+    return;
+  }
+
+  if(requiresApproval('students')){
+    const { error } = await submitForApproval('students', 'delete', 'students', pendingDeleteId, {
+      student_id: pendingDeleteId, requested_action: 'archive'
+    });
+    if(error){ showToast('Error submitting for approval: ' + error.message); return; }
+    showToast('Submitted for approval — an admin will review this archive request.');
+    closeDeleteModal();
+    return;
+  }
+
   // Remember their current status so Restore can send them back to it later
   const { data: current } = await sb.from('students').select('status').eq('id', pendingDeleteId).maybeSingle();
   const priorStatus = current ? current.status : 'enquiry';

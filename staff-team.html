@@ -151,7 +151,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
       <h2>Staff & roles</h2>
       <table>
         <thead>
-          <tr><th>Name</th><th>Role</th><th>Access (role default)</th><th></th></tr>
+          <tr><th>Name</th><th>Contact</th><th>Role</th><th>Access (role default)</th><th></th></tr>
         </thead>
         <tbody id="staffTable"></tbody>
       </table>
@@ -193,7 +193,7 @@ async function onStaffReady(staffRow){
 
 async function loadTeamData(){
   const [{ data: staff }, { data: roleDefaults }, { data: overrides }] = await Promise.all([
-    sb.from('staff').select('*').order('name'),
+    sb.rpc('get_staff_with_contact'),
     sb.from('role_permissions').select('*'),
     sb.from('staff_permission_overrides').select('*')
   ]);
@@ -241,6 +241,14 @@ function renderStaffTable(){
       <tr>
         <td><strong>${s.name}</strong></td>
         <td>
+          <div style="font-size:13px;">${s.email}</div>
+          <div style="font-size:12px;color:#888780;">
+            <input type="text" value="${s.contact_phone || ''}" placeholder="Add phone…"
+              style="border:none;background:transparent;font-size:12px;color:#888780;width:130px;padding:0;"
+              onblur="updatePhone('${s.id}', this.value)">
+          </div>
+        </td>
+        <td>
           <select class="role-select" onchange="changeRole('${s.id}', this.value)">
             ${['admin','admissions','education_lead','learning_coach','it','enrollment'].map(r =>
               `<option value="${r}" ${r === s.role ? 'selected' : ''}>${roleLabel(r)}</option>`
@@ -248,10 +256,13 @@ function renderStaffTable(){
           </select>
         </td>
         <td><div class="perm-grid">${summary}</div></td>
-        <td><button class="btn-small-outline" onclick="toggleOverridePanel('${s.id}')">Overrides</button></td>
+        <td>
+          <button class="btn-small-outline" onclick="toggleOverridePanel('${s.id}')">Overrides</button>
+          <button class="btn-small-outline" style="margin-top:6px;" onclick="resetPassword('${s.id}')">Reset password</button>
+        </td>
       </tr>
       <tr class="override-row" id="override-${s.id}">
-        <td colspan="4">
+        <td colspan="5">
           <div class="override-inner">
             <p style="font-size:12px;color:#888780;margin-bottom:10px;">
               Grant this person a different access level than their role default (per module). Leave as "role default" to remove an override.
@@ -276,11 +287,46 @@ function renderStaffTable(){
         </td>
       </tr>
     `;
-  }).join('') || '<tr><td colspan="4" class="empty-state">No staff yet.</td></tr>';
+  }).join('') || '<tr><td colspan="5" class="empty-state">No staff yet.</td></tr>';
 }
 
 function toggleOverridePanel(staffId){
   document.getElementById('override-' + staffId).classList.toggle('open');
+}
+
+async function updatePhone(staffId, phone){
+  const { error } = await sb.from('staff').update({ contact_phone: phone.trim() || null }).eq('id', staffId);
+  if(error){ showToast('Error saving phone: ' + error.message); return; }
+  showToast('Phone updated.');
+}
+
+async function resetPassword(staffId){
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session){ showToast('Session expired, please sign in again.'); return; }
+
+  let res;
+  try {
+    res = await fetch('/.netlify/functions/reset-staff-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken: session.access_token, staffId })
+    });
+  } catch (e) {
+    showToast('Network error: ' + e.message);
+    return;
+  }
+
+  const result = await res.json();
+  if(!res.ok){
+    showToast(result.error || 'Something went wrong.');
+    return;
+  }
+
+  alert(
+    'Password reset for ' + result.name + '.\n\n' +
+    'New temporary password: ' + result.tempPassword + '\n\n' +
+    'Share this with them securely — it will not be shown again.'
+  );
 }
 
 async function changeRole(staffId, newRole){

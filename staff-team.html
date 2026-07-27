@@ -170,6 +170,46 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
 
   </div>
 
+  <div class="modal-overlay" id="profileModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeStaffProfile()">&times;</button>
+      <h2 id="profileModalName">Staff Profile</h2>
+      <p class="modal-sub" id="profileModalEmail"></p>
+
+      <div class="detail-section">
+        <h3>Basic Info</h3>
+        <div class="detail-row"><div class="detail-label">Job title</div><input class="detail-input" id="p-job-title"></div>
+        <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-phone"></div>
+        <div class="detail-row"><div class="detail-label">Start date</div><input type="date" class="detail-input" id="p-start-date"></div>
+        <div class="detail-row"><div class="detail-label">Date of birth</div><input type="date" class="detail-input" id="p-dob"></div>
+      </div>
+
+      <div class="detail-section">
+        <h3>Address & ID</h3>
+        <div class="detail-row"><div class="detail-label">Home address</div><input class="detail-input" id="p-address"></div>
+        <div class="detail-row"><div class="detail-label">National ID / Passport no.</div><input class="detail-input" id="p-national-id"></div>
+        <div class="detail-row"><div class="detail-label">Nationality</div><input class="detail-input" id="p-nationality"></div>
+      </div>
+
+      <div class="detail-section">
+        <h3>Emergency Contact</h3>
+        <div class="detail-row"><div class="detail-label">Name</div><input class="detail-input" id="p-emergency-name"></div>
+        <div class="detail-row"><div class="detail-label">Relationship</div><input class="detail-input" id="p-emergency-relationship"></div>
+        <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-emergency-phone"></div>
+      </div>
+
+      <div class="detail-section">
+        <h3>Notes</h3>
+        <div class="detail-row"><textarea class="detail-input" id="p-notes" rows="3" style="width:100%;"></textarea></div>
+      </div>
+
+      <div class="modal-save-bar">
+        <button class="btn-small-outline" onclick="closeStaffProfile()">Cancel</button>
+        <button class="btn-primary" onclick="saveStaffProfile()">Save changes</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
 </main>
@@ -239,14 +279,10 @@ function renderStaffTable(){
 
     return `
       <tr>
-        <td><strong>${s.name}</strong></td>
+        <td><a href="javascript:void(0)" onclick="openStaffProfile('${s.id}')" style="color:#534AB7;font-weight:600;text-decoration:none;">${s.name}</a></td>
         <td>
           <div style="font-size:13px;">${s.email}</div>
-          <div style="font-size:12px;color:#888780;">
-            <input type="text" value="${s.contact_phone || ''}" placeholder="Add phone…"
-              style="border:none;background:transparent;font-size:12px;color:#888780;width:130px;padding:0;"
-              onblur="updatePhone('${s.id}', this.value)">
-          </div>
+          <div style="font-size:12px;color:#888780;">${s.job_title || '—'}</div>
         </td>
         <td>
           <select class="role-select" onchange="changeRole('${s.id}', this.value)">
@@ -292,6 +328,60 @@ function renderStaffTable(){
 
 function toggleOverridePanel(staffId){
   document.getElementById('override-' + staffId).classList.toggle('open');
+}
+
+function openStaffProfile(staffId){
+  const s = staffCache.find(x => x.id === staffId);
+  if(!s) return;
+  const intake = s.intake_data || {};
+
+  document.getElementById('profileModalName').textContent = s.name;
+  document.getElementById('profileModalEmail').textContent = s.email;
+  document.getElementById('p-job-title').value = s.job_title || '';
+  document.getElementById('p-phone').value = s.contact_phone || '';
+  document.getElementById('p-start-date').value = intake.start_date || '';
+  document.getElementById('p-dob').value = intake.date_of_birth || '';
+  document.getElementById('p-address').value = intake.address || '';
+  document.getElementById('p-national-id').value = intake.national_id || '';
+  document.getElementById('p-nationality').value = intake.nationality || '';
+  document.getElementById('p-emergency-name').value = intake.emergency_name || '';
+  document.getElementById('p-emergency-relationship').value = intake.emergency_relationship || '';
+  document.getElementById('p-emergency-phone').value = intake.emergency_phone || '';
+  document.getElementById('p-notes').value = s.notes || '';
+
+  document.getElementById('profileModal').dataset.staffId = staffId;
+  document.getElementById('profileModal').classList.add('open');
+}
+
+function closeStaffProfile(){
+  document.getElementById('profileModal').classList.remove('open');
+}
+
+async function saveStaffProfile(){
+  const staffId = document.getElementById('profileModal').dataset.staffId;
+  const v = id => document.getElementById(id).value.trim();
+
+  const update = {
+    job_title: v('p-job-title') || null,
+    contact_phone: v('p-phone') || null,
+    notes: v('p-notes') || null,
+    intake_data: {
+      start_date: v('p-start-date') || null,
+      date_of_birth: v('p-dob') || null,
+      address: v('p-address') || null,
+      national_id: v('p-national-id') || null,
+      nationality: v('p-nationality') || null,
+      emergency_name: v('p-emergency-name') || null,
+      emergency_relationship: v('p-emergency-relationship') || null,
+      emergency_phone: v('p-emergency-phone') || null
+    }
+  };
+
+  const { error } = await sb.from('staff').update(update).eq('id', staffId);
+  if(error){ showToast('Error saving profile: ' + error.message); return; }
+  showToast('Profile saved.');
+  closeStaffProfile();
+  loadTeamData();
 }
 
 async function updatePhone(staffId, phone){

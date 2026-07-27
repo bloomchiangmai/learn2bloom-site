@@ -284,6 +284,10 @@ function toggleOverridePanel(staffId){
 }
 
 async function changeRole(staffId, newRole){
+  if(window.currentStaff && staffId === window.currentStaff.id){
+    const ok = confirm('This changes your own role. If the new role has less access, you may lose access to this page. Continue?');
+    if(!ok){ loadTeamData(); return; }
+  }
   const { error } = await sb.from('staff').update({ role: newRole }).eq('id', staffId);
   if(error){ showToast('Error: ' + error.message); return; }
   showToast('Role updated.');
@@ -291,6 +295,10 @@ async function changeRole(staffId, newRole){
 }
 
 async function setOverride(staffId, module, level){
+  if(window.currentStaff && staffId === window.currentStaff.id && level && level !== 'full'){
+    const ok = confirm('This changes your own access to "' + module + '". If this reduces your access, you may lose the ability to undo it yourself. Continue?');
+    if(!ok){ loadTeamData(); return; }
+  }
   if(!level){
     const { error } = await sb.from('staff_permission_overrides').delete().eq('staff_id', staffId).eq('module', module);
     if(error){ showToast('Error: ' + error.message); return; }

@@ -51,7 +51,64 @@ async function checkStaffAndInit(){
   }
   document.getElementById('loginView').style.display = 'none';
   document.getElementById('adminView').style.display = 'block';
-  loadStudents();
+
+  window.currentStaff = staffRow;
+  window.currentStaffRole = staffRow.role;
+  await loadPermissions(staffRow);
+  applyTeamTabVisibility();
+
+  if(typeof loadStudents === 'function') loadStudents();
+  if(typeof onStaffReady === 'function') onStaffReady(staffRow);
+}
+
+// ---- Permissions ----
+// Loads the effective permission level for each module: per-staff override wins,
+// otherwise falls back to the role's default from role_permissions.
+window.currentPermissions = {};
+
+async function loadPermissions(staffRow){
+  const { data: roleDefaults } = await sb.from('role_permissions').select('*').eq('role', staffRow.role);
+  const { data: overrides } = await sb.from('staff_permission_overrides').select('*').eq('staff_id', staffRow.id);
+
+  const perms = {};
+  (roleDefaults || []).forEach(r => {
+    perms[r.module] = { level: r.level, requires_approval: r.requires_approval };
+  });
+  (overrides || []).forEach(o => {
+    perms[o.module] = { level: o.level, requires_approval: (perms[o.module] && perms[o.module].requires_approval) || false };
+  });
+  window.currentPermissions = perms;
+}
+
+function canAccess(module, minLevel){
+  const order = { none: 0, view: 1, edit: 2, full: 3 };
+  const perm = window.currentPermissions[module];
+  if(!perm) return false;
+  return order[perm.level] >= order[minLevel];
+}
+
+function requiresApproval(module){
+  const perm = window.currentPermissions[module];
+  return !!(perm && perm.requires_approval);
+}
+
+function applyTeamTabVisibility(){
+  const tab = document.getElementById('teamNavTab');
+  if(tab){
+    const isAdminOrIt = window.currentStaffRole === 'admin' || window.currentStaffRole === 'it';
+    tab.style.display = isAdminOrIt ? '' : 'none';
+  }
+}
+
+// ---- Approval request helper ----
+// Instead of writing directly, sensitive actions can route through this to
+// create a pending approval_requests row for an admin/IT to review.
+async function submitForApproval(module, actionType, entityTable, entityId, payload){
+  const { error } = await sb.from('approval_requests').insert({
+    module, action_type: actionType, entity_table: entityTable,
+    entity_id: entityId, payload, requested_by: window.currentStaff.id
+  });
+  return { error };
 }
 
 async function doLogin(){

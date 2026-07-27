@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Team & Permissions — Bloom Chiangmai</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="staff-shared.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#FDFAF5;color:#2C2C2A;width:100%;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:10px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.logo{font-family:Georgia,serif;font-size:22px;font-weight:700;color:#2C2C2A;text-decoration:none;}
+.nav-tabs{display:flex;gap:8px;}
+.nav-tab{font-size:13px;font-weight:600;padding:8px 16px;border-radius:8px;text-decoration:none;color:#5F5E5A;}
+.nav-tab.active{background:#534AB7;color:#fff;}
+
+main{max-width:1100px;margin:0 auto;padding:60px 24px 100px;min-height:70vh;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#534AB7;text-transform:uppercase;margin-bottom:14px;}
+h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin-bottom:8px;}
+.sub{font-size:15px;color:#5F5E5A;margin-bottom:40px;}
+
+.card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:28px;margin-bottom:32px;}
+.card h2{font-family:Georgia,serif;font-size:20px;font-weight:700;margin-bottom:20px;color:#2C2C2A;}
+
+.login-box{max-width:420px;margin:80px auto;text-align:center;}
+.login-box input{width:100%;padding:12px 14px;border:1px solid #E8E3D8;border-radius:8px;font-size:15px;margin-bottom:12px;background:#fff;}
+.login-box button{width:100%;padding:12px;border:none;border-radius:8px;background:#534AB7;color:#fff;font-size:15px;font-weight:600;cursor:pointer;}
+.login-box button:hover{background:#443c99;}
+.error-msg{color:#B23A3A;font-size:13px;margin-top:10px;}
+.denied-box{max-width:480px;margin:80px auto;text-align:center;color:#5F5E5A;}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px;align-items:end;}
+.form-grid label{display:block;font-size:12px;font-weight:600;color:#5F5E5A;margin-bottom:6px;}
+.form-grid input,.form-grid select{width:100%;padding:10px 12px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;background:#fff;}
+
+.btn-primary{padding:12px 24px;border:none;border-radius:8px;background:#534AB7;color:#fff;font-size:14px;font-weight:600;cursor:pointer;}
+.btn-primary:hover{background:#443c99;}
+.btn-small-outline{padding:6px 12px;font-size:12px;border:1px solid #534AB7;border-radius:6px;background:#fff;color:#534AB7;cursor:pointer;}
+.btn-small-danger{padding:6px 12px;font-size:12px;border:1px solid #B23A3A;border-radius:6px;background:#fff;color:#B23A3A;cursor:pointer;}
+
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th{text-align:left;padding:10px 12px;border-bottom:2px solid #E8E3D8;color:#5F5E5A;font-size:12px;text-transform:uppercase;letter-spacing:.5px;}
+td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
+.role-select{font-size:13px;padding:6px 10px;border-radius:6px;border:1px solid #E8E3D8;background:#fff;}
+
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+.signout-link{font-size:13px;color:#888780;cursor:pointer;text-decoration:underline;}
+.toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
+
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px;}
+.badge-none{background:#EDEBE6;color:#888780;}
+.badge-view{background:#E6ECF7;color:#3457A8;}
+.badge-edit{background:#FFF1D6;color:#9A6A1B;}
+.badge-full{background:#E3F0E1;color:#2E6B2A;}
+.badge-approval{background:#FBE7E7;color:#B23A3A;font-size:10px;margin-left:4px;}
+
+.perm-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px;}
+.perm-cell{text-align:center;}
+.perm-cell .mod-name{font-size:10px;color:#888780;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+
+.override-row{display:none;background:#fff;}
+.override-row.open{display:table-row;}
+.override-inner{padding:16px;}
+
+.approval-payload{font-family:monospace;font-size:12px;background:#fff;border:1px solid #E8E3D8;border-radius:6px;padding:10px;max-width:400px;overflow-x:auto;white-space:pre-wrap;}
+.empty-state{color:#888780;font-size:14px;padding:20px;text-align:center;}
+
+@media (max-width: 768px) {
+  nav{flex-direction:column;gap:10px;padding:14px 20px;}
+  .form-grid{grid-template-columns:1fr;}
+  table{font-size:12px;}
+  th,td{padding:8px 6px;}
+  .perm-grid{grid-template-columns:repeat(3,1fr);}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Bloom Chiangmai</a>
+  <div class="nav-tabs">
+    <a href="staff-admissions.html" class="nav-tab">Admissions</a>
+    <a href="learners.html" class="nav-tab">Learners</a>
+    <a href="archive.html" class="nav-tab">Archive</a>
+    <a href="staff-team.html" class="nav-tab active" id="teamNavTab">Team</a>
+  </div>
+</nav>
+
+<main>
+
+  <div id="authLoading" style="text-align:center;padding:80px 20px;color:#888780;font-size:14px;">Loading…</div>
+
+  <div id="loginView" class="login-box" style="display:none;">
+    <div class="eyebrow">Staff Access</div>
+    <h1>Sign in</h1>
+    <p class="sub">Staff accounts only.</p>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="doLogin()">Sign in</button>
+    <div class="error-msg" id="loginError"></div>
+  </div>
+
+  <div id="deniedView" class="denied-box" style="display:none;">
+    <div class="eyebrow">Team & Permissions</div>
+    <h1>Restricted</h1>
+    <p>This page is only available to Admin and IT staff.</p>
+    <p style="margin-top:20px;"><span class="signout-link" onclick="doLogout()">Sign out</span></p>
+  </div>
+
+  <div id="adminView" style="display:none;">
+    <div class="top-bar">
+      <div>
+        <div class="eyebrow">Internal Admin</div>
+        <h1>Team & Permissions</h1>
+      </div>
+      <span class="signout-link" onclick="doLogout()">Sign out</span>
+    </div>
+
+    <div class="card">
+      <h2>Add a staff member</h2>
+      <p style="font-size:13px;color:#888780;margin-bottom:16px;">
+        The person needs a Supabase Auth account first (created via the Supabase dashboard → Authentication → Add user).
+        Enter their exact login email below to link them as staff.
+      </p>
+      <div class="form-grid">
+        <div>
+          <label>Full name</label>
+          <input type="text" id="newStaffName" placeholder="Jane Doe">
+        </div>
+        <div>
+          <label>Login email</label>
+          <input type="email" id="newStaffEmail" placeholder="jane@learn2bloom.org">
+        </div>
+        <div>
+          <label>Role</label>
+          <select id="newStaffRole">
+            <option value="admin">Admin</option>
+            <option value="admissions">Admissions</option>
+            <option value="education_lead">Education Lead</option>
+            <option value="learning_coach" selected>Learning Coach</option>
+            <option value="it">IT</option>
+            <option value="enrollment">Enrollment</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="addStaff()">Add staff member</button>
+      <div class="error-msg" id="addStaffError"></div>
+    </div>
+
+    <div class="card">
+      <h2>Staff & roles</h2>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Role</th><th>Access (role default)</th><th></th></tr>
+        </thead>
+        <tbody id="staffTable"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Pending approvals</h2>
+      <table>
+        <thead>
+          <tr><th>Requested by</th><th>Module</th><th>Action</th><th>Details</th><th>When</th><th></th></tr>
+        </thead>
+        <tbody id="approvalsTable"></tbody>
+      </table>
+      <div id="approvalsEmpty" class="empty-state" style="display:none;">No pending approvals.</div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+</main>
+
+<script>
+const MODULES = ['families','students','staff','calendar','payments','settings'];
+let staffCache = [];
+let roleDefaultsCache = [];
+let overridesCache = [];
+
+async function onStaffReady(staffRow){
+  const isAdminOrIt = staffRow.role === 'admin' || staffRow.role === 'it';
+  if(!isAdminOrIt){
+    document.getElementById('adminView').style.display = 'none';
+    document.getElementById('deniedView').style.display = 'block';
+    return;
+  }
+  loadTeamData();
+  loadApprovals();
+}
+
+async function loadTeamData(){
+  const [{ data: staff }, { data: roleDefaults }, { data: overrides }] = await Promise.all([
+    sb.from('staff').select('*').order('name'),
+    sb.from('role_permissions').select('*'),
+    sb.from('staff_permission_overrides').select('*')
+  ]);
+  staffCache = staff || [];
+  roleDefaultsCache = roleDefaults || [];
+  overridesCache = overrides || [];
+  renderStaffTable();
+}
+
+function roleLabel(role){
+  return {
+    admin:'Admin', admissions:'Admissions', education_lead:'Education Lead',
+    learning_coach:'Learning Coach', it:'IT', enrollment:'Enrollment'
+  }[role] || role;
+}
+
+function levelBadge(level){
+  return `<span class="badge badge-${level}">${level}</span>`;
+}
+
+function getRoleDefaults(role){
+  const map = {};
+  roleDefaultsCache.filter(r => r.role === role).forEach(r => map[r.module] = r);
+  return map;
+}
+
+function getOverridesFor(staffId){
+  const map = {};
+  overridesCache.filter(o => o.staff_id === staffId).forEach(o => map[o.module] = o);
+  return map;
+}
+
+function renderStaffTable(){
+  const tbody = document.getElementById('staffTable');
+  tbody.innerHTML = staffCache.map(s => {
+    const defaults = getRoleDefaults(s.role);
+    const overrides = getOverridesFor(s.id);
+    const summary = MODULES.map(m => {
+      const eff = overrides[m] ? overrides[m].level : (defaults[m] ? defaults[m].level : 'none');
+      const overridden = !!overrides[m];
+      return `<div class="perm-cell"><div class="mod-name">${m}${overridden ? ' *' : ''}</div>${levelBadge(eff)}</div>`;
+    }).join('');
+
+    return `
+      <tr>
+        <td><strong>${s.name}</strong></td>
+        <td>
+          <select class="role-select" onchange="changeRole('${s.id}', this.value)">
+            ${['admin','admissions','education_lead','learning_coach','it','enrollment'].map(r =>
+              `<option value="${r}" ${r === s.role ? 'selected' : ''}>${roleLabel(r)}</option>`
+            ).join('')}
+          </select>
+        </td>
+        <td><div class="perm-grid">${summary}</div></td>
+        <td><button class="btn-small-outline" onclick="toggleOverridePanel('${s.id}')">Overrides</button></td>
+      </tr>
+      <tr class="override-row" id="override-${s.id}">
+        <td colspan="4">
+          <div class="override-inner">
+            <p style="font-size:12px;color:#888780;margin-bottom:10px;">
+              Grant this person a different access level than their role default (per module). Leave as "role default" to remove an override.
+            </p>
+            <div class="perm-grid">
+              ${MODULES.map(m => {
+                const current = overrides[m] ? overrides[m].level : '';
+                return `
+                  <div class="perm-cell">
+                    <div class="mod-name">${m}</div>
+                    <select class="role-select" style="width:100%;" onchange="setOverride('${s.id}','${m}',this.value)">
+                      <option value="" ${!current ? 'selected' : ''}>role default</option>
+                      <option value="none" ${current==='none'?'selected':''}>none</option>
+                      <option value="view" ${current==='view'?'selected':''}>view</option>
+                      <option value="edit" ${current==='edit'?'selected':''}>edit</option>
+                      <option value="full" ${current==='full'?'selected':''}>full</option>
+                    </select>
+                  </div>`;
+              }).join('')}
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('') || '<tr><td colspan="4" class="empty-state">No staff yet.</td></tr>';
+}
+
+function toggleOverridePanel(staffId){
+  document.getElementById('override-' + staffId).classList.toggle('open');
+}
+
+async function changeRole(staffId, newRole){
+  const { error } = await sb.from('staff').update({ role: newRole }).eq('id', staffId);
+  if(error){ showToast('Error: ' + error.message); return; }
+  showToast('Role updated.');
+  loadTeamData();
+}
+
+async function setOverride(staffId, module, level){
+  if(!level){
+    const { error } = await sb.from('staff_permission_overrides').delete().eq('staff_id', staffId).eq('module', module);
+    if(error){ showToast('Error: ' + error.message); return; }
+    showToast('Override removed — back to role default.');
+  } else {
+    const { error } = await sb.from('staff_permission_overrides').upsert({
+      staff_id: staffId, module, level, granted_by: window.currentStaff.id
+    });
+    if(error){ showToast('Error: ' + error.message); return; }
+    showToast('Override saved.');
+  }
+  loadTeamData();
+}
+
+async function addStaff(){
+  const name = document.getElementById('newStaffName').value.trim();
+  const email = document.getElementById('newStaffEmail').value.trim();
+  const role = document.getElementById('newStaffRole').value;
+  const errEl = document.getElementById('addStaffError');
+  errEl.textContent = '';
+
+  if(!name || !email){ errEl.textContent = 'Enter a name and email.'; return; }
+
+  const { data: authUserId, error: lookupErr } = await sb.rpc('lookup_auth_user_by_email', { lookup_email: email });
+  if(lookupErr){ errEl.textContent = 'Lookup failed: ' + lookupErr.message; return; }
+  if(!authUserId){ errEl.textContent = 'No Supabase Auth account found for that email. Create it first in the Supabase dashboard.'; return; }
+
+  const { error: insertErr } = await sb.from('staff').insert({ auth_user_id: authUserId, name, role });
+  if(insertErr){ errEl.textContent = 'Error: ' + insertErr.message; return; }
+
+  document.getElementById('newStaffName').value = '';
+  document.getElementById('newStaffEmail').value = '';
+  showToast('Staff member added.');
+  loadTeamData();
+}
+
+async function loadApprovals(){
+  const { data, error } = await sb.from('approval_requests')
+    .select('*, staff:requested_by(name)')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+
+  const tbody = document.getElementById('approvalsTable');
+  const emptyEl = document.getElementById('approvalsEmpty');
+  if(error || !data || data.length === 0){
+    tbody.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td>${r.staff ? r.staff.name : '—'}</td>
+      <td>${r.module}</td>
+      <td>${r.action_type}</td>
+      <td><div class="approval-payload">${escapeHtml(JSON.stringify(r.payload, null, 2))}</div></td>
+      <td>${new Date(r.created_at).toLocaleString()}</td>
+      <td>
+        <button class="btn-small-outline" onclick="reviewRequest('${r.id}','approved')">Approve</button>
+        <button class="btn-small-danger" onclick="reviewRequest('${r.id}','rejected')">Reject</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function escapeHtml(str){
+  return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function reviewRequest(id, status){
+  const { error } = await sb.from('approval_requests').update({
+    status, reviewed_by: window.currentStaff.id, reviewed_at: new Date().toISOString()
+  }).eq('id', id);
+  if(error){ showToast('Error: ' + error.message); return; }
+  showToast(status === 'approved'
+    ? 'Approved. Remember: this only marks the request approved — apply the actual change if it hasn\'t already taken effect.'
+    : 'Rejected.');
+  loadApprovals();
+}
+
+checkStaffAndInit();
+</script>
+
+</body>
+</html>

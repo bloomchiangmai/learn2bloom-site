@@ -120,8 +120,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
     <div class="card">
       <h2>Add a staff member</h2>
       <p style="font-size:13px;color:#888780;margin-bottom:16px;">
-        The person needs a Supabase Auth account first (created via the Supabase dashboard → Authentication → Add user).
-        Enter their exact login email below to link them as staff.
+        Creates their login and staff record in one step. You'll get a temporary password to share with them — they can sign in and change it later.
       </p>
       <div class="form-grid">
         <div>
@@ -315,17 +314,40 @@ async function addStaff(){
 
   if(!name || !email){ errEl.textContent = 'Enter a name and email.'; return; }
 
-  const { data: authUserId, error: lookupErr } = await sb.rpc('lookup_auth_user_by_email', { lookup_email: email });
-  if(lookupErr){ errEl.textContent = 'Lookup failed: ' + lookupErr.message; return; }
-  if(!authUserId){ errEl.textContent = 'No Supabase Auth account found for that email. Create it first in the Supabase dashboard.'; return; }
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session){ errEl.textContent = 'Session expired, please sign in again.'; return; }
 
-  const { error: insertErr } = await sb.from('staff').insert({ auth_user_id: authUserId, name, role });
-  if(insertErr){ errEl.textContent = 'Error: ' + insertErr.message; return; }
+  let res;
+  try {
+    res = await fetch('/.netlify/functions/create-staff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken: session.access_token, name, email, role })
+    });
+  } catch (e) {
+    errEl.textContent = 'Network error: ' + e.message;
+    return;
+  }
+
+  const result = await res.json();
+  if(!res.ok){
+    errEl.textContent = result.error || 'Something went wrong.';
+    return;
+  }
 
   document.getElementById('newStaffName').value = '';
   document.getElementById('newStaffEmail').value = '';
-  showToast('Staff member added.');
+  showTempPasswordModal(result.email, result.tempPassword);
   loadTeamData();
+}
+
+function showTempPasswordModal(email, tempPassword){
+  alert(
+    'Staff member added.\n\n' +
+    'Email: ' + email + '\n' +
+    'Temporary password: ' + tempPassword + '\n\n' +
+    'Share this with them securely — it will not be shown again. They can change their password after signing in.'
+  );
 }
 
 async function loadApprovals(){

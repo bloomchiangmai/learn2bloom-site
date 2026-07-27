@@ -32,6 +32,13 @@ create policy "staff full access families" on families
 create policy "parent view own family" on families
   for select using (auth_user_id = auth.uid());
 
+create policy "parent update own family" on families
+  for update using (auth_user_id = auth.uid())
+  with check (auth_user_id = auth.uid());
+  -- Lets parents edit their own contact info (phone, preferred contact,
+  -- emergency contact) from the Parent Portal dashboard. Learner details
+  -- (DOB, health notes, etc.) remain staff-only after initial registration.
+
 
 -- ============================================================
 -- STAFF
@@ -142,6 +149,8 @@ create policy "parent view own payments" on payments
 -- 2026-07-26  Added previous_status to students, used by Archive page's
 --             Restore button to send someone back to their prior status
 --             instead of always resetting to 'enquiry'
+-- 2026-07-27  Added parent update RLS policy on families, so parents can
+--             edit their own contact info from the Parent Portal dashboard
 --
 -- When making a future schema change: add the migration SQL above this line,
 -- update the relevant table definition above, and add a dated entry here.

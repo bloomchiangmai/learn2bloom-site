@@ -377,20 +377,21 @@ function renderProfileAccess(staffId){
     return `<div class="perm-cell"><div class="mod-name">${m}${overridden ? ' *' : ''}</div>${levelBadge(eff)}</div>`;
   }).join('');
 
-  document.getElementById('p-overrides-panel').innerHTML = MODULES.map(m => {
-    const current = overrides[m] ? overrides[m].level : '';
-    return `
-      <div class="perm-cell">
-        <div class="mod-name">${m} override</div>
-        <select class="role-select" style="width:100%;" onchange="setOverride('${staffId}','${m}',this.value)">
-          <option value="" ${!current ? 'selected' : ''}>role default</option>
-          <option value="none" ${current==='none'?'selected':''}>none</option>
-          <option value="view" ${current==='view'?'selected':''}>view</option>
-          <option value="edit" ${current==='edit'?'selected':''}>edit</option>
-          <option value="full" ${current==='full'?'selected':''}>full</option>
-        </select>
-      </div>`;
-  }).join('');
+  document.getElementById('p-overrides-panel').innerHTML = `
+    <div class="perm-grid-label" style="grid-column:1/-1;font-size:11px;color:#888780;margin-top:8px;margin-bottom:4px;">Override (optional)</div>
+    ${MODULES.map(m => {
+      const current = overrides[m] ? overrides[m].level : '';
+      return `
+        <div class="perm-cell">
+          <select class="role-select" style="width:100%;font-size:12px;padding:6px 4px;" onchange="setOverride('${staffId}','${m}',this.value)">
+            <option value="" ${!current ? 'selected' : ''}>Default</option>
+            <option value="none" ${current==='none'?'selected':''}>None</option>
+            <option value="view" ${current==='view'?'selected':''}>View</option>
+            <option value="edit" ${current==='edit'?'selected':''}>Edit</option>
+            <option value="full" ${current==='full'?'selected':''}>Full</option>
+          </select>
+        </div>`;
+    }).join('')}
 }
 
 function closeStaffProfile(){

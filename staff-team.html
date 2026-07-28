@@ -162,16 +162,7 @@ async function openStaffProfile(staffId){
         ${canEditAdminFields ? `
         <div class="detail-row"><div class="detail-label">Account email</div>
           <input class="detail-input" id="p-email" type="email" value="${s.email || ''}" data-original="${s.email || ''}">
-        </div>
-        ${!isSelf ? `
-        <div class="detail-row"><div class="detail-label"></div>
-          <div style="display:flex;gap:8px;align-items:center;flex:1;">
-            <button class="btn-small-outline" onclick="resetPasswordFromTeam('${staffId}')">Email reset link</button>
-            <span style="font-size:12px;color:#888780;">or</span>
-            <input type="password" id="p-admin-set-password" placeholder="Set password directly" style="flex:1;padding:6px 10px;border:1px solid #E8E3D8;border-radius:6px;font-size:13px;">
-            <button class="btn-small-outline" onclick="setPasswordDirectlyFromTeam('${staffId}')">Set</button>
-          </div>
-        </div>` : ''}` : ''}
+        </div>` : ''}
         <div class="detail-row"><div class="detail-label">Job title</div>
           <select class="detail-input" id="p-job-title" ${canEditAdminFields ? '' : 'disabled'}>
             <option value="">— Select —</option>
@@ -228,7 +219,16 @@ async function openStaffProfile(staffId){
         <button class="btn-small-outline" onclick="changeOwnPassword()">Update password</button>
         <div style="color:#B23A3A;font-size:13px;margin-top:8px;" id="passwordChangeError"></div>
         <div style="color:#2E6B2A;font-size:13px;margin-top:8px;" id="passwordChangeSuccess"></div>
-      </div>` : ''}
+      </div>` : (canEditAdminFields ? `
+      <div class="detail-section">
+        <h3>Password</h3>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn-small-outline" onclick="resetPasswordFromTeam('${staffId}')">Email reset link</button>
+          <span style="font-size:12px;color:#888780;">or</span>
+          <input type="password" id="p-admin-set-password" placeholder="Set password directly" style="flex:1;padding:6px 10px;border:1px solid #E8E3D8;border-radius:6px;font-size:13px;">
+          <button class="btn-small-outline" onclick="setPasswordDirectlyFromTeam('${staffId}')">Set</button>
+        </div>
+      </div>` : '')}
 
       <div class="modal-save-bar">
         <button class="btn-small-outline" onclick="closeStaffProfile()">Cancel</button>

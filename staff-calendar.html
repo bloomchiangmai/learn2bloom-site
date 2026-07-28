@@ -2783,6 +2783,26 @@ async function exportCalendarPDF(){
     doc.text('\u00A9 '+new Date().getFullYear()+' Bloom Space Hub Calendar \u00B7 Bloom Chiangmai. All rights reserved.',pageW/2,pageH-margin-3,{align:'center'});
 
     doc.save('Bloom-Chiangmai-Academic-Calendar-2026-2027.pdf');
+
+    // Also publish this PDF to the public site (Supabase Storage) so
+    // the marketing site's download link always reflects the latest export.
+    try{
+      const pdfBlob=doc.output('blob');
+      const storagePath='calendar/Bloom-Chiangmai-Academic-Calendar-2026-2027.pdf';
+      const{error:uploadErr}=await _sb.storage.from('public-documents').upload(storagePath,pdfBlob,{contentType:'application/pdf',upsert:true});
+      if(uploadErr)throw uploadErr;
+
+      const{data:{user}}=await _sb.auth.getUser();
+      await _sb.from('site_documents').upsert({
+        key:'academic_calendar_pdf',
+        storage_path:storagePath,
+        updated_at:new Date().toISOString(),
+        updated_by:user?.email||user?.id||'unknown'
+      },{onConflict:'key'});
+    }catch(publishErr){
+      console.error('Publishing PDF to public site failed',publishErr);
+      alert('PDF downloaded, but publishing it to the website failed. The public download link was not updated. Please try again or check your connection.');
+    }
   }catch(err){
     console.error('PDF export failed',err);
     alert('Something went wrong generating the PDF. Please try again.');

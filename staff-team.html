@@ -132,6 +132,7 @@ function renderDirectory(){
       <div class="person-name">${s.name}${s.id === window.currentStaff.id ? '<span class="you-badge">You</span>' : ''}</div>
       <div class="person-role">${roleLabel(s.role)}</div>
       ${s.job_title ? `<div class="person-detail">${s.job_title}</div>` : ''}
+      <div class="person-detail">${s.staff_id_code || '—'}</div>
       <div class="person-detail">${s.email}</div>
       ${s.contact_phone ? `<div class="person-detail">${s.contact_phone}</div>` : ''}
     </div>

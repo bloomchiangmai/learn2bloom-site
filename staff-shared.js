@@ -191,12 +191,30 @@ async function submitForApproval(module, actionType, entityTable, entityId, payl
 }
 
 async function doLogin(){
-  const email = document.getElementById('loginEmail').value.trim();
+  const staffIdCode = document.getElementById('loginStaffId').value.trim();
   const password = document.getElementById('loginPassword').value;
   const errEl = document.getElementById('loginError');
   errEl.textContent = '';
-  if(!email || !password){ errEl.textContent = 'Enter email and password.'; return; }
-  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if(!staffIdCode || !password){ errEl.textContent = 'Enter your Staff ID and password.'; return; }
+
+  let resolveRes;
+  try {
+    resolveRes = await fetch('https://ndlcfgkhxjoancdvmgmr.supabase.co/functions/v1/resolve-staff-login-identity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ staff_id_code: staffIdCode })
+    });
+  } catch (e) {
+    errEl.textContent = 'Network error: ' + e.message;
+    return;
+  }
+  const resolveData = await resolveRes.json();
+  if(!resolveRes.ok){
+    errEl.textContent = resolveData.error || 'Could not find that Staff ID.';
+    return;
+  }
+
+  const { error } = await sb.auth.signInWithPassword({ email: resolveData.email, password });
   if(error){ errEl.textContent = error.message; return; }
 
   const { data: { session } } = await sb.auth.getSession();

@@ -67,11 +67,21 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: 'Could not create account: ' + createErr.message }) };
   }
 
+  // Generate the next sequential Staff ID (e.g. BMSSTF03), permanent — no year component.
+  const { data: existingStaff } = await admin.from('staff').select('staff_id_code');
+  let maxN = 0;
+  (existingStaff || []).forEach(s => {
+    const match = (s.staff_id_code || '').match(/^BMSSTF(\d+)$/);
+    if (match) maxN = Math.max(maxN, parseInt(match[1], 10));
+  });
+  const staffIdCode = 'BMSSTF' + String(maxN + 1).padStart(2, '0');
+
   // Create the staff row linked to the new auth user.
   const { error: staffErr } = await admin.from('staff').insert({
     auth_user_id: newUser.user.id,
     name,
-    role
+    role,
+    staff_id_code: staffIdCode
   });
 
   if (staffErr) {
@@ -82,7 +92,7 @@ exports.handler = async (event) => {
 
   return {
     statusCode: 200,
-    body: JSON.stringify({ success: true, email, tempPassword })
+    body: JSON.stringify({ success: true, email, tempPassword, staffIdCode })
   };
 };
 // redeploy trigger 1785164373

@@ -169,6 +169,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
       <button class="modal-close" onclick="closeStaffProfile()">&times;</button>
       <h2 id="profileModalName">Staff Profile</h2>
       <p class="modal-sub" id="profileModalEmail"></p>
+      <p class="modal-sub" id="profileModalStaffId" style="margin-top:-20px;font-family:monospace;"></p>
 
       <div class="detail-section">
         <h3>Account & Access</h3>
@@ -346,6 +347,7 @@ function openStaffProfile(staffId){
 
   document.getElementById('profileModalName').textContent = s.name;
   document.getElementById('profileModalEmail').textContent = s.email;
+  document.getElementById('profileModalStaffId').textContent = 'Staff ID: ' + (s.staff_id_code || '—');
   document.getElementById('p-name').value = s.name || '';
   document.getElementById('p-email').value = s.email || '';
   document.getElementById('p-role').value = s.role;
@@ -605,16 +607,17 @@ async function addStaff(){
 
   document.getElementById('newStaffName').value = '';
   document.getElementById('newStaffEmail').value = '';
-  showTempPasswordModal(result.email, result.tempPassword);
+  showTempPasswordModal(result.email, result.tempPassword, result.staffIdCode);
   loadTeamData();
 }
 
-function showTempPasswordModal(email, tempPassword){
+function showTempPasswordModal(email, tempPassword, staffIdCode){
   alert(
     'Staff member added.\n\n' +
+    'Staff ID: ' + staffIdCode + '\n' +
     'Email: ' + email + '\n' +
     'Temporary password: ' + tempPassword + '\n\n' +
-    'Share this with them securely — it will not be shown again. They can change their password after signing in.'
+    'They can sign in with their Staff ID and this password. Share this securely — it will not be shown again.'
   );
 }
 

@@ -149,15 +149,15 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
         <div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;font-size:13px;">
           <span style="color:#888780;">Staff ID</span>
           <span id="resultStaffId" style="font-family:monospace;user-select:all;"></span>
-          <button type="button" class="btn-copy" onclick="copyResultField('resultStaffId')">Copy</button>
+          <button type="button" class="btn-copy" onclick="copyResultField('resultStaffId', this)">Copy</button>
 
           <span style="color:#888780;">Email</span>
           <span id="resultEmail" style="font-family:monospace;user-select:all;"></span>
-          <button type="button" class="btn-copy" onclick="copyResultField('resultEmail')">Copy</button>
+          <button type="button" class="btn-copy" onclick="copyResultField('resultEmail', this)">Copy</button>
 
           <span style="color:#888780;">Password</span>
           <span id="resultPassword" style="font-family:monospace;user-select:all;"></span>
-          <button type="button" class="btn-copy" onclick="copyResultField('resultPassword')">Copy</button>
+          <button type="button" class="btn-copy" onclick="copyResultField('resultPassword', this)">Copy</button>
         </div>
         <p id="resultNote" style="font-size:12px;color:#888780;margin:10px 0 0;"></p>
       </div>
@@ -731,10 +731,9 @@ function showTempPasswordModal(email, tempPassword, staffIdCode, wasCustomPasswo
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function copyResultField(elId){
+function copyResultField(elId, btn){
   const text = document.getElementById(elId).textContent;
   navigator.clipboard.writeText(text).then(()=>{
-    const btn = event.target;
     const original = btn.textContent;
     btn.textContent = 'Copied!';
     btn.classList.add('copied');

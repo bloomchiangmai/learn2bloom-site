@@ -163,9 +163,15 @@ async function openStaffProfile(staffId){
         <div class="detail-row"><div class="detail-label">Account email</div>
           <input class="detail-input" id="p-email" type="email" value="${s.email || ''}" data-original="${s.email || ''}">
         </div>
+        ${!isSelf ? `
         <div class="detail-row"><div class="detail-label"></div>
-          <button class="btn-small-outline" onclick="resetPasswordFromTeam('${staffId}')">Reset password</button>
-        </div>` : ''}
+          <div style="display:flex;gap:8px;align-items:center;flex:1;">
+            <button class="btn-small-outline" onclick="resetPasswordFromTeam('${staffId}')">Email reset link</button>
+            <span style="font-size:12px;color:#888780;">or</span>
+            <input type="password" id="p-admin-set-password" placeholder="Set password directly" style="flex:1;padding:6px 10px;border:1px solid #E8E3D8;border-radius:6px;font-size:13px;">
+            <button class="btn-small-outline" onclick="setPasswordDirectlyFromTeam('${staffId}')">Set</button>
+          </div>
+        </div>` : ''}` : ''}
         <div class="detail-row"><div class="detail-label">Job title</div>
           <select class="detail-input" id="p-job-title" ${canEditAdminFields ? '' : 'disabled'}>
             <option value="">— Select —</option>
@@ -208,12 +214,20 @@ async function openStaffProfile(staffId){
 
       ${isSelf ? `
       <div class="detail-section">
-        <h3>Change Password</h3>
-        <div class="detail-row"><div class="detail-label">New password</div><input type="password" class="detail-input" id="p-new-password"></div>
-        <div class="detail-row"><div class="detail-label">Confirm</div><input type="password" class="detail-input" id="p-confirm-password"></div>
-        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-          <button class="btn-small-outline" onclick="changeOwnPassword()">Update password</button>
+        <h3>Password</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:10px;">
+          <div>
+            <div class="field-note" style="margin-left:0;margin-bottom:4px;">New password</div>
+            <input type="password" class="detail-input" id="p-new-password" placeholder="At least 8 characters" style="width:100%;">
+          </div>
+          <div>
+            <div class="field-note" style="margin-left:0;margin-bottom:4px;">Confirm password</div>
+            <input type="password" class="detail-input" id="p-confirm-password" style="width:100%;">
+          </div>
         </div>
+        <button class="btn-small-outline" onclick="changeOwnPassword()">Update password</button>
+        <div style="color:#B23A3A;font-size:13px;margin-top:8px;" id="passwordChangeError"></div>
+        <div style="color:#2E6B2A;font-size:13px;margin-top:8px;" id="passwordChangeSuccess"></div>
       </div>` : ''}
 
       <div class="modal-save-bar">
@@ -316,16 +330,49 @@ async function resetPasswordFromTeam(staffId){
 async function changeOwnPassword(){
   const pw = document.getElementById('p-new-password').value;
   const confirm = document.getElementById('p-confirm-password').value;
+  const errEl = document.getElementById('passwordChangeError');
+  const successEl = document.getElementById('passwordChangeSuccess');
+  errEl.textContent = '';
+  successEl.textContent = '';
 
-  if(!pw || pw.length < 8){ showToast('Password must be at least 8 characters.'); return; }
-  if(pw !== confirm){ showToast('Passwords do not match.'); return; }
+  if(!pw || pw.length < 8){ errEl.textContent = 'Password must be at least 8 characters.'; return; }
+  if(pw !== confirm){ errEl.textContent = 'Passwords do not match.'; return; }
 
   const { error } = await sb.auth.updateUser({ password: pw });
-  if(error){ showToast('Error: ' + error.message); return; }
+  if(error){ errEl.textContent = error.message; return; }
 
   document.getElementById('p-new-password').value = '';
   document.getElementById('p-confirm-password').value = '';
-  showToast('Password updated.');
+  successEl.textContent = 'Password updated.';
+}
+
+async function setPasswordDirectlyFromTeam(staffId){
+  const newPassword = document.getElementById('p-admin-set-password').value;
+  if(!newPassword || newPassword.length < 8){ showToast('Password must be at least 8 characters.'); return; }
+
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session){ showToast('Session expired, please sign in again.'); return; }
+
+  let res;
+  try {
+    res = await fetch('/.netlify/functions/reset-staff-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken: session.access_token, staffId, newPassword })
+    });
+  } catch (e) {
+    showToast('Network error: ' + e.message);
+    return;
+  }
+
+  const result = await res.json();
+  if(!res.ok){
+    showToast(result.error || 'Something went wrong.');
+    return;
+  }
+
+  document.getElementById('p-admin-set-password').value = '';
+  showToast('Password set for ' + result.name + '.');
 }
 
 async function saveStaffProfile(staffId){

@@ -1,0 +1,2796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#7B4FBE">
+<title>Bloom Admin — Calendar</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="staff-shared.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --purple:#7B4FBE;--purple-dark:#5f3a96;--purple-light:#F0EBFA;
+  --orange:#F5A623;--bg:#FAF8F5;--white:#fff;
+  --text:#1a1a1a;--text-muted:#6b6b6b;--border:#e8e4de;--radius:12px;
+  --green:#16a34a;--green-bg:#dcfce7;--red:#dc2626;--red-bg:#fee2e2;
+  --amber:#d97706;--amber-bg:#fef3dc;
+  --school-color:#7B4FBE;--school-bg:#F0EBFA;
+  --break-color:#d97706;--break-bg:#FEF3DC;
+  --pd-color:#0891b2;--pd-bg:#e0f2fe;
+  --holiday-color:#dc2626;--holiday-bg:#fee2e2;
+  --event-color:#1d4ed8;--event-bg:#dbeafe;
+  --schedulechange-color:#475569;--schedulechange-bg:#e2e8f0;
+  --early-color:#475569;--early-bg:#e2e8f0;
+  --closure-color:#475569;--closure-bg:#e2e8f0;
+  --makeup-color:#475569;--makeup-bg:#e2e8f0;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:16px;}
+
+/* LOGIN */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--purple);}
+.login-card{background:white;border-radius:20px;padding:32px 28px;width:100%;max-width:380px;}
+.login-logo{font-family:'Fraunces',serif;font-size:28px;color:var(--purple);margin-bottom:4px;}
+.login-dot{display:inline-block;width:10px;height:10px;background:var(--orange);border-radius:50%;margin-left:1px;vertical-align:middle;position:relative;top:-3px;}
+.login-sub{font-size:12px;color:var(--text-muted);margin-bottom:24px;text-transform:uppercase;letter-spacing:0.06em;}
+.login-input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:16px!important;font-family:'DM Sans',sans-serif;margin-bottom:12px;outline:none;transition:border-color 0.2s;}
+.login-input:focus{border-color:var(--purple);}
+.login-btn{width:100%;padding:13px;background:var(--purple);color:white;border:none;border-radius:24px;font-size:16px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;}
+.login-btn:hover{background:var(--purple-dark);}
+.login-error{color:var(--red);font-size:13px;margin-top:8px;display:none;text-align:center;}
+.login-error.show{display:block;}
+.login-back{display:block;text-align:center;margin-top:16px;font-size:13px;color:rgba(255,255,255,0.7);text-decoration:none;}
+
+/* ONBOARDING */
+.onboarding{display:none;min-height:100vh;background:var(--bg);}
+.onboarding.visible{display:block;}
+.ob-header{background:var(--purple);padding:20px 4%;display:flex;align-items:center;justify-content:space-between;}
+.ob-logo{font-family:'Fraunces',serif;font-size:22px;color:white;}
+.ob-dot{display:inline-block;width:8px;height:8px;background:var(--orange);border-radius:50%;margin-left:1px;vertical-align:middle;position:relative;top:-2px;}
+.ob-steps{display:flex;gap:8px;align-items:center;}
+.ob-step{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);color:rgba(255,255,255,0.6);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.ob-step.active{background:white;border-color:white;color:var(--purple);}
+.ob-step.done{background:var(--orange);border-color:var(--orange);color:white;}
+.ob-body{max-width:720px;margin:0 auto;padding:40px 24px 100px;}
+.ob-title{font-family:'Fraunces',serif;font-size:28px;color:var(--purple);margin-bottom:8px;}
+.ob-sub{font-size:15px;color:var(--text-muted);margin-bottom:32px;}
+.ob-card{background:white;border-radius:var(--radius);border:1px solid var(--border);padding:24px;margin-bottom:16px;}
+.ob-card-title{font-size:14px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:16px;}
+.ob-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.ob-field{display:flex;flex-direction:column;gap:6px;}
+.ob-label{font-size:13px;font-weight:600;color:var(--text-muted);}
+.ob-input{padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-size:16px!important;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s;}
+.ob-input:focus{border-color:var(--purple);}
+.ob-day-counter{background:var(--purple);border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.ob-day-counter.warn{background:var(--red);}
+.ob-day-counter.good{background:var(--green);}
+.ob-day-num{font-family:'Fraunces',serif;font-size:48px;color:white;font-weight:600;line-height:1;}
+.ob-day-label{font-size:13px;color:rgba(255,255,255,0.8);}
+.ob-day-status{font-size:32px;}
+.ob-break-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.ob-break-item{display:flex;align-items:center;gap:10px;background:var(--bg);padding:10px 14px;border-radius:8px;font-size:14px;}
+.ob-break-remove{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;margin-left:auto;}
+.ob-holiday-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.ob-holiday-item{display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:8px;font-size:14px;background:var(--bg);}
+.ob-holiday-check{width:16px;height:16px;accent-color:var(--purple);cursor:pointer;}
+.ob-footer{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);padding:16px 24px;display:flex;justify-content:space-between;align-items:center;}
+.ob-progress{font-size:13px;color:var(--text-muted);}
+
+/* APP */
+.app{display:none;min-height:100vh;}
+.app.visible{display:block;}
+
+/* HEADER */
+.header{background:var(--purple);padding:0 4%;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;width:92%;margin:0 auto;box-sizing:border-box;}
+.header-logo{font-family:'Fraunces',serif;font-size:20px;color:white;font-weight:600;}
+.header-dot{display:inline-block;width:7px;height:7px;background:var(--orange);border-radius:50%;margin-left:1px;vertical-align:middle;position:relative;top:-2px;}
+.header-sub{font-size:10px;color:rgba(255,255,255,0.65);letter-spacing:0.08em;text-transform:uppercase;margin-top:1px;}
+.header-right{display:flex;align-items:center;gap:10px;}
+.day-counter{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:600;color:white;cursor:pointer;}
+.day-counter.warn{background:rgba(255,255,255,0.15);color:#ffd9d9;}
+.day-counter.good{background:rgba(255,255,255,0.15);color:white;}
+.pub-link{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:4px 11px;color:white;font-size:12px;font-weight:500;text-decoration:none;}
+.logout-btn{background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:34px;height:34px;color:white;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;}
+
+/* ATTENTION */
+.attention-strip{background:var(--amber-bg);border-bottom:1px solid #fcd34d;padding:10px 4%;display:none;gap:16px;flex-wrap:wrap;align-items:center;}
+.attention-strip.has-items{display:flex;}
+.attention-item{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--amber);cursor:pointer;white-space:nowrap;}
+.attention-item:hover{text-decoration:underline;}
+.attention-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);flex-shrink:0;}
+.attention-dot.red{background:var(--red);}
+
+/* TABS */
+.tabs{background:white;border-bottom:1px solid var(--border);padding:0 4%;display:flex;overflow-x:auto;scrollbar-width:none;width:92%;margin:0 auto;box-sizing:border-box;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab-btn{padding:14px 20px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.15s;position:relative;}
+.tab-btn.active{color:var(--purple);border-bottom-color:var(--purple);}
+.tab-badge{position:absolute;top:8px;right:8px;background:var(--red);color:white;font-size:10px;font-weight:700;width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;}
+.tab-badge.show{display:flex;}
+
+/* CONTENT */
+.tab-content{display:none;padding:20px 4% 100px;}
+.tab-content.active{display:block;}
+
+/* CARDS */
+.card{background:white;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:16px;}
+.card-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:14px;font-weight:600;}
+.card-body{padding:16px;}
+
+/* STATS */
+.total-card{background:var(--purple);border-radius:var(--radius);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.total-card.warn{background:var(--red);}
+.total-card.good{background:var(--green);}
+.total-days{font-family:'Fraunces',serif;font-size:36px;color:white;font-weight:600;line-height:1;}
+.total-label{font-size:11px;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:0.05em;}
+.total-target{font-size:13px;color:rgba(255,255,255,0.8);}
+.total-status{font-size:32px;}
+
+.term-summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.term-card{background:white;border-radius:var(--radius);border:1px solid var(--border);padding:14px;cursor:pointer;transition:border-color 0.2s;}
+.term-card:hover{border-color:var(--purple);}
+.term-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--purple);margin-bottom:4px;}
+.term-days{font-family:'Fraunces',serif;font-size:28px;color:var(--text);font-weight:600;line-height:1;}
+.term-sub{font-size:12px;color:var(--text-muted);margin-top:4px;}
+
+/* CALENDAR CONTROLS */
+.cal-controls{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+
+/* MINI CALENDAR */
+.mini-cal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;align-items:start;}
+.mini-month{background:white;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;}
+.mini-month-hdr{background:var(--purple);padding:8px 10px;text-align:center;}
+@media(max-width:768px){.mini-month-hdr{cursor:pointer;}}
+.mini-month-name{font-family:'Fraunces',serif;font-size:12px;color:white;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;}
+.mini-month-yr{font-size:10px;color:rgba(255,255,255,0.7);}
+.mini-body{padding:6px;}
+.mini-day-hdrs{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:3px;}
+.mini-day-hdr{text-align:center;font-size:8px;font-weight:600;color:var(--text-muted);text-transform:uppercase;}
+.mini-days{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;}
+.mini-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:9px;border-radius:50%;cursor:pointer;color:var(--text-muted);transition:all 0.1s;}
+.mini-day:hover{background:var(--purple-light);}
+.mini-day.school{background:var(--school-bg);color:var(--school-color);font-weight:500;}
+.mini-day.break{background:var(--break-bg);color:var(--break-color);font-weight:500;}
+.mini-day.pd{background:var(--pd-bg);color:var(--pd-color);font-weight:500;}
+.mini-day.holiday{background:var(--holiday-bg);color:var(--holiday-color);font-weight:500;}
+.mini-day.event{background:var(--event-bg);color:var(--event-color);font-weight:500;}
+.mini-day.early{background:var(--pd-bg);color:var(--pd-color);font-weight:500;box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--pd-color) 55%, transparent);}
+.mini-day.closure{background:var(--closure-bg);color:var(--closure-color);font-weight:500;}
+.mini-day.makeup{background:var(--makeup-bg);color:var(--makeup-color);font-weight:500;}
+.mini-day.today{background:var(--orange)!important;color:white!important;font-weight:700;}
+.mini-day.pending{outline:2px dashed var(--amber);outline-offset:-1px;}
+.mini-day.empty{cursor:default;visibility:hidden;}
+.mini-day.weekend{color:#ccc;}
+
+/* DAY TYPE GRID */
+.day-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;}
+.day-type-pill{padding:8px 10px;border-radius:8px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;transition:all 0.15s;border:1px solid transparent;}
+.day-type-pill:hover{opacity:0.8;border-color:currentColor;}
+
+/* ABSENCE */
+.absence-list{display:flex;flex-direction:column;gap:10px;}
+.absence-card{background:white;border-radius:var(--radius);border:1px solid var(--border);padding:14px 16px;display:flex;align-items:flex-start;gap:12px;}
+.absence-card.pending{border-left:3px solid var(--amber);}
+.absence-card.acknowledged{border-left:3px solid var(--green);opacity:0.7;}
+.absence-avatar{width:40px;height:40px;border-radius:50%;background:var(--purple-light);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:16px;color:var(--purple);flex-shrink:0;}
+.absence-name{font-weight:600;font-size:14px;}
+.absence-date{font-size:13px;color:var(--text-muted);margin-top:2px;}
+.absence-reason{font-size:13px;background:var(--bg);padding:6px 10px;border-radius:8px;margin-top:4px;}
+.status-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.status-badge.pending{background:var(--amber-bg);color:var(--amber);}
+.status-badge.acknowledged{background:var(--green-bg);color:var(--green);}
+.status-badge.new{background:var(--red-bg);color:var(--red);}
+
+/* APPROVALS */
+.approval-card{background:white;border-radius:var(--radius);border:1px solid var(--border);border-left:3px solid var(--amber);padding:14px 16px;margin-bottom:10px;}
+.approval-date{font-family:'Fraunces',serif;font-size:16px;color:var(--purple);}
+.approval-reason{font-size:13px;background:var(--bg);padding:8px 10px;border-radius:8px;margin-top:8px;}
+.approval-actions{display:flex;gap:8px;margin-top:12px;}
+
+/* SETTINGS */
+.settings-group{margin-bottom:24px;}
+.settings-group-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:10px;}
+.settings-row{background:white;border-radius:var(--radius);border:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;cursor:pointer;transition:background 0.15s;}
+.settings-row:hover{background:var(--bg);}
+.settings-row-label{font-size:14px;font-weight:500;}
+.settings-row-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
+
+/* TOGGLE SWITCH */
+.toggle-wrap{display:flex;align-items:center;justify-content:space-between;background:white;border-radius:var(--radius);border:1px solid var(--border);padding:14px 16px;margin-bottom:8px;}
+.toggle-info .toggle-label{font-size:14px;font-weight:500;}
+.toggle-info .toggle-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:24px;cursor:pointer;transition:0.3s;}
+.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;}
+.toggle input:checked+.toggle-slider{background:var(--purple);}
+.toggle input:checked+.toggle-slider:before{transform:translateX(20px);}
+
+/* BTNS */
+.btn{padding:9px 18px;border-radius:24px;border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--purple);color:white;}
+.btn-primary:hover{background:var(--purple-dark);}
+.btn-outline{background:transparent;border:1px solid var(--purple);color:var(--purple);}
+.btn-outline:hover{background:var(--purple-light);}
+.btn-danger{background:var(--red);color:white;}
+.btn-success{background:var(--green);color:white;}
+.btn-amber{background:var(--amber);color:white;}
+.btn-sm{padding:6px 12px;font-size:13px;}
+
+/* AUDIT LOG */
+.log-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.log-item:last-child{border-bottom:none;}
+.log-time{color:var(--text-muted);white-space:nowrap;min-width:80px;font-size:11px;}
+.log-who{color:var(--purple);font-weight:500;}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:48px 24px;color:var(--text-muted);}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+.empty-title{font-family:'Fraunces',serif;font-size:18px;color:var(--text);margin-bottom:6px;}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:white;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;}
+@media(min-width:769px){.modal-overlay{align-items:center;padding:20px;}.modal{border-radius:20px;}}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
+.modal-title{font-family:'Fraunces',serif;font-size:20px;color:var(--purple);margin-bottom:4px;}
+.modal-sub{font-size:14px;color:var(--text-muted);margin-bottom:20px;}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:6px;}
+.form-input,.form-select,.form-textarea{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-size:16px!important;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s;background:white;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--purple);}
+.form-textarea{min-height:80px;resize:vertical;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
+.modal-actions .btn{flex:1;justify-content:center;}
+
+/* VISUAL EDITOR */
+.ve-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center;padding:20px;}
+.ve-overlay.open{display:flex;}
+.ve-modal{background:white;border-radius:20px;width:100%;max-width:1100px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;}
+.ve-header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.ve-title{font-family:'Fraunces',serif;font-size:20px;}
+.ve-sub{font-size:13px;color:var(--text-muted);margin-top:2px;}
+.ve-header-right{display:flex;align-items:center;gap:10px;}
+.ve-count{font-size:13px;font-weight:600;padding:6px 12px;border-radius:20px;}
+.ve-body{overflow-y:auto;padding:20px 24px;flex:1;}
+.ve-term-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--purple);margin:16px 0 10px;}
+.ve-term-lbl:first-child{margin-top:0;}
+.ve-cal-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:8px;}
+.ve-month{background:var(--bg);border-radius:10px;border:1px solid var(--border);overflow:hidden;}
+.ve-month-hdr{background:var(--purple);padding:6px 8px;text-align:center;font-family:'Fraunces',serif;font-size:11px;color:white;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;}
+.ve-month-body{padding:6px;}
+.ve-day-hdrs{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:2px;}
+.ve-day-hdr{text-align:center;font-size:7px;font-weight:600;color:var(--text-muted);text-transform:uppercase;}
+.ve-days{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;}
+.ve-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:9px;border-radius:50%;cursor:pointer;transition:all 0.1s;color:var(--text-muted);user-select:none;}
+.ve-day:hover:not(.empty):not(.existing){background:var(--purple-light);}
+.ve-day.weekend{color:#ddd;}
+.ve-day.weekend:hover{background:rgba(0,0,0,0.05);}
+.ve-day.existing{font-weight:600;cursor:pointer;}
+.ve-day.existing:hover{opacity:0.7;outline:2px solid var(--amber);}
+.ve-day.selected{color:white!important;font-weight:700;}
+.ve-day.empty{cursor:default;visibility:hidden;}
+.ve-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;flex-shrink:0;background:white;}
+.ve-inputs{flex:1;display:flex;flex-direction:column;gap:8px;}
+.ve-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:16px!important;font-family:'DM Sans',sans-serif;outline:none;}
+.ve-input:focus{border-color:var(--purple);}
+.ve-footer-actions{display:flex;gap:8px;align-items:flex-end;flex-shrink:0;padding-bottom:2px;}
+
+/* TERM BREAKDOWN MODAL */
+.tb-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;}
+.tb-row:last-child{border-bottom:none;}
+
+/* MOBILE NAV */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);padding:6px 0 env(safe-area-inset-bottom,6px);z-index:100;}
+.mobile-nav-inner{display:flex;justify-content:space-around;}
+.mobile-nav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 12px;min-width:64px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:color 0.2s;position:relative;}
+.mobile-nav-icon{font-size:20px;line-height:1;}
+.mobile-nav-btn.active{color:var(--purple);}
+.mob-badge{position:absolute;top:2px;right:8px;background:var(--red);color:white;font-size:9px;font-weight:700;width:14px;height:14px;border-radius:50%;display:none;align-items:center;justify-content:center;}
+.mob-badge.show{display:flex;}
+
+@media(max-width:768px){.mini-cal-grid{grid-template-columns:repeat(2,1fr);}.term-summary{grid-template-columns:1fr 1fr;}.day-type-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.mobile-nav{display:block;}.tabs{display:none;}.ve-cal-grid{grid-template-columns:repeat(2,1fr);}.cal-controls{display:none;}}
+@media(max-width:768px){.mini-cal-grid{grid-template-columns:repeat(2,1fr);}.term-summary{grid-template-columns:1fr 1fr;}.day-type-grid{grid-template-columns:repeat(2,1fr);}.mobile-nav{display:block;}.tabs{display:none;}.ve-cal-grid{grid-template-columns:repeat(2,1fr);}.header{padding:0 1rem;}.tab-content{padding:1rem 1rem 80px;}.attention-strip{padding:10px 1rem;}.cal-controls{display:none;}}
+@media(min-width:900px){.mini-cal-grid{grid-template-columns:repeat(4,1fr);}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="page-content">
+
+<!-- AUTH LOADING (staff-shared.js handles the actual login redirect) -->
+<div id="authLoading" style="text-align:center;padding:80px 20px;color:#6b6b6b;font-size:14px;">Loading…</div>
+
+<!-- MOBILE SETUP BLOCKED -->
+<div class="login-screen" id="mobileSetupRequired" style="display:none;">
+  <div class="login-card">
+    <div class="login-logo">bloom<span class="login-dot"></span></div>
+    <div class="login-sub">Chiangmai · Admin</div>
+    <div style="font-size:15px;color:var(--text);line-height:1.5;margin:16px 0;text-align:center;">
+      Initial setup needs to be completed on a desktop browser first.<br><br>
+      Please sign in on a computer to finish setting up your academic year, then return here to manage things on the go.
+    </div>
+    <a href="index.html" class="login-back">← Back to calendar</a>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div class="onboarding" id="onboarding">
+  <div class="ob-header">
+    <div class="ob-logo">bloom<span class="ob-dot"></span></div>
+    <div class="ob-steps">
+      <div class="ob-step active" id="obStep1">1</div>
+      <div style="width:16px;height:1px;background:rgba(255,255,255,0.3);"></div>
+      <div class="ob-step" id="obStep2">2</div>
+      <div style="width:16px;height:1px;background:rgba(255,255,255,0.3);"></div>
+      <div class="ob-step" id="obStep3">3</div>
+      <div style="width:16px;height:1px;background:rgba(255,255,255,0.3);"></div>
+      <div class="ob-step" id="obStep4">4</div>
+      <div style="width:16px;height:1px;background:rgba(255,255,255,0.3);"></div>
+      <div class="ob-step" id="obStep5">5</div>
+    </div>
+  </div>
+
+  <div class="ob-body" id="obBody"></div>
+
+  <div class="ob-footer">
+    <div class="ob-progress" id="obProgress">Step 1 of 5</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-outline" id="obBack" onclick="obPrev()" style="display:none;">← Back</button>
+      <button class="btn btn-primary" id="obNext" onclick="obNext()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="app">
+  <header class="header">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div>
+        <div class="header-logo">bloom<span class="header-dot"></span></div>
+        <div class="header-sub">chiangmai · admin</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <a href="index.html" class="pub-link">Public view</a>
+      <div class="day-counter" id="dayCounter" onclick="switchTab('calendar')">
+        <span id="dayCountNum">—</span>
+        <span style="opacity:0.8;">/ 180</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="attention-strip" id="attentionStrip">
+    <div class="attention-item" id="attnPending" onclick="switchTab('approvals')" style="display:none">
+      <span class="attention-dot"></span><span id="attnPendingTxt"></span>
+    </div>
+    <div class="attention-item" id="attnAbsence" onclick="switchTab('absences')" style="display:none">
+      <span class="attention-dot red"></span><span id="attnAbsenceTxt"></span>
+    </div>
+    <div class="attention-item" id="attnDays" onclick="switchTab('calendar')" style="display:none">
+      <span class="attention-dot red"></span><span id="attnDaysTxt"></span>
+    </div>
+    <div class="attention-item" id="attnUnsynced" onclick="retryUnsyncedNow()" style="display:none">
+      <span class="attention-dot red"></span><span id="attnUnsyncedTxt"></span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-calendar" onclick="switchTab('calendar')">📅 Calendar</button>
+    <button class="tab-btn" id="tab-absences" onclick="switchTab('absences')">
+      🙋 Absences<span class="tab-badge" id="absenceBadge"></span>
+    </button>
+    <button class="tab-btn" id="tab-approvals" onclick="switchTab('approvals')">
+      ✅ Approvals<span class="tab-badge" id="approvalBadge"></span>
+    </button>
+    <button class="tab-btn" id="tab-settings" onclick="switchTab('settings')">⚙️ Settings</button>
+  </div>
+
+  <!-- CALENDAR TAB -->
+  <div class="tab-content active" id="content-calendar">
+    <div class="total-card" id="totalCard">
+      <div>
+        <div class="total-label">Total School Days</div>
+        <div class="total-days" id="totalDaysDisplay">—</div>
+        <div class="total-target" id="totalTarget">of 180 required</div>
+      </div>
+      <div class="total-status" id="totalStatus">📊</div>
+    </div>
+    <div class="term-summary">
+      <div class="term-card" onclick="openTermBreakdown('term1')">
+        <div class="term-label">Term 1 <span style="font-size:10px;color:var(--text-muted);font-weight:400;">tap for breakdown</span></div>
+        <div class="term-days" id="term1Days">—</div>
+        <div class="term-sub" id="term1Sub">31 Aug – 18 Dec 2026</div>
+      </div>
+      <div class="term-card" onclick="openTermBreakdown('term2')">
+        <div class="term-label">Term 2 <span style="font-size:10px;color:var(--text-muted);font-weight:400;">tap for breakdown</span></div>
+        <div class="term-days" id="term2Days">—</div>
+        <div class="term-sub" id="term2Sub">4 Jan – 25 Jun 2027</div>
+      </div>
+    </div>
+
+    <div class="cal-controls">
+      <button class="btn btn-primary" onclick="openAddEvent()">+ Add Event</button>
+      <button class="btn btn-outline" onclick="openMultiSelect()">⊞ Multi-select</button>
+      <button class="btn btn-outline" id="pdfExportBtn" onclick="exportCalendarPDF()">↗ Export PDF</button>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">
+        <span class="card-title">Day Types</span>
+        <span style="font-size:12px;color:var(--text-muted);">tap to edit dates visually</span>
+      </div>
+      <div class="card-body">
+        <div class="day-type-grid">
+          <div class="day-type-pill" style="background:var(--school-bg);color:var(--school-color)" onclick="openVE('school','School Day')">School Day</div>
+          <div class="day-type-pill" style="background:var(--event-bg);color:var(--event-color)" onclick="openVE('event','School Event')">School Event</div>
+          <div class="day-type-pill" style="background:var(--pd-bg);color:var(--pd-color)" onclick="openVE('pd','PD Day')">PD Day</div>
+          <div class="day-type-pill" style="background:var(--holiday-bg);color:var(--holiday-color)" onclick="openVE('holiday','Public Holiday')">Public Holiday</div>
+          <div class="day-type-pill" style="background:var(--break-bg);color:var(--break-color)" onclick="openVE('break','School Break')">School Break</div>
+          <div class="day-type-pill" style="background:var(--early-bg);color:var(--early-color)" onclick="openVE('early','Early Dismissal')">Early Dismissal</div>
+          <div class="day-type-pill" style="background:var(--closure-bg);color:var(--closure-color)" onclick="openVE('closure','Emergency Closure')">Emergency Closure</div>
+          <div class="day-type-pill" style="background:var(--makeup-bg);color:var(--makeup-color)" onclick="openVE('makeup','Make-up Day')">Make-up Day</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);">Dashed border = pending approval · Click existing day to request change</div>
+      </div>
+    </div>
+
+    <div class="mini-cal-grid" id="adminCalGrid"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Recent Changes</span>
+        <button class="btn btn-outline btn-sm" onclick="clearLog()">Clear</button>
+      </div>
+      <div class="card-body" id="auditLog">
+        <div class="empty-state" style="padding:20px;"><div class="empty-sub">No changes yet.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABSENCES TAB -->
+  <div class="tab-content" id="content-absences">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div>
+        <div style="font-family:'Fraunces',serif;font-size:18px;color:var(--purple);">Absence Reports</div>
+        <div style="font-size:13px;color:var(--text-muted);">Submitted by parents</div>
+      </div>
+    </div>
+    <div class="absence-list" id="absenceList"></div>
+  </div>
+
+  <!-- APPROVALS TAB -->
+  <div class="tab-content" id="content-approvals">
+    <div style="margin-bottom:16px;">
+      <div style="font-family:'Fraunces',serif;font-size:18px;color:var(--purple);">Pending Approvals</div>
+      <div style="font-size:13px;color:var(--text-muted);">Changes awaiting sign-off</div>
+    </div>
+    <div id="approvalList"></div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div class="tab-content" id="content-settings">
+    <div style="font-family:'Fraunces',serif;font-size:18px;color:var(--purple);margin-bottom:20px;">Settings</div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">Calendar Mode</div>
+      <div class="toggle-wrap">
+        <div class="toggle-info">
+          <div class="toggle-label">Calendar Status</div>
+          <div class="toggle-sub" id="statusSub">Coming in Phase 3</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="toggleLive" disabled onclick="return false;">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-wrap">
+        <div class="toggle-info">
+          <div class="toggle-label">Approval Required</div>
+          <div class="toggle-sub" id="approvalSub">Off — staff changes go live instantly</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="toggleApproval" onchange="toggleSetting('approval')">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">Public Site Access</div>
+      <div class="toggle-wrap">
+        <div class="toggle-info">
+          <div class="toggle-label">Notify (Absence Reporting)</div>
+          <div class="toggle-sub" id="notifyEnabledSub">Loading…</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="toggleNotifyEnabled" onchange="togglePublicAccess('notify')">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-wrap">
+        <div class="toggle-info">
+          <div class="toggle-label">Sign In</div>
+          <div class="toggle-sub" id="signinEnabledSub">Loading…</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="toggleSigninEnabled" onchange="togglePublicAccess('signin')">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">Academic Year</div>
+      <div class="settings-row" onclick="syncToCloud()" id="syncCloudBtn">
+        <div>
+          <div class="settings-row-label">Force Re-sync All</div>
+          <div class="settings-row-sub" id="syncCloudStatus">Changes now sync automatically — use this only if something looks out of date</div>
+        </div>
+        <span style="color:var(--text-muted);">›</span>
+      </div>
+      <div class="settings-row" onclick="openEditTermDatesModal()">
+        <div>
+          <div class="settings-row-label">Edit Calendar Settings</div>
+          <div class="settings-row-sub">Adjust term start/end, breaks, and school hours</div>
+        </div>
+        <span style="color:var(--text-muted);">›</span>
+      </div>
+      <div class="settings-row" onclick="archiveYear()">
+        <div>
+          <div class="settings-row-label">Archive & Start New Year</div>
+          <div class="settings-row-sub" id="archiveRowSub">Save 2026-2027 and begin fresh setup</div>
+        </div>
+        <span style="color:var(--text-muted);">›</span>
+      </div>
+      <div class="settings-row" onclick="openRestoreYearModal()">
+        <div>
+          <div class="settings-row-label">Restore Archived Year</div>
+          <div class="settings-row-sub" id="restoreRowSub">Loading…</div>
+        </div>
+        <span style="color:var(--text-muted);">›</span>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">Notifications</div>
+      <div class="settings-row" onclick="alert('Email settings coming in Phase 2')">
+        <div>
+          <div class="settings-row-label">Email Notifications</div>
+          <div class="settings-row-sub">hello@learn2bloom.org</div>
+        </div>
+        <span style="color:var(--text-muted);">›</span>
+      </div>
+      <div class="settings-row" onclick="alert('Line Notify coming in Phase 3')">
+        <div>
+          <div class="settings-row-label">Line Notify</div>
+          <div class="settings-row-sub">Not connected yet</div>
+        </div>
+        <span style="color:var(--text-muted);">›</span>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">Account</div>
+      <div class="settings-row" onclick="doLogout()">
+        <div class="settings-row-label" style="color:var(--red);">Sign Out</div>
+        <span style="color:var(--text-muted);">›</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE NAV -->
+  <nav class="mobile-nav">
+    <div class="mobile-nav-inner">
+      <button class="mobile-nav-btn active" id="mnav-calendar" onclick="switchTab('calendar')">
+        <span class="mobile-nav-icon">📅</span>
+        Calendar
+      </button>
+      <button class="mobile-nav-btn" id="mnav-absences" onclick="switchTab('absences')">
+        <span class="mobile-nav-icon">🙋</span>
+        Absences
+        <span class="mob-badge" id="mAbsenceBadge"></span>
+      </button>
+      <button class="mobile-nav-btn" id="mnav-approvals" onclick="switchTab('approvals')">
+        <span class="mobile-nav-icon">✅</span>
+        Approvals
+        <span class="mob-badge" id="mApprovalBadge"></span>
+      </button>
+      <button class="mobile-nav-btn" id="mnav-settings" onclick="switchTab('settings')">
+        <span class="mobile-nav-icon">⚙️</span>
+        Settings
+      </button>
+    </div>
+  </nav>
+</div>
+
+<!-- VISUAL EDITOR -->
+<div class="ve-overlay" id="veOverlay">
+  <div class="ve-modal">
+    <div class="ve-header">
+      <div>
+        <div class="ve-title" id="veTitle"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+          <div style="display:flex;border:1px solid var(--border);border-radius:20px;overflow:hidden;">
+            <button id="veModeAssign" onclick="setVEMode('assign')" style="padding:4px 14px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:var(--purple);color:white;font-family:'DM Sans',sans-serif;">Assign</button>
+            <button id="veModeRemove" onclick="setVEMode('remove')" style="padding:4px 14px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:white;color:var(--text-muted);font-family:'DM Sans',sans-serif;">Remove</button>
+          </div>
+          <div class="ve-sub" id="veModeHint">Click days to assign · Weekends allowed</div>
+        </div>
+      </div>
+      <div class="ve-header-right">
+        <div class="ve-count" id="veCount">0 selected</div>
+        <button class="btn btn-outline btn-sm" onclick="veClearAll()">Clear</button>
+        <button class="btn btn-outline btn-sm" onclick="closeVE()">✕</button>
+      </div>
+    </div>
+    <div class="ve-body" id="veBody"></div>
+    <div class="ve-footer">
+      <div class="ve-inputs">
+        <input type="text" class="ve-input" id="veLabel" placeholder="Event name (optional)..." style="display:none;">
+        <input type="text" class="ve-input" id="veReason" placeholder="Reason for change (optional)...">
+      </div>
+      <div class="ve-footer-actions">
+        <button class="btn btn-primary" id="veApplyBtn" onclick="veApply()">Apply Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE REQUEST MODAL -->
+<div class="modal-overlay" id="changeRequestModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="crTitle">Request Change</div>
+    <div class="modal-sub" id="crDate"></div>
+    <div class="form-group">
+      <label class="form-label">Change to</label>
+      <select class="form-select" id="crType">
+        <option value="school">School Day</option>
+        <option value="break">School Break</option>
+        <option value="holiday">Public Holiday</option>
+        <option value="pd">PD Day</option>
+        <option value="event">School Event</option>
+        <option value="early">Early Dismissal</option>
+        <option value="closure">Emergency Closure</option>
+        <option value="makeup">Make-up Day</option>
+        <option value="none">Remove (no school)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Label (optional)</label>
+      <input type="text" class="form-input" id="crLabel" placeholder="e.g. Sports Day...">
+    </div>
+    <div class="form-group">
+      <label class="form-label" id="crReasonLabel">Reason <span style="color:var(--red)">*</span></label>
+      <textarea class="form-textarea" id="crReason" placeholder="Why is this change needed?"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('changeRequestModal')">Cancel</button>
+      <button class="btn btn-primary" id="crSubmitBtn" onclick="submitChangeRequest()">Submit for Approval</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD EVENT MODAL -->
+<div class="modal-overlay" id="addEventModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Event</div>
+    <div class="modal-sub">Adds a named event to the calendar</div>
+    <div class="form-group">
+      <label class="form-label">Date</label>
+      <input type="date" class="form-input" id="eventDate">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Event Name</label>
+      <input type="text" class="form-input" id="eventName" placeholder="e.g. Sports Day...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-select" id="eventType">
+        <option value="holiday">Public Holiday</option>
+        <option value="pd">PD Day</option>
+        <option value="event">School Event</option>
+        <option value="early">Early Dismissal</option>
+        <option value="closure">Emergency Closure</option>
+        <option value="makeup">Make-up Day</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Reason</label>
+      <textarea class="form-textarea" id="eventReason" placeholder="Brief note..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('addEventModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitEvent()">Submit for Approval</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT TERM DATES MODAL -->
+<div class="modal-overlay" id="editTermDatesModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit Calendar Settings</div>
+    <div class="modal-sub">Updates term dates, breaks, and school hours. Does not touch holidays or any existing calendar events.</div>
+    <div class="form-group">
+      <label class="form-label">Term 1 Start</label>
+      <input type="date" class="form-input" id="etdT1Start">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Term 1 End</label>
+      <input type="date" class="form-input" id="etdT1End">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Break 1 Start</label>
+      <input type="date" class="form-input" id="etdBreak1Start">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Break 1 End</label>
+      <input type="date" class="form-input" id="etdBreak1End">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Term 2 Start</label>
+      <input type="date" class="form-input" id="etdT2Start">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Term 2 End</label>
+      <input type="date" class="form-input" id="etdT2End">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Break 2 Start</label>
+      <input type="date" class="form-input" id="etdBreak2Start">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Break 2 End</label>
+      <input type="date" class="form-input" id="etdBreak2End">
+    </div>
+    <div style="border-top:1px solid var(--border);margin:16px 0;padding-top:12px;">
+      <div class="modal-sub" style="margin-bottom:12px;">School Hours</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Regular Days (label)</label>
+      <input type="text" class="form-input" id="etdHoursRegularDays" placeholder="e.g. Mon, Tue, Thu, Fri">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Regular Start</label>
+      <input type="time" class="form-input" id="etdHoursRegularStart">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Regular End</label>
+      <input type="time" class="form-input" id="etdHoursRegularEnd">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Wednesday Start</label>
+      <input type="time" class="form-input" id="etdHoursWedStart">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Wednesday End</label>
+      <input type="time" class="form-input" id="etdHoursWedEnd">
+      <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Also sets the time shown on every Wednesday Early Dismissal label.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('editTermDatesModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTermDates()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM TERM DATES MODAL -->
+<div class="modal-overlay" id="confirmTermDatesModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Confirm Term Date Changes</div>
+    <div class="modal-sub">This updates the live calendar for every visitor. Review before confirming.</div>
+    <div id="confirmTermDatesSummary" style="margin:16px 0;font-size:14px;color:var(--text-main);line-height:1.8;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" style="flex:1;justify-content:center;" onclick="closeModal('confirmTermDatesModal');document.getElementById('editTermDatesModal').classList.add('open');">Back</button>
+      <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="confirmSaveTermDates()">Confirm & Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- MULTI SELECT MODAL -->
+<div class="modal-overlay" id="multiSelectModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Multi-day Edit</div>
+    <div class="modal-sub">Apply one day type to a date range</div>
+    <div class="form-group">
+      <label class="form-label">Date Range</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><label class="form-label" style="font-size:11px;">From</label><input type="date" class="form-input" id="msFrom" oninput="document.getElementById('msTo').min=this.value"></div>
+        <div><label class="form-label" style="font-size:11px;">To</label><input type="date" class="form-input" id="msTo"></div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Day Type</label>
+      <select class="form-select" id="msType">
+        <option value="school">School Day</option>
+        <option value="break">School Break</option>
+        <option value="holiday">Public Holiday</option>
+        <option value="pd">PD Day</option>
+        <option value="event">School Event</option>
+        <option value="early">Early Dismissal</option>
+        <option value="closure">Emergency Closure</option>
+        <option value="makeup">Make-up Day</option>
+      </select>
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+      <input type="checkbox" id="msWeekends" style="width:16px;height:16px;">
+      <label for="msWeekends" style="font-size:14px;">Include weekends</label>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Reason <span style="color:var(--red)">*</span></label>
+      <textarea class="form-textarea" id="msReason" placeholder="Brief reason..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('multiSelectModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitMultiSelect()">Submit for Approval</button>
+    </div>
+  </div>
+</div>
+
+<!-- TERM BREAKDOWN MODAL -->
+<div class="modal-overlay" id="termBreakdownModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="tbTitle">Term Breakdown</div>
+    <div class="modal-sub">School days by month</div>
+    <div id="tbContent"></div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="closeModal('termBreakdownModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="archiveYearModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Archive & Start New Year</div>
+    <div class="modal-sub" id="archiveYearWarning">This permanently ends the current academic year setup and starts a new one. Past calendar data stays in the database, but this cannot be undone from here.</div>
+    <div style="margin:16px 0;">
+      <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Type <strong id="archiveYearLabelTarget"></strong> to confirm</label>
+      <input type="text" id="archiveYearConfirmInput" class="form-input" style="width:100%;box-sizing:border-box;" autocomplete="off" oninput="document.getElementById('archiveYearConfirmBtn').disabled=this.value!==_yearLabel;">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" style="flex:1;justify-content:center;" onclick="closeModal('archiveYearModal')">Cancel</button>
+      <button class="btn btn-primary" id="archiveYearConfirmBtn" style="flex:1;justify-content:center;background:#dc2626;border-color:#dc2626;" disabled onclick="confirmArchiveYear()">Archive Year</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="restoreYearListModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Restore Archived Year</div>
+    <div class="modal-sub">Pick a year to make active again</div>
+    <div id="restoreYearList" style="margin:16px 0;display:flex;flex-direction:column;gap:8px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" style="flex:1;justify-content:center;" onclick="closeModal('restoreYearListModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="restoreYearConfirmModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Restore Year</div>
+    <div class="modal-sub" id="restoreYearWarning"></div>
+    <div style="margin:16px 0;">
+      <label style="display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;">Type <strong id="restoreYearLabelTarget"></strong> to confirm</label>
+      <input type="text" id="restoreYearConfirmInput" class="form-input" style="width:100%;box-sizing:border-box;" autocomplete="off" oninput="document.getElementById('restoreYearConfirmBtn').disabled=this.value!==_restoreTargetLabel;">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" style="flex:1;justify-content:center;" onclick="closeModal('restoreYearConfirmModal')">Cancel</button>
+      <button class="btn btn-primary" id="restoreYearConfirmBtn" style="flex:1;justify-content:center;" disabled onclick="confirmRestoreYear()">Restore Year</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ── CONSTANTS ────────────────────────────────────────────────────
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+let CALENDAR_MONTHS = [];
+const TYPE_COLORS = {
+  school:'#7B4FBE',early:'#475569',event:'#1d4ed8',pd:'#0891b2',
+  holiday:'#dc2626',break:'#d97706',closure:'#475569',makeup:'#475569'
+};
+const TYPE_BG = {
+  school:'var(--school-bg)',early:'var(--early-bg)',event:'var(--event-bg)',
+  pd:'var(--pd-bg)',holiday:'var(--holiday-bg)',break:'var(--break-bg)',closure:'var(--closure-bg)',makeup:'var(--makeup-bg)'
+};
+const COUNTS_AS_SCHOOL = ['school','event','early','makeup'];
+
+// ── BASE DATA ────────────────────────────────────────────────────
+let BASE = {};
+let YEAR_START,YEAR_END,TERM1_END,TERM2_START,TERM2_END;
+function dk(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
+function sr(sy,sm,sd,ey,em,ed,type,label=''){
+  let c=new Date(sy,sm,sd),e=new Date(ey,em,ed);
+  while(c<=e){BASE[dk(c.getFullYear(),c.getMonth(),c.getDate())]={type,label};c.setDate(c.getDate()+1);}
+}
+function sd(y,m,d,type,label=''){BASE[dk(y,m,d)]={type,label};}
+
+// Fallback term dates, used only if the bloom_academic_years fetch hasn't
+// resolved yet or fails. Overwritten by real data once the app loads.
+let TERM_DATES={
+  t1Start:[2026,7,31],t1End:[2026,11,18],t2Start:[2027,0,4],t2End:[2027,5,29],
+  break1Start:[2026,9,26],break1End:[2026,9,30],
+  break2Start:[2027,2,22],break2End:[2027,3,15],
+  hoursRegularStart:'08:30',hoursRegularEnd:'15:30',hoursRegularDays:'Mon, Tue, Thu, Fri',
+  hoursWedStart:'08:30',hoursWedEnd:'13:30'
+};
+
+function parseDateParts(s){
+  const[y,m,d]=s.split('-').map(Number);
+  return[y,m-1,d];
+}
+
+function buildCalendarFromTerms(){
+  BASE={};
+  const{t1Start,t1End,t2Start,t2End,break1Start,break1End,break2Start,break2End,hoursWedEnd}=TERM_DATES;
+  sr(...t1Start,...t1End,'school');
+  sr(...break1Start,...break1End,'break','School Break');
+  sd(2026,9,13,'holiday','HM King Bhumibol Memorial Day');
+  sr(...t2Start,...t2End,'school');
+  sr(...break2Start,...break2End,'break','School Break');
+  sd(2027,4,20,'holiday','Visakha Bucha Day');
+  ['2027-01-01','2027-01-02','2027-01-03'].forEach(k=>delete BASE[k]);
+  Object.keys(BASE).forEach(k=>{if(BASE[k].type==='school'){const dow=new Date(k).getDay();if(dow===0||dow===6)delete BASE[k];}});
+  // Early Dismissal: every Wednesday that's still a regular school day (skips break/holiday weeks automatically)
+  Object.keys(BASE).forEach(k=>{if(BASE[k].type==='school'&&new Date(k).getDay()===3){BASE[k]={type:'early',label:`Early Dismissal – ${hoursWedEnd}`};}});
+
+  YEAR_START=new Date(...t1Start);
+  TERM1_END=new Date(...t1End);
+  TERM2_START=new Date(...t2Start);
+  TERM2_END=new Date(...t2End);
+
+  // Display range is always a fixed 12 months from YEAR_START, independent of
+  // when Term 2 actually ends. Extra months (e.g. July) show blank/uncolored
+  // until manually assigned day types — they don't auto-count as school days.
+  let ey=YEAR_START.getFullYear(),em=YEAR_START.getMonth()+11;
+  while(em>11){em-=12;ey++;}
+  YEAR_END=new Date(ey,em+1,0);
+
+  CALENDAR_MONTHS=[];
+  let cy=YEAR_START.getFullYear(),cm=YEAR_START.getMonth();
+  while(cy<ey||(cy===ey&&cm<=em)){
+    CALENDAR_MONTHS.push({year:cy,month:cm});
+    cm++;if(cm>11){cm=0;cy++;}
+  }
+}
+buildCalendarFromTerms();
+
+// ── STATE ────────────────────────────────────────────────────────
+let overrides = JSON.parse(localStorage.getItem('bloom_cal_overrides')||'{}');
+let pendingChanges = JSON.parse(localStorage.getItem('bloom_cal_pending')||'[]');
+let auditLog = JSON.parse(localStorage.getItem('bloom_cal_audit')||'[]');
+let absences = [];
+let settings = JSON.parse(localStorage.getItem('bloom_cal_settings')||'{"live":false,"approval":true}');
+let veType=null, veSelected=new Set(), crDateKey=null, veMode='assign';
+
+function setVEMode(mode){
+  veMode=mode;
+  veSelected.clear();
+  document.getElementById('veCount').textContent='0 selected';
+  document.getElementById('veModeAssign').style.background=mode==='assign'?TYPE_COLORS[veType]:'white';
+  document.getElementById('veModeAssign').style.color=mode==='assign'?'white':'#6b6b6b';
+  document.getElementById('veModeRemove').style.background=mode==='remove'?'#dc2626':'white';
+  document.getElementById('veModeRemove').style.color=mode==='remove'?'white':'var(--text-muted)';
+  document.getElementById('veModeHint').textContent=mode==='assign'?'Click days to assign · Weekends allowed':'Click existing days to mark for removal';
+  document.getElementById('veApplyBtn').textContent=mode==='remove'?(settings.approval?'Submit Removal':'Remove Days'):(settings.approval?'Submit for Approval':'Apply Changes');
+  document.getElementById('veApplyBtn').style.background=mode==='remove'?'#dc2626':'';
+  renderVE();
+}
+
+// Mock absence data removed — now pulling real submissions from Supabase (bloom_absence_reports)
+
+function getDayData(y,m,d){return overrides[dk(y,m,d)]||BASE[dk(y,m,d)]||null;}
+function isPending(y,m,d){return pendingChanges.some(p=>p.dateKey===dk(y,m,d)||(p.dates&&p.dates.includes(dk(y,m,d))));}
+
+// ── AUTH ─────────────────────────────────────────────────────────
+// Login/logout now handled by staff-shared.js (checkStaffAndInit/doLogout).
+// See onStaffReady() near the bottom of this file for what runs after sign-in.
+
+// ── ONBOARDING ───────────────────────────────────────────────────
+let obStep = 1;
+const OB_STEPS = 5;
+
+const THAI_HOLIDAYS = [
+  {date:'2026-01-01',name:'New Year\'s Day'},
+  {date:'2026-02-12',name:'Makha Bucha Day'},
+  {date:'2026-04-06',name:'Chakri Day'},
+  {date:'2026-04-13',name:'Songkran Festival'},
+  {date:'2026-04-14',name:'Songkran Festival'},
+  {date:'2026-04-15',name:'Songkran Festival'},
+  {date:'2026-05-01',name:'Labour Day'},
+  {date:'2026-05-04',name:'Coronation Day'},
+  {date:'2026-05-11',name:'Visakha Bucha Day'},
+  {date:'2026-07-08',name:'Asanha Bucha Day'},
+  {date:'2026-07-28',name:'King\'s Birthday'},
+  {date:'2026-08-12',name:'Queen\'s Birthday'},
+  {date:'2026-10-13',name:'HM King Bhumibol Memorial Day'},
+  {date:'2026-10-23',name:'Chulalongkorn Day'},
+  {date:'2026-12-05',name:'King Bhumibol\'s Birthday'},
+  {date:'2026-12-10',name:'Constitution Day'},
+  {date:'2026-12-31',name:'New Year\'s Eve'},
+  {date:'2027-05-01',name:'Labour Day'},
+  {date:'2027-05-20',name:'Visakha Bucha Day'},
+];
+
+let obData = {
+  t1Start:'2026-08-31', t1End:'2026-12-18',
+  t2Start:'2027-01-04', t2End:'2027-06-29',
+  breaks:[{from:'2026-10-26',to:'2026-10-30',label:'Term 1 Break'},{from:'2027-03-22',to:'2027-04-15',label:'Term 2 Break'}],
+  holidays: new Set(THAI_HOLIDAYS.map(h=>h.date)),
+  pdDays:[]
+};
+
+function routeAfterAuth(setupDone){
+  const isMobile=window.innerWidth<=768;
+  if(!setupDone){
+    if(isMobile){
+      document.getElementById('mobileSetupRequired').style.display='flex';
+    }else{
+      showOnboarding();
+    }
+  }else{
+    showApp();
+  }
+}
+
+function showOnboarding(){
+  document.getElementById('onboarding').classList.add('visible');
+  renderObStep();
+}
+
+function renderObStep(){
+  document.getElementById('obProgress').textContent=`Step ${obStep} of ${OB_STEPS}`;
+  document.getElementById('obBack').style.display=obStep>1?'inline-flex':'none';
+  document.getElementById('obNext').textContent=obStep===OB_STEPS?'Finish Setup ✓':'Next →';
+
+  for(let i=1;i<=OB_STEPS;i++){
+    const el=document.getElementById(`obStep${i}`);
+    el.className='ob-step'+(i===obStep?' active':i<obStep?' done':'');
+  }
+
+  const body=document.getElementById('obBody');
+  if(obStep===1){
+    body.innerHTML=`
+      <div class="ob-title">Welcome to Bloom Calendar</div>
+      <div class="ob-sub">Let's set up your academic year. This takes about 2 minutes.</div>
+      <div class="ob-card">
+        <div class="ob-card-title">School Details</div>
+        <div class="ob-row">
+          <div class="ob-field"><label class="ob-label">School Name</label><input class="ob-input" id="obSchoolName" value="Bloom Chiangmai" placeholder="School name..."></div>
+          <div class="ob-field"><label class="ob-label">Academic Year</label><input class="ob-input" id="obYearLabel" value="2026–2027" placeholder="e.g. 2026-2027"></div>
+        </div>
+        <div class="ob-row">
+          <div class="ob-field"><label class="ob-label">City</label><input class="ob-input" id="obCity" value="Chiang Mai" placeholder="City..."></div>
+          <div class="ob-field"><label class="ob-label">Country</label><input class="ob-input" id="obCountry" value="Thailand" placeholder="Country..."></div>
+        </div>
+      </div>`;
+  } else if(obStep===2){
+    const days=calcObDays();
+    body.innerHTML=`
+      <div class="ob-title">Set Term Dates</div>
+      <div class="ob-sub">The system will automatically mark all weekdays as school days.</div>
+      <div class="${days>=180?'ob-day-counter good':'ob-day-counter'+(days>0?' warn':'ob-day-counter')}">
+        <div><div class="ob-day-label">Estimated school days</div><div class="ob-day-num" id="obDayNum">${days}</div><div class="ob-day-label">/ 180 required</div></div>
+        <div class="ob-day-status">${days>=180?'✅':days>0?'⚠️':'📊'}</div>
+      </div>
+      <div class="ob-card">
+        <div class="ob-card-title">Term 1</div>
+        <div class="ob-row">
+          <div class="ob-field"><label class="ob-label">Start Date</label><input type="date" class="ob-input" id="obT1Start" value="${obData.t1Start}" onchange="obUpdateDays()"></div>
+          <div class="ob-field"><label class="ob-label">End Date</label><input type="date" class="ob-input" id="obT1End" value="${obData.t1End}" onchange="obUpdateDays()"></div>
+        </div>
+      </div>
+      <div class="ob-card">
+        <div class="ob-card-title">Term 2</div>
+        <div class="ob-row">
+          <div class="ob-field"><label class="ob-label">Start Date</label><input type="date" class="ob-input" id="obT2Start" value="${obData.t2Start}" onchange="obUpdateDays()"></div>
+          <div class="ob-field"><label class="ob-label">End Date</label><input type="date" class="ob-input" id="obT2End" value="${obData.t2End}" onchange="obUpdateDays()"></div>
+        </div>
+      </div>`;
+  } else if(obStep===3){
+    body.innerHTML=`
+      <div class="ob-title">Mark School Breaks</div>
+      <div class="ob-sub">Add all planned break periods. These will be removed from school days automatically.</div>
+      <div class="ob-card">
+        <div class="ob-card-title">Break Periods</div>
+        <div class="ob-break-list" id="obBreakList">${renderObBreaks()}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end;">
+          <div class="ob-field"><label class="ob-label">From</label><input type="date" class="ob-input" id="obBreakFrom"></div>
+          <div class="ob-field"><label class="ob-label">To</label><input type="date" class="ob-input" id="obBreakTo"></div>
+          <div class="ob-field"><label class="ob-label">Label</label><input class="ob-input" id="obBreakLabel" placeholder="e.g. Term 1 Break"></div>
+          <button class="btn btn-primary" onclick="addObBreak()" style="margin-bottom:0;">+ Add</button>
+        </div>
+      </div>`;
+  } else if(obStep===4){
+    body.innerHTML=`
+      <div class="ob-title">Public Holidays</div>
+      <div class="ob-sub">Select official holidays. These will be marked on the calendar and removed from school day count.</div>
+      <div class="ob-card">
+        <div class="ob-card-title" style="display:flex;justify-content:space-between;align-items:center;">
+          Thai Public Holidays 2026-2027
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="obSelectAllHolidays(true)">Select All</button>
+            <button class="btn btn-outline btn-sm" onclick="obSelectAllHolidays(false)">Deselect All</button>
+          </div>
+        </div>
+        <div class="ob-holiday-list">
+          ${THAI_HOLIDAYS.map(h=>`
+            <div class="ob-holiday-item">
+              <input type="checkbox" class="ob-holiday-check" id="hol_${h.date}" ${obData.holidays.has(h.date)?'checked':''} onchange="toggleObHoliday('${h.date}')">
+              <label for="hol_${h.date}" style="cursor:pointer;flex:1;">${h.name}</label>
+              <span style="font-size:12px;color:var(--text-muted);">${formatDate(h.date)}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+          <div class="ob-card-title" style="margin-bottom:8px;">Custom Holiday</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;">
+            <div class="ob-field"><label class="ob-label">Date</label><input type="date" class="ob-input" id="obCustomHolDate"></div>
+            <div class="ob-field"><label class="ob-label">Name</label><input class="ob-input" id="obCustomHolName" placeholder="Holiday name..."></div>
+            <button class="btn btn-primary" onclick="addCustomHoliday()">+ Add</button>
+          </div>
+        </div>
+      </div>`;
+  } else if(obStep===5){
+    const days=calcObDays();
+    body.innerHTML=`
+      <div class="ob-title">Review & Publish</div>
+      <div class="ob-sub">Check your calendar before going live.</div>
+      <div class="${days>=180?'ob-day-counter good':'ob-day-counter warn'}">
+        <div><div class="ob-day-label">Total school days</div><div class="ob-day-num">${days}</div><div class="ob-day-label">of 180 required</div></div>
+        <div class="ob-day-status">${days>=180?'✅':'⚠️ '+Math.abs(180-days)+' days '+(days<180?'short':'over')}</div>
+      </div>
+      <div class="ob-card">
+        <div class="ob-card-title">Summary</div>
+        <div class="tb-row"><span>Term 1</span><span style="color:var(--purple);font-weight:600;">${obData.t1Start} → ${obData.t1End}</span></div>
+        <div class="tb-row"><span>Term 2</span><span style="color:var(--purple);font-weight:600;">${obData.t2Start} → ${obData.t2End}</span></div>
+        <div class="tb-row"><span>Break periods</span><span style="font-weight:600;">${obData.breaks.length}</span></div>
+        <div class="tb-row"><span>Public holidays</span><span style="font-weight:600;">${obData.holidays.size}</span></div>
+      </div>
+      ${days<180?`<div style="background:var(--amber-bg);border-radius:var(--radius);padding:14px;color:var(--amber);font-size:14px;">⚠️ You're ${180-days} days short of 180. Go back and adjust term dates or shorten breaks before publishing.</div>`:''}
+      <div style="margin-top:16px;">
+        <label style="font-size:13px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:8px;">Add PD Days (optional)</label>
+        <div id="obPDList" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+          ${obData.pdDays.map(d=>`<span style="background:var(--pd-bg);color:var(--pd-color);padding:4px 10px;border-radius:20px;font-size:13px;font-weight:500;">${d} <span onclick="removeObPD('${d}')" style="cursor:pointer;margin-left:4px;">×</span></span>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <input type="date" class="ob-input" id="obPDDate" style="flex:1;">
+          <button class="btn btn-outline" onclick="addObPD()">+ PD Day</button>
+        </div>
+      </div>`;
+  }
+}
+
+function calcObDays(){
+  if(!obData.t1Start||!obData.t1End||!obData.t2Start||!obData.t2End) return 0;
+  let count=0;
+  [[obData.t1Start,obData.t1End],[obData.t2Start,obData.t2End]].forEach(([start,end])=>{
+    let c=new Date(start),e=new Date(end);
+    while(c<=e){
+      const dow=c.getDay();
+      if(dow!==0&&dow!==6){
+        const k=c.toISOString().split('T')[0];
+        const isBreak=obData.breaks.some(b=>k>=b.from&&k<=b.to);
+        const isHoliday=obData.holidays.has(k);
+        if(!isBreak&&!isHoliday)count++;
+      }
+      c.setDate(c.getDate()+1);
+    }
+  });
+  return count;
+}
+
+function obUpdateDays(){
+  const t1s=document.getElementById('obT1Start')?.value;
+  const t1e=document.getElementById('obT1End')?.value;
+  const t2s=document.getElementById('obT2Start')?.value;
+  const t2e=document.getElementById('obT2End')?.value;
+  if(t1s)obData.t1Start=t1s;
+  if(t1e)obData.t1End=t1e;
+  if(t2s)obData.t2Start=t2s;
+  if(t2e)obData.t2End=t2e;
+  const days=calcObDays();
+  const el=document.getElementById('obDayNum');
+  if(el)el.textContent=days;
+}
+
+function renderObBreaks(){
+  return obData.breaks.map((b,i)=>`
+    <div class="ob-break-item">
+      <span style="color:var(--break-color);">🟡</span>
+      <span>${b.label||'Break'}: ${b.from} → ${b.to}</span>
+      <button class="ob-break-remove" onclick="removeObBreak(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addObBreak(){
+  const from=document.getElementById('obBreakFrom').value;
+  const to=document.getElementById('obBreakTo').value;
+  const label=document.getElementById('obBreakLabel').value||'School Break';
+  if(!from||!to){alert('Please select both dates.');return;}
+  obData.breaks.push({from,to,label});
+  document.getElementById('obBreakList').innerHTML=renderObBreaks();
+}
+
+function removeObBreak(idx){
+  obData.breaks.splice(idx,1);
+  document.getElementById('obBreakList').innerHTML=renderObBreaks();
+}
+
+function obSelectAllHolidays(selectAll){
+  THAI_HOLIDAYS.forEach(h=>{
+    if(selectAll)obData.holidays.add(h.date);
+    else obData.holidays.delete(h.date);
+    const el=document.getElementById(`hol_${h.date}`);
+    if(el)el.checked=selectAll;
+  });
+}
+
+function toggleObHoliday(date){
+  if(obData.holidays.has(date))obData.holidays.delete(date);
+  else obData.holidays.add(date);
+}
+
+function addCustomHoliday(){
+  const date=document.getElementById('obCustomHolDate').value;
+  const name=document.getElementById('obCustomHolName').value.trim();
+  if(!date||!name){alert('Please add date and name.');return;}
+  THAI_HOLIDAYS.push({date,name});
+  obData.holidays.add(date);
+  renderObStep();
+}
+
+function addObPD(){
+  const date=document.getElementById('obPDDate').value;
+  if(!date)return;
+  if(!obData.pdDays.includes(date))obData.pdDays.push(date);
+  renderObStep();
+}
+
+function removeObPD(date){
+  obData.pdDays=obData.pdDays.filter(d=>d!==date);
+  renderObStep();
+}
+
+function obNext(){
+  if(obStep===OB_STEPS){
+    finishSetup();
+    return;
+  }
+  obStep++;
+  renderObStep();
+}
+
+function obPrev(){
+  if(obStep>1){obStep--;renderObStep();}
+}
+
+async function finishSetup(){
+  const newOverrides={};
+
+  [[obData.t1Start,obData.t1End],[obData.t2Start,obData.t2End]].forEach(([start,end])=>{
+    let c=new Date(start),e=new Date(end);
+    while(c<=e){
+      const dow=c.getDay();
+      if(dow!==0&&dow!==6){const k=c.toISOString().split('T')[0];newOverrides[k]={type:'school',label:''};}
+      c.setDate(c.getDate()+1);
+    }
+  });
+  obData.breaks.forEach(b=>{
+    let c=new Date(b.from),e=new Date(b.to);
+    while(c<=e){newOverrides[c.toISOString().split('T')[0]]={type:'break',label:b.label};c.setDate(c.getDate()+1);}
+  });
+  obData.holidays.forEach(date=>{
+    const h=THAI_HOLIDAYS.find(x=>x.date===date);
+    newOverrides[date]={type:'holiday',label:h?h.name:'Public Holiday'};
+  });
+  obData.pdDays.forEach(date=>{newOverrides[date]={type:'pd',label:'Professional Development Day'};});
+  // Early Dismissal: every Wednesday still marked 'school' after breaks/holidays applied
+  Object.keys(newOverrides).forEach(k=>{
+    if(newOverrides[k].type==='school'&&new Date(k).getDay()===3){
+      newOverrides[k]={type:'early',label:`Early Dismissal – ${TERM_DATES.hoursWedEnd}`};
+    }
+  });
+
+  overrides=newOverrides;
+  localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+  localStorage.setItem('bloom_setup_done','true');
+
+  // Save to Supabase
+  try{
+    const yr=await sbSaveYear(obData);
+    if(yr){
+      await sbDeleteAllEvents();
+      const events=Object.entries(newOverrides).map(([date,d])=>({date,type:d.type,label:d.label}));
+      await sbSaveBulk(events);
+    }
+  }catch(e){console.log('Supabase setup save failed',e);}
+
+  addAuditEntry('Calendar setup completed','Admin');
+  document.getElementById('onboarding').classList.remove('visible');
+  showApp();
+}
+
+// ── APP ──────────────────────────────────────────────────────────
+window.addEventListener('resize',()=>{
+  if(!isMobileAdmin()&&adminZoomedMonthIdx!==null){adminZoomedMonthIdx=null;renderAdminCalendar();}
+});
+async function showApp(){
+  document.getElementById('app').classList.add('visible');
+  loadSettings();
+  calcDays();
+  renderAdminCalendar();
+  await renderAbsences();
+  renderApprovals();
+  updateAttention();
+  renderAuditLog();
+}
+
+function loadSettings(){
+  document.getElementById('toggleLive').checked=settings.live;
+  document.getElementById('toggleApproval').checked=settings.approval;
+  document.getElementById('statusSub').textContent='Coming in Phase 3';
+  document.getElementById('approvalSub').textContent=settings.approval?'On — staff changes need approval':'Off — staff changes go live instantly';
+}
+
+function toggleSetting(key){
+  settings[key]=!settings[key];
+  localStorage.setItem('bloom_cal_settings',JSON.stringify(settings));
+  loadSettings();
+  addAuditEntry(`${key==='live'?'Calendar status':'Approval required'} set to ${settings[key]?'ON':'OFF'}`,'Admin');
+}
+
+// ── PUBLIC SITE ACCESS (Notify / Sign In toggles, Supabase-backed) ──
+let _publicAccessSettingsId=null;
+async function loadPublicAccessSettings(){
+  try{
+    const{data,error}=await _sb.from('bloom_settings').select('*').eq('location_id',_locId).maybeSingle();
+    if(error||!data){
+      document.getElementById('notifyEnabledSub').textContent='Could not load — check connection';
+      document.getElementById('signinEnabledSub').textContent='Could not load — check connection';
+      return;
+    }
+    _publicAccessSettingsId=data.id;
+    document.getElementById('toggleNotifyEnabled').checked=!!data.notify_enabled;
+    document.getElementById('toggleSigninEnabled').checked=!!data.signin_enabled;
+    document.getElementById('notifyEnabledSub').textContent=data.notify_enabled?'Live — parents can report absences':'Off — parents see "coming soon"';
+    document.getElementById('signinEnabledSub').textContent=data.signin_enabled?'Live — parents can create accounts and sign in':'Off — parents see "coming soon"';
+  }catch(e){
+    console.log('Failed to load public access settings',e);
+  }
+}
+async function togglePublicAccess(key){
+  const checkbox=document.getElementById(key==='notify'?'toggleNotifyEnabled':'toggleSigninEnabled');
+  const sub=document.getElementById(key==='notify'?'notifyEnabledSub':'signinEnabledSub');
+  const newValue=checkbox.checked;
+  const column=key==='notify'?'notify_enabled':'signin_enabled';
+  try{
+    const{error}=await _sb.from('bloom_settings').update({[column]:newValue,updated_at:new Date().toISOString()}).eq('location_id',_locId);
+    if(error)throw error;
+    sub.textContent=newValue
+      ?(key==='notify'?'Live — parents can report absences':'Live — parents can create accounts and sign in')
+      :'Off — parents see "coming soon"';
+    addAuditEntry(`Public ${key==='notify'?'Notify':'Sign In'} set to ${newValue?'ON':'OFF'}`,'Admin');
+  }catch(e){
+    checkbox.checked=!newValue;
+    alert('Failed to update setting. Please check your connection and try again.');
+  }
+}
+
+// ── DAY COUNT ────────────────────────────────────────────────────
+function calcDays(){
+  let t1=0,t2=0;
+  const today=new Date();
+  CALENDAR_MONTHS.forEach(({year,month})=>{
+    const dim=new Date(year,month+1,0).getDate();
+    for(let d=1;d<=dim;d++){
+      const data=getDayData(year,month,d);
+      if(!data||!COUNTS_AS_SCHOOL.includes(data.type))continue;
+      const isT1=new Date(year,month,d)>=YEAR_START&&new Date(year,month,d)<=TERM1_END;
+      if(isT1)t1++;else t2++;
+    }
+  });
+  const total=t1+t2;
+  document.getElementById('term1Days').textContent=t1;
+  document.getElementById('term2Days').textContent=t2;
+  const fmt=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('term1Sub').textContent=`${fmt(YEAR_START)} – ${fmt(TERM1_END)}`;
+  document.getElementById('term2Sub').textContent=`${fmt(TERM2_START)} – ${fmt(TERM2_END)}`;
+  document.getElementById('totalDaysDisplay').textContent=total;
+  document.getElementById('dayCountNum').textContent=total;
+  const card=document.getElementById('totalCard');
+  const counter=document.getElementById('dayCounter');
+  const status=document.getElementById('totalStatus');
+  if(total<180){
+    card.className='total-card warn';counter.className='day-counter warn';status.textContent='⚠️';
+    document.getElementById('totalTarget').textContent=`of 180 required — ${180-total} days short`;
+  } else {
+    card.className='total-card good';counter.className='day-counter good';status.textContent='✅';
+    document.getElementById('totalTarget').textContent='of 180 required — target met!';
+  }
+}
+
+// ── ATTENTION ────────────────────────────────────────────────────
+function updateAttention(){
+  const pending=pendingChanges.filter(p=>p.status==='pending').length;
+  const newAbs=absences.filter(a=>a.status==='new').length;
+  const total=parseInt(document.getElementById('totalDaysDisplay').textContent)||0;
+  let hasAny=false;
+
+  const ap=document.getElementById('attnPending');
+  if(pending>0){ap.style.display='flex';document.getElementById('attnPendingTxt').textContent=`${pending} pending approval`;hasAny=true;}
+  else ap.style.display='none';
+
+  const aa=document.getElementById('attnAbsence');
+  if(newAbs>0){aa.style.display='flex';document.getElementById('attnAbsenceTxt').textContent=`${newAbs} new absence`;hasAny=true;}
+  else aa.style.display='none';
+
+  const ad=document.getElementById('attnDays');
+  if(total<180){ad.style.display='flex';document.getElementById('attnDaysTxt').textContent=`${180-total} days short of 180`;hasAny=true;}
+  else ad.style.display='none';
+
+  const au=document.getElementById('attnUnsynced');
+  if(unsyncedQueue.length>0){au.style.display='flex';document.getElementById('attnUnsyncedTxt').textContent=`${unsyncedQueue.length} change${unsyncedQueue.length!==1?'s':''} not yet synced — tap to retry`;hasAny=true;}
+  else au.style.display='none';
+
+  document.getElementById('attentionStrip').classList.toggle('has-items',hasAny);
+
+  const ab=document.getElementById('absenceBadge');
+  const apb=document.getElementById('approvalBadge');
+  ab.classList.toggle('show',newAbs>0);ab.textContent=newAbs;
+  apb.classList.toggle('show',pending>0);apb.textContent=pending;
+  document.getElementById('mAbsenceBadge').classList.toggle('show',newAbs>0);
+  document.getElementById('mApprovalBadge').classList.toggle('show',pending>0);
+}
+
+// ── ADMIN CALENDAR ────────────────────────────────────────────────
+let adminZoomedMonthIdx=null;
+let adminLastZoomedMonthIdx=null;
+
+function isMobileAdmin(){return window.innerWidth<=768;}
+
+function openAdminMonthZoom(idx){
+  if(!isMobileAdmin())return; // desktop keeps its current behavior, no zoom
+  adminZoomedMonthIdx=idx;
+  adminLastZoomedMonthIdx=idx;
+  renderAdminCalendar();
+}
+
+function closeAdminMonthZoom(){
+  adminLastZoomedMonthIdx=adminZoomedMonthIdx;
+  adminZoomedMonthIdx=null;
+  renderAdminCalendar();
+}
+
+function renderAdminCalendar(){
+  const grid=document.getElementById('adminCalGrid');
+  grid.innerHTML='';
+  grid.style.gridTemplateColumns='';
+  const today=new Date();
+  if(isMobileAdmin()&&adminZoomedMonthIdx!==null){
+    renderAdminMonthZoom(grid,today);
+    return;
+  }
+  CALENDAR_MONTHS.forEach(({year,month},idx)=>{
+    const card=document.createElement('div');
+    card.className='mini-month';
+    const fd=new Date(year,month,1).getDay();
+    const offset=fd===0?6:fd-1;
+    const dim=new Date(year,month+1,0).getDate();
+    const trailing=42-offset-dim;
+    let html=`<div class="mini-month-hdr" onclick="openAdminMonthZoom(${idx})"><div class="mini-month-name">${MONTH_NAMES[month]}</div><div class="mini-month-yr">${year}</div></div>
+    <div class="mini-body"><div class="mini-day-hdrs"><div class="mini-day-hdr">M</div><div class="mini-day-hdr">T</div><div class="mini-day-hdr">W</div><div class="mini-day-hdr">T</div><div class="mini-day-hdr">F</div><div class="mini-day-hdr">S</div><div class="mini-day-hdr">S</div></div><div class="mini-days">`;
+    for(let i=0;i<offset;i++)html+=`<div class="mini-day empty"></div>`;
+    for(let d=1;d<=dim;d++){
+      const data=getDayData(year,month,d);
+      const isToday=today.getFullYear()===year&&today.getMonth()===month&&today.getDate()===d;
+      const pend=isPending(year,month,d);
+      const dow=new Date(year,month,d).getDay();
+      const isWeekend=dow===0||dow===6;
+      let cls='mini-day';
+      if(isToday)cls+=' today';
+      else if(data)cls+=` ${data.type}`;
+      else if(isWeekend)cls+=' weekend';
+      if(pend)cls+=' pending';
+      // Day tap opens the edit form on both desktop and mobile
+      html+=`<div class="${cls}" onclick="openEditDay(${year},${month},${d})">${d}</div>`;
+    }
+    for(let i=0;i<trailing;i++)html+=`<div class="mini-day empty"></div>`;
+    html+=`</div></div>`;
+    card.innerHTML=html;
+    grid.appendChild(card);
+  });
+}
+
+function renderAdminMonthZoom(grid,today){
+  const {year,month}=CALENDAR_MONTHS[adminZoomedMonthIdx];
+  const fd=new Date(year,month,1).getDay();
+  const offset=fd===0?6:fd-1;
+  const dim=new Date(year,month+1,0).getDate();
+  const trailing=(7-(offset+dim)%7)%7;
+  let daysHtml='';
+  for(let i=0;i<offset;i++)daysHtml+=`<div class="mini-day empty"></div>`;
+  for(let d=1;d<=dim;d++){
+    const data=getDayData(year,month,d);
+    const isToday=today.getFullYear()===year&&today.getMonth()===month&&today.getDate()===d;
+    const dow=new Date(year,month,d).getDay();
+    const isWeekend=dow===0||dow===6;
+    let cls='mini-day';
+    if(isToday)cls+=' today';
+    else if(data)cls+=` ${data.type}`;
+    else if(isWeekend)cls+=' weekend';
+    daysHtml+=`<div class="${cls}" onclick="openEditDay(${year},${month},${d})">${d}</div>`;
+  }
+  for(let i=0;i<trailing;i++)daysHtml+=`<div class="mini-day empty"></div>`;
+  grid.style.gridTemplateColumns='1fr';
+  grid.innerHTML=`<div class="mini-month">
+    <div class="mini-month-hdr" style="cursor:default;display:flex;align-items:center;justify-content:space-between;">
+      <button onclick="event.stopPropagation();closeAdminMonthZoom()" style="background:none;border:1px solid rgba(255,255,255,0.5);color:white;border-radius:20px;padding:5px 14px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;">← All months</button>
+      <div style="text-align:right;"><div class="mini-month-name">${MONTH_NAMES[month]}</div><div class="mini-month-yr">${year}</div></div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="event.stopPropagation();adminChangeMonth(-1)" ${adminZoomedMonthIdx<=0?'disabled style="opacity:0.3;"':''} style="background:none;border:1px solid rgba(255,255,255,0.5);color:white;border-radius:50%;width:28px;height:28px;font-size:15px;cursor:pointer;">‹</button>
+        <button onclick="event.stopPropagation();adminChangeMonth(1)" ${adminZoomedMonthIdx>=CALENDAR_MONTHS.length-1?'disabled style="opacity:0.3;"':''} style="background:none;border:1px solid rgba(255,255,255,0.5);color:white;border-radius:50%;width:28px;height:28px;font-size:15px;cursor:pointer;">›</button>
+      </div>
+    </div>
+    <div class="mini-body"><div class="mini-day-hdrs"><div class="mini-day-hdr">M</div><div class="mini-day-hdr">T</div><div class="mini-day-hdr">W</div><div class="mini-day-hdr">T</div><div class="mini-day-hdr">F</div><div class="mini-day-hdr">S</div><div class="mini-day-hdr">S</div></div><div class="mini-days">${daysHtml}</div></div>
+  </div>`;
+}
+
+function adminChangeMonth(delta){
+  const next=adminZoomedMonthIdx+delta;
+  if(next<0||next>=CALENDAR_MONTHS.length)return;
+  adminZoomedMonthIdx=next;
+  adminLastZoomedMonthIdx=next;
+  renderAdminCalendar();
+}
+
+// ── EDIT DAY (single click on calendar) ──────────────────────────
+function openEditDay(y,m,d){
+  const data=getDayData(y,m,d);
+  const key=dk(y,m,d);
+  crDateKey=key;
+  const dow=new Date(y,m,d).getDay();
+  const isWeekend=dow===0||dow===6;
+  const dateStr=new Date(y,m,d).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const needsApproval=settings.approval;
+
+  document.getElementById('crTitle').textContent=data?'Change Day':'Assign Day';
+  document.getElementById('crDate').textContent=(isWeekend?'⚠️ Weekend day · ':'')+( data?`${dateStr} · Currently: ${data.type}`:dateStr);
+  document.getElementById('crType').value=data?data.type:'school';
+  document.getElementById('crLabel').value=data?data.label||'':'';
+  document.getElementById('crReason').value='';
+
+  const reasonLabel=document.getElementById('crReasonLabel');
+  const submitBtn=document.getElementById('crSubmitBtn');
+  if(reasonLabel){reasonLabel.innerHTML=needsApproval?'Reason <span style="color:var(--red)">*</span>':'Reason <span style="color:var(--text-muted);font-weight:400;">(optional)</span>';}
+  if(submitBtn){submitBtn.textContent=needsApproval?'Submit for Approval':'Apply Change';}
+
+  document.getElementById('changeRequestModal').classList.add('open');
+}
+
+function submitChangeRequest(){
+  const type=document.getElementById('crType').value;
+  const label=document.getElementById('crLabel').value.trim();
+  const reason=document.getElementById('crReason').value.trim();
+
+  if(settings.approval&&!reason){alert('Please add a reason.');return;}
+
+  if(!settings.approval){
+    if(type==='none'){
+      delete overrides[crDateKey];
+      sbDeleteEvent(crDateKey);
+    } else {
+      overrides[crDateKey]={type,label};
+      sbSaveEvent(crDateKey,type,label);
+    }
+    localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+    addAuditEntry(`${crDateKey} → ${type==='none'?'removed':type}${label?' ('+label+')':''}`, 'Admin');
+    closeModal('changeRequestModal');
+    calcDays();renderAdminCalendar();updateAttention();
+  } else {
+    const change={id:Date.now(),dateKey:crDateKey,type,label,reason,submittedBy:'Staff',
+      submittedAt:new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}),status:'pending'};
+    pendingChanges.push(change);
+    localStorage.setItem('bloom_cal_pending',JSON.stringify(pendingChanges));
+    addAuditEntry(`Change requested: ${crDateKey} → ${type}`,'Staff');
+    closeModal('changeRequestModal');
+    renderAdminCalendar();renderApprovals();updateAttention();
+  }
+}
+
+// ── VISUAL EDITOR ────────────────────────────────────────────────
+function openVE(type,label){
+  veType=type;veSelected=new Set();veMode='assign';
+  document.getElementById('veTitle').textContent=label;
+  document.getElementById('veTitle').style.color=TYPE_COLORS[type];
+  document.getElementById('veCount').textContent='0 selected';
+  document.getElementById('veCount').style.background=TYPE_BG[type];
+  document.getElementById('veCount').style.color=TYPE_COLORS[type];
+  document.getElementById('veReason').value='';
+  document.getElementById('veLabel').value='';
+  document.getElementById('veReason').placeholder=settings.approval?'Reason for change (required)...':'Reason for change (optional)...';
+  document.getElementById('veApplyBtn').textContent=settings.approval?'Submit for Approval':'Apply Changes';
+  document.getElementById('veApplyBtn').style.background='';
+  document.getElementById('veModeAssign').style.background=TYPE_COLORS[type];
+  document.getElementById('veModeAssign').style.color='white';
+  document.getElementById('veModeRemove').style.background='white';
+  document.getElementById('veModeRemove').style.color='#6b6b6b';
+  document.getElementById('veModeHint').textContent='Click days to assign · Weekends allowed';
+  const needsLabel=['event','early','closure','makeup'].includes(type);
+  document.getElementById('veLabel').style.display=needsLabel?'block':'none';
+  renderVE();
+  document.getElementById('veOverlay').classList.add('open');
+}
+
+function renderVE(){
+  const body=document.getElementById('veBody');
+  const terms=[
+    {label:'Term 1',months:CALENDAR_MONTHS.slice(0,5)},
+    {label:'Term 2',months:CALENDAR_MONTHS.slice(5)}
+  ];
+  let html='';
+  terms.forEach(term=>{
+    html+=`<div class="ve-term-lbl">${term.label}</div><div class="ve-cal-grid">`;
+    term.months.forEach(({year,month})=>{
+      const fd=new Date(year,month,1).getDay();
+      const offset=fd===0?6:fd-1;
+      const dim=new Date(year,month+1,0).getDate();
+      const trailing=42-offset-dim;
+      html+=`<div class="ve-month"><div class="ve-month-hdr">${MONTH_NAMES[month]} ${year}</div><div class="ve-month-body">
+        <div class="ve-day-hdrs"><div class="ve-day-hdr">M</div><div class="ve-day-hdr">T</div><div class="ve-day-hdr">W</div><div class="ve-day-hdr">T</div><div class="ve-day-hdr">F</div><div class="ve-day-hdr">S</div><div class="ve-day-hdr">S</div></div>
+        <div class="ve-days">`;
+      for(let i=0;i<offset;i++)html+=`<div class="ve-day empty"></div>`;
+      for(let d=1;d<=dim;d++){
+        const key=dk(year,month,d);
+        const dow=new Date(year,month,d).getDay();
+        const isWeekend=dow===0||dow===6;
+        const existing=getDayData(year,month,d);
+        const isExisting=existing&&existing.type===veType;
+        const isSelected=veSelected.has(key);
+        let cls='ve-day';
+        let style='';
+        if(isSelected){style=`background:${TYPE_COLORS[veType]};color:white;`;cls+=' selected';}
+        else if(isExisting){style=`background:${TYPE_BG[veType]};color:${TYPE_COLORS[veType]};`;cls+=' existing';}
+        else if(isWeekend)cls+=' weekend';
+        html+=`<div class="${cls}" style="${style}" data-key="${key}" data-y="${year}" data-m="${month}" data-d="${d}" onclick="veClick(this,${year},${month},${d})">${d}</div>`;
+      }
+      for(let i=0;i<trailing;i++)html+=`<div class="ve-day empty"></div>`;
+      html+=`</div></div></div>`;
+    });
+    html+=`</div>`;
+  });
+  body.innerHTML=html;
+}
+
+function veClick(el,y,m,d){
+  const key=dk(y,m,d);
+  const dow=new Date(y,m,d).getDay();
+  const isWeekend=dow===0||dow===6;
+  const existing=getDayData(y,m,d);
+  const isExisting=existing&&existing.type===veType;
+
+  if(veMode==='remove'){
+    // Only allow selecting existing days of this type
+    if(!isExisting){return;}
+    if(veSelected.has(key)){
+      veSelected.delete(key);
+      el.style.background=TYPE_BG[veType];el.style.color=TYPE_COLORS[veType];
+      el.classList.remove('selected');
+    } else {
+      veSelected.add(key);
+      el.style.background='#dc2626';el.style.color='white';
+      el.classList.add('selected');
+    }
+  } else {
+    // Assign mode
+    if(isWeekend&&!veSelected.has(key)){
+      const typeName=document.getElementById('veTitle').textContent||veType;
+      if(!confirm(`This is a weekend day. Assign as ${typeName}?`))return;
+    }
+    if(veSelected.has(key)){
+      veSelected.delete(key);
+      el.style.background='';el.style.color='';
+      el.classList.remove('selected');
+      if(isExisting){el.style.background=TYPE_BG[veType];el.style.color=TYPE_COLORS[veType];el.classList.add('existing');}
+      else if(isWeekend)el.classList.add('weekend');
+    } else {
+      veSelected.add(key);
+      el.style.background=TYPE_COLORS[veType];el.style.color='white';
+      el.classList.add('selected');el.classList.remove('weekend','existing');
+    }
+  }
+  document.getElementById('veCount').textContent=`${veSelected.size} day${veSelected.size!==1?'s':''} selected`;
+}
+
+function veClearAll(){veSelected.clear();renderVE();document.getElementById('veCount').textContent='0 selected';}
+
+function veApply(){
+  if(veSelected.size===0){alert(`Please select at least one day.`);return;}
+  const reason=document.getElementById('veReason').value.trim();
+  if(settings.approval&&!reason){alert('Please add a reason.');return;}
+  const label=document.getElementById('veLabel').value.trim();
+  const dates=Array.from(veSelected).sort();
+  const isRemove=veMode==='remove';
+
+  if(!settings.approval){
+    if(isRemove){
+      dates.forEach(dateKey=>delete overrides[dateKey]);
+    } else {
+      dates.forEach(dateKey=>overrides[dateKey]={type:veType,label});
+    }
+    localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+    sbSyncDates(dates,veType,label,isRemove);
+    addAuditEntry(`${dates.length} days ${isRemove?'removed':'set to '+veType}${label?' ('+label+')':''}`,'Admin');
+    closeVE();calcDays();renderAdminCalendar();updateAttention();
+  } else {
+    const change={id:Date.now(),
+      dateKey:`${dates[0]}${dates.length>1?' +more':''}`,
+      isMulti:true,dates,
+      type:isRemove?'none':veType,
+      label,reason,
+      submittedBy:'Staff',
+      submittedAt:new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}),
+      status:'pending'
+    };
+    pendingChanges.push(change);
+    localStorage.setItem('bloom_cal_pending',JSON.stringify(pendingChanges));
+    addAuditEntry(`${dates.length} days submitted for ${isRemove?'removal':'change to '+veType}`,'Staff');
+    closeVE();renderAdminCalendar();renderApprovals();updateAttention();
+    alert(`✓ ${dates.length} day${dates.length!==1?'s':''} submitted for ${isRemove?'removal':'approval'}.`);
+  }
+}
+
+function closeVE(){document.getElementById('veOverlay').classList.remove('open');veSelected.clear();}
+
+// ── ADD EVENT ────────────────────────────────────────────────────
+function openAddEvent(){
+  document.getElementById('eventDate').value='';
+  document.getElementById('eventName').value='';
+  document.getElementById('eventType').value='event';
+  document.getElementById('eventReason').value='';
+  document.getElementById('addEventModal').classList.add('open');
+}
+
+function submitEvent(){
+  const date=document.getElementById('eventDate').value;
+  const name=document.getElementById('eventName').value.trim();
+  const type=document.getElementById('eventType').value;
+  const reason=document.getElementById('eventReason').value.trim();
+  if(!date||!name){alert('Please fill in date and name.');return;}
+
+  if(!settings.approval){
+    overrides[date]={type,label:name};
+    localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+    sbSyncDates([date],type,name,false);
+    addAuditEntry(`Event "${name}" added on ${date} (direct)`,'Admin');
+    closeModal('addEventModal');calcDays();renderAdminCalendar();
+  } else {
+    pendingChanges.push({id:Date.now(),dateKey:date,type,label:name,reason:reason||'New event',
+      submittedBy:'Staff',submittedAt:new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}),status:'pending'});
+    localStorage.setItem('bloom_cal_pending',JSON.stringify(pendingChanges));
+    addAuditEntry(`Event "${name}" submitted for ${date}`,'Staff');
+    closeModal('addEventModal');renderApprovals();updateAttention();
+  }
+}
+
+// ── MULTI SELECT ─────────────────────────────────────────────────
+function openMultiSelect(){
+  document.getElementById('msFrom').value='';document.getElementById('msTo').value='';document.getElementById('msTo').min='';
+  document.getElementById('msReason').value='';
+  document.getElementById('multiSelectModal').classList.add('open');
+}
+
+function submitMultiSelect(){
+  const from=document.getElementById('msFrom').value;
+  const to=document.getElementById('msTo').value;
+  const type=document.getElementById('msType').value;
+  const reason=document.getElementById('msReason').value.trim();
+  const incWeekends=document.getElementById('msWeekends').checked;
+  if(!from||!to){alert('Please select date range.');return;}
+  if(!reason){alert('Please add a reason.');return;}
+  if(new Date(from)>new Date(to)){alert('Start must be before end.');return;}
+
+  const dates=[];
+  let c=new Date(from);const e=new Date(to);
+  while(c<=e){
+    const dow=c.getDay();
+    if(incWeekends||(dow!==0&&dow!==6))dates.push(c.toISOString().split('T')[0]);
+    c.setDate(c.getDate()+1);
+  }
+
+  if(!settings.approval){
+    dates.forEach(d=>overrides[d]={type,label:''});
+    localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+    sbSyncDates(dates,type,'',false);
+    addAuditEntry(`${dates.length} days (${from}→${to}) set to ${type} (direct)`,'Admin');
+    closeModal('multiSelectModal');calcDays();renderAdminCalendar();
+  } else {
+    pendingChanges.push({id:Date.now(),dateKey:`${from} to ${to}`,isMulti:true,dates,type,label:'',reason,
+      submittedBy:'Staff',submittedAt:new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}),status:'pending'});
+    localStorage.setItem('bloom_cal_pending',JSON.stringify(pendingChanges));
+    addAuditEntry(`Range ${from}→${to} (${dates.length} days) submitted as ${type}`,'Staff');
+    closeModal('multiSelectModal');renderApprovals();updateAttention();
+  }
+}
+
+// ── ABSENCES ─────────────────────────────────────────────────────
+async function renderAbsences(){
+  const list=document.getElementById('absenceList');
+  list.innerHTML=`<div class="empty-state"><div class="empty-icon">🙋</div><div class="empty-title">Loading…</div></div>`;
+  const {data,error}=await _sb.from('bloom_absence_reports').select('*').order('created_at',{ascending:false});
+  if(error){list.innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Could not load absences</div></div>`;return;}
+  absences=data||[];
+  updateAttention();
+  if(!absences.length){list.innerHTML=`<div class="empty-state"><div class="empty-icon">🙋</div><div class="empty-title">No absences yet</div></div>`;return;}
+  const reasonLabels={sick:'Sick / Fever',appointment:"Doctor's appointment",travel:'Family travel',emergency:'Family emergency',other:'Other'};
+  list.innerHTML=absences.map(a=>{
+    const dateStr=a.date_end&&a.date_end!==a.date_start
+      ?`${formatDate(a.date_start)} → ${formatDate(a.date_end)}`
+      :formatDate(a.date_start);
+    const who=a.submitted_by_name||a.submitted_by_email;
+    const reasonLine=[reasonLabels[a.reason_type]||a.reason_type,a.reason_note].filter(Boolean).join(' — ');
+    return `
+    <div class="absence-card ${a.status}">
+      <div class="absence-avatar">${(a.learner_name||'?')[0]}</div>
+      <div style="flex:1;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="absence-name">${a.learner_name}</span>
+          <span class="status-badge ${a.status==='new'?'new':a.status}">${a.status==='new'?'New':'Noted'}</span>
+        </div>
+        <div class="absence-date">📅 ${dateStr} · ${who}</div>
+        <div class="absence-reason">${reasonLine}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${new Date(a.created_at).toLocaleString()}</div>
+        ${a.status==='new'?`<div style="margin-top:8px;"><button class="btn btn-success btn-sm" onclick="acknowledgeAbsence('${a.id}')">✓ Acknowledge</button></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function acknowledgeAbsence(id){
+  const a=absences.find(x=>x.id===id);
+  if(!a)return;
+  const {error}=await _sb.from('bloom_absence_reports').update({status:'acknowledged'}).eq('id',id);
+  if(error){alert('Could not update: '+(error.message||'error'));return;}
+  a.status='acknowledged';
+  addAuditEntry(`Absence acknowledged: ${a.learner_name} on ${a.date_start}`,'Admin');
+  renderAbsences();updateAttention();
+}
+
+// ── APPROVALS ────────────────────────────────────────────────────
+function renderApprovals(){
+  const list=document.getElementById('approvalList');
+  const pending=pendingChanges.filter(p=>p.status==='pending');
+  if(!pending.length){list.innerHTML=`<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">All clear</div><div style="font-size:14px;color:var(--text-muted);">No pending changes.</div></div>`;return;}
+  const typeLabels={school:'School Day',early:'Early Dismissal',event:'School Event',pd:'PD Day',holiday:'Public Holiday',break:'School Break',closure:'Emergency Closure',makeup:'Make-up Day',none:'Remove'};
+  list.innerHTML=pending.map(p=>`
+    <div class="approval-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="approval-date">${p.isMulti?`${p.dates?.length||'Multiple'} days`:formatDate(p.dateKey)}</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">→ ${typeLabels[p.type]||p.type}${p.label?' · '+p.label:''}</div>
+        </div>
+        <span class="status-badge pending">Pending</span>
+      </div>
+      <div class="approval-reason">"${p.reason}"</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">${p.submittedBy} · ${p.submittedAt}</div>
+      <div class="approval-actions">
+        <button class="btn btn-success btn-sm" onclick="approveChange(${p.id})">✓ Approve</button>
+        <button class="btn btn-danger btn-sm" onclick="rejectChange(${p.id})">✕ Reject</button>
+      </div>
+    </div>`).join('');
+}
+
+function approveChange(id){
+  const change=pendingChanges.find(p=>p.id===id);
+  if(!change)return;
+  const dates=change.isMulti?change.dates:[change.dateKey];
+  dates.forEach(dateKey=>{
+    if(change.type==='none'){
+      delete overrides[dateKey];
+      sbDeleteEvent(dateKey);
+    } else {
+      overrides[dateKey]={type:change.type,label:change.label||''};
+      sbSaveEvent(dateKey,change.type,change.label||'');
+    }
+  });
+  localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+  pendingChanges=pendingChanges.filter(p=>p.id!==id);
+  localStorage.setItem('bloom_cal_pending',JSON.stringify(pendingChanges));
+  addAuditEntry(`Approved: ${dates.length} day(s) → ${change.type}`,'Admin');
+  calcDays();renderAdminCalendar();renderApprovals();updateAttention();
+}
+
+function rejectChange(id){
+  const reason=prompt('Reason for rejection (optional):');
+  const change=pendingChanges.find(p=>p.id===id);
+  if(!change)return;
+  pendingChanges=pendingChanges.filter(p=>p.id!==id);
+  localStorage.setItem('bloom_cal_pending',JSON.stringify(pendingChanges));
+  addAuditEntry(`Rejected: ${change.dateKey}${reason?' — '+reason:''}`,'Admin');
+  renderApprovals();updateAttention();
+}
+
+// ── TERM BREAKDOWN ───────────────────────────────────────────────
+function openTermBreakdown(term){
+  const iT1=term==='term1';
+  const start=iT1?YEAR_START:TERM2_START;
+  const end=iT1?TERM1_END:TERM2_END;
+  const byMonth={};let ts=0,th=0,tp=0,tb=0;
+  CALENDAR_MONTHS.forEach(({year,month})=>{
+    const ms=new Date(year,month,1),me=new Date(year,month+1,0);
+    if(me<start||ms>end)return;
+    const k=`${MONTH_NAMES[month]} ${year}`;byMonth[k]={s:0,h:0,p:0,b:0};
+    for(let d=1;d<=new Date(year,month+1,0).getDate();d++){
+      const dt=new Date(year,month,d);if(dt<start||dt>end)continue;
+      const data=getDayData(year,month,d);if(!data)continue;
+      if(COUNTS_AS_SCHOOL.includes(data.type)){byMonth[k].s++;ts++;}
+      else if(data.type==='holiday'){byMonth[k].h++;th++;}
+      else if(data.type==='pd'){byMonth[k].p++;tp++;}
+      else if(data.type==='break'){byMonth[k].b++;tb++;}
+    }
+  });
+  document.getElementById('tbTitle').textContent=`${iT1?'Term 1':'Term 2'} Breakdown`;
+  document.getElementById('tbContent').innerHTML=Object.entries(byMonth).map(([m,c])=>`
+    <div class="tb-row">
+      <span style="font-weight:500;">${m}</span>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
+        <span style="color:var(--school-color);font-weight:600;">${c.s} school</span>
+        ${c.h>0?`<span style="color:var(--holiday-color);">${c.h} holiday</span>`:''}
+        ${c.p>0?`<span style="color:var(--pd-color);">${c.p} PD</span>`:''}
+        ${c.b>0?`<span style="color:var(--break-color);">${c.b} break</span>`:''}
+      </div>
+    </div>`).join('')+`
+    <div style="margin-top:12px;padding-top:12px;border-top:2px solid var(--border);">
+      <div class="tb-row"><span style="font-weight:600;">Total school days</span><span style="color:var(--school-color);font-weight:700;font-size:16px;">${ts}</span></div>
+      ${th>0?`<div class="tb-row"><span style="color:var(--text-muted);">Holidays</span><span>${th}</span></div>`:''}
+      ${tp>0?`<div class="tb-row"><span style="color:var(--text-muted);">PD days</span><span>${tp}</span></div>`:''}
+      ${tb>0?`<div class="tb-row"><span style="color:var(--text-muted);">Break days</span><span>${tb}</span></div>`:''}
+    </div>`;
+  document.getElementById('termBreakdownModal').classList.add('open');
+}
+
+// ── AUDIT LOG ────────────────────────────────────────────────────
+function addAuditEntry(text,who){
+  const now=new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  auditLog.unshift({text,who,time:now});
+  if(auditLog.length>50)auditLog=auditLog.slice(0,50);
+  localStorage.setItem('bloom_cal_audit',JSON.stringify(auditLog));
+  renderAuditLog();
+}
+
+function renderAuditLog(){
+  const el=document.getElementById('auditLog');
+  if(!auditLog.length){el.innerHTML=`<div class="empty-state" style="padding:20px;"><div style="color:var(--text-muted);font-size:14px;">No changes yet.</div></div>`;return;}
+  el.innerHTML=auditLog.slice(0,10).map(e=>`
+    <div class="log-item"><span class="log-time">${e.time}</span>
+    <span><span class="log-who">${e.who}</span> — ${e.text}</span></div>`).join('');
+}
+
+function clearLog(){if(!confirm('Clear history?'))return;auditLog=[];localStorage.setItem('bloom_cal_audit','[]');renderAuditLog();}
+
+// ── ARCHIVE ──────────────────────────────────────────────────────
+async function syncToCloud(){
+  const btn=document.getElementById('syncCloudBtn');
+  const status=document.getElementById('syncCloudStatus');
+  if(btn.dataset.syncing==='1')return;
+  const allDatesPreview=new Set([...Object.keys(BASE),...Object.keys(overrides)]);
+  const confirmMsg=`This will save your current academic year (Term 1: ${obData.t1Start} to ${obData.t1End}, Term 2: ${obData.t2Start} to ${obData.t2End}) and all ${allDatesPreview.size} calendar entries to the cloud database. Continue?`;
+  if(!confirm(confirmMsg))return;
+  btn.dataset.syncing='1';
+  status.textContent='Syncing…';
+  try{
+    await sbInit();
+    if(!_yearId){
+      const yr=await sbSaveYear(obData);
+      if(!yr){
+        status.textContent='Failed to save academic year — check Supabase connection.';
+        status.style.color='var(--red)';
+        btn.dataset.syncing='0';
+        return;
+      }
+    }
+    const allDates=new Set([...Object.keys(BASE),...Object.keys(overrides)]);
+    const events=[...allDates].map(date=>{
+      const d=overrides[date]||BASE[date];
+      return{date,type:d.type,label:d.label||''};
+    });
+    await sbDeleteAllEvents();
+    await sbSaveBulk(events);
+    localStorage.setItem('bloom_setup_done','true');
+    status.textContent=`Synced successfully — ${events.length} calendar entries saved to the cloud.`;
+    status.style.color='#16a34a';
+    btn.dataset.syncing='0';
+  }catch(e){
+    status.textContent='Sync failed: '+e.message;
+    status.style.color='var(--red)';
+    btn.dataset.syncing='0';
+  }
+}
+
+function archiveYear(){
+  document.getElementById('archiveYearLabelTarget').textContent=_yearLabel||'the current year';
+  document.getElementById('archiveYearWarning').textContent=`This permanently ends ${_yearLabel||'the current'} academic year setup and starts a new one. Past calendar data stays in the database and remains visible in reports, but this cannot be undone from here.`;
+  document.getElementById('archiveYearConfirmInput').value='';
+  document.getElementById('archiveYearConfirmBtn').disabled=true;
+  document.getElementById('archiveYearModal').classList.add('open');
+}
+async function refreshArchiveSettingsUI(){
+  const archiveSub=document.getElementById('archiveRowSub');
+  const restoreSub=document.getElementById('restoreRowSub');
+  if(archiveSub)archiveSub.textContent=`Save ${_yearLabel||'the current year'} and begin fresh setup`;
+  if(!restoreSub||!_locId)return;
+  try{
+    const{data,error}=await _sb.from('bloom_academic_years').select('id').eq('location_id',_locId).eq('is_active',false).not('archived_at','is',null);
+    if(error)throw error;
+    const n=data?data.length:0;
+    restoreSub.textContent=n===0?'No archived years yet':`${n} archived year${n===1?'':'s'} available`;
+  }catch(e){
+    restoreSub.textContent='Could not load archived years';
+  }
+}
+async function openRestoreYearModal(){
+  const listEl=document.getElementById('restoreYearList');
+  listEl.innerHTML='<div style="color:var(--text-muted);font-size:14px;">Loading…</div>';
+  document.getElementById('restoreYearListModal').classList.add('open');
+  try{
+    const{data,error}=await _sb.from('bloom_academic_years').select('*').eq('location_id',_locId).eq('is_active',false).not('archived_at','is',null).order('archived_at',{ascending:false});
+    if(error)throw error;
+    if(!data||data.length===0){
+      listEl.innerHTML='<div style="color:var(--text-muted);font-size:14px;">No archived years yet.</div>';
+      return;
+    }
+    listEl.innerHTML=data.map(yr=>`
+      <div class="settings-row" style="border:1px solid var(--border);border-radius:10px;margin:0;" onclick="openRestoreConfirm('${yr.id}','${(yr.label||'').replace(/'/g,"\\'")}')">
+        <div>
+          <div class="settings-row-label">${yr.label||'(untitled)'}</div>
+          <div class="settings-row-sub">Archived ${new Date(yr.archived_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+        </div>
+        <span style="color:var(--text-muted);">›</span>
+      </div>`).join('');
+  }catch(e){
+    listEl.innerHTML='<div style="color:#dc2626;font-size:14px;">Failed to load archived years. Check your connection.</div>';
+  }
+}
+let _restoreTargetId=null,_restoreTargetLabel='';
+function openRestoreConfirm(id,label){
+  _restoreTargetId=id;_restoreTargetLabel=label;
+  closeModal('restoreYearListModal');
+  document.getElementById('restoreYearLabelTarget').textContent=label;
+  document.getElementById('restoreYearWarning').textContent=`This makes ${label} the active year again and archives ${_yearLabel||'the current year'} in its place. The public calendar will immediately switch to showing ${label}.`;
+  document.getElementById('restoreYearConfirmInput').value='';
+  document.getElementById('restoreYearConfirmBtn').disabled=true;
+  document.getElementById('restoreYearConfirmModal').classList.add('open');
+}
+async function confirmRestoreYear(){
+  const input=document.getElementById('restoreYearConfirmInput');
+  if(input.value!==_restoreTargetLabel||!_restoreTargetId)return;
+  const btn=document.getElementById('restoreYearConfirmBtn');
+  btn.disabled=true;btn.textContent='Restoring…';
+  try{
+    // Archive whichever year is currently active before activating the picked one,
+    // so there is never a moment (or a bug) with two active years at once.
+    if(_yearId){
+      const{error:archiveErr}=await _sb.from('bloom_academic_years').update({is_active:false,archived_at:new Date().toISOString()}).eq('id',_yearId);
+      if(archiveErr)throw archiveErr;
+    }
+    const{error:restoreErr}=await _sb.from('bloom_academic_years').update({is_active:true,archived_at:null}).eq('id',_restoreTargetId);
+    if(restoreErr)throw restoreErr;
+    addAuditEntry(`${_restoreTargetLabel} restored as active year (${_yearLabel||'previous year'} archived)`,'Admin');
+    closeModal('restoreYearConfirmModal');
+    location.reload();
+  }catch(e){
+    alert('Failed to restore the year. Please check your connection and try again.');
+    btn.disabled=false;btn.textContent='Restore Year';
+  }
+}
+async function confirmArchiveYear(){
+  const input=document.getElementById('archiveYearConfirmInput');
+  if(input.value!==_yearLabel)return;
+  const btn=document.getElementById('archiveYearConfirmBtn');
+  btn.disabled=true;btn.textContent='Archiving…';
+  try{
+    if(_yearId){
+      const{error}=await _sb.from('bloom_academic_years').update({is_active:false,archived_at:new Date().toISOString()}).eq('id',_yearId);
+      if(error)throw error;
+    }
+    localStorage.removeItem('bloom_setup_done');
+    localStorage.removeItem('bloom_cal_overrides');
+    localStorage.removeItem('bloom_cal_pending');
+    overrides={};pendingChanges=[];
+    addAuditEntry(`${_yearLabel||'Academic year'} archived, new setup started`,'Admin');
+    closeModal('archiveYearModal');
+    document.getElementById('app').classList.remove('visible');
+    showOnboarding();
+  }catch(e){
+    alert('Failed to archive the year. Please check your connection and try again.');
+    btn.disabled=false;btn.textContent='Archive Year';
+  }
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────────
+
+function partsToInputValue(parts){
+  const[y,m,d]=parts;
+  return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+function openEditTermDatesModal(){
+  document.getElementById('etdT1Start').value=partsToInputValue(TERM_DATES.t1Start);
+  document.getElementById('etdT1End').value=partsToInputValue(TERM_DATES.t1End);
+  document.getElementById('etdBreak1Start').value=partsToInputValue(TERM_DATES.break1Start);
+  document.getElementById('etdBreak1End').value=partsToInputValue(TERM_DATES.break1End);
+  document.getElementById('etdT2Start').value=partsToInputValue(TERM_DATES.t2Start);
+  document.getElementById('etdT2End').value=partsToInputValue(TERM_DATES.t2End);
+  document.getElementById('etdBreak2Start').value=partsToInputValue(TERM_DATES.break2Start);
+  document.getElementById('etdBreak2End').value=partsToInputValue(TERM_DATES.break2End);
+  document.getElementById('etdHoursRegularDays').value=TERM_DATES.hoursRegularDays;
+  document.getElementById('etdHoursRegularStart').value=TERM_DATES.hoursRegularStart;
+  document.getElementById('etdHoursRegularEnd').value=TERM_DATES.hoursRegularEnd;
+  document.getElementById('etdHoursWedStart').value=TERM_DATES.hoursWedStart;
+  document.getElementById('etdHoursWedEnd').value=TERM_DATES.hoursWedEnd;
+  document.getElementById('editTermDatesModal').classList.add('open');
+}
+
+let _pendingTermDates=null;
+
+function saveTermDates(){
+  const t1s=document.getElementById('etdT1Start').value;
+  const t1e=document.getElementById('etdT1End').value;
+  const b1s=document.getElementById('etdBreak1Start').value;
+  const b1e=document.getElementById('etdBreak1End').value;
+  const t2s=document.getElementById('etdT2Start').value;
+  const t2e=document.getElementById('etdT2End').value;
+  const b2s=document.getElementById('etdBreak2Start').value;
+  const b2e=document.getElementById('etdBreak2End').value;
+  const hDays=document.getElementById('etdHoursRegularDays').value.trim();
+  const hRs=document.getElementById('etdHoursRegularStart').value;
+  const hRe=document.getElementById('etdHoursRegularEnd').value;
+  const hWs=document.getElementById('etdHoursWedStart').value;
+  const hWe=document.getElementById('etdHoursWedEnd').value;
+  if(!t1s||!t1e||!t2s||!t2e||!b1s||!b1e||!b2s||!b2e){alert('All dates are required.');return;}
+  if(!hDays||!hRs||!hRe||!hWs||!hWe){alert('All School Hours fields are required.');return;}
+  if(t1s>=t1e){alert('Term 1 start must be before Term 1 end.');return;}
+  if(t2s>=t2e){alert('Term 2 start must be before Term 2 end.');return;}
+  if(t1e>=t2s){alert('Term 1 must end before Term 2 starts.');return;}
+  if(b1s>=b1e){alert('Break 1 start must be before Break 1 end.');return;}
+  if(b2s>=b2e){alert('Break 2 start must be before Break 2 end.');return;}
+  if(b1s<t1s||b1e>t1e){alert('Break 1 should fall within Term 1 dates.');return;}
+  if(b2s<t2s||b2e>t2e){alert('Break 2 should fall within Term 2 dates.');return;}
+  if(hRs>=hRe){alert('Regular hours start must be before end.');return;}
+  if(hWs>=hWe){alert('Wednesday hours start must be before end.');return;}
+  if(!_yearId){alert('No active academic year found — cannot save.');return;}
+  _pendingTermDates={t1s,t1e,b1s,b1e,t2s,t2e,b2s,b2e,hDays,hRs,hRe,hWs,hWe};
+  const fmt=s=>{const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;};
+  const toISO=parts=>{const[y,m,d]=parts;return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;};
+  const dateRows=[
+    {label:'Term 1',oldS:toISO(TERM_DATES.t1Start),oldE:toISO(TERM_DATES.t1End),newS:t1s,newE:t1e},
+    {label:'Break 1',oldS:toISO(TERM_DATES.break1Start),oldE:toISO(TERM_DATES.break1End),newS:b1s,newE:b1e},
+    {label:'Term 2',oldS:toISO(TERM_DATES.t2Start),oldE:toISO(TERM_DATES.t2End),newS:t2s,newE:t2e},
+    {label:'Break 2',oldS:toISO(TERM_DATES.break2Start),oldE:toISO(TERM_DATES.break2End),newS:b2s,newE:b2e}
+  ];
+  const changedDates=dateRows.filter(r=>r.oldS!==r.newS||r.oldE!==r.newE);
+  const lines=changedDates.map(r=>`<strong>${r.label}:</strong> ${fmt(r.newS)} – ${fmt(r.newE)}`);
+  if(hDays!==TERM_DATES.hoursRegularDays||hRs!==TERM_DATES.hoursRegularStart||hRe!==TERM_DATES.hoursRegularEnd){
+    lines.push(`<strong>Regular Hours:</strong> ${hDays}, ${hRs} – ${hRe}`);
+  }
+  if(hWs!==TERM_DATES.hoursWedStart||hWe!==TERM_DATES.hoursWedEnd){
+    lines.push(`<strong>Wednesday Hours:</strong> ${hWs} – ${hWe}`);
+  }
+  document.getElementById('confirmTermDatesSummary').innerHTML=lines.length?lines.join('<br>'):'No changes detected.';
+  closeModal('editTermDatesModal');
+  document.getElementById('confirmTermDatesModal').classList.add('open');
+}
+
+async function confirmSaveTermDates(){
+  if(!_pendingTermDates)return;
+  const{t1s,t1e,b1s,b1e,t2s,t2e,b2s,b2e,hDays,hRs,hRe,hWs,hWe}=_pendingTermDates;
+  try{
+    const{error}=await _sb.from('bloom_academic_years').update({
+      t1_start:t1s,t1_end:t1e,t2_start:t2s,t2_end:t2e,
+      break1_start:b1s,break1_end:b1e,break2_start:b2s,break2_end:b2e,
+      hours_regular_start:hRs,hours_regular_end:hRe,hours_regular_days:hDays,
+      hours_wed_start:hWs,hours_wed_end:hWe
+    }).eq('id',_yearId);
+    if(error)throw error;
+    TERM_DATES={
+      t1Start:parseDateParts(t1s),t1End:parseDateParts(t1e),
+      t2Start:parseDateParts(t2s),t2End:parseDateParts(t2e),
+      break1Start:parseDateParts(b1s),break1End:parseDateParts(b1e),
+      break2Start:parseDateParts(b2s),break2End:parseDateParts(b2e),
+      hoursRegularStart:hRs,hoursRegularEnd:hRe,hoursRegularDays:hDays,
+      hoursWedStart:hWs,hoursWedEnd:hWe
+    };
+    buildCalendarFromTerms();
+    calcDays();renderAdminCalendar();
+    addAuditEntry(`Term dates updated: T1 ${t1s}–${t1e}, Break1 ${b1s}–${b1e}, T2 ${t2s}–${t2e}, Break2 ${b2s}–${b2e}, Hours ${hDays} ${hRs}-${hRe}, Wed ${hWs}-${hWe}`,'Admin');
+    _pendingTermDates=null;
+    closeModal('confirmTermDatesModal');
+  }catch(e){
+    console.log('Save term dates failed',e);
+    alert('Failed to save term dates. Check your connection and try again.');
+  }
+}
+
+function switchTab(tab){
+  const wasCalendarActive=tab==='calendar'&&document.getElementById('mnav-calendar').classList.contains('active')&&document.getElementById('content-calendar').classList.contains('active');
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById(`content-${tab}`).classList.add('active');
+  document.getElementById(`tab-${tab}`)?.classList.add('active');
+  document.getElementById(`mnav-${tab}`)?.classList.add('active');
+  if(tab==='absences')renderAbsences();
+  if(tab==='approvals')renderApprovals();
+  if(tab==='calendar'){
+    renderAuditLog();
+    if(isMobileAdmin()&&wasCalendarActive){
+      // Tapping Calendar again toggles full-year <-> monthly view (mirrors public page)
+      if(adminZoomedMonthIdx===null){
+        const today=new Date();
+        const idx=CALENDAR_MONTHS.findIndex(m=>m.year===today.getFullYear()&&m.month===today.getMonth());
+        adminZoomedMonthIdx=idx>=0?idx:(adminLastZoomedMonthIdx!==null?adminLastZoomedMonthIdx:0);
+      }else{
+        adminLastZoomedMonthIdx=adminZoomedMonthIdx;
+        adminZoomedMonthIdx=null;
+      }
+      renderAdminCalendar();
+    }
+  }
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────
+function formatDate(dateStr){
+  try{const d=new Date(dateStr);return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'long',year:'numeric'});}
+  catch{return dateStr;}
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+});
+
+document.getElementById('veOverlay').addEventListener('click',function(e){if(e.target===this)closeVE();});
+
+
+// ── SUPABASE ─────────────────────────────────────────────────────
+const SB_URL='https://ndlcfgkhxjoancdvmgmr.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kbGNmZ2toeGpvYW5jZHZtZ21yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MDYwODUsImV4cCI6MjA5Nzk4MjA4NX0.q0F6_ej0CTneazs6ey7mR3HOsGpqrU0BLe8Y-JHatu8';
+const _sb=window.supabase.createClient(SB_URL,SB_KEY);
+let _locId=null,_yearId=null,_yearLabel='';
+let unsyncedQueue=JSON.parse(localStorage.getItem('bloom_cal_unsynced')||'[]');
+
+// Realtime: new absence reports show up in the badge instantly instead of
+// only on page load. Fallback: renderAbsences() still runs on login/tab
+// switch, so a dropped socket just means the badge waits for next visit.
+_sb.channel('admin-absences')
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'bloom_absence_reports'},()=>{
+    renderAbsences();
+  })
+  .subscribe();
+
+function markUnsynced(date,type,label,deleted){
+  unsyncedQueue=unsyncedQueue.filter(u=>u.date!==date);
+  unsyncedQueue.push({date,type,label,deleted:!!deleted});
+  localStorage.setItem('bloom_cal_unsynced',JSON.stringify(unsyncedQueue));
+  updateAttention();
+}
+
+function clearUnsynced(date){
+  unsyncedQueue=unsyncedQueue.filter(u=>u.date!==date);
+  localStorage.setItem('bloom_cal_unsynced',JSON.stringify(unsyncedQueue));
+  updateAttention();
+}
+
+async function retryUnsyncedNow(){
+  if(unsyncedQueue.length===0)return;
+  await sbInit();
+  const queue=[...unsyncedQueue];
+  for(const item of queue){
+    if(item.deleted)await sbDeleteEvent(item.date);
+    else await sbSaveEvent(item.date,item.type,item.label);
+  }
+}
+
+window.addEventListener('online',()=>{if(unsyncedQueue.length>0)retryUnsyncedNow();});
+
+async function sbInit(){
+  try{
+    const{data:loc}=await _sb.from('bloom_locations').select('id').eq('name','Bloom Chiangmai').maybeSingle();
+    if(loc)_locId=loc.id;
+    if(_locId){
+      const{data:yr}=await _sb.from('bloom_academic_years').select('*').eq('location_id',_locId).eq('is_active',true).maybeSingle();
+      if(yr){
+        _yearId=yr.id;
+        _yearLabel=yr.label||'';
+        if(yr.t1_start&&yr.t1_end&&yr.t2_start&&yr.t2_end){
+          const trimTime=t=>t?t.slice(0,5):null;
+          TERM_DATES={
+            t1Start:parseDateParts(yr.t1_start),t1End:parseDateParts(yr.t1_end),
+            t2Start:parseDateParts(yr.t2_start),t2End:parseDateParts(yr.t2_end),
+            break1Start:yr.break1_start?parseDateParts(yr.break1_start):TERM_DATES.break1Start,
+            break1End:yr.break1_end?parseDateParts(yr.break1_end):TERM_DATES.break1End,
+            break2Start:yr.break2_start?parseDateParts(yr.break2_start):TERM_DATES.break2Start,
+            break2End:yr.break2_end?parseDateParts(yr.break2_end):TERM_DATES.break2End,
+            hoursRegularStart:trimTime(yr.hours_regular_start)||TERM_DATES.hoursRegularStart,
+            hoursRegularEnd:trimTime(yr.hours_regular_end)||TERM_DATES.hoursRegularEnd,
+            hoursRegularDays:yr.hours_regular_days||TERM_DATES.hoursRegularDays,
+            hoursWedStart:trimTime(yr.hours_wed_start)||TERM_DATES.hoursWedStart,
+            hoursWedEnd:trimTime(yr.hours_wed_end)||TERM_DATES.hoursWedEnd
+          };
+          buildCalendarFromTerms();
+        }
+      }
+      const{data:events}=await _sb.from('bloom_calendar_events').select('*').eq('location_id',_locId);
+      overrides={};
+      if(events&&events.length>0){
+        events.forEach(ev=>{overrides[ev.date]={type:ev.day_type,label:ev.label||'',sbId:ev.id};});
+      }
+      localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+    }
+  }catch(e){console.log('Supabase init failed, using localStorage',e);}
+}
+
+async function sbSaveEvent(date,dayType,label=''){
+  if(!_locId||!_yearId){markUnsynced(date,dayType,label,false);return false;}
+  try{
+    await _sb.from('bloom_calendar_events').upsert(
+      {location_id:_locId,academic_year_id:_yearId,date,day_type:dayType,label,updated_at:new Date().toISOString()},
+      {onConflict:'location_id,date'}
+    );
+    clearUnsynced(date);
+    return true;
+  }catch(e){console.log('Supabase save failed',e);markUnsynced(date,dayType,label,false);return false;}
+}
+
+async function sbDeleteEvent(date){
+  if(!_locId){markUnsynced(date,null,null,true);return false;}
+  try{
+    await _sb.from('bloom_calendar_events').delete().eq('location_id',_locId).eq('date',date);
+    clearUnsynced(date);
+    return true;
+  }catch(e){console.log('Supabase delete failed',e);markUnsynced(date,null,null,true);return false;}
+}
+
+// Sync a batch of dates to the same type/label (Add Event, Multi-select, Visual Editor)
+async function sbSyncDates(dates,type,label,isRemove){
+  if(!_locId||!_yearId){dates.forEach(d=>markUnsynced(d,type,label,isRemove));return;}
+  try{
+    if(isRemove){
+      for(const d of dates)await _sb.from('bloom_calendar_events').delete().eq('location_id',_locId).eq('date',d);
+    }else{
+      const rows=dates.map(d=>({location_id:_locId,academic_year_id:_yearId,date:d,day_type:type,label:label||'',updated_at:new Date().toISOString()}));
+      for(let i=0;i<rows.length;i+=100)await _sb.from('bloom_calendar_events').upsert(rows.slice(i,i+100),{onConflict:'location_id,date'});
+    }
+    dates.forEach(d=>clearUnsynced(d));
+  }catch(e){console.log('Bulk sync failed',e);dates.forEach(d=>markUnsynced(d,type,label,isRemove));}
+}
+
+async function sbDeleteAllEvents(){
+  if(!_locId)return;
+  try{
+    await _sb.from('bloom_calendar_events').delete().eq('location_id',_locId);
+  }catch(e){console.log('Supabase delete-all failed',e);}
+}
+
+async function sbSaveBulk(events){
+  if(!_locId||!_yearId)return;
+  try{
+    const rows=events.map(e=>({location_id:_locId,academic_year_id:_yearId,date:e.date,day_type:e.type,label:e.label||'',updated_at:new Date().toISOString()}));
+    for(let i=0;i<rows.length;i+=100){
+      await _sb.from('bloom_calendar_events').upsert(rows.slice(i,i+100),{onConflict:'location_id,date'});
+    }
+  }catch(e){console.log('Supabase bulk save failed',e);}
+}
+
+async function sbSaveYear(data){
+  if(!_locId)return null;
+  try{
+    // Deactivate any existing active year(s) for this location first —
+    // without this, every resync creates another is_active:true row and
+    // breaks any query that expects exactly one active year.
+    await _sb.from('bloom_academic_years').update({is_active:false}).eq('location_id',_locId).eq('is_active',true);
+    const{data:yr}=await _sb.from('bloom_academic_years').insert({
+      location_id:_locId,label:data.label||'2026-2027',
+      t1_start:data.t1Start,t1_end:data.t1End,
+      t2_start:data.t2Start,t2_end:data.t2End,is_active:true
+    }).select().single();
+    if(yr)_yearId=yr.id;
+    return yr;
+  }catch(e){console.log('Supabase year save failed',e);return null;}
+}
+
+// ── BOOT ─────────────────────────────────────────────────────────
+// Auth is now handled by staff-shared.js. checkStaffAndInit() verifies the
+// staff session, renders the sidebar, then calls onStaffReady() below —
+// which replaces the old password-gated boot sequence.
+window.STAFF_PAGE_KEY = 'calendar';
+
+async function onStaffReady(staffRow){
+  document.getElementById('authLoading').style.display = 'none';
+  await sbInit();
+  const setupDone = localStorage.getItem('bloom_setup_done') || !!_yearId;
+  if(setupDone) localStorage.setItem('bloom_setup_done','true');
+  routeAfterAuth(setupDone);
+  loadPublicAccessSettings();
+  refreshArchiveSettingsUI();
+}
+
+checkStaffAndInit();
+// ===== PDF Export (matches public calendar output) =====
+function cssVar(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
+function hexToRgb(hex){
+  hex=(hex||'#000000').replace('#','');
+  if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');
+  const num=parseInt(hex,16);
+  return[(num>>16)&255,(num>>8)&255,num&255];
+}
+function loadImageAsDataURL(src){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        const canvas=document.createElement('canvas');
+        canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
+        canvas.getContext('2d').drawImage(img,0,0);
+        resolve({data:canvas.toDataURL('image/png'),w:img.naturalWidth,h:img.naturalHeight});
+      }catch(e){resolve(null);}
+    };
+    img.onerror=()=>resolve(null);
+    img.src=src;
+  });
+}
+// Key Dates and School Hours for the PDF are now built live from TERM_DATES
+// at export time, so they can never drift from what's on screen.
+// Official Holidays are still hardcoded, since holidays aren't editable from admin yet.
+function fmtPdfDateRange(startParts,endParts){
+  const abbr=m=>MONTH_NAMES[m].slice(0,3);
+  const[sy,sm,sd_]=startParts,[ey,em,ed_]=endParts;
+  return`${sd_} ${abbr(sm)} \u2013 ${ed_} ${abbr(em)} ${ey}`;
+}
+function getPdfKeyDates(){
+  const{t1Start,t1End,t2Start,t2End,break1Start,break1End,break2Start,break2End}=TERM_DATES;
+  return[
+    {label:'TERM 1',labelClass:'term',value:fmtPdfDateRange(t1Start,t1End)},
+    {label:'BREAK',labelClass:'break',value:fmtPdfDateRange(break1Start,break1End)},
+    {label:'TERM 2',labelClass:'term',value:fmtPdfDateRange(t2Start,t2End)},
+    {label:'BREAK',labelClass:'break',value:fmtPdfDateRange(break2Start,break2End)}
+  ];
+}
+function getPdfHours(){
+  const{hoursRegularDays,hoursRegularStart,hoursRegularEnd,hoursWedStart,hoursWedEnd}=TERM_DATES;
+  return[
+    {day:hoursRegularDays,time:`${hoursRegularStart} \u2013 ${hoursRegularEnd}`},
+    {day:'Wed',time:`${hoursWedStart} \u2013 ${hoursWedEnd}`}
+  ];
+}
+const PDF_HOLIDAYS=[
+  {label:'13 OCT 2026',value:'HM King Bhumibol Memorial Day'},
+  {label:'20 MAY 2027',value:'Visakha Bucha Day'}
+];
+async function exportCalendarPDF(){
+  const btn=document.getElementById('pdfExportBtn');
+  const originalLabel=btn.textContent;
+  try{
+    if(typeof window.jspdf==='undefined'){alert('PDF library failed to load. Check your connection and try again.');return;}
+    btn.textContent='Generating\u2026';btn.disabled=true;
+    const PDF_KEY_DATES=getPdfKeyDates();
+    const PDF_HOURS=getPdfHours();
+
+    const{jsPDF}=window.jspdf;
+    const pageW=420,margin=10;
+    const contentX=margin,contentW=pageW-2*margin;
+
+    // Load the real logo asset before creating the page (admin has no <img>
+    // logo element on screen, so fetch the same file the public page uses).
+    const logoInfo=await loadImageAsDataURL('assets/logo.png');
+
+    // Match public calendar's behavior: only show day types that actually
+    // occur in this year's data, not a fixed list of all possible types.
+    const DAY_TYPE_LABELS={school:'School Day',break:'School Break',pd:'PD Day',holiday:'Public Holiday',event:'School Event',early:'Early Dismissal',closure:'Emergency Closure',makeup:'Make-up Day'};
+    const usedTypes=new Set();
+    CALENDAR_MONTHS.forEach(({year,month})=>{
+      const dim=new Date(year,month+1,0).getDate();
+      for(let d=1;d<=dim;d++){
+        const data=getDayData(year,month,d);
+        if(data&&data.type)usedTypes.add(data.type);
+      }
+    });
+    usedTypes.add('pd');usedTypes.add('event');
+    const dayTypeOrder=['school','break','holiday','pd','event','early','closure','makeup'];
+    const dayTypeItems=dayTypeOrder.filter(t=>usedTypes.has(t)).map(t=>({label:DAY_TYPE_LABELS[t],t}));
+
+    // ---- Layout math (pure geometry, no drawing yet) ----
+    const headerY=margin,headerH=16;
+    const statsY=headerY+headerH+4,statsH=16;
+    const legendY=statsY+statsH+4,legendH=9;
+    const gridY=legendY+legendH+5;
+
+    const sidebarW=80,gapMain=5;
+    const gridW=contentW-sidebarW-gapMain;
+    const sidebarX=contentX+gridW+gapMain;
+    const cols=4,rows=3,colGap=3,rowGap=4;
+    const cardW=(gridW-(cols-1)*colGap)/cols;
+    const monthHeaderH=10,dowRowH=5;
+    const cellW=cardW/7,cellH=cellW;
+    const cardH=monthHeaderH+dowRowH+cellH*6;
+    const gridBlockH=cardH*rows+rowGap*(rows-1);
+
+    let kdRowH=10.5,holRowH=10.5,hoursRowH=10,dtRowH=9;
+    const sidebarCardH=(rowsCount,rowH)=>11+rowsCount*rowH+5;
+    let sidebarTotalH=
+      sidebarCardH(PDF_KEY_DATES.length,kdRowH)+4+
+      sidebarCardH(PDF_HOLIDAYS.length,holRowH)+4+
+      sidebarCardH(PDF_HOURS.length,hoursRowH)+4+
+      sidebarCardH(dayTypeItems.length,dtRowH);
+
+    // Only Key Dates and Holidays have two-line rows (label + value), so extra
+    // height reads as natural spacing there. School Hours and Day Types are
+    // single-line rows; stretching them the same way just creates dead gaps.
+    const stretchableRows=PDF_KEY_DATES.length+PDF_HOLIDAYS.length;
+    if(stretchableRows>0&&gridBlockH>sidebarTotalH){
+      const delta=(gridBlockH-sidebarTotalH)/stretchableRows;
+      kdRowH+=delta;holRowH+=delta;
+      sidebarTotalH=
+        sidebarCardH(PDF_KEY_DATES.length,kdRowH)+4+
+        sidebarCardH(PDF_HOLIDAYS.length,holRowH)+4+
+        sidebarCardH(PDF_HOURS.length,hoursRowH)+4+
+        sidebarCardH(dayTypeItems.length,dtRowH);
+    }
+
+    const contentBlockH=Math.max(gridBlockH,sidebarTotalH);
+    const footerH=10;
+    const pageH=gridY+contentBlockH+footerH+margin;
+
+    // ---- Create the page at the exact size the content needs ----
+    const doc=new jsPDF({orientation:'landscape',unit:'mm',format:[pageW,pageH]});
+
+    const purple=hexToRgb(cssVar('--purple'));
+    const orange=hexToRgb(cssVar('--orange'));
+    const textMuted=hexToRgb(cssVar('--text-muted'));
+    const text=hexToRgb(cssVar('--text'));
+    const border=hexToRgb(cssVar('--border'));
+    const white=[255,255,255];
+    const typeColors={
+      school:{bg:hexToRgb(cssVar('--school-bg')),color:hexToRgb(cssVar('--school-color'))},
+      break:{bg:hexToRgb(cssVar('--break-bg')),color:hexToRgb(cssVar('--break-color'))},
+      pd:{bg:hexToRgb(cssVar('--pd-bg')),color:hexToRgb(cssVar('--pd-color'))},
+      holiday:{bg:hexToRgb(cssVar('--holiday-bg')),color:hexToRgb(cssVar('--holiday-color'))},
+      event:{bg:hexToRgb(cssVar('--event-bg')),color:hexToRgb(cssVar('--event-color'))},
+      early:{bg:hexToRgb(cssVar('--pd-bg')),color:hexToRgb(cssVar('--pd-color')),ring:true},
+      closure:{bg:hexToRgb(cssVar('--closure-bg')),color:hexToRgb(cssVar('--closure-color'))},
+      makeup:{bg:hexToRgb(cssVar('--makeup-bg')),color:hexToRgb(cssVar('--makeup-color'))}
+    };
+
+    // ---- Header bar ----
+    doc.setFillColor(...purple);doc.rect(contentX,headerY,contentW,headerH,'F');
+    if(logoInfo){
+      const logoH=11,logoW=logoH*(logoInfo.w/logoInfo.h);
+      doc.addImage(logoInfo.data,'PNG',contentX+5,headerY+(headerH-logoH)/2,logoW,logoH);
+    }else{
+      doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(17);
+      doc.text('bloom.',contentX+6,headerY+10);
+      doc.setFont('helvetica','normal');doc.setFontSize(7.5);
+      doc.text('chiangmai',contentX+6,headerY+13.8);
+    }
+    doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(17);
+    doc.text('Academic Calendar 2026\u20132027',pageW/2,headerY+10,{align:'center'});
+    doc.setFont('helvetica','normal');doc.setFontSize(7);
+    const genDate='Generated '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    doc.text(genDate,contentX+contentW-6,headerY+headerH-4,{align:'right'});
+
+    // ---- Stats bar ----
+    doc.setDrawColor(...border);doc.setFillColor(...white);
+    doc.rect(contentX,statsY,contentW,statsH,'FD');
+    let totalSchoolDays=0;
+    CALENDAR_MONTHS.forEach(({year,month})=>{
+      const dim=new Date(year,month+1,0).getDate();
+      for(let d=1;d<=dim;d++){
+        const data=getDayData(year,month,d);
+        if(data&&(data.type==='school'||data.type==='early'))totalSchoolDays++;
+      }
+    });
+    const fmtShort=dt=>dt.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    const statLabels=['ACADEMIC YEAR','TOTAL SCHOOL DAYS','TERM 1','TERM 2'];
+    const statValues=[
+      `${YEAR_START.getFullYear()}\u2013${YEAR_START.getFullYear()+1}`,
+      String(totalSchoolDays),
+      fmtShort(YEAR_START)+' \u2013 '+fmtShort(TERM1_END),
+      fmtShort(TERM2_START)+' \u2013 '+fmtShort(TERM2_END)
+    ];
+    const statColW=contentW/statLabels.length;
+    for(let i=0;i<statLabels.length;i++){
+      const x=contentX+i*statColW+6;
+      doc.setTextColor(...textMuted);doc.setFont('helvetica','bold');doc.setFontSize(7.5);
+      doc.text(statLabels[i],x,statsY+6);
+      doc.setTextColor(...purple);doc.setFont('times','bold');doc.setFontSize(14);
+      doc.text(statValues[i]||'\u2014',x,statsY+12.5);
+      if(i<statLabels.length-1){doc.setDrawColor(...border);doc.line(contentX+(i+1)*statColW,statsY+2,contentX+(i+1)*statColW,statsY+statsH-2);}
+    }
+
+    // ---- Legend strip ----
+    const pills=[
+      {label:'School Day',t:'school'},{label:'School Break',t:'break'},
+      {label:'Public Holiday',t:'holiday'},{label:'PD Day',t:'pd'},
+      {label:'School Event',t:'event'},{label:'Early Dismissal',t:'early'}
+    ];
+    doc.setFont('helvetica','bold');doc.setFontSize(8.5);
+    let px=contentX;
+    pills.forEach(p=>{
+      const tw=doc.getTextWidth(p.label);
+      const pw=tw+10,ph=8;
+      doc.setFillColor(...typeColors[p.t].bg);
+      doc.roundedRect(px,legendY,pw,ph,3,3,'F');
+      doc.setTextColor(...typeColors[p.t].color);
+      doc.text(p.label,px+5,legendY+5.4);
+      px+=pw+4;
+    });
+
+    // ---- Grid + sidebar area (positions already computed above) ----
+    const gridBlockY=gridY;
+    const dowLabels=['M','T','W','T','F','S','S'];
+
+    (CALENDAR_MONTHS||[]).slice(0,12).forEach((m,i)=>{
+      const row=Math.floor(i/cols),col=i%cols;
+      const cardX=contentX+col*(cardW+colGap);
+      const cardY=gridBlockY+row*(cardH+rowGap);
+
+      doc.setDrawColor(...border);doc.setFillColor(...white);
+      doc.roundedRect(cardX,cardY,cardW,cardH,1.2,1.2,'FD');
+
+      doc.setFillColor(...purple);
+      doc.rect(cardX,cardY,cardW,monthHeaderH,'F');
+      doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(10);
+      doc.text(MONTH_NAMES[m.month].toUpperCase(),cardX+cardW/2,cardY+4.8,{align:'center'});
+      doc.setFont('helvetica','normal');doc.setFontSize(8);
+      doc.text(String(m.year),cardX+cardW/2,cardY+8.5,{align:'center'});
+
+      doc.setTextColor(...textMuted);doc.setFont('helvetica','bold');doc.setFontSize(7);
+      for(let c=0;c<7;c++){
+        doc.text(dowLabels[c],cardX+c*cellW+cellW/2,cardY+monthHeaderH+dowRowH-1.5,{align:'center'});
+      }
+
+      const fd=new Date(m.year,m.month,1).getDay();
+      const offset=fd===0?6:fd-1;
+      const dim=new Date(m.year,m.month+1,0).getDate();
+      const startY=cardY+monthHeaderH+dowRowH;
+      const today=new Date();
+      for(let d=1;d<=dim;d++){
+        const idx=offset+d-1;
+        const r2=Math.floor(idx/7),c2=idx%7;
+        const cx=cardX+c2*cellW+cellW/2,cy=startY+r2*cellH+cellH/2;
+        const data=typeof getDayData==='function'?getDayData(m.year,m.month,d):null;
+        const isToday=today.getFullYear()===m.year&&today.getMonth()===m.month&&today.getDate()===d;
+        doc.setFont('helvetica',data||isToday?'bold':'normal');doc.setFontSize(7.5);
+        if(isToday){
+          doc.setFillColor(...orange);doc.circle(cx,cy,cellW*0.42,'F');
+          doc.setTextColor(...white);
+        }else if(data&&typeColors[data.type]){
+          const tc=typeColors[data.type];
+          doc.setFillColor(...tc.bg);doc.circle(cx,cy,cellW*0.42,'F');
+          if(tc.ring){doc.setDrawColor(...tc.color);doc.setLineWidth(0.15);doc.circle(cx,cy,cellW*0.42,'S');}
+          doc.setTextColor(...tc.color);
+        }else{
+          doc.setTextColor(...textMuted);
+        }
+        doc.text(String(d),cx,cy+1,{align:'center'});
+      }
+    });
+
+    // ---- Sidebar ----
+    let sy=gridY;
+    function sidebarCardHeader(title,width){
+      doc.setFillColor(...purple);doc.rect(sidebarX,sy,width,11,'F');
+      doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(10.5);
+      doc.text(title.toUpperCase(),sidebarX+5,sy+7.3);
+      sy+=11;
+    }
+    function sidebarCardBox(rowsCount,rowH,width){
+      const h=rowsCount*rowH+5;
+      doc.setDrawColor(...border);doc.setFillColor(...white);
+      doc.rect(sidebarX,sy,width,h,'FD');
+      return h;
+    }
+    const labelColorMap={term:purple,break:hexToRgb(cssVar('--break-color')),holiday:hexToRgb(cssVar('--holiday-color'))};
+
+    // Key Dates
+    sidebarCardHeader('Key Dates',sidebarW);
+    {
+      const rowH=kdRowH;
+      const boxH=sidebarCardBox(PDF_KEY_DATES.length,rowH,sidebarW);
+      let ry=sy+6.5;
+      PDF_KEY_DATES.forEach(item=>{
+        doc.setTextColor(...(labelColorMap[item.labelClass]||purple));
+        doc.setFont('helvetica','bold');doc.setFontSize(9);
+        doc.text(item.label,sidebarX+5,ry);
+        doc.setTextColor(...text);doc.setFont('helvetica','normal');doc.setFontSize(10.5);
+        doc.text(item.value,sidebarX+5,ry+5);
+        ry+=rowH;
+      });
+      sy+=boxH+5;
+    }
+
+    // Official Holidays
+    sidebarCardHeader('Official Holidays',sidebarW);
+    {
+      const rowH=holRowH;
+      const boxH=sidebarCardBox(PDF_HOLIDAYS.length,rowH,sidebarW);
+      let ry=sy+6.5;
+      PDF_HOLIDAYS.forEach(item=>{
+        doc.setTextColor(...hexToRgb(cssVar('--holiday-color')));
+        doc.setFont('helvetica','bold');doc.setFontSize(9);
+        doc.text(item.label,sidebarX+5,ry);
+        doc.setTextColor(...text);doc.setFont('helvetica','normal');doc.setFontSize(10.5);
+        doc.text(item.value,sidebarX+5,ry+5);
+        ry+=rowH;
+      });
+      sy+=boxH+5;
+    }
+
+    // School Hours
+    sidebarCardHeader('School Hours',sidebarW);
+    {
+      const rowH=hoursRowH;
+      const boxH=sidebarCardBox(PDF_HOURS.length,rowH,sidebarW);
+      let ry=sy+7;
+      PDF_HOURS.forEach(r=>{
+        doc.setTextColor(...text);doc.setFont('helvetica','normal');doc.setFontSize(10.5);
+        doc.text(r.day,sidebarX+5,ry);
+        doc.setTextColor(...purple);doc.setFont('helvetica','bold');doc.setFontSize(10.5);
+        doc.text(r.time,sidebarX+sidebarW-5,ry,{align:'right'});
+        ry+=rowH;
+      });
+      sy+=boxH+5;
+    }
+
+    // Day Types
+    sidebarCardHeader('Day Types',sidebarW);
+    {
+      const rowH=dtRowH;
+      const boxH=sidebarCardBox(dayTypeItems.length,rowH,sidebarW);
+      let ry=sy+6.5;
+      dayTypeItems.forEach(it=>{
+        const tc=typeColors[it.t];
+        if(tc.ring){
+          doc.setFillColor(...tc.color);doc.circle(sidebarX+6,ry-1.2,2.1,'F');
+          doc.setDrawColor(255,255,255);doc.setLineWidth(0.45);doc.circle(sidebarX+6,ry-1.2,1.1,'S');
+        }else{
+          doc.setFillColor(...tc.color);doc.circle(sidebarX+6,ry-1.2,2.1,'F');
+        }
+        doc.setTextColor(...text);doc.setFont('helvetica','normal');doc.setFontSize(10.5);
+        doc.text(it.label,sidebarX+12,ry);
+        ry+=rowH;
+      });
+      sy+=boxH;
+    }
+
+    // ---- Footer ----
+    doc.setTextColor(...textMuted);doc.setFont('helvetica','normal');doc.setFontSize(8.5);
+    doc.text('\u00A9 '+new Date().getFullYear()+' Bloom Space Hub Calendar \u00B7 Bloom Chiangmai. All rights reserved.',pageW/2,pageH-margin-3,{align:'center'});
+
+    doc.save('Bloom-Chiangmai-Academic-Calendar-2026-2027.pdf');
+  }catch(err){
+    console.error('PDF export failed',err);
+    alert('Something went wrong generating the PDF. Please try again.');
+  }finally{
+    btn.textContent=originalLabel;btn.disabled=false;
+  }
+}
+</script>
+</div>
+</body>
+</html>

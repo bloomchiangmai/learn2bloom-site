@@ -598,12 +598,8 @@ async function confirmDeleteStaff(){
 }
 
 async function changeRole(staffId, newRole){
-  if(window.currentStaff && staffId === window.currentStaff.id){
-    const ok = confirm('This changes your own role. If the new role has less access, you may lose access to this page. Continue?');
-    if(!ok){ await loadTeamData(); if(document.getElementById('profileModal').dataset.staffId === staffId) openStaffProfile(staffId); return; }
-  }
   const { error } = await sb.from('staff').update({ role: newRole }).eq('id', staffId);
-  if(error){ showToast('Error: ' + error.message); return; }
+  if(error){ showToast(error.message); await loadTeamData(); if(document.getElementById('profileModal').dataset.staffId === staffId) openStaffProfile(staffId); return; }
   showToast('Role updated.');
   await loadTeamData();
   if(document.getElementById('profileModal').classList.contains('open') && document.getElementById('profileModal').dataset.staffId === staffId){

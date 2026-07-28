@@ -646,6 +646,7 @@ async function confirmDeleteStaff(){
   if(error){ showToast('Error deleting: ' + error.message); return; }
   showToast('Staff member deleted.');
   closeDeleteStaffModal();
+  closeStaffProfile();
   loadTeamData();
 }
 

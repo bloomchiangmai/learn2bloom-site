@@ -418,9 +418,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <button class="btn btn-outline" onclick="openMultiSelect()">⊞ Multi-select</button>
       <button class="btn btn-outline" id="pdfExportBtn" onclick="exportCalendarPDF()">↗ Export PDF</button>
       <button class="btn btn-outline" id="pdfSyncBtn" onclick="syncPublicPDF()">⟳ Sync Public PDF</button>
+      <button class="btn btn-primary" id="publishChangesBtn" onclick="publishCalendarChanges()">✓ Publish Changes<span id="draftCount" style="display:none;"></span></button>
     </div>
 
     <p id="pdfSyncStatus" style="font-size:12px;color:#888780;margin:6px 0 0;"></p>
+    <p id="publishStatus" style="font-size:12px;color:#888780;margin:2px 0 0;"></p>
 
     <div class="card" style="margin-bottom:16px;">
       <div class="card-header">
@@ -1508,7 +1510,7 @@ function renderAdminCalendar(){
       if(isToday)cls+=' today';
       else if(data)cls+=` ${data.type}`;
       else if(isWeekend)cls+=' weekend';
-      if(pend)cls+=' pending';
+      if(pend||(data&&data.isDraft))cls+=' pending';
       // Day tap opens the edit form on both desktop and mobile
       html+=`<div class="${cls}" onclick="openEditDay(${year},${month},${d})">${d}</div>`;
     }
@@ -1517,6 +1519,53 @@ function renderAdminCalendar(){
     card.innerHTML=html;
     grid.appendChild(card);
   });
+  updateDraftCount();
+}
+
+function updateDraftCount(){
+  const count=Object.values(overrides).filter(o=>o&&o.isDraft).length;
+  const badgeEl=document.getElementById('draftCount');
+  const btn=document.getElementById('publishChangesBtn');
+  if(!badgeEl||!btn)return;
+  if(count>0){
+    badgeEl.textContent=' ('+count+')';
+    badgeEl.style.display='inline';
+    btn.disabled=false;
+  }else{
+    badgeEl.style.display='none';
+    btn.disabled=false;
+  }
+}
+
+async function publishCalendarChanges(){
+  const btn=document.getElementById('publishChangesBtn');
+  const statusEl=document.getElementById('publishStatus');
+  const draftDates=Object.keys(overrides).filter(k=>overrides[k]&&overrides[k].isDraft);
+  if(draftDates.length===0){
+    if(statusEl)statusEl.textContent='No unpublished changes right now.';
+    return;
+  }
+  if(!confirm(`Publish ${draftDates.length} unconfirmed change${draftDates.length===1?'':'s'} to the public calendar? Parents will see these immediately.`))return;
+
+  const originalLabel=btn.textContent;
+  btn.textContent='Publishing\u2026';btn.disabled=true;
+  try{
+    await _sb.from('bloom_calendar_events').update({is_draft:false}).eq('location_id',_locId).eq('is_draft',true);
+    draftDates.forEach(k=>{if(overrides[k])overrides[k].isDraft=false;});
+    localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+    renderAdminCalendar();
+    if(statusEl){
+      const formatted=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'});
+      statusEl.textContent='Published '+draftDates.length+' change'+(draftDates.length===1?'':'s')+' — live on public calendar as of '+formatted;
+    }
+  }catch(err){
+    console.error('Publish failed',err);
+    if(statusEl)statusEl.textContent='Publish failed. Please check your connection and try again.';
+    alert('Something went wrong publishing changes. Please try again.');
+  }finally{
+    btn.textContent=originalLabel;btn.disabled=false;
+    updateDraftCount();
+  }
 }
 
 function renderAdminMonthZoom(grid,today){
@@ -2341,7 +2390,7 @@ async function sbInit(){
       const{data:events}=await _sb.from('bloom_calendar_events').select('*').eq('location_id',_locId);
       overrides={};
       if(events&&events.length>0){
-        events.forEach(ev=>{overrides[ev.date]={type:ev.day_type,label:ev.label||'',sbId:ev.id};});
+        events.forEach(ev=>{overrides[ev.date]={type:ev.day_type,label:ev.label||'',sbId:ev.id,isDraft:!!ev.is_draft};});
       }
       localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
     }
@@ -2352,7 +2401,7 @@ async function sbSaveEvent(date,dayType,label=''){
   if(!_locId||!_yearId){markUnsynced(date,dayType,label,false);return false;}
   try{
     await _sb.from('bloom_calendar_events').upsert(
-      {location_id:_locId,academic_year_id:_yearId,date,day_type:dayType,label,updated_at:new Date().toISOString()},
+      {location_id:_locId,academic_year_id:_yearId,date,day_type:dayType,label,is_draft:true,updated_at:new Date().toISOString()},
       {onConflict:'location_id,date'}
     );
     clearUnsynced(date);
@@ -2376,7 +2425,7 @@ async function sbSyncDates(dates,type,label,isRemove){
     if(isRemove){
       for(const d of dates)await _sb.from('bloom_calendar_events').delete().eq('location_id',_locId).eq('date',d);
     }else{
-      const rows=dates.map(d=>({location_id:_locId,academic_year_id:_yearId,date:d,day_type:type,label:label||'',updated_at:new Date().toISOString()}));
+      const rows=dates.map(d=>({location_id:_locId,academic_year_id:_yearId,date:d,day_type:type,label:label||'',is_draft:true,updated_at:new Date().toISOString()}));
       for(let i=0;i<rows.length;i+=100)await _sb.from('bloom_calendar_events').upsert(rows.slice(i,i+100),{onConflict:'location_id,date'});
     }
     dates.forEach(d=>clearUnsynced(d));
@@ -2393,7 +2442,7 @@ async function sbDeleteAllEvents(){
 async function sbSaveBulk(events){
   if(!_locId||!_yearId)return;
   try{
-    const rows=events.map(e=>({location_id:_locId,academic_year_id:_yearId,date:e.date,day_type:e.type,label:e.label||'',updated_at:new Date().toISOString()}));
+    const rows=events.map(e=>({location_id:_locId,academic_year_id:_yearId,date:e.date,day_type:e.type,label:e.label||'',is_draft:true,updated_at:new Date().toISOString()}));
     for(let i=0;i<rows.length;i+=100){
       await _sb.from('bloom_calendar_events').upsert(rows.slice(i,i+100),{onConflict:'location_id,date'});
     }

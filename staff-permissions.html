@@ -237,6 +237,15 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
         <div class="detail-row"><textarea class="detail-input" id="p-notes" rows="3" style="width:100%;"></textarea></div>
       </div>
 
+      <div class="detail-section">
+        <h3>Documents</h3>
+        <div id="p-documents-list" style="margin-bottom:12px;"></div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="file" id="p-document-upload" style="flex:1;font-size:13px;">
+          <button class="btn-small-outline" onclick="uploadStaffDocument()">Upload</button>
+        </div>
+      </div>
+
       <div class="modal-save-bar">
         <button class="btn-small-outline" onclick="closeStaffProfile()">Cancel</button>
         <button class="btn-primary" onclick="saveStaffProfile()">Save changes</button>
@@ -368,6 +377,7 @@ function openStaffProfile(staffId){
 
   document.getElementById('profileModal').dataset.staffId = staffId;
   document.getElementById('profileModal').classList.add('open');
+  loadStaffDocuments(staffId);
 }
 
 function renderProfileAccess(staffId){
@@ -402,6 +412,61 @@ function renderProfileAccess(staffId){
 
 function closeStaffProfile(){
   document.getElementById('profileModal').classList.remove('open');
+}
+
+async function loadStaffDocuments(staffId){
+  const { data, error } = await sb.from('staff_documents').select('*').eq('staff_id', staffId).order('uploaded_at', { ascending: false });
+  const el = document.getElementById('p-documents-list');
+  if(error || !data || data.length === 0){
+    el.innerHTML = '<div style="font-size:13px;color:#888780;">No documents uploaded yet.</div>';
+    return;
+  }
+  el.innerHTML = data.map(d => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #E8E3D8;font-size:13px;">
+      <span>${d.file_name}</span>
+      <span>
+        <button class="btn-small-outline" onclick="downloadStaffDocument('${d.file_path}')">Download</button>
+        <button class="btn-small-danger" onclick="deleteStaffDocument('${d.id}','${d.file_path}')">Delete</button>
+      </span>
+    </div>
+  `).join('');
+}
+
+async function uploadStaffDocument(){
+  const staffId = document.getElementById('profileModal').dataset.staffId;
+  const fileInput = document.getElementById('p-document-upload');
+  const file = fileInput.files[0];
+  if(!file){ showToast('Choose a file first.'); return; }
+
+  const filePath = `${staffId}/${Date.now()}_${file.name}`;
+  const { error: uploadErr } = await sb.storage.from('staff-documents').upload(filePath, file);
+  if(uploadErr){ showToast('Upload failed: ' + uploadErr.message); return; }
+
+  const { error: metaErr } = await sb.from('staff_documents').insert({
+    staff_id: staffId, file_path: filePath, file_name: file.name, uploaded_by: window.currentStaff.id
+  });
+  if(metaErr){ showToast('Error saving document record: ' + metaErr.message); return; }
+
+  fileInput.value = '';
+  showToast('Document uploaded.');
+  loadStaffDocuments(staffId);
+}
+
+async function downloadStaffDocument(filePath){
+  const { data, error } = await sb.storage.from('staff-documents').createSignedUrl(filePath, 60);
+  if(error){ showToast('Error: ' + error.message); return; }
+  window.open(data.signedUrl, '_blank');
+}
+
+async function deleteStaffDocument(docId, filePath){
+  const ok = confirm('Delete this document? This cannot be undone.');
+  if(!ok) return;
+  const staffId = document.getElementById('profileModal').dataset.staffId;
+  await sb.storage.from('staff-documents').remove([filePath]);
+  const { error } = await sb.from('staff_documents').delete().eq('id', docId);
+  if(error){ showToast('Error: ' + error.message); return; }
+  showToast('Document deleted.');
+  loadStaffDocuments(staffId);
 }
 
 async function saveStaffProfile(){

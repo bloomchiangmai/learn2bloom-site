@@ -37,7 +37,7 @@ const NAV_ITEMS = [
   { key: 'dashboard', label: 'Dashboard', href: 'staff-dashboard.html', group: 'Home' },
   { key: 'admissions', label: 'Admissions', href: 'staff-admissions.html', group: 'Students' },
   { key: 'learners', label: 'Learners', href: 'learners.html', group: 'Students' },
-  { key: 'archive', label: 'Archive', href: 'archive.html', group: 'Students' },
+  { key: 'archive', label: 'Archive', href: 'archive.html', group: 'Archive' },
   { key: 'team', label: 'Team', href: 'staff-team.html', group: 'Staff' },
   { key: 'permissions', label: 'Permissions', href: 'staff-permissions.html', group: 'Staff', adminOnly: true }
 ];

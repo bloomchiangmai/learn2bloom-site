@@ -122,7 +122,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
           <input type="text" id="newStaffName" placeholder="Jane Doe">
         </div>
         <div>
-          <label>Login email</label>
+          <label>Account email</label>
           <input type="email" id="newStaffEmail" placeholder="jane@learn2bloom.org">
         </div>
         <div>
@@ -169,7 +169,10 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
       <button class="modal-close" onclick="closeStaffProfile()">&times;</button>
       <h2 id="profileModalName">Staff Profile</h2>
       <p class="modal-sub" id="profileModalEmail"></p>
-      <p class="modal-sub" id="profileModalStaffId" style="margin-top:-20px;font-family:monospace;"></p>
+      <p class="modal-sub" style="margin-top:-20px;display:flex;align-items:center;gap:8px;">
+        Staff ID:
+        <input class="detail-input" id="p-staff-id" style="font-family:monospace;text-transform:uppercase;width:160px;padding:6px 10px;">
+      </p>
 
       <div class="detail-section">
         <h3>Account & Access</h3>
@@ -194,7 +197,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
       <div class="detail-section">
         <h3>Basic Info</h3>
         <div class="detail-row"><div class="detail-label">Full name</div><input class="detail-input" id="p-name"></div>
-        <div class="detail-row"><div class="detail-label">Login email</div>
+        <div class="detail-row"><div class="detail-label">Account email</div>
           <input class="detail-input" id="p-email" type="email">
         </div>
         <div class="detail-row"><div class="detail-label">Job title</div>
@@ -355,7 +358,7 @@ function openStaffProfile(staffId){
 
   document.getElementById('profileModalName').textContent = s.name;
   document.getElementById('profileModalEmail').textContent = s.email;
-  document.getElementById('profileModalStaffId').textContent = 'Staff ID: ' + (s.staff_id_code || '—');
+  document.getElementById('p-staff-id').value = s.staff_id_code || '';
   document.getElementById('p-name').value = s.name || '';
   document.getElementById('p-email').value = s.email || '';
   document.getElementById('profileModal').dataset.originalEmail = s.email || '';
@@ -477,6 +480,9 @@ async function saveStaffProfile(){
   const name = v('p-name');
   if(!name){ showToast('Name cannot be empty.'); return; }
 
+  const staffIdCode = v('p-staff-id').toUpperCase();
+  if(!staffIdCode){ showToast('Staff ID cannot be empty.'); return; }
+
   // If the email changed, update it via the secure function first — stop here if that fails.
   const newEmail = v('p-email');
   if(newEmail && newEmail !== originalEmail){
@@ -502,6 +508,7 @@ async function saveStaffProfile(){
 
   const update = {
     name,
+    staff_id_code: staffIdCode,
     job_title: v('p-job-title') || null,
     contact_phone: v('p-phone') || null,
     notes: v('p-notes') || null,
@@ -518,7 +525,14 @@ async function saveStaffProfile(){
   };
 
   const { error } = await sb.from('staff').update(update).eq('id', staffId);
-  if(error){ showToast('Error saving profile: ' + error.message); return; }
+  if(error){
+    if(error.message && error.message.includes('staff_id_code')){
+      showToast('That Staff ID is already in use by someone else — please choose a different one.');
+    } else {
+      showToast('Error saving profile: ' + error.message);
+    }
+    return;
+  }
   showToast('Profile saved.');
   closeStaffProfile();
   loadTeamData();

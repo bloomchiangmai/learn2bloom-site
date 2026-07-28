@@ -160,14 +160,20 @@ async function openStaffProfile(staffId){
       <div class="detail-section">
         <h3>Basic Info</h3>
         ${canEditAdminFields ? `
-        <div class="detail-row"><div class="detail-label">Login email</div>
+        <div class="detail-row"><div class="detail-label">Account email</div>
           <input class="detail-input" id="p-email" type="email" value="${s.email || ''}" data-original="${s.email || ''}">
         </div>
         <div class="detail-row"><div class="detail-label"></div>
           <button class="btn-small-outline" onclick="resetPasswordFromTeam('${staffId}')">Reset password</button>
         </div>` : ''}
         <div class="detail-row"><div class="detail-label">Job title</div>
-          <input class="detail-input" id="p-job-title" value="${s.job_title || ''}" ${canEditAdminFields ? '' : 'disabled'}></div>
+          <select class="detail-input" id="p-job-title" ${canEditAdminFields ? '' : 'disabled'}>
+            <option value="">— Select —</option>
+            ${['Director','Education Lead','Education Consultant','Lead Teacher','Learning Coach','Learning Coach Assistant','Admissions Officer','Enrollment Coordinator','Front Desk / Office Manager','IT Support','Teaching Assistant'].map(title =>
+              `<option value="${title}" ${s.job_title === title ? 'selected' : ''}>${title}</option>`
+            ).join('')}
+          </select>
+        </div>
         ${!canEditAdminFields ? '<div class="field-note" style="margin-left:196px;">Contact an admin to change your job title.</div>' : ''}
         <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-phone" value="${s.contact_phone || ''}"></div>
         <div class="detail-row"><div class="detail-label">Start date</div><input type="date" class="detail-input" id="p-start-date" value="${intake.start_date || ''}"></div>

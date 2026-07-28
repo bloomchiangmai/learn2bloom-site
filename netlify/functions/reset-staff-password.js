@@ -25,9 +25,12 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request body' }) };
   }
 
-  const { accessToken, staffId } = body;
+  const { accessToken, staffId, newPassword } = body;
   if (!accessToken || !staffId) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Missing required fields' }) };
+  }
+  if (newPassword && newPassword.length < 8) {
+    return { statusCode: 400, body: JSON.stringify({ error: 'Password must be at least 8 characters' }) };
   }
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
@@ -57,9 +60,9 @@ exports.handler = async (event) => {
     return { statusCode: 404, body: JSON.stringify({ error: 'Staff member not found' }) };
   }
 
-  const tempPassword = genTempPassword();
+  const finalPassword = newPassword || genTempPassword();
   const { error: updateErr } = await admin.auth.admin.updateUserById(targetStaff.auth_user_id, {
-    password: tempPassword
+    password: finalPassword
   });
 
   if (updateErr) {
@@ -68,6 +71,6 @@ exports.handler = async (event) => {
 
   return {
     statusCode: 200,
-    body: JSON.stringify({ success: true, name: targetStaff.name, tempPassword })
+    body: JSON.stringify({ success: true, name: targetStaff.name, tempPassword: finalPassword, wasCustom: !!newPassword })
   };
 };

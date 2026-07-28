@@ -206,6 +206,16 @@ async function openStaffProfile(staffId){
         </div>
       </div>
 
+      ${isSelf ? `
+      <div class="detail-section">
+        <h3>Change Password</h3>
+        <div class="detail-row"><div class="detail-label">New password</div><input type="password" class="detail-input" id="p-new-password"></div>
+        <div class="detail-row"><div class="detail-label">Confirm</div><input type="password" class="detail-input" id="p-confirm-password"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+          <button class="btn-small-outline" onclick="changeOwnPassword()">Update password</button>
+        </div>
+      </div>` : ''}
+
       <div class="modal-save-bar">
         <button class="btn-small-outline" onclick="closeStaffProfile()">Cancel</button>
         <button class="btn-primary" onclick="saveStaffProfile('${staffId}')">Save changes</button>
@@ -301,6 +311,21 @@ async function resetPasswordFromTeam(staffId){
   if(error){ showToast('Error: ' + error.message); return; }
 
   showToast('Reset link sent to ' + dirEntry.email + '. They can set their own new password from there.');
+}
+
+async function changeOwnPassword(){
+  const pw = document.getElementById('p-new-password').value;
+  const confirm = document.getElementById('p-confirm-password').value;
+
+  if(!pw || pw.length < 8){ showToast('Password must be at least 8 characters.'); return; }
+  if(pw !== confirm){ showToast('Passwords do not match.'); return; }
+
+  const { error } = await sb.auth.updateUser({ password: pw });
+  if(error){ showToast('Error: ' + error.message); return; }
+
+  document.getElementById('p-new-password').value = '';
+  document.getElementById('p-confirm-password').value = '';
+  showToast('Password updated.');
 }
 
 async function saveStaffProfile(staffId){

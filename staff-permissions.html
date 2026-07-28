@@ -309,7 +309,10 @@ function renderStaffTable(){
 
     return `
       <tr>
-        <td><a href="javascript:void(0)" onclick="openStaffProfile('${s.id}')" style="color:#534AB7;font-weight:600;text-decoration:none;">${s.name}</a></td>
+        <td>
+          <input type="text" class="detail-input" style="font-weight:600;padding:6px 8px;" value="${s.name}"
+            onblur="updateStaffName('${s.id}', this.value, '${s.name.replace(/'/g, "\\'")}')">
+        </td>
         <td>
           <div style="font-size:13px;">${s.email}</div>
           <div style="font-size:12px;color:#888780;">${s.job_title || '—'}</div>
@@ -448,6 +451,15 @@ async function resetPassword(staffId){
     'New temporary password: ' + result.tempPassword + '\n\n' +
     'Share this with them securely — it will not be shown again.'
   );
+}
+
+async function updateStaffName(staffId, newName, oldName){
+  newName = newName.trim();
+  if(!newName || newName === oldName) return;
+  const { error } = await sb.from('staff').update({ name: newName }).eq('id', staffId);
+  if(error){ showToast('Error renaming: ' + error.message); loadTeamData(); return; }
+  showToast('Name updated.');
+  loadTeamData();
 }
 
 let pendingDeleteStaffId = null;

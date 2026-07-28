@@ -194,6 +194,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
 
       <div class="detail-section">
         <h3>Basic Info</h3>
+        <div class="detail-row"><div class="detail-label">Full name</div><input class="detail-input" id="p-name"></div>
         <div class="detail-row"><div class="detail-label">Job title</div><input class="detail-input" id="p-job-title"></div>
         <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-phone"></div>
         <div class="detail-row"><div class="detail-label">Start date</div><input type="date" class="detail-input" id="p-start-date"></div>
@@ -309,10 +310,7 @@ function renderStaffTable(){
 
     return `
       <tr>
-        <td>
-          <input type="text" class="detail-input" style="font-weight:600;padding:6px 8px;" value="${s.name}"
-            onblur="updateStaffName('${s.id}', this.value, '${s.name.replace(/'/g, "\\'")}')">
-        </td>
+        <td><a href="javascript:void(0)" onclick="openStaffProfile('${s.id}')" style="color:#534AB7;font-weight:600;text-decoration:none;">${s.name}</a></td>
         <td>
           <div style="font-size:13px;">${s.email}</div>
           <div style="font-size:12px;color:#888780;">${s.job_title || '—'}</div>
@@ -371,6 +369,7 @@ function openStaffProfile(staffId){
 
   document.getElementById('profileModalName').textContent = s.name;
   document.getElementById('profileModalEmail').textContent = s.email;
+  document.getElementById('p-name').value = s.name || '';
   document.getElementById('p-job-title').value = s.job_title || '';
   document.getElementById('p-phone').value = s.contact_phone || '';
   document.getElementById('p-start-date').value = intake.start_date || '';
@@ -395,7 +394,11 @@ async function saveStaffProfile(){
   const staffId = document.getElementById('profileModal').dataset.staffId;
   const v = id => document.getElementById(id).value.trim();
 
+  const name = v('p-name');
+  if(!name){ showToast('Name cannot be empty.'); return; }
+
   const update = {
+    name,
     job_title: v('p-job-title') || null,
     contact_phone: v('p-phone') || null,
     notes: v('p-notes') || null,
@@ -451,15 +454,6 @@ async function resetPassword(staffId){
     'New temporary password: ' + result.tempPassword + '\n\n' +
     'Share this with them securely — it will not be shown again.'
   );
-}
-
-async function updateStaffName(staffId, newName, oldName){
-  newName = newName.trim();
-  if(!newName || newName === oldName) return;
-  const { error } = await sb.from('staff').update({ name: newName }).eq('id', staffId);
-  if(error){ showToast('Error renaming: ' + error.message); loadTeamData(); return; }
-  showToast('Name updated.');
-  loadTeamData();
 }
 
 let pendingDeleteStaffId = null;

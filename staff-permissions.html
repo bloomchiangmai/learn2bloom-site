@@ -129,11 +129,17 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
           <label>Role</label>
           <select id="newStaffRole">
             <option value="admin">Admin</option>
-            <option value="admissions">Admissions</option>
+            <option value="director">Director</option>
             <option value="education_lead">Education Lead</option>
+            <option value="education_consultant">Education Consultant</option>
+            <option value="lead_teacher">Lead Teacher</option>
             <option value="learning_coach" selected>Learning Coach</option>
-            <option value="it">IT</option>
-            <option value="enrollment">Enrollment</option>
+            <option value="learning_coach_assistant">Learning Coach Assistant</option>
+            <option value="admissions">Admissions Officer</option>
+            <option value="enrollment">Enrollment Coordinator</option>
+            <option value="front_desk">Front Desk / Office Manager</option>
+            <option value="it">IT Support</option>
+            <option value="teaching_assistant">Teaching Assistant</option>
           </select>
         </div>
         <div>
@@ -204,11 +210,17 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
         <div class="detail-row"><div class="detail-label">Role</div>
           <select class="detail-input" id="p-role">
             <option value="admin">Admin</option>
-            <option value="admissions">Admissions</option>
+            <option value="director">Director</option>
             <option value="education_lead">Education Lead</option>
+            <option value="education_consultant">Education Consultant</option>
+            <option value="lead_teacher">Lead Teacher</option>
             <option value="learning_coach">Learning Coach</option>
-            <option value="it">IT</option>
-            <option value="enrollment">Enrollment</option>
+            <option value="learning_coach_assistant">Learning Coach Assistant</option>
+            <option value="admissions">Admissions Officer</option>
+            <option value="enrollment">Enrollment Coordinator</option>
+            <option value="front_desk">Front Desk / Office Manager</option>
+            <option value="it">IT Support</option>
+            <option value="teaching_assistant">Teaching Assistant</option>
           </select>
         </div>
         <div class="perm-grid" id="p-access-summary" style="margin-top:10px;margin-bottom:12px;"></div>
@@ -228,20 +240,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
           <input class="detail-input" id="p-email" type="email">
         </div>
         <div class="detail-row"><div class="detail-label">Job title</div>
-          <select class="detail-input" id="p-job-title">
-            <option value="">— Select —</option>
-            <option value="Director">Director</option>
-            <option value="Education Lead">Education Lead</option>
-            <option value="Education Consultant">Education Consultant</option>
-            <option value="Lead Teacher">Lead Teacher</option>
-            <option value="Learning Coach">Learning Coach</option>
-            <option value="Learning Coach Assistant">Learning Coach Assistant</option>
-            <option value="Admissions Officer">Admissions Officer</option>
-            <option value="Enrollment Coordinator">Enrollment Coordinator</option>
-            <option value="Front Desk / Office Manager">Front Desk / Office Manager</option>
-            <option value="IT Support">IT Support</option>
-            <option value="Teaching Assistant">Teaching Assistant</option>
-          </select>
+          <div class="detail-static" id="p-job-title-display" style="font-size:13px;color:#888780;">—</div>
         </div>
         <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-phone"></div>
         <div class="detail-row"><div class="detail-label">Start date</div><input type="date" class="detail-input" id="p-start-date"></div>
@@ -333,8 +332,11 @@ async function loadTeamData(){
 
 function roleLabel(role){
   return {
-    admin:'Admin', admissions:'Admissions', education_lead:'Education Lead',
-    learning_coach:'Learning Coach', it:'IT', enrollment:'Enrollment'
+    admin:'Admin', director:'Director',
+    education_lead:'Education Lead', education_consultant:'Education Consultant', lead_teacher:'Lead Teacher',
+    learning_coach:'Learning Coach', learning_coach_assistant:'Learning Coach Assistant',
+    admissions:'Admissions Officer', enrollment:'Enrollment Coordinator', front_desk:'Front Desk / Office Manager',
+    it:'IT Support', teaching_assistant:'Teaching Assistant'
   }[role] || role;
 }
 
@@ -370,7 +372,7 @@ function renderStaffTable(){
         <td><a href="javascript:void(0)" onclick="openStaffProfile('${s.id}')" style="color:#534AB7;font-weight:600;text-decoration:none;">${s.name}</a></td>
         <td>
           <div style="font-size:13px;">${s.email}</div>
-          <div style="font-size:12px;color:#888780;">${s.job_title || '—'}</div>
+          <div style="font-size:12px;color:#888780;">${roleLabel(s.role)}</div>
         </td>
         <td>${roleLabel(s.role)}</td>
         <td><div class="perm-grid">${summary}</div></td>
@@ -392,7 +394,7 @@ function openStaffProfile(staffId){
   document.getElementById('profileModal').dataset.originalEmail = s.email || '';
   document.getElementById('p-role').value = s.role;
   document.getElementById('p-role').onchange = function(){ changeRole(staffId, this.value); };
-  document.getElementById('p-job-title').value = s.job_title || '';
+  document.getElementById('p-job-title-display').textContent = roleLabel(s.role);
   document.getElementById('p-phone').value = s.contact_phone || '';
   document.getElementById('p-start-date').value = intake.start_date || '';
   document.getElementById('p-dob').value = intake.date_of_birth || '';
@@ -533,7 +535,6 @@ async function saveStaffProfile(){
 
   const update = {
     name,
-    job_title: v('p-job-title') || null,
     contact_phone: v('p-phone') || null,
     notes: v('p-notes') || null,
     intake_data: {
@@ -649,9 +650,10 @@ async function confirmDeleteStaff(){
 }
 
 async function changeRole(staffId, newRole){
-  const { error } = await sb.from('staff').update({ role: newRole }).eq('id', staffId);
+  const { error } = await sb.from('staff').update({ role: newRole, job_title: roleLabel(newRole) }).eq('id', staffId);
   if(error){ showToast(error.message); await loadTeamData(); if(document.getElementById('profileModal').dataset.staffId === staffId) openStaffProfile(staffId); return; }
   showToast('Role updated.');
+  document.getElementById('p-job-title-display').textContent = roleLabel(newRole);
   await loadTeamData();
   if(document.getElementById('profileModal').classList.contains('open') && document.getElementById('profileModal').dataset.staffId === staffId){
     renderProfileAccess(staffId);

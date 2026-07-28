@@ -116,8 +116,11 @@ async function loadDirectory(){
 
 function roleLabel(role){
   return {
-    admin:'Admin', admissions:'Admissions', education_lead:'Education Lead',
-    learning_coach:'Learning Coach', it:'IT', enrollment:'Enrollment'
+    admin:'Admin', director:'Director',
+    education_lead:'Education Lead', education_consultant:'Education Consultant', lead_teacher:'Lead Teacher',
+    learning_coach:'Learning Coach', learning_coach_assistant:'Learning Coach Assistant',
+    admissions:'Admissions Officer', enrollment:'Enrollment Coordinator', front_desk:'Front Desk / Office Manager',
+    it:'IT Support', teaching_assistant:'Teaching Assistant'
   }[role] || role;
 }
 
@@ -164,14 +167,9 @@ async function openStaffProfile(staffId){
           <input class="detail-input" id="p-email" type="email" value="${s.email || ''}" data-original="${s.email || ''}">
         </div>` : ''}
         <div class="detail-row"><div class="detail-label">Job title</div>
-          <select class="detail-input" id="p-job-title" ${canEditAdminFields ? '' : 'disabled'}>
-            <option value="">— Select —</option>
-            ${['Director','Education Lead','Education Consultant','Lead Teacher','Learning Coach','Learning Coach Assistant','Admissions Officer','Enrollment Coordinator','Front Desk / Office Manager','IT Support','Teaching Assistant'].map(title =>
-              `<option value="${title}" ${s.job_title === title ? 'selected' : ''}>${title}</option>`
-            ).join('')}
-          </select>
+          <div class="detail-static">${roleLabel(s.role)}</div>
         </div>
-        ${!canEditAdminFields ? '<div class="field-note" style="margin-left:196px;">Contact an admin to change your job title.</div>' : ''}
+        <div class="field-note" style="margin-left:196px;">Job title follows Role — change it from the Permissions page.</div>
         <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-phone" value="${s.contact_phone || ''}"></div>
         <div class="detail-row"><div class="detail-label">Start date</div><input type="date" class="detail-input" id="p-start-date" value="${intake.start_date || ''}"></div>
         <div class="detail-row"><div class="detail-label">Date of birth</div><input type="date" class="detail-input" id="p-dob" value="${intake.date_of_birth || ''}"></div>
@@ -420,7 +418,6 @@ async function saveStaffProfile(staffId){
     }
   };
   if(isAdmin){
-    update.job_title = v('p-job-title') || null;
     update.notes = v('p-notes') || null;
   }
 

@@ -3,7 +3,21 @@ const { createClient } = require('@supabase/supabase-js');
 const SUPABASE_URL = 'https://ndlcfgkhxjoancdvmgmr.supabase.co';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const VALID_ROLES = ['admin', 'admissions', 'education_lead', 'learning_coach', 'it', 'enrollment'];
+const VALID_ROLES = [
+  'admin', 'director',
+  'education_lead', 'education_consultant', 'lead_teacher',
+  'learning_coach', 'learning_coach_assistant',
+  'admissions', 'enrollment', 'front_desk',
+  'it', 'teaching_assistant'
+];
+
+const ROLE_LABELS = {
+  admin: 'Admin', director: 'Director',
+  education_lead: 'Education Lead', education_consultant: 'Education Consultant', lead_teacher: 'Lead Teacher',
+  learning_coach: 'Learning Coach', learning_coach_assistant: 'Learning Coach Assistant',
+  admissions: 'Admissions Officer', enrollment: 'Enrollment Coordinator', front_desk: 'Front Desk / Office Manager',
+  it: 'IT Support', teaching_assistant: 'Teaching Assistant'
+};
 
 function genTempPassword() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$';
@@ -84,6 +98,7 @@ exports.handler = async (event) => {
     auth_user_id: newUser.user.id,
     name,
     role,
+    job_title: ROLE_LABELS[role] || role,
     staff_id_code: staffIdCode
   });
 

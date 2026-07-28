@@ -65,32 +65,12 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
 </head>
 <body>
 
-<nav>
-  <a href="index.html" class="logo">Bloom Chiangmai</a>
-  <div class="nav-tabs">
-    <a href="staff-admissions.html" class="nav-tab">Admissions</a>
-    <a href="learners.html" class="nav-tab">Learners</a>
-    <a href="archive.html" class="nav-tab active">Archive</a>
-    <a href="staff-team.html" class="nav-tab">Team</a>
-    <a href="staff-permissions.html" class="nav-tab" id="permissionsNavTab" style="display:none;">Permissions</a>
-  </div>
-</nav>
 
-<main>
+<main class="page-content">
 
   <div id="authLoading" style="text-align:center;padding:80px 20px;color:#888780;font-size:14px;">Loading…</div>
 
-  <div id="loginView" class="login-box" style="display:none;">
-    <div class="eyebrow">Staff Access</div>
-    <h1>Sign in</h1>
-    <p class="sub">Staff accounts only.</p>
-    <input type="email" id="loginEmail" placeholder="Email">
-    <input type="password" id="loginPassword" placeholder="Password">
-    <button onclick="doLogin()">Sign in</button>
-    <div class="error-msg" id="loginError"></div>
-  </div>
-
-  <div id="adminView" style="display:none;">
+  <div id="pageContent" style="display:none;">
     <div class="top-bar">
       <div>
         <div class="eyebrow">Staff Admin</div>
@@ -367,6 +347,7 @@ function closeModal(){
   document.getElementById('detailModal').classList.remove('open');
 }
 
+window.STAFF_PAGE_KEY = 'archive';
 checkStaffAndInit();
 </script>
 

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Dashboard — Bloom Chiangmai</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="staff-shared.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#FDFAF5;color:#2C2C2A;}
+main{max-width:900px;margin:0 auto;padding:60px 32px 100px;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#534AB7;text-transform:uppercase;margin-bottom:14px;}
+h1{font-family:Georgia,serif;font-size:32px;font-weight:700;margin-bottom:8px;}
+.sub{font-size:15px;color:#5F5E5A;margin-bottom:40px;}
+
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));gap:16px;margin-bottom:40px;}
+.stat-card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:20px;}
+.stat-num{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#534AB7;}
+.stat-label{font-size:12px;color:#888780;text-transform:uppercase;letter-spacing:.4px;margin-top:4px;}
+
+h2{font-family:Georgia,serif;font-size:20px;margin-bottom:16px;}
+.shortcut-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:16px;}
+.shortcut-card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:22px;text-decoration:none;color:#2C2C2A;display:block;transition:border-color .15s;}
+.shortcut-card:hover{border-color:#534AB7;}
+.shortcut-title{font-weight:700;font-size:16px;margin-bottom:4px;}
+.shortcut-desc{font-size:13px;color:#5F5E5A;}
+
+#authLoading{text-align:center;padding:80px 20px;color:#888780;font-size:14px;}
+</style>
+</head>
+<body>
+
+<div id="authLoading">Loading…</div>
+
+<div id="pageContent" class="page-content" style="display:none;">
+<main>
+  <div class="eyebrow">Bloom Chiangmai</div>
+  <h1 id="greeting">Welcome</h1>
+  <p class="sub">Here's what's happening today.</p>
+
+  <div class="stat-row" id="statRow"></div>
+
+  <h2>Your tools</h2>
+  <div class="shortcut-grid" id="shortcutGrid"></div>
+</main>
+</div>
+
+<script>
+window.STAFF_PAGE_KEY = 'dashboard';
+
+const SHORTCUTS = [
+  { key:'admissions', href:'staff-admissions.html', title:'Admissions', desc:'Review and manage new applications.' },
+  { key:'learners', href:'learners.html', title:'Learners', desc:'View and edit enrolled students.' },
+  { key:'archive', href:'archive.html', title:'Archive', desc:'Restore or review archived records.' },
+  { key:'team', href:'staff-team.html', title:'Team', desc:'See the staff directory, update your contact info.' },
+  { key:'permissions', href:'staff-permissions.html', title:'Permissions', desc:'Manage roles, access, and approvals.', adminOnly:true }
+];
+
+async function onStaffReady(staffRow){
+  document.getElementById('greeting').textContent = `Welcome, ${staffRow.name.split(' ')[0]}`;
+
+  const isAdminOrIt = window.currentStaffRole === 'admin' || window.currentStaffRole === 'it';
+
+  // Shortcuts, filtered by role
+  const grid = document.getElementById('shortcutGrid');
+  grid.innerHTML = SHORTCUTS
+    .filter(s => !s.adminOnly || isAdminOrIt)
+    .map(s => `
+      <a href="${s.href}" class="shortcut-card">
+        <div class="shortcut-title">${s.title}</div>
+        <div class="shortcut-desc">${s.desc}</div>
+      </a>
+    `).join('');
+
+  // Quick stats
+  const stats = [];
+
+  if(canAccess('students', 'view')){
+    const { count: activeCount } = await sb.from('students').select('*', { count: 'exact', head: true }).not('status', 'in', '("archived")');
+    const { count: enquiryCount } = await sb.from('students').select('*', { count: 'exact', head: true }).eq('status', 'enquiry');
+    stats.push({ num: activeCount ?? '—', label: 'Active students' });
+    stats.push({ num: enquiryCount ?? '—', label: 'New enquiries' });
+  }
+
+  if(isAdminOrIt){
+    const { count: pendingCount } = await sb.from('approval_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+    stats.push({ num: pendingCount ?? '—', label: 'Pending approvals' });
+  }
+
+  document.getElementById('statRow').innerHTML = stats.map(s => `
+    <div class="stat-card">
+      <div class="stat-num">${s.num}</div>
+      <div class="stat-label">${s.label}</div>
+    </div>
+  `).join('');
+}
+
+checkStaffAndInit();
+</script>
+
+</body>
+</html>

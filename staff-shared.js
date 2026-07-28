@@ -31,31 +31,118 @@ function nextStudentIdCode(existingCodes){
   return prefix + String(n).padStart(3,'0');
 }
 
+// ---- Sidebar shell (persistent left nav across all staff pages) ----
+
+const NAV_ITEMS = [
+  { key: 'dashboard', label: 'Dashboard', href: 'staff-dashboard.html', group: 'Home' },
+  { key: 'admissions', label: 'Admissions', href: 'staff-admissions.html', group: 'Students' },
+  { key: 'learners', label: 'Learners', href: 'learners.html', group: 'Students' },
+  { key: 'archive', label: 'Archive', href: 'archive.html', group: 'Students' },
+  { key: 'team', label: 'Team', href: 'staff-team.html', group: 'Staff' },
+  { key: 'permissions', label: 'Permissions', href: 'staff-permissions.html', group: 'Staff', adminOnly: true }
+];
+
+function injectSidebarStyles(){
+  if(document.getElementById('sidebar-shell-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'sidebar-shell-styles';
+  style.textContent = `
+    body.has-sidebar{display:flex;min-height:100vh;}
+    .sidebar{width:220px;flex-shrink:0;background:#F7F3EC;border-right:1px solid #E8E3D8;
+      display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:50;}
+    .sidebar-logo{font-family:Georgia,serif;font-size:19px;font-weight:700;color:#2C2C2A;
+      padding:22px 20px 18px;text-decoration:none;border-bottom:1px solid #E8E3D8;display:block;}
+    .sidebar-nav{flex:1;padding:16px 12px;}
+    .sidebar-group{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+      color:#A8A39A;margin:16px 8px 6px;}
+    .sidebar-group:first-child{margin-top:0;}
+    .sidebar-link{display:block;font-size:14px;font-weight:600;color:#5F5E5A;padding:9px 12px;
+      border-radius:8px;text-decoration:none;margin-bottom:2px;}
+    .sidebar-link:hover{background:#EFEAE0;}
+    .sidebar-link.active{background:#534AB7;color:#fff;}
+    .sidebar-footer{border-top:1px solid #E8E3D8;padding:14px 20px;font-size:12px;}
+    .sidebar-footer .name{font-weight:700;color:#2C2C2A;font-size:13px;}
+    .sidebar-footer .role{color:#888780;margin-bottom:8px;}
+    .sidebar-footer .signout{color:#888780;cursor:pointer;text-decoration:underline;}
+    .page-content{margin-left:220px;flex:1;min-width:0;}
+    @media (max-width: 768px) {
+      body.has-sidebar{display:block;}
+      .sidebar{position:static;width:100%;height:auto;border-right:none;border-bottom:1px solid #E8E3D8;}
+      .sidebar-nav{display:flex;flex-wrap:wrap;padding:10px 12px;}
+      .sidebar-group{display:none;}
+      .sidebar-link{margin-right:4px;padding:7px 10px;}
+      .page-content{margin-left:0;}
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function renderSidebar(activeKey){
+  injectSidebarStyles();
+  document.body.classList.add('has-sidebar');
+
+  const isAdminOrIt = window.currentStaffRole === 'admin' || window.currentStaffRole === 'it';
+  const groups = [];
+  NAV_ITEMS.forEach(item => {
+    if(item.adminOnly && !isAdminOrIt) return;
+    let group = groups.find(g => g.name === item.group);
+    if(!group){ group = { name: item.group, items: [] }; groups.push(group); }
+    group.items.push(item);
+  });
+
+  const navHtml = groups.map(g => `
+    <div class="sidebar-group">${g.name}</div>
+    ${g.items.map(item => `
+      <a href="${item.href}" class="sidebar-link ${item.key === activeKey ? 'active' : ''}">${item.label}</a>
+    `).join('')}
+  `).join('');
+
+  const el = document.createElement('div');
+  el.className = 'sidebar';
+  el.innerHTML = `
+    <a href="staff-dashboard.html" class="sidebar-logo">Bloom Chiangmai</a>
+    <div class="sidebar-nav">${navHtml}</div>
+    <div class="sidebar-footer">
+      <div class="name">${window.currentStaff ? window.currentStaff.name : ''}</div>
+      <div class="role">${roleLabelShared(window.currentStaffRole)}</div>
+      <span class="signout" onclick="doLogout()">Sign out</span>
+    </div>
+  `;
+  document.body.insertBefore(el, document.body.firstChild);
+}
+
+function roleLabelShared(role){
+  return {
+    admin:'Admin', admissions:'Admissions', education_lead:'Education Lead',
+    learning_coach:'Learning Coach', it:'IT', enrollment:'Enrollment'
+  }[role] || role;
+}
+
 // ---- Auth ----
 
 async function checkStaffAndInit(){
   const { data: { session } } = await sb.auth.getSession();
-  document.getElementById('authLoading').style.display = 'none';
   if(!session){
-    document.getElementById('loginView').style.display = 'block';
-    document.getElementById('adminView').style.display = 'none';
+    window.location.href = 'staff-login.html?redirect=' + encodeURIComponent(window.location.pathname.split('/').pop());
     return;
   }
   const { data: staffRow } = await sb.from('staff').select('*').eq('auth_user_id', session.user.id).maybeSingle();
   if(!staffRow){
-    document.getElementById('loginError').textContent = 'This account is not registered as staff.';
-    document.getElementById('loginView').style.display = 'block';
-    document.getElementById('adminView').style.display = 'none';
     await sb.auth.signOut();
+    window.location.href = 'staff-login.html?error=not_staff';
     return;
   }
-  document.getElementById('loginView').style.display = 'none';
-  document.getElementById('adminView').style.display = 'block';
 
   window.currentStaff = staffRow;
   window.currentStaffRole = staffRow.role;
   await loadPermissions(staffRow);
-  applyTeamTabVisibility();
+
+  const loading = document.getElementById('authLoading');
+  if(loading) loading.style.display = 'none';
+  const content = document.getElementById('pageContent');
+  if(content) content.style.display = 'block';
+
+  renderSidebar(window.STAFF_PAGE_KEY || '');
 
   if(typeof loadStudents === 'function') loadStudents();
   if(typeof onStaffReady === 'function') onStaffReady(staffRow);
@@ -92,14 +179,6 @@ function requiresApproval(module){
   return !!(perm && perm.requires_approval);
 }
 
-function applyTeamTabVisibility(){
-  const permTab = document.getElementById('permissionsNavTab');
-  if(permTab){
-    const isAdminOrIt = window.currentStaffRole === 'admin' || window.currentStaffRole === 'it';
-    permTab.style.display = isAdminOrIt ? '' : 'none';
-  }
-}
-
 // ---- Approval request helper ----
 // Instead of writing directly, sensitive actions can route through this to
 // create a pending approval_requests row for an admin/IT to review.
@@ -119,7 +198,18 @@ async function doLogin(){
   if(!email || !password){ errEl.textContent = 'Enter email and password.'; return; }
   const { error } = await sb.auth.signInWithPassword({ email, password });
   if(error){ errEl.textContent = error.message; return; }
-  checkStaffAndInit();
+
+  const { data: { session } } = await sb.auth.getSession();
+  const { data: staffRow } = await sb.from('staff').select('id').eq('auth_user_id', session.user.id).maybeSingle();
+  if(!staffRow){
+    errEl.textContent = 'This account is not registered as staff.';
+    await sb.auth.signOut();
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const redirect = params.get('redirect');
+  window.location.href = (redirect && redirect !== 'staff-login.html') ? redirect : 'staff-dashboard.html';
 }
 
 async function doLogout(){

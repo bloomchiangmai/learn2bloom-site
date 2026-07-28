@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Staff Login — Bloom Chiangmai</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="staff-shared.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#FDFAF5;color:#2C2C2A;
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{max-width:400px;width:100%;text-align:center;}
+.logo{font-family:Georgia,serif;font-size:24px;font-weight:700;margin-bottom:36px;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#534AB7;text-transform:uppercase;margin-bottom:14px;}
+h1{font-family:Georgia,serif;font-size:30px;font-weight:700;margin-bottom:8px;}
+.sub{font-size:14px;color:#5F5E5A;margin-bottom:28px;}
+input{width:100%;padding:12px 14px;border:1px solid #E8E3D8;border-radius:8px;font-size:15px;margin-bottom:12px;background:#fff;}
+button{width:100%;padding:12px;border:none;border-radius:8px;background:#534AB7;color:#fff;font-size:15px;font-weight:600;cursor:pointer;}
+button:hover{background:#443c99;}
+.error-msg{color:#B23A3A;font-size:13px;margin-top:10px;}
+</style>
+</head>
+<body>
+
+<div class="login-box">
+  <div class="logo">Bloom Chiangmai</div>
+  <div class="eyebrow">Staff Access</div>
+  <h1>Sign in</h1>
+  <p class="sub">Staff accounts only.</p>
+  <input type="email" id="loginEmail" placeholder="Email">
+  <input type="password" id="loginPassword" placeholder="Password">
+  <button onclick="doLogin()">Sign in</button>
+  <div class="error-msg" id="loginError"></div>
+</div>
+
+<script>
+// If already logged in as staff, skip straight through.
+(async function(){
+  const { data: { session } } = await sb.auth.getSession();
+  if(session){
+    const { data: staffRow } = await sb.from('staff').select('id').eq('auth_user_id', session.user.id).maybeSingle();
+    if(staffRow){
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect');
+      window.location.href = (redirect && redirect !== 'staff-login.html') ? redirect : 'staff-dashboard.html';
+      return;
+    }
+  }
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('error') === 'not_staff'){
+    document.getElementById('loginError').textContent = 'This account is not registered as staff.';
+  }
+})();
+
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+  if(e.key === 'Enter') doLogin();
+});
+</script>
+
+</body>
+</html>

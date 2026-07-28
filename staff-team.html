@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Team & Permissions — Bloom Chiangmai</title>
+<title>Team — Bloom Chiangmai</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="staff-shared.js"></script>
@@ -15,60 +15,31 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:10px m
 .nav-tab{font-size:13px;font-weight:600;padding:8px 16px;border-radius:8px;text-decoration:none;color:#5F5E5A;}
 .nav-tab.active{background:#534AB7;color:#fff;}
 
-main{max-width:1100px;margin:0 auto;padding:60px 24px 100px;min-height:70vh;}
+main{max-width:900px;margin:0 auto;padding:60px 24px 100px;min-height:70vh;}
 .eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#534AB7;text-transform:uppercase;margin-bottom:14px;}
 h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin-bottom:8px;}
 .sub{font-size:15px;color:#5F5E5A;margin-bottom:40px;}
-
-.card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:28px;margin-bottom:32px;}
-.card h2{font-family:Georgia,serif;font-size:20px;font-weight:700;margin-bottom:20px;color:#2C2C2A;}
 
 .login-box{max-width:420px;margin:80px auto;text-align:center;}
 .login-box input{width:100%;padding:12px 14px;border:1px solid #E8E3D8;border-radius:8px;font-size:15px;margin-bottom:12px;background:#fff;}
 .login-box button{width:100%;padding:12px;border:none;border-radius:8px;background:#534AB7;color:#fff;font-size:15px;font-weight:600;cursor:pointer;}
 .login-box button:hover{background:#443c99;}
 .error-msg{color:#B23A3A;font-size:13px;margin-top:10px;}
-.denied-box{max-width:480px;margin:80px auto;text-align:center;color:#5F5E5A;}
-
-.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px;align-items:end;}
-.form-grid label{display:block;font-size:12px;font-weight:600;color:#5F5E5A;margin-bottom:6px;}
-.form-grid input,.form-grid select{width:100%;padding:10px 12px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;background:#fff;}
-
-.btn-primary{padding:12px 24px;border:none;border-radius:8px;background:#534AB7;color:#fff;font-size:14px;font-weight:600;cursor:pointer;}
-.btn-primary:hover{background:#443c99;}
-.btn-small-outline{padding:6px 12px;font-size:12px;border:1px solid #534AB7;border-radius:6px;background:#fff;color:#534AB7;cursor:pointer;}
-.btn-small-danger{padding:6px 12px;font-size:12px;border:1px solid #B23A3A;border-radius:6px;background:#fff;color:#B23A3A;cursor:pointer;}
-
-table{width:100%;border-collapse:collapse;font-size:14px;}
-th{text-align:left;padding:10px 12px;border-bottom:2px solid #E8E3D8;color:#5F5E5A;font-size:12px;text-transform:uppercase;letter-spacing:.5px;}
-td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
-.role-select{font-size:13px;padding:6px 10px;border-radius:6px;border:1px solid #E8E3D8;background:#fff;}
 
 .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
 .signout-link{font-size:13px;color:#888780;cursor:pointer;text-decoration:underline;}
-.toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
 
-.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px;}
-.badge-none{background:#EDEBE6;color:#888780;}
-.badge-view{background:#E6ECF7;color:#3457A8;}
-.badge-edit{background:#FFF1D6;color:#9A6A1B;}
-.badge-full{background:#E3F0E1;color:#2E6B2A;}
-.badge-approval{background:#FBE7E7;color:#B23A3A;font-size:10px;margin-left:4px;}
-
-.perm-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px;}
-.perm-cell{text-align:center;}
-.perm-cell .mod-name{font-size:10px;color:#888780;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
-
-.override-row{display:none;background:#fff;}
-.override-row.open{display:table-row;}
-.override-inner{padding:16px;}
-
-.approval-payload{font-family:monospace;font-size:12px;background:#fff;border:1px solid #E8E3D8;border-radius:6px;padding:10px;max-width:400px;overflow-x:auto;white-space:pre-wrap;}
-.empty-state{color:#888780;font-size:14px;padding:20px;text-align:center;}
+.directory-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:16px;}
+.person-card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:20px;cursor:pointer;transition:border-color .15s;}
+.person-card:hover{border-color:#534AB7;}
+.person-name{font-weight:700;font-size:16px;margin-bottom:2px;}
+.person-role{font-size:12px;color:#534AB7;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;}
+.person-detail{font-size:13px;color:#5F5E5A;margin-bottom:2px;}
+.you-badge{display:inline-block;font-size:10px;font-weight:700;background:#534AB7;color:#fff;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:middle;}
 
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(44,44,42,0.5);z-index:100;align-items:center;justify-content:center;padding:20px;}
 .modal-overlay.open{display:flex;}
-.modal-box{background:#FDFAF5;border-radius:12px;max-width:720px;width:100%;max-height:85vh;overflow-y:auto;padding:32px;position:relative;}
+.modal-box{background:#FDFAF5;border-radius:12px;max-width:640px;width:100%;max-height:85vh;overflow-y:auto;padding:32px;position:relative;}
 .modal-close{position:absolute;top:20px;right:20px;background:none;border:none;font-size:20px;cursor:pointer;color:#888780;}
 .modal-box h2{font-family:Georgia,serif;font-size:24px;margin-bottom:4px;}
 .modal-box .modal-sub{font-size:13px;color:#888780;margin-bottom:24px;}
@@ -77,14 +48,19 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
 .detail-row{display:flex;gap:16px;margin-bottom:8px;font-size:14px;align-items:center;}
 .detail-label{width:180px;flex-shrink:0;color:#5F5E5A;}
 .detail-input{flex:1;padding:8px 10px;border:1px solid #E8E3D8;border-radius:6px;font-size:14px;background:#fff;font-family:inherit;}
+.detail-input:disabled{background:#F0EEE7;color:#888780;}
+.detail-static{flex:1;font-size:14px;}
+.field-note{font-size:11px;color:#888780;margin-top:2px;}
 .modal-save-bar{position:sticky;bottom:0;background:#FDFAF5;padding-top:16px;margin-top:8px;border-top:1px solid #E8E3D8;display:flex;justify-content:flex-end;gap:10px;}
+.btn-primary{padding:12px 24px;border:none;border-radius:8px;background:#534AB7;color:#fff;font-size:14px;font-weight:600;cursor:pointer;}
+.btn-primary:hover{background:#443c99;}
+.btn-small-outline{padding:6px 12px;font-size:12px;border:1px solid #534AB7;border-radius:6px;background:#fff;color:#534AB7;cursor:pointer;}
+
+.toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
+.empty-state{color:#888780;font-size:14px;padding:20px;text-align:center;}
 
 @media (max-width: 768px) {
   nav{flex-direction:column;gap:10px;padding:14px 20px;}
-  .form-grid{grid-template-columns:1fr;}
-  table{font-size:12px;}
-  th,td{padding:8px 6px;}
-  .perm-grid{grid-template-columns:repeat(3,1fr);}
   .detail-label{width:120px;}
   .modal-box{padding:20px;}
 }
@@ -98,7 +74,8 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
     <a href="staff-admissions.html" class="nav-tab">Admissions</a>
     <a href="learners.html" class="nav-tab">Learners</a>
     <a href="archive.html" class="nav-tab">Archive</a>
-    <a href="staff-team.html" class="nav-tab active" id="teamNavTab">Team</a>
+    <a href="staff-team.html" class="nav-tab active">Team</a>
+    <a href="staff-permissions.html" class="nav-tab" id="permissionsNavTab" style="display:none;">Permissions</a>
   </div>
 </nav>
 
@@ -116,72 +93,17 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
     <div class="error-msg" id="loginError"></div>
   </div>
 
-  <div id="deniedView" class="denied-box" style="display:none;">
-    <div class="eyebrow">Team & Permissions</div>
-    <h1>Restricted</h1>
-    <p>This page is only available to Admin and IT staff.</p>
-    <p style="margin-top:20px;"><span class="signout-link" onclick="doLogout()">Sign out</span></p>
-  </div>
-
   <div id="adminView" style="display:none;">
     <div class="top-bar">
       <div>
-        <div class="eyebrow">Internal Admin</div>
-        <h1>Team & Permissions</h1>
+        <div class="eyebrow">Bloom Chiangmai</div>
+        <h1>Team</h1>
       </div>
       <span class="signout-link" onclick="doLogout()">Sign out</span>
     </div>
+    <p class="sub" style="margin-top:-24px;">Click on your own name to update your contact info.</p>
 
-    <div class="card">
-      <h2>Add a staff member</h2>
-      <p style="font-size:13px;color:#888780;margin-bottom:16px;">
-        Creates their login and staff record in one step. You'll get a temporary password to share with them — they can sign in and change it later.
-      </p>
-      <div class="form-grid">
-        <div>
-          <label>Full name</label>
-          <input type="text" id="newStaffName" placeholder="Jane Doe">
-        </div>
-        <div>
-          <label>Login email</label>
-          <input type="email" id="newStaffEmail" placeholder="jane@learn2bloom.org">
-        </div>
-        <div>
-          <label>Role</label>
-          <select id="newStaffRole">
-            <option value="admin">Admin</option>
-            <option value="admissions">Admissions</option>
-            <option value="education_lead">Education Lead</option>
-            <option value="learning_coach" selected>Learning Coach</option>
-            <option value="it">IT</option>
-            <option value="enrollment">Enrollment</option>
-          </select>
-        </div>
-      </div>
-      <button class="btn-primary" onclick="addStaff()">Add staff member</button>
-      <div class="error-msg" id="addStaffError"></div>
-    </div>
-
-    <div class="card">
-      <h2>Staff & roles</h2>
-      <table>
-        <thead>
-          <tr><th>Name</th><th>Contact</th><th>Role</th><th>Access (role default)</th><th></th></tr>
-        </thead>
-        <tbody id="staffTable"></tbody>
-      </table>
-    </div>
-
-    <div class="card">
-      <h2>Pending approvals</h2>
-      <table>
-        <thead>
-          <tr><th>Requested by</th><th>Module</th><th>Action</th><th>Details</th><th>When</th><th></th></tr>
-        </thead>
-        <tbody id="approvalsTable"></tbody>
-      </table>
-      <div id="approvalsEmpty" class="empty-state" style="display:none;">No pending approvals.</div>
-    </div>
+    <div class="directory-grid" id="directoryGrid"></div>
 
   </div>
 
@@ -191,37 +113,8 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
       <h2 id="profileModalName">Staff Profile</h2>
       <p class="modal-sub" id="profileModalEmail"></p>
 
-      <div class="detail-section">
-        <h3>Basic Info</h3>
-        <div class="detail-row"><div class="detail-label">Job title</div><input class="detail-input" id="p-job-title"></div>
-        <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-phone"></div>
-        <div class="detail-row"><div class="detail-label">Start date</div><input type="date" class="detail-input" id="p-start-date"></div>
-        <div class="detail-row"><div class="detail-label">Date of birth</div><input type="date" class="detail-input" id="p-dob"></div>
-      </div>
-
-      <div class="detail-section">
-        <h3>Address & ID</h3>
-        <div class="detail-row"><div class="detail-label">Home address</div><input class="detail-input" id="p-address"></div>
-        <div class="detail-row"><div class="detail-label">National ID / Passport no.</div><input class="detail-input" id="p-national-id"></div>
-        <div class="detail-row"><div class="detail-label">Nationality</div><input class="detail-input" id="p-nationality"></div>
-      </div>
-
-      <div class="detail-section">
-        <h3>Emergency Contact</h3>
-        <div class="detail-row"><div class="detail-label">Name</div><input class="detail-input" id="p-emergency-name"></div>
-        <div class="detail-row"><div class="detail-label">Relationship</div><input class="detail-input" id="p-emergency-relationship"></div>
-        <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-emergency-phone"></div>
-      </div>
-
-      <div class="detail-section">
-        <h3>Notes</h3>
-        <div class="detail-row"><textarea class="detail-input" id="p-notes" rows="3" style="width:100%;"></textarea></div>
-      </div>
-
-      <div class="modal-save-bar">
-        <button class="btn-small-outline" onclick="closeStaffProfile()">Cancel</button>
-        <button class="btn-primary" onclick="saveStaffProfile()">Save changes</button>
-      </div>
+      <div id="profileFullView"></div>
+      <div id="profileLimitedView" style="display:none;"></div>
     </div>
   </div>
 
@@ -230,32 +123,16 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
 </main>
 
 <script>
-const MODULES = ['families','students','staff','calendar','payments','settings'];
-let staffCache = [];
-let roleDefaultsCache = [];
-let overridesCache = [];
+let directoryCache = [];
 
 async function onStaffReady(staffRow){
-  const isAdminOrIt = staffRow.role === 'admin' || staffRow.role === 'it';
-  if(!isAdminOrIt){
-    document.getElementById('adminView').style.display = 'none';
-    document.getElementById('deniedView').style.display = 'block';
-    return;
-  }
-  loadTeamData();
-  loadApprovals();
+  loadDirectory();
 }
 
-async function loadTeamData(){
-  const [{ data: staff }, { data: roleDefaults }, { data: overrides }] = await Promise.all([
-    sb.rpc('get_staff_with_contact'),
-    sb.from('role_permissions').select('*'),
-    sb.from('staff_permission_overrides').select('*')
-  ]);
-  staffCache = staff || [];
-  roleDefaultsCache = roleDefaults || [];
-  overridesCache = overrides || [];
-  renderStaffTable();
+async function loadDirectory(){
+  const { data, error } = await sb.rpc('get_team_directory');
+  directoryCache = data || [];
+  renderDirectory();
 }
 
 function roleLabel(role){
@@ -265,106 +142,89 @@ function roleLabel(role){
   }[role] || role;
 }
 
-function levelBadge(level){
-  return `<span class="badge badge-${level}">${level}</span>`;
+function renderDirectory(){
+  const grid = document.getElementById('directoryGrid');
+  if(!directoryCache.length){
+    grid.innerHTML = '<div class="empty-state">No staff yet.</div>';
+    return;
+  }
+  grid.innerHTML = directoryCache.map(s => `
+    <div class="person-card" onclick="openStaffProfile('${s.id}')">
+      <div class="person-name">${s.name}${s.id === window.currentStaff.id ? '<span class="you-badge">You</span>' : ''}</div>
+      <div class="person-role">${roleLabel(s.role)}</div>
+      ${s.job_title ? `<div class="person-detail">${s.job_title}</div>` : ''}
+      <div class="person-detail">${s.email}</div>
+      ${s.contact_phone ? `<div class="person-detail">${s.contact_phone}</div>` : ''}
+    </div>
+  `).join('');
 }
 
-function getRoleDefaults(role){
-  const map = {};
-  roleDefaultsCache.filter(r => r.role === role).forEach(r => map[r.module] = r);
-  return map;
-}
+async function openStaffProfile(staffId){
+  const { data, error } = await sb.rpc('get_staff_profile', { target_staff_id: staffId });
+  const dirEntry = directoryCache.find(x => x.id === staffId);
 
-function getOverridesFor(staffId){
-  const map = {};
-  overridesCache.filter(o => o.staff_id === staffId).forEach(o => map[o.module] = o);
-  return map;
-}
+  document.getElementById('profileModalName').textContent = dirEntry ? dirEntry.name : 'Staff Profile';
+  document.getElementById('profileModalEmail').textContent = dirEntry ? dirEntry.email : '';
 
-function renderStaffTable(){
-  const tbody = document.getElementById('staffTable');
-  tbody.innerHTML = staffCache.map(s => {
-    const defaults = getRoleDefaults(s.role);
-    const overrides = getOverridesFor(s.id);
-    const summary = MODULES.map(m => {
-      const eff = overrides[m] ? overrides[m].level : (defaults[m] ? defaults[m].level : 'none');
-      const overridden = !!overrides[m];
-      return `<div class="perm-cell"><div class="mod-name">${m}${overridden ? ' *' : ''}</div>${levelBadge(eff)}</div>`;
-    }).join('');
+  const isSelf = staffId === window.currentStaff.id;
+  const isAdmin = window.currentStaffRole === 'admin' || window.currentStaffRole === 'it';
 
-    return `
-      <tr>
-        <td><a href="javascript:void(0)" onclick="openStaffProfile('${s.id}')" style="color:#534AB7;font-weight:600;text-decoration:none;">${s.name}</a></td>
-        <td>
-          <div style="font-size:13px;">${s.email}</div>
-          <div style="font-size:12px;color:#888780;">${s.job_title || '—'}</div>
-        </td>
-        <td>
-          <select class="role-select" onchange="changeRole('${s.id}', this.value)">
-            ${['admin','admissions','education_lead','learning_coach','it','enrollment'].map(r =>
-              `<option value="${r}" ${r === s.role ? 'selected' : ''}>${roleLabel(r)}</option>`
-            ).join('')}
-          </select>
-        </td>
-        <td><div class="perm-grid">${summary}</div></td>
-        <td>
-          <button class="btn-small-outline" onclick="toggleOverridePanel('${s.id}')">Overrides</button>
-          <button class="btn-small-outline" style="margin-top:6px;" onclick="resetPassword('${s.id}')">Reset password</button>
-        </td>
-      </tr>
-      <tr class="override-row" id="override-${s.id}">
-        <td colspan="5">
-          <div class="override-inner">
-            <p style="font-size:12px;color:#888780;margin-bottom:10px;">
-              Grant this person a different access level than their role default (per module). Leave as "role default" to remove an override.
-            </p>
-            <div class="perm-grid">
-              ${MODULES.map(m => {
-                const current = overrides[m] ? overrides[m].level : '';
-                return `
-                  <div class="perm-cell">
-                    <div class="mod-name">${m}</div>
-                    <select class="role-select" style="width:100%;" onchange="setOverride('${s.id}','${m}',this.value)">
-                      <option value="" ${!current ? 'selected' : ''}>role default</option>
-                      <option value="none" ${current==='none'?'selected':''}>none</option>
-                      <option value="view" ${current==='view'?'selected':''}>view</option>
-                      <option value="edit" ${current==='edit'?'selected':''}>edit</option>
-                      <option value="full" ${current==='full'?'selected':''}>full</option>
-                    </select>
-                  </div>`;
-              }).join('')}
-            </div>
-          </div>
-        </td>
-      </tr>
+  if(data && data.length > 0){
+    const s = data[0];
+    const intake = s.intake_data || {};
+    const canEditAdminFields = isAdmin;
+
+    document.getElementById('profileFullView').style.display = 'block';
+    document.getElementById('profileLimitedView').style.display = 'none';
+    document.getElementById('profileFullView').innerHTML = `
+      <div class="detail-section">
+        <h3>Basic Info</h3>
+        <div class="detail-row"><div class="detail-label">Job title</div>
+          <input class="detail-input" id="p-job-title" value="${s.job_title || ''}" ${canEditAdminFields ? '' : 'disabled'}></div>
+        ${!canEditAdminFields ? '<div class="field-note" style="margin-left:196px;">Contact an admin to change your job title.</div>' : ''}
+        <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-phone" value="${s.contact_phone || ''}"></div>
+        <div class="detail-row"><div class="detail-label">Start date</div><input type="date" class="detail-input" id="p-start-date" value="${intake.start_date || ''}"></div>
+        <div class="detail-row"><div class="detail-label">Date of birth</div><input type="date" class="detail-input" id="p-dob" value="${intake.date_of_birth || ''}"></div>
+      </div>
+      <div class="detail-section">
+        <h3>Address & ID</h3>
+        <div class="detail-row"><div class="detail-label">Home address</div><input class="detail-input" id="p-address" value="${intake.address || ''}"></div>
+        <div class="detail-row"><div class="detail-label">National ID / Passport no.</div><input class="detail-input" id="p-national-id" value="${intake.national_id || ''}"></div>
+        <div class="detail-row"><div class="detail-label">Nationality</div><input class="detail-input" id="p-nationality" value="${intake.nationality || ''}"></div>
+      </div>
+      <div class="detail-section">
+        <h3>Emergency Contact</h3>
+        <div class="detail-row"><div class="detail-label">Name</div><input class="detail-input" id="p-emergency-name" value="${intake.emergency_name || ''}"></div>
+        <div class="detail-row"><div class="detail-label">Relationship</div><input class="detail-input" id="p-emergency-relationship" value="${intake.emergency_relationship || ''}"></div>
+        <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-emergency-phone" value="${intake.emergency_phone || ''}"></div>
+      </div>
+      ${canEditAdminFields ? `
+      <div class="detail-section">
+        <h3>Notes (Admin only)</h3>
+        <div class="detail-row"><textarea class="detail-input" id="p-notes" rows="3" style="width:100%;">${s.notes || ''}</textarea></div>
+      </div>` : ''}
+      <div class="modal-save-bar">
+        <button class="btn-small-outline" onclick="closeStaffProfile()">Cancel</button>
+        <button class="btn-primary" onclick="saveStaffProfile('${staffId}')">Save changes</button>
+      </div>
     `;
-  }).join('') || '<tr><td colspan="5" class="empty-state">No staff yet.</td></tr>';
-}
+  } else {
+    document.getElementById('profileFullView').style.display = 'none';
+    document.getElementById('profileLimitedView').style.display = 'block';
+    document.getElementById('profileLimitedView').innerHTML = `
+      <div class="detail-section">
+        <h3>Contact</h3>
+        <div class="detail-row"><div class="detail-label">Role</div><div class="detail-static">${roleLabel(dirEntry?.role)}</div></div>
+        <div class="detail-row"><div class="detail-label">Job title</div><div class="detail-static">${dirEntry?.job_title || '—'}</div></div>
+        <div class="detail-row"><div class="detail-label">Email</div><div class="detail-static">${dirEntry?.email || '—'}</div></div>
+        <div class="detail-row"><div class="detail-label">Phone</div><div class="detail-static">${dirEntry?.contact_phone || '—'}</div></div>
+      </div>
+      <div class="modal-save-bar">
+        <button class="btn-small-outline" onclick="closeStaffProfile()">Close</button>
+      </div>
+    `;
+  }
 
-function toggleOverridePanel(staffId){
-  document.getElementById('override-' + staffId).classList.toggle('open');
-}
-
-function openStaffProfile(staffId){
-  const s = staffCache.find(x => x.id === staffId);
-  if(!s) return;
-  const intake = s.intake_data || {};
-
-  document.getElementById('profileModalName').textContent = s.name;
-  document.getElementById('profileModalEmail').textContent = s.email;
-  document.getElementById('p-job-title').value = s.job_title || '';
-  document.getElementById('p-phone').value = s.contact_phone || '';
-  document.getElementById('p-start-date').value = intake.start_date || '';
-  document.getElementById('p-dob').value = intake.date_of_birth || '';
-  document.getElementById('p-address').value = intake.address || '';
-  document.getElementById('p-national-id').value = intake.national_id || '';
-  document.getElementById('p-nationality').value = intake.nationality || '';
-  document.getElementById('p-emergency-name').value = intake.emergency_name || '';
-  document.getElementById('p-emergency-relationship').value = intake.emergency_relationship || '';
-  document.getElementById('p-emergency-phone').value = intake.emergency_phone || '';
-  document.getElementById('p-notes').value = s.notes || '';
-
-  document.getElementById('profileModal').dataset.staffId = staffId;
   document.getElementById('profileModal').classList.add('open');
 }
 
@@ -372,14 +232,12 @@ function closeStaffProfile(){
   document.getElementById('profileModal').classList.remove('open');
 }
 
-async function saveStaffProfile(){
-  const staffId = document.getElementById('profileModal').dataset.staffId;
-  const v = id => document.getElementById(id).value.trim();
+async function saveStaffProfile(staffId){
+  const v = id => document.getElementById(id) ? document.getElementById(id).value.trim() : undefined;
+  const isAdmin = window.currentStaffRole === 'admin' || window.currentStaffRole === 'it';
 
   const update = {
-    job_title: v('p-job-title') || null,
     contact_phone: v('p-phone') || null,
-    notes: v('p-notes') || null,
     intake_data: {
       start_date: v('p-start-date') || null,
       date_of_birth: v('p-dob') || null,
@@ -391,166 +249,16 @@ async function saveStaffProfile(){
       emergency_phone: v('p-emergency-phone') || null
     }
   };
+  if(isAdmin){
+    update.job_title = v('p-job-title') || null;
+    update.notes = v('p-notes') || null;
+  }
 
   const { error } = await sb.from('staff').update(update).eq('id', staffId);
   if(error){ showToast('Error saving profile: ' + error.message); return; }
   showToast('Profile saved.');
   closeStaffProfile();
-  loadTeamData();
-}
-
-async function updatePhone(staffId, phone){
-  const { error } = await sb.from('staff').update({ contact_phone: phone.trim() || null }).eq('id', staffId);
-  if(error){ showToast('Error saving phone: ' + error.message); return; }
-  showToast('Phone updated.');
-}
-
-async function resetPassword(staffId){
-  const { data: { session } } = await sb.auth.getSession();
-  if(!session){ showToast('Session expired, please sign in again.'); return; }
-
-  let res;
-  try {
-    res = await fetch('/.netlify/functions/reset-staff-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken: session.access_token, staffId })
-    });
-  } catch (e) {
-    showToast('Network error: ' + e.message);
-    return;
-  }
-
-  const result = await res.json();
-  if(!res.ok){
-    showToast(result.error || 'Something went wrong.');
-    return;
-  }
-
-  alert(
-    'Password reset for ' + result.name + '.\n\n' +
-    'New temporary password: ' + result.tempPassword + '\n\n' +
-    'Share this with them securely — it will not be shown again.'
-  );
-}
-
-async function changeRole(staffId, newRole){
-  if(window.currentStaff && staffId === window.currentStaff.id){
-    const ok = confirm('This changes your own role. If the new role has less access, you may lose access to this page. Continue?');
-    if(!ok){ loadTeamData(); return; }
-  }
-  const { error } = await sb.from('staff').update({ role: newRole }).eq('id', staffId);
-  if(error){ showToast('Error: ' + error.message); return; }
-  showToast('Role updated.');
-  loadTeamData();
-}
-
-async function setOverride(staffId, module, level){
-  if(window.currentStaff && staffId === window.currentStaff.id && level && level !== 'full'){
-    const ok = confirm('This changes your own access to "' + module + '". If this reduces your access, you may lose the ability to undo it yourself. Continue?');
-    if(!ok){ loadTeamData(); return; }
-  }
-  if(!level){
-    const { error } = await sb.from('staff_permission_overrides').delete().eq('staff_id', staffId).eq('module', module);
-    if(error){ showToast('Error: ' + error.message); return; }
-    showToast('Override removed — back to role default.');
-  } else {
-    const { error } = await sb.from('staff_permission_overrides').upsert({
-      staff_id: staffId, module, level, granted_by: window.currentStaff.id
-    });
-    if(error){ showToast('Error: ' + error.message); return; }
-    showToast('Override saved.');
-  }
-  loadTeamData();
-}
-
-async function addStaff(){
-  const name = document.getElementById('newStaffName').value.trim();
-  const email = document.getElementById('newStaffEmail').value.trim();
-  const role = document.getElementById('newStaffRole').value;
-  const errEl = document.getElementById('addStaffError');
-  errEl.textContent = '';
-
-  if(!name || !email){ errEl.textContent = 'Enter a name and email.'; return; }
-
-  const { data: { session } } = await sb.auth.getSession();
-  if(!session){ errEl.textContent = 'Session expired, please sign in again.'; return; }
-
-  let res;
-  try {
-    res = await fetch('/.netlify/functions/create-staff', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken: session.access_token, name, email, role })
-    });
-  } catch (e) {
-    errEl.textContent = 'Network error: ' + e.message;
-    return;
-  }
-
-  const result = await res.json();
-  if(!res.ok){
-    errEl.textContent = result.error || 'Something went wrong.';
-    return;
-  }
-
-  document.getElementById('newStaffName').value = '';
-  document.getElementById('newStaffEmail').value = '';
-  showTempPasswordModal(result.email, result.tempPassword);
-  loadTeamData();
-}
-
-function showTempPasswordModal(email, tempPassword){
-  alert(
-    'Staff member added.\n\n' +
-    'Email: ' + email + '\n' +
-    'Temporary password: ' + tempPassword + '\n\n' +
-    'Share this with them securely — it will not be shown again. They can change their password after signing in.'
-  );
-}
-
-async function loadApprovals(){
-  const { data, error } = await sb.from('approval_requests')
-    .select('*, staff:requested_by(name)')
-    .eq('status', 'pending')
-    .order('created_at', { ascending: false });
-
-  const tbody = document.getElementById('approvalsTable');
-  const emptyEl = document.getElementById('approvalsEmpty');
-  if(error || !data || data.length === 0){
-    tbody.innerHTML = '';
-    emptyEl.style.display = 'block';
-    return;
-  }
-  emptyEl.style.display = 'none';
-  tbody.innerHTML = data.map(r => `
-    <tr>
-      <td>${r.staff ? r.staff.name : '—'}</td>
-      <td>${r.module}</td>
-      <td>${r.action_type}</td>
-      <td><div class="approval-payload">${escapeHtml(JSON.stringify(r.payload, null, 2))}</div></td>
-      <td>${new Date(r.created_at).toLocaleString()}</td>
-      <td>
-        <button class="btn-small-outline" onclick="reviewRequest('${r.id}','approved')">Approve</button>
-        <button class="btn-small-danger" onclick="reviewRequest('${r.id}','rejected')">Reject</button>
-      </td>
-    </tr>
-  `).join('');
-}
-
-function escapeHtml(str){
-  return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-async function reviewRequest(id, status){
-  const { error } = await sb.from('approval_requests').update({
-    status, reviewed_by: window.currentStaff.id, reviewed_at: new Date().toISOString()
-  }).eq('id', id);
-  if(error){ showToast('Error: ' + error.message); return; }
-  showToast(status === 'approved'
-    ? 'Approved. Remember: this only marks the request approved — apply the actual change if it hasn\'t already taken effect.'
-    : 'Rejected.');
-  loadApprovals();
+  loadDirectory();
 }
 
 checkStaffAndInit();

@@ -93,10 +93,10 @@ function requiresApproval(module){
 }
 
 function applyTeamTabVisibility(){
-  const tab = document.getElementById('teamNavTab');
-  if(tab){
+  const permTab = document.getElementById('permissionsNavTab');
+  if(permTab){
     const isAdminOrIt = window.currentStaffRole === 'admin' || window.currentStaffRole === 'it';
-    tab.style.display = isAdminOrIt ? '' : 'none';
+    permTab.style.display = isAdminOrIt ? '' : 'none';
   }
 }
 

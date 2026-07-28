@@ -161,8 +161,10 @@ async function openStaffProfile(staffId){
         <h3>Basic Info</h3>
         ${canEditAdminFields ? `
         <div class="detail-row"><div class="detail-label">Login email</div>
-          <input class="detail-input" id="p-email" type="email" value="${s.email || ''}">
-          <button class="btn-small-outline" onclick="updateStaffEmailFromTeam('${staffId}')">Update</button>
+          <input class="detail-input" id="p-email" type="email" value="${s.email || ''}" data-original="${s.email || ''}">
+        </div>
+        <div class="detail-row"><div class="detail-label"></div>
+          <button class="btn-small-outline" onclick="resetPasswordFromTeam('${staffId}')">Reset password</button>
         </div>` : ''}
         <div class="detail-row"><div class="detail-label">Job title</div>
           <input class="detail-input" id="p-job-title" value="${s.job_title || ''}" ${canEditAdminFields ? '' : 'disabled'}></div>
@@ -217,19 +219,16 @@ function closeStaffProfile(){
   document.getElementById('profileModal').classList.remove('open');
 }
 
-async function updateStaffEmailFromTeam(staffId){
-  const newEmail = document.getElementById('p-email').value.trim();
-  if(!newEmail){ showToast('Enter an email.'); return; }
-
+async function resetPasswordFromTeam(staffId){
   const { data: { session } } = await sb.auth.getSession();
   if(!session){ showToast('Session expired, please sign in again.'); return; }
 
   let res;
   try {
-    res = await fetch('/.netlify/functions/update-staff-email', {
+    res = await fetch('/.netlify/functions/reset-staff-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken: session.access_token, staffId, newEmail })
+      body: JSON.stringify({ accessToken: session.access_token, staffId })
     });
   } catch (e) {
     showToast('Network error: ' + e.message);
@@ -242,14 +241,43 @@ async function updateStaffEmailFromTeam(staffId){
     return;
   }
 
-  showToast('Email updated.');
-  document.getElementById('profileModalEmail').textContent = newEmail;
-  loadDirectory();
+  alert(
+    'Password reset for ' + result.name + '.\n\n' +
+    'New temporary password: ' + result.tempPassword + '\n\n' +
+    'Share this with them securely — it will not be shown again.'
+  );
 }
 
 async function saveStaffProfile(staffId){
   const v = id => document.getElementById(id) ? document.getElementById(id).value.trim() : undefined;
   const isAdmin = window.currentStaffRole === 'admin' || window.currentStaffRole === 'it';
+
+  // If admin changed the email, update it via the secure function first.
+  if(isAdmin && document.getElementById('p-email')){
+    const emailInput = document.getElementById('p-email');
+    const newEmail = emailInput.value.trim();
+    const originalEmail = emailInput.dataset.original || '';
+    if(newEmail && newEmail !== originalEmail){
+      const { data: { session } } = await sb.auth.getSession();
+      if(!session){ showToast('Session expired, please sign in again.'); return; }
+      let res;
+      try {
+        res = await fetch('/.netlify/functions/update-staff-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessToken: session.access_token, staffId, newEmail })
+        });
+      } catch (e) {
+        showToast('Network error updating email: ' + e.message);
+        return;
+      }
+      const emailResult = await res.json();
+      if(!res.ok){
+        showToast(emailResult.error || 'Could not update email.');
+        return;
+      }
+    }
+  }
 
   const update = {
     contact_phone: v('p-phone') || null,

@@ -196,7 +196,6 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
         <div class="detail-row"><div class="detail-label">Full name</div><input class="detail-input" id="p-name"></div>
         <div class="detail-row"><div class="detail-label">Login email</div>
           <input class="detail-input" id="p-email" type="email">
-          <button class="btn-small-outline" onclick="updateStaffEmail()">Update</button>
         </div>
         <div class="detail-row"><div class="detail-label">Job title</div>
           <select class="detail-input" id="p-job-title">
@@ -350,6 +349,7 @@ function openStaffProfile(staffId){
   document.getElementById('profileModalStaffId').textContent = 'Staff ID: ' + (s.staff_id_code || '—');
   document.getElementById('p-name').value = s.name || '';
   document.getElementById('p-email').value = s.email || '';
+  document.getElementById('profileModal').dataset.originalEmail = s.email || '';
   document.getElementById('p-role').value = s.role;
   document.getElementById('p-role').onchange = function(){ changeRole(staffId, this.value); };
   document.getElementById('p-job-title').value = s.job_title || '';
@@ -406,10 +406,34 @@ function closeStaffProfile(){
 
 async function saveStaffProfile(){
   const staffId = document.getElementById('profileModal').dataset.staffId;
+  const originalEmail = document.getElementById('profileModal').dataset.originalEmail;
   const v = id => document.getElementById(id).value.trim();
 
   const name = v('p-name');
   if(!name){ showToast('Name cannot be empty.'); return; }
+
+  // If the email changed, update it via the secure function first — stop here if that fails.
+  const newEmail = v('p-email');
+  if(newEmail && newEmail !== originalEmail){
+    const { data: { session } } = await sb.auth.getSession();
+    if(!session){ showToast('Session expired, please sign in again.'); return; }
+    let res;
+    try {
+      res = await fetch('/.netlify/functions/update-staff-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken: session.access_token, staffId, newEmail })
+      });
+    } catch (e) {
+      showToast('Network error updating email: ' + e.message);
+      return;
+    }
+    const emailResult = await res.json();
+    if(!res.ok){
+      showToast(emailResult.error || 'Could not update email.');
+      return;
+    }
+  }
 
   const update = {
     name,
@@ -439,37 +463,6 @@ async function updatePhone(staffId, phone){
   const { error } = await sb.from('staff').update({ contact_phone: phone.trim() || null }).eq('id', staffId);
   if(error){ showToast('Error saving phone: ' + error.message); return; }
   showToast('Phone updated.');
-}
-
-async function updateStaffEmail(){
-  const staffId = document.getElementById('profileModal').dataset.staffId;
-  const newEmail = document.getElementById('p-email').value.trim();
-  if(!newEmail){ showToast('Enter an email.'); return; }
-
-  const { data: { session } } = await sb.auth.getSession();
-  if(!session){ showToast('Session expired, please sign in again.'); return; }
-
-  let res;
-  try {
-    res = await fetch('/.netlify/functions/update-staff-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken: session.access_token, staffId, newEmail })
-    });
-  } catch (e) {
-    showToast('Network error: ' + e.message);
-    return;
-  }
-
-  const result = await res.json();
-  if(!res.ok){
-    showToast(result.error || 'Something went wrong.');
-    return;
-  }
-
-  showToast('Email updated.');
-  document.getElementById('profileModalEmail').textContent = newEmail;
-  loadTeamData();
 }
 
 async function resetPassword(staffId){

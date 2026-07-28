@@ -112,70 +112,6 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
     </div>
 
     <div class="card">
-      <h2>Add a staff member</h2>
-      <p style="font-size:13px;color:#888780;margin-bottom:16px;">
-        Creates their login and staff record in one step. Set a password now, or leave blank to auto-generate one.
-      </p>
-      <div class="form-grid">
-        <div>
-          <label>Full name</label>
-          <input type="text" id="newStaffName" placeholder="Jane Doe">
-        </div>
-        <div>
-          <label>Account email</label>
-          <input type="email" id="newStaffEmail" placeholder="jane@learn2bloom.org">
-        </div>
-        <div>
-          <label>Role</label>
-          <select id="newStaffRole">
-            <option value="admin">Admin</option>
-            <option value="director">Director</option>
-            <option value="education_lead">Education Lead</option>
-            <option value="education_consultant">Education Consultant</option>
-            <option value="lead_teacher">Lead Teacher</option>
-            <option value="learning_coach" selected>Learning Coach</option>
-            <option value="learning_coach_assistant">Learning Coach Assistant</option>
-            <option value="admissions">Admissions Officer</option>
-            <option value="enrollment">Enrollment Coordinator</option>
-            <option value="front_desk">Front Desk / Office Manager</option>
-            <option value="it">IT Support</option>
-            <option value="teaching_assistant">Teaching Assistant</option>
-          </select>
-        </div>
-        <div>
-          <label>Password (optional)</label>
-          <input type="text" id="newStaffPassword" placeholder="Leave blank to auto-generate">
-        </div>
-      </div>
-      <button class="btn-primary" onclick="addStaff()">Add staff member</button>
-      <div class="error-msg" id="addStaffError"></div>
-
-      <div id="newStaffResult" style="display:none;margin-top:16px;padding:16px;border:1px solid #ddd8cc;border-radius:8px;background:#FDFAF5;">
-        <p style="font-weight:700;margin:0 0 10px;">Staff member added</p>
-        <div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;font-size:13px;">
-          <span style="color:#888780;">Staff ID</span>
-          <span id="resultStaffId" style="font-family:monospace;user-select:all;"></span>
-          <button type="button" class="btn-copy" onclick="copyResultField('resultStaffId', this)">Copy</button>
-
-          <span style="color:#888780;">Email</span>
-          <span id="resultEmail" style="font-family:monospace;user-select:all;"></span>
-          <button type="button" class="btn-copy" onclick="copyResultField('resultEmail', this)">Copy</button>
-
-          <span style="color:#888780;">Password</span>
-          <span id="resultPassword" style="font-family:monospace;user-select:all;"></span>
-          <button type="button" class="btn-copy" onclick="copyResultField('resultPassword', this)">Copy</button>
-        </div>
-        <p id="resultNote" style="font-size:12px;color:#888780;margin:10px 0 0;"></p>
-      </div>
-    </div>
-
-    <style>
-      .btn-copy{font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid #ddd8cc;background:white;cursor:pointer;color:#3D3670;}
-      .btn-copy:hover{background:#f0eee6;}
-      .btn-copy.copied{background:#2f7a3e;color:white;border-color:#2f7a3e;}
-    </style>
-
-    <div class="card">
       <h2>Staff & roles</h2>
       <table>
         <thead>
@@ -204,6 +140,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
       <h2 id="profileModalName">Staff Profile</h2>
       <p class="modal-sub" id="profileModalEmail"></p>
       <p class="modal-sub" id="profileModalStaffId" style="margin-top:-20px;font-family:monospace;"></p>
+      <p style="font-size:12px;color:#888780;margin-top:-8px;">For contact info, address, emergency contact, or documents, edit this person from the <a href="staff-team.html" style="color:#534AB7;">Team</a> page.</p>
 
       <div class="detail-section">
         <h3>Account & Access</h3>
@@ -233,52 +170,9 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
         </div>
       </div>
 
-      <div class="detail-section">
-        <h3>Basic Info</h3>
-        <div class="detail-row"><div class="detail-label">Full name</div><input class="detail-input" id="p-name"></div>
-        <div class="detail-row"><div class="detail-label">Account email</div>
-          <input class="detail-input" id="p-email" type="email">
-        </div>
-        <div class="detail-row"><div class="detail-label">Job title</div>
-          <div class="detail-static" id="p-job-title-display" style="font-size:13px;color:#888780;">—</div>
-        </div>
-        <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-phone"></div>
-        <div class="detail-row"><div class="detail-label">Start date</div><input type="date" class="detail-input" id="p-start-date"></div>
-        <div class="detail-row"><div class="detail-label">Date of birth</div><input type="date" class="detail-input" id="p-dob"></div>
-      </div>
-
-      <div class="detail-section">
-        <h3>Address & ID</h3>
-        <div class="detail-row"><div class="detail-label">Home address</div><input class="detail-input" id="p-address"></div>
-        <div class="detail-row"><div class="detail-label">National ID / Passport no.</div><input class="detail-input" id="p-national-id"></div>
-        <div class="detail-row"><div class="detail-label">Nationality</div><input class="detail-input" id="p-nationality"></div>
-      </div>
-
-      <div class="detail-section">
-        <h3>Emergency Contact</h3>
-        <div class="detail-row"><div class="detail-label">Name</div><input class="detail-input" id="p-emergency-name"></div>
-        <div class="detail-row"><div class="detail-label">Relationship</div><input class="detail-input" id="p-emergency-relationship"></div>
-        <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-emergency-phone"></div>
-      </div>
-
-      <div class="detail-section">
-        <h3>Notes</h3>
-        <div class="detail-row"><textarea class="detail-input" id="p-notes" rows="3" style="width:100%;"></textarea></div>
-      </div>
-
-      <div class="detail-section">
-        <h3>Documents</h3>
-        <div id="p-documents-list" style="margin-bottom:12px;"></div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input type="file" id="p-document-upload" style="flex:1;font-size:13px;">
-          <button class="btn-small-outline" onclick="uploadStaffDocument()">Upload</button>
-        </div>
-      </div>
-
       <div class="modal-save-bar">
-        <button class="btn-small-outline" onclick="closeStaffProfile()">Cancel</button>
-        <button class="btn-primary" onclick="saveStaffProfile()">Save changes</button>
-        <button class="btn-small-danger" onclick="openDeleteStaffModal(document.getElementById('profileModal').dataset.staffId, document.getElementById('p-name').value)">Delete staff member</button>
+        <button class="btn-small-outline" onclick="closeStaffProfile()">Close</button>
+        <button class="btn-small-danger" onclick="openDeleteStaffModal(document.getElementById('profileModal').dataset.staffId, document.getElementById('profileModalName').textContent)">Delete staff member</button>
       </div>
     </div>
   </div>
@@ -308,7 +202,7 @@ let roleDefaultsCache = [];
 let overridesCache = [];
 
 async function onStaffReady(staffRow){
-  const isAdminOrIt = staffRow.role === 'admin' || staffRow.role === 'it';
+  const isAdminOrIt = staffRow.role === 'admin' || staffRow.role === 'director' || staffRow.role === 'it';
   if(!isAdminOrIt){
     document.getElementById('pageContent').style.display = 'none';
     document.getElementById('deniedView').style.display = 'block';
@@ -384,33 +278,17 @@ function renderStaffTable(){
 function openStaffProfile(staffId){
   const s = staffCache.find(x => x.id === staffId);
   if(!s) return;
-  const intake = s.intake_data || {};
 
   document.getElementById('profileModalName').textContent = s.name;
   document.getElementById('profileModalEmail').textContent = s.email;
   document.getElementById('profileModalStaffId').textContent = 'Staff ID: ' + (s.staff_id_code || '—');
-  document.getElementById('p-name').value = s.name || '';
-  document.getElementById('p-email').value = s.email || '';
-  document.getElementById('profileModal').dataset.originalEmail = s.email || '';
   document.getElementById('p-role').value = s.role;
   document.getElementById('p-role').onchange = function(){ changeRole(staffId, this.value); };
-  document.getElementById('p-job-title-display').textContent = roleLabel(s.role);
-  document.getElementById('p-phone').value = s.contact_phone || '';
-  document.getElementById('p-start-date').value = intake.start_date || '';
-  document.getElementById('p-dob').value = intake.date_of_birth || '';
-  document.getElementById('p-address').value = intake.address || '';
-  document.getElementById('p-national-id').value = intake.national_id || '';
-  document.getElementById('p-nationality').value = intake.nationality || '';
-  document.getElementById('p-emergency-name').value = intake.emergency_name || '';
-  document.getElementById('p-emergency-relationship').value = intake.emergency_relationship || '';
-  document.getElementById('p-emergency-phone').value = intake.emergency_phone || '';
-  document.getElementById('p-notes').value = s.notes || '';
 
   renderProfileAccess(staffId);
 
   document.getElementById('profileModal').dataset.staffId = staffId;
   document.getElementById('profileModal').classList.add('open');
-  loadStaffDocuments(staffId);
 }
 
 function renderProfileAccess(staffId){
@@ -445,122 +323,6 @@ function renderProfileAccess(staffId){
 
 function closeStaffProfile(){
   document.getElementById('profileModal').classList.remove('open');
-}
-
-async function loadStaffDocuments(staffId){
-  const { data, error } = await sb.from('staff_documents').select('*').eq('staff_id', staffId).order('uploaded_at', { ascending: false });
-  const el = document.getElementById('p-documents-list');
-  if(error || !data || data.length === 0){
-    el.innerHTML = '<div style="font-size:13px;color:#888780;">No documents uploaded yet.</div>';
-    return;
-  }
-  el.innerHTML = data.map(d => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #E8E3D8;font-size:13px;">
-      <span>${d.file_name}</span>
-      <span>
-        <button class="btn-small-outline" onclick="downloadStaffDocument('${d.file_path}')">Download</button>
-        <button class="btn-small-danger" onclick="deleteStaffDocument('${d.id}','${d.file_path}')">Delete</button>
-      </span>
-    </div>
-  `).join('');
-}
-
-async function uploadStaffDocument(){
-  const staffId = document.getElementById('profileModal').dataset.staffId;
-  const fileInput = document.getElementById('p-document-upload');
-  const file = fileInput.files[0];
-  if(!file){ showToast('Choose a file first.'); return; }
-
-  const filePath = `${staffId}/${Date.now()}_${file.name}`;
-  const { error: uploadErr } = await sb.storage.from('staff-documents').upload(filePath, file);
-  if(uploadErr){ showToast('Upload failed: ' + uploadErr.message); return; }
-
-  const { error: metaErr } = await sb.from('staff_documents').insert({
-    staff_id: staffId, file_path: filePath, file_name: file.name, uploaded_by: window.currentStaff.id
-  });
-  if(metaErr){ showToast('Error saving document record: ' + metaErr.message); return; }
-
-  fileInput.value = '';
-  showToast('Document uploaded.');
-  loadStaffDocuments(staffId);
-}
-
-async function downloadStaffDocument(filePath){
-  const { data, error } = await sb.storage.from('staff-documents').createSignedUrl(filePath, 60);
-  if(error){ showToast('Error: ' + error.message); return; }
-  window.open(data.signedUrl, '_blank');
-}
-
-async function deleteStaffDocument(docId, filePath){
-  const ok = confirm('Delete this document? This cannot be undone.');
-  if(!ok) return;
-  const staffId = document.getElementById('profileModal').dataset.staffId;
-  await sb.storage.from('staff-documents').remove([filePath]);
-  const { error } = await sb.from('staff_documents').delete().eq('id', docId);
-  if(error){ showToast('Error: ' + error.message); return; }
-  showToast('Document deleted.');
-  loadStaffDocuments(staffId);
-}
-
-async function saveStaffProfile(){
-  const staffId = document.getElementById('profileModal').dataset.staffId;
-  const originalEmail = document.getElementById('profileModal').dataset.originalEmail;
-  const v = id => document.getElementById(id).value.trim();
-
-  const name = v('p-name');
-  if(!name){ showToast('Name cannot be empty.'); return; }
-
-  // If the email changed, update it via the secure function first — stop here if that fails.
-  const newEmail = v('p-email');
-  if(newEmail && newEmail !== originalEmail){
-    const { data: { session } } = await sb.auth.getSession();
-    if(!session){ showToast('Session expired, please sign in again.'); return; }
-    let res;
-    try {
-      res = await fetch('/.netlify/functions/update-staff-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken: session.access_token, staffId, newEmail })
-      });
-    } catch (e) {
-      showToast('Network error updating email: ' + e.message);
-      return;
-    }
-    const emailResult = await res.json();
-    if(!res.ok){
-      showToast(emailResult.error || 'Could not update email.');
-      return;
-    }
-  }
-
-  const update = {
-    name,
-    contact_phone: v('p-phone') || null,
-    notes: v('p-notes') || null,
-    intake_data: {
-      start_date: v('p-start-date') || null,
-      date_of_birth: v('p-dob') || null,
-      address: v('p-address') || null,
-      national_id: v('p-national-id') || null,
-      nationality: v('p-nationality') || null,
-      emergency_name: v('p-emergency-name') || null,
-      emergency_relationship: v('p-emergency-relationship') || null,
-      emergency_phone: v('p-emergency-phone') || null
-    }
-  };
-
-  const { error } = await sb.from('staff').update(update).eq('id', staffId);
-  if(error){
-    if(error.message && error.message.includes('staff_id_code')){
-      showToast('That Staff ID is already in use by someone else — please choose a different one.');
-    } else {
-      showToast('Error saving profile: ' + error.message);
-    }
-    return;
-  }
-  showToast('Profile saved.');
-  closeStaffProfile();
-  loadTeamData();
 }
 
 async function updatePhone(staffId, phone){
@@ -713,68 +475,6 @@ async function setOverride(staffId, module, level){
   }
 }
 
-async function addStaff(){
-  const name = document.getElementById('newStaffName').value.trim();
-  const email = document.getElementById('newStaffEmail').value.trim();
-  const role = document.getElementById('newStaffRole').value;
-  const password = document.getElementById('newStaffPassword').value;
-  const errEl = document.getElementById('addStaffError');
-  errEl.textContent = '';
-
-  if(!name || !email){ errEl.textContent = 'Enter a name and email.'; return; }
-  if(password && password.length < 8){ errEl.textContent = 'Password must be at least 8 characters.'; return; }
-
-  const { data: { session } } = await sb.auth.getSession();
-  if(!session){ errEl.textContent = 'Session expired, please sign in again.'; return; }
-
-  let res;
-  try {
-    res = await fetch('/.netlify/functions/create-staff', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken: session.access_token, name, email, role, password: password || undefined })
-    });
-  } catch (e) {
-    errEl.textContent = 'Network error: ' + e.message;
-    return;
-  }
-
-  const result = await res.json();
-  if(!res.ok){
-    errEl.textContent = result.error || 'Something went wrong.';
-    return;
-  }
-
-  document.getElementById('newStaffName').value = '';
-  document.getElementById('newStaffEmail').value = '';
-  document.getElementById('newStaffPassword').value = '';
-  showTempPasswordModal(result.email, result.tempPassword, result.staffIdCode, !!password);
-  loadTeamData();
-}
-
-function showTempPasswordModal(email, tempPassword, staffIdCode, wasCustomPassword){
-  document.getElementById('resultStaffId').textContent = staffIdCode;
-  document.getElementById('resultEmail').textContent = email;
-  document.getElementById('resultPassword').textContent = tempPassword;
-  document.getElementById('resultNote').textContent = wasCustomPassword
-    ? 'They can sign in with their Staff ID and this password.'
-    : 'They can sign in with their Staff ID and this password. This won\'t be shown again after you leave this page — copy it now.';
-  const panel = document.getElementById('newStaffResult');
-  panel.style.display = 'block';
-  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function copyResultField(elId, btn){
-  const text = document.getElementById(elId).textContent;
-  navigator.clipboard.writeText(text).then(()=>{
-    const original = btn.textContent;
-    btn.textContent = 'Copied!';
-    btn.classList.add('copied');
-    setTimeout(()=>{ btn.textContent = original; btn.classList.remove('copied'); }, 1500);
-  }).catch(()=>{
-    alert('Could not copy automatically. Please select and copy the text manually.');
-  });
-}
 
 async function loadApprovals(){
   const { data, error } = await sb.from('approval_requests')

@@ -82,7 +82,7 @@ function renderSidebar(activeKey){
   injectSidebarStyles();
   document.body.classList.add('has-sidebar');
 
-  const isAdminOrIt = window.currentStaffRole === 'admin' || window.currentStaffRole === 'it';
+  const isAdminOrIt = window.currentStaffRole === 'admin' || window.currentStaffRole === 'director' || window.currentStaffRole === 'it';
   const groups = [];
   NAV_ITEMS.forEach(item => {
     if(item.adminOnly && !isAdminOrIt) return;

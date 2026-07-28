@@ -82,6 +82,70 @@ h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin
     </div>
     <p class="sub" style="margin-top:-24px;">Click on your own name to update your contact info.</p>
 
+    <div class="card" id="addStaffCard" style="display:none;">
+      <h2>Add a staff member</h2>
+      <p style="font-size:13px;color:#888780;margin-bottom:16px;">
+        Creates their login and staff record in one step. Set a password now, or leave blank to auto-generate one.
+      </p>
+      <div class="form-grid">
+        <div>
+          <label>Full name</label>
+          <input type="text" id="newStaffName" placeholder="Jane Doe">
+        </div>
+        <div>
+          <label>Account email</label>
+          <input type="email" id="newStaffEmail" placeholder="jane@learn2bloom.org">
+        </div>
+        <div>
+          <label>Role</label>
+          <select id="newStaffRole">
+            <option value="admin">Admin</option>
+            <option value="director">Director</option>
+            <option value="education_lead">Education Lead</option>
+            <option value="education_consultant">Education Consultant</option>
+            <option value="lead_teacher">Lead Teacher</option>
+            <option value="learning_coach" selected>Learning Coach</option>
+            <option value="learning_coach_assistant">Learning Coach Assistant</option>
+            <option value="admissions">Admissions Officer</option>
+            <option value="enrollment">Enrollment Coordinator</option>
+            <option value="front_desk">Front Desk / Office Manager</option>
+            <option value="it">IT Support</option>
+            <option value="teaching_assistant">Teaching Assistant</option>
+          </select>
+        </div>
+        <div>
+          <label>Password (optional)</label>
+          <input type="text" id="newStaffPassword" placeholder="Leave blank to auto-generate">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="addStaff()">Add staff member</button>
+      <div class="error-msg" id="addStaffError"></div>
+
+      <div id="newStaffResult" style="display:none;margin-top:16px;padding:16px;border:1px solid #ddd8cc;border-radius:8px;background:#FDFAF5;">
+        <p style="font-weight:700;margin:0 0 10px;">Staff member added</p>
+        <div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;font-size:13px;">
+          <span style="color:#888780;">Staff ID</span>
+          <span id="resultStaffId" style="font-family:monospace;user-select:all;"></span>
+          <button type="button" class="btn-copy" onclick="copyResultField('resultStaffId', this)">Copy</button>
+
+          <span style="color:#888780;">Email</span>
+          <span id="resultEmail" style="font-family:monospace;user-select:all;"></span>
+          <button type="button" class="btn-copy" onclick="copyResultField('resultEmail', this)">Copy</button>
+
+          <span style="color:#888780;">Password</span>
+          <span id="resultPassword" style="font-family:monospace;user-select:all;"></span>
+          <button type="button" class="btn-copy" onclick="copyResultField('resultPassword', this)">Copy</button>
+        </div>
+        <p id="resultNote" style="font-size:12px;color:#888780;margin:10px 0 0;"></p>
+      </div>
+    </div>
+
+    <style>
+      .btn-copy{font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid #ddd8cc;background:white;cursor:pointer;color:#3D3670;}
+      .btn-copy:hover{background:#f0eee6;}
+      .btn-copy.copied{background:#2f7a3e;color:white;border-color:#2f7a3e;}
+    </style>
+
     <div class="directory-grid" id="directoryGrid"></div>
 
   </div>
@@ -105,6 +169,8 @@ h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin
 let directoryCache = [];
 
 async function onStaffReady(staffRow){
+  const canAddStaff = ['admin','director','it'].includes(staffRow.role);
+  document.getElementById('addStaffCard').style.display = canAddStaff ? 'block' : 'none';
   loadDirectory();
 }
 
@@ -150,7 +216,7 @@ async function openStaffProfile(staffId){
   document.getElementById('profileModalEmail').textContent = dirEntry ? dirEntry.email : '';
 
   const isSelf = staffId === window.currentStaff.id;
-  const isAdmin = window.currentStaffRole === 'admin' || window.currentStaffRole === 'it';
+  const isAdmin = window.currentStaffRole === 'admin' || window.currentStaffRole === 'director' || window.currentStaffRole === 'it';
 
   if(data && data.length > 0){
     const s = data[0];
@@ -289,7 +355,7 @@ async function uploadStaffDocument(staffId){
 
   fileInput.value = '';
   showToast('Document uploaded.');
-  const isAdmin = window.currentStaffRole === 'admin' || window.currentStaffRole === 'it';
+  const isAdmin = window.currentStaffRole === 'admin' || window.currentStaffRole === 'director' || window.currentStaffRole === 'it';
   loadStaffDocuments(staffId, isAdmin);
 }
 
@@ -375,7 +441,7 @@ async function setPasswordDirectlyFromTeam(staffId){
 
 async function saveStaffProfile(staffId){
   const v = id => document.getElementById(id) ? document.getElementById(id).value.trim() : undefined;
-  const isAdmin = window.currentStaffRole === 'admin' || window.currentStaffRole === 'it';
+  const isAdmin = window.currentStaffRole === 'admin' || window.currentStaffRole === 'director' || window.currentStaffRole === 'it';
 
   // If admin changed the email, update it via the secure function first.
   if(isAdmin && document.getElementById('p-email')){
@@ -430,6 +496,71 @@ async function saveStaffProfile(staffId){
 
 window.STAFF_PAGE_KEY = 'team';
 checkStaffAndInit();
+
+async function addStaff(){
+  const name = document.getElementById('newStaffName').value.trim();
+  const email = document.getElementById('newStaffEmail').value.trim();
+  const role = document.getElementById('newStaffRole').value;
+  const password = document.getElementById('newStaffPassword').value;
+  const errEl = document.getElementById('addStaffError');
+  errEl.textContent = '';
+
+  if(!name || !email){ errEl.textContent = 'Enter a name and email.'; return; }
+  if(password && password.length < 8){ errEl.textContent = 'Password must be at least 8 characters.'; return; }
+
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session){ errEl.textContent = 'Session expired, please sign in again.'; return; }
+
+  let res;
+  try {
+    res = await fetch('/.netlify/functions/create-staff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken: session.access_token, name, email, role, password: password || undefined })
+    });
+  } catch (e) {
+    errEl.textContent = 'Network error: ' + e.message;
+    return;
+  }
+
+  const result = await res.json();
+  if(!res.ok){
+    errEl.textContent = result.error || 'Something went wrong.';
+    return;
+  }
+
+  document.getElementById('newStaffName').value = '';
+  document.getElementById('newStaffEmail').value = '';
+  document.getElementById('newStaffPassword').value = '';
+  showTempPasswordModal(result.email, result.tempPassword, result.staffIdCode, !!password);
+  loadTeamData();
+}
+
+function showTempPasswordModal(email, tempPassword, staffIdCode, wasCustomPassword){
+  document.getElementById('resultStaffId').textContent = staffIdCode;
+  document.getElementById('resultEmail').textContent = email;
+  document.getElementById('resultPassword').textContent = tempPassword;
+  document.getElementById('resultNote').textContent = wasCustomPassword
+    ? 'They can sign in with their Staff ID and this password.'
+    : 'They can sign in with their Staff ID and this password. This won\'t be shown again after you leave this page — copy it now.';
+  const panel = document.getElementById('newStaffResult');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function copyResultField(elId, btn){
+  const text = document.getElementById(elId).textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent = original; btn.classList.remove('copied'); }, 1500);
+  }).catch(()=>{
+    alert('Could not copy automatically. Please select and copy the text manually.');
+  });
+}
+
+
 </script>
 
 </body>

@@ -28,10 +28,13 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request body' }) };
   }
 
-  const { accessToken, name, email, role } = body;
+  const { accessToken, name, email, role, password } = body;
 
   if (!accessToken || !name || !email || !role) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Missing required fields' }) };
+  }
+  if (password && password.length < 8) {
+    return { statusCode: 400, body: JSON.stringify({ error: 'Password must be at least 8 characters' }) };
   }
   if (!VALID_ROLES.includes(role)) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid role' }) };
@@ -56,7 +59,7 @@ exports.handler = async (event) => {
   }
 
   // Create the Supabase Auth account.
-  const tempPassword = genTempPassword();
+  const tempPassword = password || genTempPassword();
   const { data: newUser, error: createErr } = await admin.auth.admin.createUser({
     email,
     password: tempPassword,

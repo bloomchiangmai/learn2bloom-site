@@ -114,7 +114,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
     <div class="card">
       <h2>Add a staff member</h2>
       <p style="font-size:13px;color:#888780;margin-bottom:16px;">
-        Creates their login and staff record in one step. You'll get a temporary password to share with them — they can sign in and change it later.
+        Creates their login and staff record in one step. Set a password now, or leave blank to auto-generate one.
       </p>
       <div class="form-grid">
         <div>
@@ -135,6 +135,10 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
             <option value="it">IT</option>
             <option value="enrollment">Enrollment</option>
           </select>
+        </div>
+        <div>
+          <label>Password (optional)</label>
+          <input type="text" id="newStaffPassword" placeholder="Leave blank to auto-generate">
         </div>
       </div>
       <button class="btn-primary" onclick="addStaff()">Add staff member</button>
@@ -656,10 +660,12 @@ async function addStaff(){
   const name = document.getElementById('newStaffName').value.trim();
   const email = document.getElementById('newStaffEmail').value.trim();
   const role = document.getElementById('newStaffRole').value;
+  const password = document.getElementById('newStaffPassword').value;
   const errEl = document.getElementById('addStaffError');
   errEl.textContent = '';
 
   if(!name || !email){ errEl.textContent = 'Enter a name and email.'; return; }
+  if(password && password.length < 8){ errEl.textContent = 'Password must be at least 8 characters.'; return; }
 
   const { data: { session } } = await sb.auth.getSession();
   if(!session){ errEl.textContent = 'Session expired, please sign in again.'; return; }
@@ -669,7 +675,7 @@ async function addStaff(){
     res = await fetch('/.netlify/functions/create-staff', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken: session.access_token, name, email, role })
+      body: JSON.stringify({ accessToken: session.access_token, name, email, role, password: password || undefined })
     });
   } catch (e) {
     errEl.textContent = 'Network error: ' + e.message;
@@ -684,17 +690,18 @@ async function addStaff(){
 
   document.getElementById('newStaffName').value = '';
   document.getElementById('newStaffEmail').value = '';
-  showTempPasswordModal(result.email, result.tempPassword, result.staffIdCode);
+  document.getElementById('newStaffPassword').value = '';
+  showTempPasswordModal(result.email, result.tempPassword, result.staffIdCode, !!password);
   loadTeamData();
 }
 
-function showTempPasswordModal(email, tempPassword, staffIdCode){
+function showTempPasswordModal(email, tempPassword, staffIdCode, wasCustomPassword){
   alert(
     'Staff member added.\n\n' +
     'Staff ID: ' + staffIdCode + '\n' +
     'Email: ' + email + '\n' +
-    'Temporary password: ' + tempPassword + '\n\n' +
-    'They can sign in with their Staff ID and this password. Share this securely — it will not be shown again.'
+    (wasCustomPassword ? 'Password: ' : 'Temporary password: ') + tempPassword + '\n\n' +
+    'They can sign in with their Staff ID and this password.' + (wasCustomPassword ? '' : ' Share this securely — it will not be shown again.')
   );
 }
 

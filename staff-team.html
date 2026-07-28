@@ -159,6 +159,11 @@ async function openStaffProfile(staffId){
     document.getElementById('profileFullView').innerHTML = `
       <div class="detail-section">
         <h3>Basic Info</h3>
+        ${canEditAdminFields ? `
+        <div class="detail-row"><div class="detail-label">Login email</div>
+          <input class="detail-input" id="p-email" type="email" value="${s.email || ''}">
+          <button class="btn-small-outline" onclick="updateStaffEmailFromTeam('${staffId}')">Update</button>
+        </div>` : ''}
         <div class="detail-row"><div class="detail-label">Job title</div>
           <input class="detail-input" id="p-job-title" value="${s.job_title || ''}" ${canEditAdminFields ? '' : 'disabled'}></div>
         ${!canEditAdminFields ? '<div class="field-note" style="margin-left:196px;">Contact an admin to change your job title.</div>' : ''}
@@ -210,6 +215,36 @@ async function openStaffProfile(staffId){
 
 function closeStaffProfile(){
   document.getElementById('profileModal').classList.remove('open');
+}
+
+async function updateStaffEmailFromTeam(staffId){
+  const newEmail = document.getElementById('p-email').value.trim();
+  if(!newEmail){ showToast('Enter an email.'); return; }
+
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session){ showToast('Session expired, please sign in again.'); return; }
+
+  let res;
+  try {
+    res = await fetch('/.netlify/functions/update-staff-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken: session.access_token, staffId, newEmail })
+    });
+  } catch (e) {
+    showToast('Network error: ' + e.message);
+    return;
+  }
+
+  const result = await res.json();
+  if(!res.ok){
+    showToast(result.error || 'Something went wrong.');
+    return;
+  }
+
+  showToast('Email updated.');
+  document.getElementById('profileModalEmail').textContent = newEmail;
+  loadDirectory();
 }
 
 async function saveStaffProfile(staffId){

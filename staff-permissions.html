@@ -167,7 +167,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
       <h2>Staff & roles</h2>
       <table>
         <thead>
-          <tr><th>Name</th><th>Contact</th><th>Role</th><th>Access (role default)</th><th></th></tr>
+          <tr><th>Name</th><th>Contact</th><th>Role</th><th>Access (role default)</th></tr>
         </thead>
         <tbody id="staffTable"></tbody>
       </table>
@@ -191,6 +191,26 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
       <button class="modal-close" onclick="closeStaffProfile()">&times;</button>
       <h2 id="profileModalName">Staff Profile</h2>
       <p class="modal-sub" id="profileModalEmail"></p>
+
+      <div class="detail-section">
+        <h3>Account & Access</h3>
+        <div class="detail-row"><div class="detail-label">Role</div>
+          <select class="detail-input" id="p-role">
+            <option value="admin">Admin</option>
+            <option value="admissions">Admissions</option>
+            <option value="education_lead">Education Lead</option>
+            <option value="learning_coach">Learning Coach</option>
+            <option value="it">IT</option>
+            <option value="enrollment">Enrollment</option>
+          </select>
+        </div>
+        <div class="perm-grid" id="p-access-summary" style="margin-top:10px;margin-bottom:12px;"></div>
+        <div id="p-overrides-panel" class="perm-grid"></div>
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          <button class="btn-small-outline" onclick="resetPassword(document.getElementById('profileModal').dataset.staffId)">Reset password</button>
+          <button class="btn-small-danger" onclick="openDeleteStaffModal(document.getElementById('profileModal').dataset.staffId, document.getElementById('p-name').value)">Delete staff member</button>
+        </div>
+      </div>
 
       <div class="detail-section">
         <h3>Basic Info</h3>
@@ -330,51 +350,11 @@ function renderStaffTable(){
           <div style="font-size:13px;">${s.email}</div>
           <div style="font-size:12px;color:#888780;">${s.job_title || '—'}</div>
         </td>
-        <td>
-          <select class="role-select" onchange="changeRole('${s.id}', this.value)">
-            ${['admin','admissions','education_lead','learning_coach','it','enrollment'].map(r =>
-              `<option value="${r}" ${r === s.role ? 'selected' : ''}>${roleLabel(r)}</option>`
-            ).join('')}
-          </select>
-        </td>
+        <td>${roleLabel(s.role)}</td>
         <td><div class="perm-grid">${summary}</div></td>
-        <td>
-          <button class="btn-small-outline" onclick="toggleOverridePanel('${s.id}')">Overrides</button>
-          <button class="btn-small-outline" style="margin-top:6px;" onclick="resetPassword('${s.id}')">Reset password</button>
-          <button class="btn-small-danger" style="margin-top:6px;" onclick="openDeleteStaffModal('${s.id}', '${s.name.replace(/'/g, "\\'")}')">Delete</button>
-        </td>
-      </tr>
-      <tr class="override-row" id="override-${s.id}">
-        <td colspan="5">
-          <div class="override-inner">
-            <p style="font-size:12px;color:#888780;margin-bottom:10px;">
-              Grant this person a different access level than their role default (per module). Leave as "role default" to remove an override.
-            </p>
-            <div class="perm-grid">
-              ${MODULES.map(m => {
-                const current = overrides[m] ? overrides[m].level : '';
-                return `
-                  <div class="perm-cell">
-                    <div class="mod-name">${m}</div>
-                    <select class="role-select" style="width:100%;" onchange="setOverride('${s.id}','${m}',this.value)">
-                      <option value="" ${!current ? 'selected' : ''}>role default</option>
-                      <option value="none" ${current==='none'?'selected':''}>none</option>
-                      <option value="view" ${current==='view'?'selected':''}>view</option>
-                      <option value="edit" ${current==='edit'?'selected':''}>edit</option>
-                      <option value="full" ${current==='full'?'selected':''}>full</option>
-                    </select>
-                  </div>`;
-              }).join('')}
-            </div>
-          </div>
-        </td>
       </tr>
     `;
-  }).join('') || '<tr><td colspan="5" class="empty-state">No staff yet.</td></tr>';
-}
-
-function toggleOverridePanel(staffId){
-  document.getElementById('override-' + staffId).classList.toggle('open');
+  }).join('') || '<tr><td colspan="4" class="empty-state">No staff yet.</td></tr>';
 }
 
 function openStaffProfile(staffId){
@@ -385,6 +365,8 @@ function openStaffProfile(staffId){
   document.getElementById('profileModalName').textContent = s.name;
   document.getElementById('profileModalEmail').textContent = s.email;
   document.getElementById('p-name').value = s.name || '';
+  document.getElementById('p-role').value = s.role;
+  document.getElementById('p-role').onchange = function(){ changeRole(staffId, this.value); };
   document.getElementById('p-job-title').value = s.job_title || '';
   document.getElementById('p-phone').value = s.contact_phone || '';
   document.getElementById('p-start-date').value = intake.start_date || '';
@@ -397,8 +379,38 @@ function openStaffProfile(staffId){
   document.getElementById('p-emergency-phone').value = intake.emergency_phone || '';
   document.getElementById('p-notes').value = s.notes || '';
 
+  renderProfileAccess(staffId);
+
   document.getElementById('profileModal').dataset.staffId = staffId;
   document.getElementById('profileModal').classList.add('open');
+}
+
+function renderProfileAccess(staffId){
+  const s = staffCache.find(x => x.id === staffId);
+  if(!s) return;
+  const defaults = getRoleDefaults(s.role);
+  const overrides = getOverridesFor(s.id);
+
+  document.getElementById('p-access-summary').innerHTML = MODULES.map(m => {
+    const eff = overrides[m] ? overrides[m].level : (defaults[m] ? defaults[m].level : 'none');
+    const overridden = !!overrides[m];
+    return `<div class="perm-cell"><div class="mod-name">${m}${overridden ? ' *' : ''}</div>${levelBadge(eff)}</div>`;
+  }).join('');
+
+  document.getElementById('p-overrides-panel').innerHTML = MODULES.map(m => {
+    const current = overrides[m] ? overrides[m].level : '';
+    return `
+      <div class="perm-cell">
+        <div class="mod-name">${m} override</div>
+        <select class="role-select" style="width:100%;" onchange="setOverride('${staffId}','${m}',this.value)">
+          <option value="" ${!current ? 'selected' : ''}>role default</option>
+          <option value="none" ${current==='none'?'selected':''}>none</option>
+          <option value="view" ${current==='view'?'selected':''}>view</option>
+          <option value="edit" ${current==='edit'?'selected':''}>edit</option>
+          <option value="full" ${current==='full'?'selected':''}>full</option>
+        </select>
+      </div>`;
+  }).join('');
 }
 
 function closeStaffProfile(){
@@ -512,18 +524,21 @@ async function confirmDeleteStaff(){
 async function changeRole(staffId, newRole){
   if(window.currentStaff && staffId === window.currentStaff.id){
     const ok = confirm('This changes your own role. If the new role has less access, you may lose access to this page. Continue?');
-    if(!ok){ loadTeamData(); return; }
+    if(!ok){ await loadTeamData(); if(document.getElementById('profileModal').dataset.staffId === staffId) openStaffProfile(staffId); return; }
   }
   const { error } = await sb.from('staff').update({ role: newRole }).eq('id', staffId);
   if(error){ showToast('Error: ' + error.message); return; }
   showToast('Role updated.');
-  loadTeamData();
+  await loadTeamData();
+  if(document.getElementById('profileModal').classList.contains('open') && document.getElementById('profileModal').dataset.staffId === staffId){
+    renderProfileAccess(staffId);
+  }
 }
 
 async function setOverride(staffId, module, level){
   if(window.currentStaff && staffId === window.currentStaff.id && level && level !== 'full'){
     const ok = confirm('This changes your own access to "' + module + '". If this reduces your access, you may lose the ability to undo it yourself. Continue?');
-    if(!ok){ loadTeamData(); return; }
+    if(!ok){ await loadTeamData(); if(document.getElementById('profileModal').dataset.staffId === staffId) openStaffProfile(staffId); return; }
   }
   if(!level){
     const { error } = await sb.from('staff_permission_overrides').delete().eq('staff_id', staffId).eq('module', module);
@@ -536,7 +551,10 @@ async function setOverride(staffId, module, level){
     if(error){ showToast('Error: ' + error.message); return; }
     showToast('Override saved.');
   }
-  loadTeamData();
+  await loadTeamData();
+  if(document.getElementById('profileModal').classList.contains('open') && document.getElementById('profileModal').dataset.staffId === staffId){
+    renderProfileAccess(staffId);
+  }
 }
 
 async function addStaff(){

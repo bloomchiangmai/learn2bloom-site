@@ -226,6 +226,20 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
     </div>
   </div>
 
+  <div class="modal-overlay" id="deleteStaffModal">
+    <div class="modal-box" style="max-width:480px;">
+      <button class="modal-close" onclick="closeDeleteStaffModal()">&times;</button>
+      <h2 style="color:#B23A3A;">Delete staff member</h2>
+      <p class="modal-sub" id="deleteStaffModalSub"></p>
+      <p style="font-size:13px;color:#5F5E5A;margin-bottom:8px;">This removes their access to all staff tools. Their login itself stays intact — only their staff record is removed. Type their name exactly to confirm.</p>
+      <input type="text" id="deleteStaffConfirmInput" class="detail-input" style="width:100%;margin-bottom:16px;" oninput="checkDeleteStaffMatch()" autocomplete="off">
+      <div class="modal-save-bar" style="position:static;border-top:none;padding-top:0;">
+        <button class="btn-small-outline" onclick="closeDeleteStaffModal()">Cancel</button>
+        <button class="btn-primary" id="confirmDeleteStaffBtn" style="background:#B23A3A;opacity:.5;pointer-events:none;" onclick="confirmDeleteStaff()">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
 </main>
@@ -311,6 +325,7 @@ function renderStaffTable(){
         <td>
           <button class="btn-small-outline" onclick="toggleOverridePanel('${s.id}')">Overrides</button>
           <button class="btn-small-outline" style="margin-top:6px;" onclick="resetPassword('${s.id}')">Reset password</button>
+          <button class="btn-small-danger" style="margin-top:6px;" onclick="openDeleteStaffModal('${s.id}', '${s.name.replace(/'/g, "\\'")}')">Delete</button>
         </td>
       </tr>
       <tr class="override-row" id="override-${s.id}">
@@ -433,6 +448,44 @@ async function resetPassword(staffId){
     'New temporary password: ' + result.tempPassword + '\n\n' +
     'Share this with them securely — it will not be shown again.'
   );
+}
+
+let pendingDeleteStaffId = null;
+let pendingDeleteStaffName = null;
+
+function openDeleteStaffModal(staffId, name){
+  if(window.currentStaff && staffId === window.currentStaff.id){
+    showToast('You cannot delete your own staff record.');
+    return;
+  }
+  pendingDeleteStaffId = staffId;
+  pendingDeleteStaffName = name;
+  document.getElementById('deleteStaffModalSub').textContent = `Type "${name}" below to confirm.`;
+  document.getElementById('deleteStaffConfirmInput').value = '';
+  checkDeleteStaffMatch();
+  document.getElementById('deleteStaffModal').classList.add('open');
+}
+
+function closeDeleteStaffModal(){
+  document.getElementById('deleteStaffModal').classList.remove('open');
+  pendingDeleteStaffId = null;
+  pendingDeleteStaffName = null;
+}
+
+function checkDeleteStaffMatch(){
+  const btn = document.getElementById('confirmDeleteStaffBtn');
+  const match = document.getElementById('deleteStaffConfirmInput').value.trim() === pendingDeleteStaffName;
+  btn.style.opacity = match ? '1' : '.5';
+  btn.style.pointerEvents = match ? 'auto' : 'none';
+}
+
+async function confirmDeleteStaff(){
+  if(!pendingDeleteStaffId) return;
+  const { error } = await sb.from('staff').delete().eq('id', pendingDeleteStaffId);
+  if(error){ showToast('Error deleting: ' + error.message); return; }
+  showToast('Staff member deleted.');
+  closeDeleteStaffModal();
+  loadTeamData();
 }
 
 async function changeRole(staffId, newRole){

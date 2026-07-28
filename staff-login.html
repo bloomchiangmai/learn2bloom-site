@@ -32,6 +32,15 @@ button:hover{background:#443c99;}
   <input type="password" id="loginPassword" placeholder="Password">
   <button onclick="doLogin()">Sign in</button>
   <div class="error-msg" id="loginError"></div>
+  <p style="margin-top:16px;"><a href="javascript:void(0)" onclick="showForgotPassword()" style="font-size:13px;color:#888780;">Forgot password?</a></p>
+
+  <div id="forgotView" style="display:none;margin-top:16px;text-align:left;">
+    <p style="font-size:13px;color:#5F5E5A;margin-bottom:10px;">Enter your Staff ID and we'll email you a reset link.</p>
+    <input type="text" id="forgotStaffId" placeholder="Staff ID (e.g. BMSSTF01)" autocapitalize="characters">
+    <button onclick="submitForgotPassword()">Send reset link</button>
+    <div class="error-msg" id="forgotError"></div>
+    <div style="color:#2E6B2A;font-size:13px;margin-top:10px;" id="forgotSuccess"></div>
+  </div>
 </div>
 
 <script>
@@ -56,6 +65,44 @@ button:hover{background:#443c99;}
 document.getElementById('loginPassword').addEventListener('keydown', e => {
   if(e.key === 'Enter') doLogin();
 });
+
+function showForgotPassword(){
+  document.getElementById('forgotView').style.display = 'block';
+}
+
+async function submitForgotPassword(){
+  const staffIdCode = document.getElementById('forgotStaffId').value.trim();
+  const errEl = document.getElementById('forgotError');
+  const successEl = document.getElementById('forgotSuccess');
+  errEl.textContent = '';
+  successEl.textContent = '';
+
+  if(!staffIdCode){ errEl.textContent = 'Enter your Staff ID.'; return; }
+
+  let resolveRes;
+  try {
+    resolveRes = await fetch('https://ndlcfgkhxjoancdvmgmr.supabase.co/functions/v1/resolve-staff-login-identity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ staff_id_code: staffIdCode })
+    });
+  } catch (e) {
+    errEl.textContent = 'Network error: ' + e.message;
+    return;
+  }
+  const resolveData = await resolveRes.json();
+  if(!resolveRes.ok){
+    errEl.textContent = resolveData.error || 'Could not find that Staff ID.';
+    return;
+  }
+
+  const { error } = await sb.auth.resetPasswordForEmail(resolveData.email, {
+    redirectTo: 'https://learn2bloom.org/staff-reset-password.html'
+  });
+  if(error){ errEl.textContent = error.message; return; }
+
+  successEl.textContent = 'Reset link sent. Check your email.';
+}
 </script>
 
 </body>

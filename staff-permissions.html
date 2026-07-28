@@ -545,32 +545,15 @@ async function updatePhone(staffId, phone){
 }
 
 async function resetPassword(staffId){
-  const { data: { session } } = await sb.auth.getSession();
-  if(!session){ showToast('Session expired, please sign in again.'); return; }
+  const s = staffCache.find(x => x.id === staffId);
+  if(!s || !s.email){ showToast('No email on file for this staff member.'); return; }
 
-  let res;
-  try {
-    res = await fetch('/.netlify/functions/reset-staff-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken: session.access_token, staffId })
-    });
-  } catch (e) {
-    showToast('Network error: ' + e.message);
-    return;
-  }
+  const { error } = await sb.auth.resetPasswordForEmail(s.email, {
+    redirectTo: 'https://learn2bloom.org/staff-reset-password.html'
+  });
+  if(error){ showToast('Error: ' + error.message); return; }
 
-  const result = await res.json();
-  if(!res.ok){
-    showToast(result.error || 'Something went wrong.');
-    return;
-  }
-
-  alert(
-    'Password reset for ' + result.name + '.\n\n' +
-    'New temporary password: ' + result.tempPassword + '\n\n' +
-    'Share this with them securely — it will not be shown again.'
-  );
+  showToast('Reset link sent to ' + s.email + '. They can set their own new password from there.');
 }
 
 let pendingDeleteStaffId = null;

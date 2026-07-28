@@ -62,6 +62,17 @@ h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin
 .btn-primary{padding:12px 24px;border:none;border-radius:8px;background:#534AB7;color:#fff;font-size:14px;font-weight:600;cursor:pointer;}
 .btn-primary:hover{background:#443c99;}
 .btn-small-outline{padding:6px 12px;font-size:12px;border:1px solid #534AB7;border-radius:6px;background:#fff;color:#534AB7;cursor:pointer;}
+.btn-small-danger{padding:6px 12px;font-size:12px;border:1px solid #B23A3A;border-radius:6px;background:#fff;color:#B23A3A;cursor:pointer;}
+.role-select{font-size:13px;padding:6px 10px;border-radius:6px;border:1px solid #E8E3D8;background:#fff;}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px;}
+.badge-none{background:#EDEBE6;color:#888780;}
+.badge-view{background:#E6ECF7;color:#3457A8;}
+.badge-edit{background:#FFF1D6;color:#9A6A1B;}
+.badge-full{background:#E3F0E1;color:#2E6B2A;}
+.perm-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px;}
+.perm-cell{text-align:center;}
+.perm-cell .mod-name{font-size:10px;color:#888780;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+@media (max-width:700px){ .perm-grid{grid-template-columns:repeat(3,1fr);} }
 
 .toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
 .empty-state{color:#888780;font-size:14px;padding:20px;text-align:center;}
@@ -168,17 +179,58 @@ h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin
     </div>
   </div>
 
+  <div class="modal-overlay" id="deleteStaffModal">
+    <div class="modal-box" style="max-width:480px;">
+      <button class="modal-close" onclick="closeDeleteStaffModal()">&times;</button>
+      <h2 style="color:#B23A3A;">Delete staff member</h2>
+      <p class="modal-sub" id="deleteStaffModalSub"></p>
+      <p style="font-size:13px;color:#5F5E5A;margin-bottom:8px;">This removes their staff record and their login — they will no longer be able to sign in. Type their name exactly to confirm.</p>
+      <input type="text" id="deleteStaffConfirmInput" class="detail-input" style="width:100%;margin-bottom:16px;" oninput="checkDeleteStaffMatch()" autocomplete="off">
+      <div class="modal-save-bar" style="position:static;border-top:none;padding-top:0;">
+        <button class="btn-small-outline" onclick="closeDeleteStaffModal()">Cancel</button>
+        <button class="btn-primary" id="confirmDeleteStaffBtn" style="background:#B23A3A;opacity:.5;pointer-events:none;" onclick="confirmDeleteStaff()">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
 </main>
 
 <script>
 let directoryCache = [];
+const MODULES = ['families','students','staff','calendar','payments','settings'];
+let roleDefaultsCache = [];
+let overridesCache = [];
 
 async function onStaffReady(staffRow){
   const canAddStaff = ['admin','director','it'].includes(staffRow.role);
   document.getElementById('addStaffCard').style.display = canAddStaff ? 'block' : 'none';
+  if(canAddStaff){
+    const [{ data: roleDefaults }, { data: overrides }] = await Promise.all([
+      sb.from('role_permissions').select('*'),
+      sb.from('staff_permission_overrides').select('*')
+    ]);
+    roleDefaultsCache = roleDefaults || [];
+    overridesCache = overrides || [];
+  }
   loadDirectory();
+}
+
+function getRoleDefaults(role){
+  const map = {};
+  roleDefaultsCache.filter(r => r.role === role).forEach(r => map[r.module] = r);
+  return map;
+}
+
+function getOverridesFor(staffId){
+  const map = {};
+  overridesCache.filter(o => o.staff_id === staffId).forEach(o => map[o.module] = o);
+  return map;
+}
+
+function levelBadge(level){
+  return `<span class="badge badge-${level}">${level}</span>`;
 }
 
 async function loadDirectory(){
@@ -233,16 +285,70 @@ async function openStaffProfile(staffId){
     document.getElementById('profileFullView').style.display = 'block';
     document.getElementById('profileLimitedView').style.display = 'none';
     document.getElementById('profileFullView').innerHTML = `
+      ${(canEditAdminFields && !isSelf) ? `
+      <div class="detail-section">
+        <h3>Role & Access</h3>
+        <div class="detail-row"><div class="detail-label">Role</div>
+          <select class="detail-input" id="p-role" onchange="changeRole('${staffId}', this.value)">
+            <option value="admin" ${s.role==='admin'?'selected':''}>Admin</option>
+            <option value="director" ${s.role==='director'?'selected':''}>Director</option>
+            <option value="education_lead" ${s.role==='education_lead'?'selected':''}>Education Lead</option>
+            <option value="education_consultant" ${s.role==='education_consultant'?'selected':''}>Education Consultant</option>
+            <option value="lead_teacher" ${s.role==='lead_teacher'?'selected':''}>Lead Teacher</option>
+            <option value="learning_coach" ${s.role==='learning_coach'?'selected':''}>Learning Coach</option>
+            <option value="learning_coach_assistant" ${s.role==='learning_coach_assistant'?'selected':''}>Learning Coach Assistant</option>
+            <option value="admissions" ${s.role==='admissions'?'selected':''}>Admissions Officer</option>
+            <option value="enrollment" ${s.role==='enrollment'?'selected':''}>Enrollment Coordinator</option>
+            <option value="front_desk" ${s.role==='front_desk'?'selected':''}>Front Desk / Office Manager</option>
+            <option value="it" ${s.role==='it'?'selected':''}>IT Support</option>
+            <option value="teaching_assistant" ${s.role==='teaching_assistant'?'selected':''}>Teaching Assistant</option>
+          </select>
+        </div>
+        ${(() => {
+          const defaults = getRoleDefaults(s.role);
+          const overrides = getOverridesFor(s.id);
+          const summary = MODULES.map(m => {
+            const eff = overrides[m] ? overrides[m].level : (defaults[m] ? defaults[m].level : 'none');
+            const overridden = !!overrides[m];
+            return `<div class="perm-cell"><div class="mod-name">${m}${overridden ? ' *' : ''}</div>${levelBadge(eff)}</div>`;
+          }).join('');
+          const overridePanel = MODULES.map(m => {
+            const current = overrides[m] ? overrides[m].level : '';
+            return `
+              <div class="perm-cell">
+                <select class="role-select" style="width:100%;font-size:12px;padding:6px 4px;" onchange="setOverride('${staffId}','${m}',this.value)">
+                  <option value="" ${!current ? 'selected' : ''}>Default</option>
+                  <option value="none" ${current==='none'?'selected':''}>None</option>
+                  <option value="view" ${current==='view'?'selected':''}>View</option>
+                  <option value="edit" ${current==='edit'?'selected':''}>Edit</option>
+                  <option value="full" ${current==='full'?'selected':''}>Full</option>
+                </select>
+              </div>`;
+          }).join('');
+          return `
+            <div class="perm-grid" style="margin-top:10px;margin-bottom:12px;">${summary}</div>
+            <div class="perm-grid">
+              <div class="mod-name" style="grid-column:1/-1;font-size:11px;color:#888780;margin-bottom:4px;">Override (optional)</div>
+              ${overridePanel}
+            </div>
+          `;
+        })()}
+      </div>
+      ` : `
       <div class="detail-section">
         <h3>Basic Info</h3>
+        <div class="detail-row"><div class="detail-label">Job title</div>
+          <div class="detail-static">${roleLabel(s.role)}</div>
+        </div>
+        ${!isSelf ? '' : '<div class="field-note" style="margin-left:196px;">Role changes are managed by an Admin, Director, or IT from your Team profile.</div>'}
+      </div>
+      `}
+      <div class="detail-section">
+        ${canEditAdminFields && !isSelf ? '' : '<h3>Basic Info</h3>'}
         ${canEditAdminFields ? `
         <div class="detail-row"><div class="detail-label">Account email</div>
           <input class="detail-input" id="p-email" type="email" value="${s.email || ''}" data-original="${s.email || ''}">
         </div>` : ''}
-        <div class="detail-row"><div class="detail-label">Job title</div>
-          <div class="detail-static">${roleLabel(s.role)}</div>
-        </div>
-        <div class="field-note" style="margin-left:196px;">Job title follows Role — change it from the Permissions page.</div>
         <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-phone" value="${s.contact_phone || ''}"></div>
         <div class="detail-row"><div class="detail-label">Start date</div><input type="date" class="detail-input" id="p-start-date" value="${intake.start_date || ''}"></div>
         <div class="detail-row"><div class="detail-label">Date of birth</div><input type="date" class="detail-input" id="p-dob" value="${intake.date_of_birth || ''}"></div>
@@ -304,6 +410,7 @@ async function openStaffProfile(staffId){
       <div class="modal-save-bar">
         <button class="btn-small-outline" onclick="closeStaffProfile()">Cancel</button>
         <button class="btn-primary" onclick="saveStaffProfile('${staffId}')">Save changes</button>
+        ${(canEditAdminFields && !isSelf) ? `<button class="btn-small-danger" onclick="openDeleteStaffModal('${staffId}', '${(s.name||'').replace(/'/g,"\\'")}')">Delete staff member</button>` : ''}
       </div>
     `;
   } else {
@@ -384,6 +491,110 @@ async function deleteStaffDocument(docId, filePath, staffId){
 
 function closeStaffProfile(){
   document.getElementById('profileModal').classList.remove('open');
+}
+
+async function changeRole(staffId, newRole){
+  const { error } = await sb.from('staff').update({ role: newRole, job_title: roleLabel(newRole) }).eq('id', staffId);
+  if(error){ showToast(error.message); return; }
+  showToast('Role updated.');
+  const [{ data: roleDefaults }, { data: overrides }] = await Promise.all([
+    sb.from('role_permissions').select('*'),
+    sb.from('staff_permission_overrides').select('*')
+  ]);
+  roleDefaultsCache = roleDefaults || [];
+  overridesCache = overrides || [];
+  await loadDirectory();
+  openStaffProfile(staffId);
+}
+
+async function setOverride(staffId, module, level){
+  if(window.currentStaff && staffId === window.currentStaff.id && level && level !== 'full'){
+    const ok = confirm('This changes your own access to "' + module + '". If this reduces your access, you may lose the ability to undo it yourself. Continue?');
+    if(!ok){ openStaffProfile(staffId); return; }
+  }
+  if(!level){
+    const { error } = await sb.from('staff_permission_overrides').delete().eq('staff_id', staffId).eq('module', module);
+    if(error){ showToast('Error: ' + error.message); return; }
+    showToast('Override removed — back to role default.');
+  } else {
+    const { error } = await sb.from('staff_permission_overrides').upsert({
+      staff_id: staffId, module, level, granted_by: window.currentStaff.id
+    });
+    if(error){ showToast('Error: ' + error.message); return; }
+    showToast('Override saved.');
+  }
+  const { data: overrides } = await sb.from('staff_permission_overrides').select('*');
+  overridesCache = overrides || [];
+  openStaffProfile(staffId);
+}
+
+let pendingDeleteStaffId = null;
+let pendingDeleteStaffName = null;
+
+function openDeleteStaffModal(staffId, name){
+  if(window.currentStaff && staffId === window.currentStaff.id){
+    showToast('You cannot delete your own staff record.');
+    return;
+  }
+  pendingDeleteStaffId = staffId;
+  pendingDeleteStaffName = name;
+  document.getElementById('deleteStaffModalSub').textContent = `Type "${name}" below to confirm.`;
+  document.getElementById('deleteStaffConfirmInput').value = '';
+  checkDeleteStaffMatch();
+  document.getElementById('deleteStaffModal').classList.add('open');
+}
+
+function closeDeleteStaffModal(){
+  document.getElementById('deleteStaffModal').classList.remove('open');
+  pendingDeleteStaffId = null;
+  pendingDeleteStaffName = null;
+}
+
+function checkDeleteStaffMatch(){
+  const btn = document.getElementById('confirmDeleteStaffBtn');
+  const match = document.getElementById('deleteStaffConfirmInput').value.trim() === pendingDeleteStaffName;
+  btn.style.opacity = match ? '1' : '.5';
+  btn.style.pointerEvents = match ? 'auto' : 'none';
+}
+
+async function confirmDeleteStaff(){
+  if(!pendingDeleteStaffId) return;
+  const btn = document.getElementById('confirmDeleteStaffBtn');
+  const originalLabel = btn.textContent;
+  btn.textContent = 'Deleting…';
+  btn.disabled = true;
+
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session){ showToast('Session expired, please sign in again.'); btn.textContent = originalLabel; btn.disabled = false; return; }
+
+  let res;
+  try {
+    res = await fetch('/.netlify/functions/delete-staff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken: session.access_token, staffId: pendingDeleteStaffId })
+    });
+  } catch (e) {
+    showToast('Network error: ' + e.message);
+    btn.textContent = originalLabel; btn.disabled = false;
+    return;
+  }
+
+  const result = await res.json();
+  btn.textContent = originalLabel; btn.disabled = false;
+
+  if(!res.ok){
+    showToast(result.error || 'Something went wrong.');
+    return;
+  }
+  if(result.warning){
+    showToast(result.warning);
+  } else {
+    showToast('Staff member and their login deleted.');
+  }
+  closeDeleteStaffModal();
+  closeStaffProfile();
+  loadDirectory();
 }
 
 async function resetPasswordFromTeam(staffId){

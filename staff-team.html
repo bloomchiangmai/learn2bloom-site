@@ -136,7 +136,7 @@ h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin
           <input type="text" id="newStaffPassword" placeholder="Leave blank to auto-generate">
         </div>
       </div>
-      <button class="btn-primary" onclick="addStaff()">Add staff member</button>
+      <button class="btn-primary" id="addStaffBtn" onclick="addStaff()">Add staff member</button>
       <div class="error-msg" id="addStaffError"></div>
 
       <div id="newStaffResult" style="display:none;margin-top:16px;padding:16px;border:1px solid #ddd8cc;border-radius:8px;background:#FDFAF5;">
@@ -604,6 +604,7 @@ async function addStaff(){
   const role = document.getElementById('newStaffRole').value;
   const password = document.getElementById('newStaffPassword').value;
   const errEl = document.getElementById('addStaffError');
+  const btn = document.getElementById('addStaffBtn');
   errEl.textContent = '';
 
   if(!name || !email){ errEl.textContent = 'Enter a name and email.'; return; }
@@ -611,6 +612,10 @@ async function addStaff(){
 
   const { data: { session } } = await sb.auth.getSession();
   if(!session){ errEl.textContent = 'Session expired, please sign in again.'; return; }
+
+  const originalLabel = btn.textContent;
+  btn.textContent = 'Adding…';
+  btn.disabled = true;
 
   let res;
   try {
@@ -621,10 +626,13 @@ async function addStaff(){
     });
   } catch (e) {
     errEl.textContent = 'Network error: ' + e.message;
+    btn.textContent = originalLabel; btn.disabled = false;
     return;
   }
 
   const result = await res.json();
+  btn.textContent = originalLabel; btn.disabled = false;
+
   if(!res.ok){
     errEl.textContent = result.error || 'Something went wrong.';
     return;
@@ -634,7 +642,7 @@ async function addStaff(){
   document.getElementById('newStaffEmail').value = '';
   document.getElementById('newStaffPassword').value = '';
   showTempPasswordModal(result.email, result.tempPassword, result.staffIdCode, !!password);
-  loadTeamData();
+  loadDirectory();
 }
 
 function showTempPasswordModal(email, tempPassword, staffIdCode, wasCustomPassword){

@@ -68,24 +68,22 @@ exports.handler = async (event) => {
     .eq('auth_user_id', callerUser.user.id)
     .maybeSingle();
 
-  if (callerStaffErr || !callerStaff || !['admin', 'it'].includes(callerStaff.role)) {
-    return { statusCode: 403, body: JSON.stringify({ error: 'Only Admin or IT can add staff' }) };
+  if (callerStaffErr || !callerStaff || !['admin', 'director', 'it'].includes(callerStaff.role)) {
+    return { statusCode: 403, body: JSON.stringify({ error: 'Only Admin, Director, or IT can add staff' }) };
   }
 
-  // Create the Supabase Auth account.
+  // Create the Supabase Auth account and look up existing Staff IDs in parallel — independent of each other.
   const tempPassword = password || genTempPassword();
-  const { data: newUser, error: createErr } = await admin.auth.admin.createUser({
-    email,
-    password: tempPassword,
-    email_confirm: true
-  });
+  const [{ data: newUser, error: createErr }, { data: existingStaff }] = await Promise.all([
+    admin.auth.admin.createUser({ email, password: tempPassword, email_confirm: true }),
+    admin.from('staff').select('staff_id_code')
+  ]);
 
   if (createErr) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Could not create account: ' + createErr.message }) };
   }
 
   // Generate the next sequential Staff ID (e.g. BMSSTF03), permanent — no year component.
-  const { data: existingStaff } = await admin.from('staff').select('staff_id_code');
   let maxN = 0;
   (existingStaff || []).forEach(s => {
     const match = (s.staff_id_code || '').match(/^BMSSTF(\d+)$/);

@@ -417,7 +417,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <button class="btn btn-primary" onclick="openAddEvent()">+ Add Event</button>
       <button class="btn btn-outline" onclick="openMultiSelect()">⊞ Multi-select</button>
       <button class="btn btn-outline" id="pdfExportBtn" onclick="exportCalendarPDF()">↗ Export PDF</button>
+      <button class="btn btn-outline" id="pdfSyncBtn" onclick="syncPublicPDF()">⟳ Sync Public PDF</button>
     </div>
+
+    <p id="pdfSyncStatus" style="font-size:12px;color:#888780;margin:6px 0 0;"></p>
 
     <div class="card" style="margin-bottom:16px;">
       <div class="card-header">
@@ -2482,12 +2485,9 @@ const PDF_HOLIDAYS=[
   {label:'13 OCT 2026',value:'HM King Bhumibol Memorial Day'},
   {label:'20 MAY 2027',value:'Visakha Bucha Day'}
 ];
-async function exportCalendarPDF(){
-  const btn=document.getElementById('pdfExportBtn');
-  const originalLabel=btn.textContent;
-  try{
-    if(typeof window.jspdf==='undefined'){alert('PDF library failed to load. Check your connection and try again.');return;}
-    btn.textContent='Generating\u2026';btn.disabled=true;
+async function buildCalendarPDFDoc(){
+  if(typeof window.jspdf==='undefined')throw new Error('PDF library failed to load. Check your connection and try again.');
+  {
     const PDF_KEY_DATES=getPdfKeyDates();
     const PDF_HOURS=getPdfHours();
 
@@ -2782,30 +2782,57 @@ async function exportCalendarPDF(){
     doc.setTextColor(...textMuted);doc.setFont('helvetica','normal');doc.setFontSize(8.5);
     doc.text('\u00A9 '+new Date().getFullYear()+' Bloom Space Hub Calendar \u00B7 Bloom Chiangmai. All rights reserved.',pageW/2,pageH-margin-3,{align:'center'});
 
+    return doc;
+  }
+}
+
+async function exportCalendarPDF(){
+  const btn=document.getElementById('pdfExportBtn');
+  const originalLabel=btn.textContent;
+  try{
+    btn.textContent='Generating\u2026';btn.disabled=true;
+    const doc=await buildCalendarPDFDoc();
     doc.save('Bloom-Chiangmai-Academic-Calendar-2026-2027.pdf');
-
-    // Also publish this PDF to the public site (Supabase Storage) so
-    // the marketing site's download link always reflects the latest export.
-    try{
-      const pdfBlob=doc.output('blob');
-      const storagePath='calendar/Bloom-Chiangmai-Academic-Calendar-2026-2027.pdf';
-      const{error:uploadErr}=await _sb.storage.from('public-documents').upload(storagePath,pdfBlob,{contentType:'application/pdf',upsert:true});
-      if(uploadErr)throw uploadErr;
-
-      const{data:{user}}=await _sb.auth.getUser();
-      await _sb.from('site_documents').upsert({
-        key:'academic_calendar_pdf',
-        storage_path:storagePath,
-        updated_at:new Date().toISOString(),
-        updated_by:user?.email||user?.id||'unknown'
-      },{onConflict:'key'});
-    }catch(publishErr){
-      console.error('Publishing PDF to public site failed',publishErr);
-      alert('PDF downloaded, but publishing it to the website failed. The public download link was not updated. Please try again or check your connection.');
-    }
   }catch(err){
     console.error('PDF export failed',err);
     alert('Something went wrong generating the PDF. Please try again.');
+  }finally{
+    btn.textContent=originalLabel;btn.disabled=false;
+  }
+}
+
+// ===== Sync Public PDF (publishes the current calendar as the official
+// public download on the marketing site and public calendar) =====
+async function syncPublicPDF(){
+  const btn=document.getElementById('pdfSyncBtn');
+  const statusEl=document.getElementById('pdfSyncStatus');
+  const originalLabel=btn.textContent;
+  btn.textContent='Syncing…';btn.disabled=true;
+  if(statusEl)statusEl.textContent='';
+  try{
+    const pdfDoc=await buildCalendarPDFDoc();
+    const pdfBlob=pdfDoc.output('blob');
+    const storagePath='calendar/Bloom-Chiangmai-Academic-Calendar-2026-2027.pdf';
+    const{error:uploadErr}=await _sb.storage.from('public-documents').upload(storagePath,pdfBlob,{contentType:'application/pdf',upsert:true});
+    if(uploadErr)throw uploadErr;
+
+    const{data:{user}}=await _sb.auth.getUser();
+    const nowIso=new Date().toISOString();
+    await _sb.from('site_documents').upsert({
+      key:'academic_calendar_pdf',
+      storage_path:storagePath,
+      updated_at:nowIso,
+      updated_by:user?.email||user?.id||'unknown'
+    },{onConflict:'key'});
+
+    if(statusEl){
+      const formatted=new Date(nowIso).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'});
+      statusEl.textContent='Synced to website — last published '+formatted;
+    }
+  }catch(err){
+    console.error('Sync public PDF failed',err);
+    if(statusEl)statusEl.textContent='Sync failed. Please check your connection and try again.';
+    alert('Something went wrong publishing the PDF to the website. Please try again.');
   }finally{
     btn.textContent=originalLabel;btn.disabled=false;
   }

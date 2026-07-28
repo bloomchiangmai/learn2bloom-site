@@ -113,7 +113,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
 
     <div class="card">
       <h2>Staff & roles</h2>
-      <p style="font-size:13px;color:#888780;margin-top:-12px;margin-bottom:16px;">Overview only. To change someone's role, access, password, or to remove them, open their profile from the <a href="staff-team.html" style="color:#534AB7;">Team</a> page.</p>
+      <p style="font-size:13px;color:#888780;margin-top:-12px;margin-bottom:16px;">Click a name to change their role or override specific module access. For password or to remove someone, use the <a href="staff-team.html" style="color:#534AB7;">Team</a> page.</p>
       <table>
         <thead>
           <tr><th>Name</th><th>Contact</th><th>Role</th><th>Access (role default)</th></tr>
@@ -133,6 +133,42 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
       <div id="approvalsEmpty" class="empty-state" style="display:none;">No pending approvals.</div>
     </div>
 
+  </div>
+
+  <div class="modal-overlay" id="profileModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeStaffProfile()">&times;</button>
+      <h2 id="profileModalName">Staff Profile</h2>
+      <p class="modal-sub" id="profileModalEmail"></p>
+      <p class="modal-sub" id="profileModalStaffId" style="margin-top:-20px;font-family:monospace;"></p>
+      <p style="font-size:12px;color:#888780;margin-top:-8px;">For contact info, password, or to remove this person, use the <a href="staff-team.html" style="color:#534AB7;">Team</a> page.</p>
+
+      <div class="detail-section">
+        <h3>Role & Access</h3>
+        <div class="detail-row"><div class="detail-label">Role</div>
+          <select class="detail-input" id="p-role">
+            <option value="admin">Admin</option>
+            <option value="director">Director</option>
+            <option value="education_lead">Education Lead</option>
+            <option value="education_consultant">Education Consultant</option>
+            <option value="lead_teacher">Lead Teacher</option>
+            <option value="learning_coach">Learning Coach</option>
+            <option value="learning_coach_assistant">Learning Coach Assistant</option>
+            <option value="admissions">Admissions Officer</option>
+            <option value="enrollment">Enrollment Coordinator</option>
+            <option value="front_desk">Front Desk / Office Manager</option>
+            <option value="it">IT Support</option>
+            <option value="teaching_assistant">Teaching Assistant</option>
+          </select>
+        </div>
+        <div class="perm-grid" id="p-access-summary" style="margin-top:10px;margin-bottom:12px;"></div>
+        <div id="p-overrides-panel" class="perm-grid"></div>
+      </div>
+
+      <div class="modal-save-bar">
+        <button class="btn-small-outline" onclick="closeStaffProfile()">Close</button>
+      </div>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -207,7 +243,7 @@ function renderStaffTable(){
 
     return `
       <tr>
-        <td style="font-weight:600;">${s.name}</td>
+        <td><a href="javascript:void(0)" onclick="openStaffProfile('${s.id}')" style="color:#534AB7;font-weight:600;text-decoration:none;">${s.name}</a></td>
         <td>
           <div style="font-size:13px;">${s.email}</div>
           <div style="font-size:12px;color:#888780;">${roleLabel(s.role)}</div>
@@ -217,6 +253,88 @@ function renderStaffTable(){
       </tr>
     `;
   }).join('') || '<tr><td colspan="4" class="empty-state">No staff yet.</td></tr>';
+}
+
+function openStaffProfile(staffId){
+  const s = staffCache.find(x => x.id === staffId);
+  if(!s) return;
+
+  document.getElementById('profileModalName').textContent = s.name;
+  document.getElementById('profileModalEmail').textContent = s.email;
+  document.getElementById('profileModalStaffId').textContent = 'Staff ID: ' + (s.staff_id_code || '—');
+  document.getElementById('p-role').value = s.role;
+  document.getElementById('p-role').onchange = function(){ changeRole(staffId, this.value); };
+
+  renderProfileAccess(staffId);
+
+  document.getElementById('profileModal').dataset.staffId = staffId;
+  document.getElementById('profileModal').classList.add('open');
+}
+
+function renderProfileAccess(staffId){
+  const s = staffCache.find(x => x.id === staffId);
+  if(!s) return;
+  const defaults = getRoleDefaults(s.role);
+  const overrides = getOverridesFor(s.id);
+
+  document.getElementById('p-access-summary').innerHTML = MODULES.map(m => {
+    const eff = overrides[m] ? overrides[m].level : (defaults[m] ? defaults[m].level : 'none');
+    const overridden = !!overrides[m];
+    return `<div class="perm-cell"><div class="mod-name">${m}${overridden ? ' *' : ''}</div>${levelBadge(eff)}</div>`;
+  }).join('');
+
+  document.getElementById('p-overrides-panel').innerHTML = `
+    <div class="perm-grid-label" style="grid-column:1/-1;font-size:11px;color:#888780;margin-top:8px;margin-bottom:4px;">Override (optional)</div>
+    ${MODULES.map(m => {
+      const current = overrides[m] ? overrides[m].level : '';
+      return `
+        <div class="perm-cell">
+          <select class="role-select" style="width:100%;font-size:12px;padding:6px 4px;" onchange="setOverride('${staffId}','${m}',this.value)">
+            <option value="" ${!current ? 'selected' : ''}>Default</option>
+            <option value="none" ${current==='none'?'selected':''}>None</option>
+            <option value="view" ${current==='view'?'selected':''}>View</option>
+            <option value="edit" ${current==='edit'?'selected':''}>Edit</option>
+            <option value="full" ${current==='full'?'selected':''}>Full</option>
+          </select>
+        </div>`;
+    }).join('')}
+  `;
+}
+
+function closeStaffProfile(){
+  document.getElementById('profileModal').classList.remove('open');
+}
+
+async function changeRole(staffId, newRole){
+  const { error } = await sb.from('staff').update({ role: newRole, job_title: roleLabel(newRole) }).eq('id', staffId);
+  if(error){ showToast(error.message); await loadTeamData(); if(document.getElementById('profileModal').dataset.staffId === staffId) openStaffProfile(staffId); return; }
+  showToast('Role updated.');
+  await loadTeamData();
+  if(document.getElementById('profileModal').classList.contains('open') && document.getElementById('profileModal').dataset.staffId === staffId){
+    renderProfileAccess(staffId);
+  }
+}
+
+async function setOverride(staffId, module, level){
+  if(window.currentStaff && staffId === window.currentStaff.id && level && level !== 'full'){
+    const ok = confirm('This changes your own access to "' + module + '". If this reduces your access, you may lose the ability to undo it yourself. Continue?');
+    if(!ok){ await loadTeamData(); if(document.getElementById('profileModal').dataset.staffId === staffId) openStaffProfile(staffId); return; }
+  }
+  if(!level){
+    const { error } = await sb.from('staff_permission_overrides').delete().eq('staff_id', staffId).eq('module', module);
+    if(error){ showToast('Error: ' + error.message); return; }
+    showToast('Override removed — back to role default.');
+  } else {
+    const { error } = await sb.from('staff_permission_overrides').upsert({
+      staff_id: staffId, module, level, granted_by: window.currentStaff.id
+    });
+    if(error){ showToast('Error: ' + error.message); return; }
+    showToast('Override saved.');
+  }
+  await loadTeamData();
+  if(document.getElementById('profileModal').classList.contains('open') && document.getElementById('profileModal').dataset.staffId === staffId){
+    renderProfileAccess(staffId);
+  }
 }
 
 async function loadApprovals(){

@@ -642,9 +642,39 @@ function checkDeleteStaffMatch(){
 
 async function confirmDeleteStaff(){
   if(!pendingDeleteStaffId) return;
-  const { error } = await sb.from('staff').delete().eq('id', pendingDeleteStaffId);
-  if(error){ showToast('Error deleting: ' + error.message); return; }
-  showToast('Staff member deleted.');
+  const btn = document.getElementById('confirmDeleteStaffBtn');
+  const originalLabel = btn.textContent;
+  btn.textContent = 'Deleting…';
+  btn.disabled = true;
+
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session){ showToast('Session expired, please sign in again.'); btn.textContent = originalLabel; btn.disabled = false; return; }
+
+  let res;
+  try {
+    res = await fetch('/.netlify/functions/delete-staff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken: session.access_token, staffId: pendingDeleteStaffId })
+    });
+  } catch (e) {
+    showToast('Network error: ' + e.message);
+    btn.textContent = originalLabel; btn.disabled = false;
+    return;
+  }
+
+  const result = await res.json();
+  btn.textContent = originalLabel; btn.disabled = false;
+
+  if(!res.ok){
+    showToast(result.error || 'Something went wrong.');
+    return;
+  }
+  if(result.warning){
+    showToast(result.warning);
+  } else {
+    showToast('Staff member and their login deleted.');
+  }
   closeDeleteStaffModal();
   closeStaffProfile();
   loadTeamData();

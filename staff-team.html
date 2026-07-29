@@ -277,24 +277,14 @@ function renderDirectory(){
     return;
   }
 
-  // Default: group by role, ordered by seniority/function rather than alphabetically.
-  const groups = {};
-  filtered.forEach(s => {
-    if(!groups[s.role]) groups[s.role] = [];
-    groups[s.role].push(s);
+  // Default: sort by role (seniority/function order), then name within each role — no headers, packed flow.
+  const sorted = [...filtered].sort((a, b) => {
+    const ia = ROLE_ORDER.indexOf(a.role), ib = ROLE_ORDER.indexOf(b.role);
+    const roleDiff = (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+    if(roleDiff !== 0) return roleDiff;
+    return (a.name || '').localeCompare(b.name || '');
   });
-
-  const orderedRoles = Object.keys(groups).sort((a, b) => {
-    const ia = ROLE_ORDER.indexOf(a), ib = ROLE_ORDER.indexOf(b);
-    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-  });
-
-  grid.innerHTML = orderedRoles.map(role => `
-    <div class="role-group-header" style="grid-column:1/-1;font-size:12px;font-weight:700;letter-spacing:.5px;color:#888780;text-transform:uppercase;margin-top:8px;">
-      ${roleLabel(role)}
-    </div>
-    ${groups[role].map(s => personCardHtml(s)).join('')}
-  `).join('');
+  grid.innerHTML = sorted.map(s => personCardHtml(s)).join('');
 }
 
 function personCardHtml(s){

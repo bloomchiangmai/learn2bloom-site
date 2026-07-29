@@ -27,6 +27,12 @@ h2{font-family:Georgia,serif;font-size:20px;margin-bottom:16px;}
 .shortcut-desc{font-size:13px;color:#5F5E5A;}
 
 #authLoading{text-align:center;padding:80px 20px;color:#888780;font-size:14px;}
+
+input#toggleCalendar:checked + span, input#toggleBloombrary:checked + span{background:#534AB7;}
+input#toggleCalendar + span::before, input#toggleBloombrary + span::before{
+  content:"";position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;
+}
+input#toggleCalendar:checked + span::before, input#toggleBloombrary:checked + span::before{transform:translateX(20px);}
 </style>
 </head>
 <body>
@@ -42,6 +48,35 @@ h2{font-family:Georgia,serif;font-size:20px;margin-bottom:16px;}
 
   <h2>Your tools</h2>
   <div class="shortcut-grid" id="shortcutGrid"></div>
+
+  <div id="siteFeaturesCard" style="display:none;margin-top:40px;">
+    <h2>Site Features</h2>
+    <div style="background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:22px;">
+      <p style="font-size:13px;color:#5F5E5A;margin-bottom:16px;">
+        Turn Calendar or Library off temporarily (e.g. for maintenance). Parents and staff will see a "temporarily unavailable" message instead.
+      </p>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #E8E3D8;">
+        <div>
+          <div style="font-weight:600;">Calendar</div>
+          <div style="font-size:12px;color:#888780;">bloomcalendar.learn2bloom.org and the Calendar tool</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;">
+          <input type="checkbox" id="toggleCalendar" onchange="toggleFeature('calendar_enabled', this.checked)" style="opacity:0;width:0;height:0;">
+          <span id="toggleCalendarTrack" style="position:absolute;inset:0;background:#ccc;border-radius:24px;transition:.2s;cursor:pointer;" onclick="document.getElementById('toggleCalendar').click()"></span>
+        </label>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;">
+        <div>
+          <div style="font-weight:600;">Library (Bloombrary)</div>
+          <div style="font-size:12px;color:#888780;">bloombrary.learn2bloom.org, public catalog and admin</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;">
+          <input type="checkbox" id="toggleBloombrary" onchange="toggleFeature('bloombrary_enabled', this.checked)" style="opacity:0;width:0;height:0;">
+          <span id="toggleBloombraryTrack" style="position:absolute;inset:0;background:#ccc;border-radius:24px;transition:.2s;cursor:pointer;" onclick="document.getElementById('toggleBloombrary').click()"></span>
+        </label>
+      </div>
+    </div>
+  </div>
 </main>
 </div>
 
@@ -52,6 +87,7 @@ const SHORTCUTS = [
   { key:'admissions', href:'staff-admissions.html', title:'Admissions', desc:'Review and manage new applications.' },
   { key:'learners', href:'learners.html', title:'Learners', desc:'View and edit enrolled students.' },
   { key:'calendar', href:'staff-calendar.html', title:'Calendar', desc:'Manage the school calendar and term dates.' },
+  { key:'library', href:'https://bloombrary.learn2bloom.org/admin', title:'Library', desc:'Manage the book catalog, checkouts, and holds.' },
   { key:'archive', href:'archive.html', title:'Archive', desc:'Restore or review archived records.' },
   { key:'team', href:'staff-team.html', title:'Team', desc:'See the staff directory, update your contact info.' },
   { key:'permissions', href:'staff-permissions.html', title:'Permissions', desc:'Manage roles, access, and approvals.', adminOnly:true }
@@ -60,7 +96,7 @@ const SHORTCUTS = [
 async function onStaffReady(staffRow){
   document.getElementById('greeting').textContent = `Welcome, ${staffRow.name.split(' ')[0]}`;
 
-  const isAdminOrIt = window.currentStaffRole === 'admin' || window.currentStaffRole === 'it';
+  const isAdminOrIt = window.currentStaffRole === 'admin' || window.currentStaffRole === 'director' || window.currentStaffRole === 'it';
 
   // Shortcuts, filtered by role
   const grid = document.getElementById('shortcutGrid');
@@ -94,6 +130,25 @@ async function onStaffReady(staffRow){
       <div class="stat-label">${s.label}</div>
     </div>
   `).join('');
+
+  if(isAdminOrIt){
+    document.getElementById('siteFeaturesCard').style.display = 'block';
+    const { data: settings } = await sb.from('bloom_settings').select('calendar_enabled, bloombrary_enabled').maybeSingle();
+    document.getElementById('toggleCalendar').checked = settings?.calendar_enabled !== false;
+    document.getElementById('toggleBloombrary').checked = settings?.bloombrary_enabled !== false;
+  }
+}
+
+async function toggleFeature(column, enabled){
+  const { error } = await sb.from('bloom_settings').update({ [column]: enabled }).eq('location_id', (await sb.from('bloom_locations').select('id').limit(1).single()).data.id);
+  if(error){
+    showToast('Error: ' + error.message);
+    // Revert the checkbox visually on failure
+    if(column === 'calendar_enabled') document.getElementById('toggleCalendar').checked = !enabled;
+    if(column === 'bloombrary_enabled') document.getElementById('toggleBloombrary').checked = !enabled;
+    return;
+  }
+  showToast(enabled ? 'Turned back on.' : 'Turned off — visitors will see a maintenance message.');
 }
 
 checkStaffAndInit();

@@ -49,6 +49,8 @@ input#toggleCalendar:checked + span::before, input#toggleBloombrary:checked + sp
 
   <div id="requestsPanel" style="display:none;background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:20px 24px;margin:-8px 0 24px;"></div>
 
+  <div id="approvalsPanel" style="display:none;background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:20px 24px;margin:-8px 0 24px;"></div>
+
   <h2>Your tools</h2>
   <div class="shortcut-grid" id="shortcutGrid"></div>
 
@@ -140,20 +142,28 @@ async function onStaffReady(staffRow){
     stats.push({ num: total, label: 'Requests', clickable: true });
   }
 
+  let approvalsData = [];
   if(isAdminOrIt){
-    const { count: pendingCount } = await sb.from('approval_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending');
-    stats.push({ num: pendingCount ?? '—', label: 'Pending approvals' });
+    const { data: approvals } = await sb
+      .from('approval_requests')
+      .select('id, module, action_type, entity_table, entity_id, payload, created_at, staff:requested_by(name)')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    approvalsData = approvals || [];
+    stats.push({ num: approvalsData.length, label: 'Pending approvals', clickable: true, panel: 'approvals' });
   }
 
   document.getElementById('statRow').innerHTML = stats.map(s => `
-    <div class="stat-card" ${s.clickable ? 'onclick="toggleRequestsPanel()" style="cursor:pointer;"' : ''}>
+    <div class="stat-card" ${s.clickable ? `onclick="togglePanel('${s.panel || 'requests'}')" style="cursor:pointer;"` : ''}>
       <div class="stat-num">${s.num}</div>
       <div class="stat-label">${s.label}</div>
     </div>
   `).join('');
 
   window._requestsData = requestsData;
+  window._approvalsData = approvalsData;
   renderRequestsPanel();
+  renderApprovalsPanel();
 
   if(isAdminOrIt){
     document.getElementById('siteFeaturesCard').style.display = 'block';
@@ -163,9 +173,16 @@ async function onStaffReady(staffRow){
   }
 }
 
-function toggleRequestsPanel(){
-  const panel = document.getElementById('requestsPanel');
-  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+function togglePanel(which){
+  const requestsPanel = document.getElementById('requestsPanel');
+  const approvalsPanel = document.getElementById('approvalsPanel');
+  if(which === 'requests'){
+    approvalsPanel.style.display = 'none';
+    requestsPanel.style.display = requestsPanel.style.display === 'none' ? 'block' : 'none';
+  } else {
+    requestsPanel.style.display = 'none';
+    approvalsPanel.style.display = approvalsPanel.style.display === 'none' ? 'block' : 'none';
+  }
 }
 
 function renderRequestsPanel(){
@@ -201,6 +218,97 @@ function renderRequestsPanel(){
     }).join('');
   }
   panel.innerHTML = html;
+}
+
+function describeApprovalPayload(a){
+  const p = a.payload || {};
+  if(a.module === 'calendar'){
+    const typeLabels = {school:'School Day',early:'Early Dismissal',event:'School Event',pd:'PD Day',holiday:'Public Holiday',break:'School Break',closure:'Emergency Closure',makeup:'Make-up Day',none:'Remove'};
+    if(p.events){
+      return `${p.events.length} day${p.events.length===1?'':'s'} imported`;
+    }
+    if(p.dates){
+      return `${p.dates.length} day${p.dates.length===1?'':'s'} → ${typeLabels[p.type]||p.type}${p.label?' ('+p.label+')':''}`;
+    }
+    return `${p.date} → ${typeLabels[p.day_type]||p.day_type}${p.label?' ('+p.label+')':''}`;
+  }
+  if(a.module === 'students'){
+    return 'Learner profile update';
+  }
+  return `${a.action_type} on ${a.entity_table || a.module}`;
+}
+
+function renderApprovalsPanel(){
+  const panel = document.getElementById('approvalsPanel');
+  const items = window._approvalsData || [];
+
+  if(items.length === 0){
+    panel.innerHTML = `<p style="font-size:13px;color:#888780;margin:0;">No pending approvals right now.</p>`;
+    return;
+  }
+
+  panel.innerHTML = items.map(a => `
+    <div style="padding:12px 0;border-bottom:1px solid #E8E3D8;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+        <div>
+          <div style="font-weight:600;font-size:14px;">${describeApprovalPayload(a)}</div>
+          <div style="font-size:12px;color:#888780;margin-top:2px;">
+            ${a.staff?.name || 'Unknown'} · ${a.module} · ${new Date(a.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button class="btn-small-outline" style="border-color:#2E7D46;color:#2E7D46;" onclick="reviewApproval('${a.id}','approved')">Approve</button>
+          <button class="btn-small-outline" style="border-color:#B23A3A;color:#B23A3A;" onclick="reviewApproval('${a.id}','rejected')">Reject</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function reviewApproval(id, status){
+  const item = (window._approvalsData || []).find(a => a.id === id);
+  if(!item) return;
+
+  if(status === 'approved' && item.module === 'calendar'){
+    const p = item.payload || {};
+    try {
+      if(p.events){
+        const rows = p.events.map(e => ({location_id:p.location_id, academic_year_id:p.academic_year_id, date:e.date, day_type:e.type, label:e.label||'', is_draft:false, updated_at:new Date().toISOString()}));
+        for(let i=0;i<rows.length;i+=100) await sb.from('bloom_calendar_events').upsert(rows.slice(i,i+100), {onConflict:'location_id,date'});
+      } else if(p.dates){
+        const rows = p.dates.map(d => ({location_id:p.location_id, academic_year_id:p.academic_year_id, date:d, day_type:p.type, label:p.label||'', is_draft:false, updated_at:new Date().toISOString()}));
+        for(let i=0;i<rows.length;i+=100) await sb.from('bloom_calendar_events').upsert(rows.slice(i,i+100), {onConflict:'location_id,date'});
+      } else if(p.date){
+        await sb.from('bloom_calendar_events').upsert(
+          {location_id:p.location_id, academic_year_id:p.academic_year_id, date:p.date, day_type:p.day_type, label:p.label||'', is_draft:false, updated_at:new Date().toISOString()},
+          {onConflict:'location_id,date'}
+        );
+      }
+    } catch(e){
+      showToast('Error applying calendar change: ' + e.message);
+      return;
+    }
+  }
+
+  const { error } = await sb.from('approval_requests').update({
+    status, reviewed_by: window.currentStaff.id, reviewed_at: new Date().toISOString()
+  }).eq('id', id);
+
+  if(error){ showToast('Error: ' + error.message); return; }
+
+  if(status === 'approved'){
+    showToast(item.module === 'calendar' ? 'Approved and published to the live calendar.' : 'Approved. If this change needs to be applied elsewhere, do that now.');
+  } else {
+    showToast('Rejected.');
+  }
+
+  window._approvalsData = (window._approvalsData || []).filter(a => a.id !== id);
+  renderApprovalsPanel();
+  document.querySelectorAll('.stat-card').forEach(el => {
+    if(el.querySelector('.stat-label')?.textContent === 'Pending approvals'){
+      el.querySelector('.stat-num').textContent = window._approvalsData.length;
+    }
+  });
 }
 
 function setToggleState(id, isOn){

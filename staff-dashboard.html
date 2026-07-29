@@ -47,6 +47,8 @@ input#toggleCalendar:checked + span::before, input#toggleBloombrary:checked + sp
 
   <div class="stat-row" id="statRow"></div>
 
+  <div id="requestsPanel" style="display:none;background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:20px 24px;margin:-8px 0 24px;"></div>
+
   <h2>Your tools</h2>
   <div class="shortcut-grid" id="shortcutGrid"></div>
 
@@ -61,20 +63,26 @@ input#toggleCalendar:checked + span::before, input#toggleBloombrary:checked + sp
           <div style="font-weight:600;">Calendar</div>
           <div style="font-size:12px;color:#888780;">bloomcalendar.learn2bloom.org and the Calendar tool</div>
         </div>
-        <label style="position:relative;display:inline-block;width:44px;height:24px;">
-          <input type="checkbox" id="toggleCalendar" onchange="toggleFeature('calendar_enabled', this.checked)" style="opacity:0;width:0;height:0;">
-          <span id="toggleCalendarTrack" class="toggle-track"></span>
-        </label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="toggleCalendarStatus" style="font-size:12px;font-weight:600;color:#5F5E5A;width:28px;text-align:right;">On</span>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;">
+            <input type="checkbox" id="toggleCalendar" onchange="toggleFeature('calendar_enabled', this.checked)" style="opacity:0;width:0;height:0;">
+            <span id="toggleCalendarTrack" class="toggle-track"></span>
+          </label>
+        </div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;">
         <div>
-          <div style="font-weight:600;">Library (Bloombrary)</div>
+          <div style="font-weight:600;">Bloombrary</div>
           <div style="font-size:12px;color:#888780;">bloombrary.learn2bloom.org, public catalog and admin</div>
         </div>
-        <label style="position:relative;display:inline-block;width:44px;height:24px;">
-          <input type="checkbox" id="toggleBloombrary" onchange="toggleFeature('bloombrary_enabled', this.checked)" style="opacity:0;width:0;height:0;">
-          <span id="toggleBloombraryTrack" class="toggle-track"></span>
-        </label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="toggleBloombraryStatus" style="font-size:12px;font-weight:600;color:#5F5E5A;width:28px;text-align:right;">On</span>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;">
+            <input type="checkbox" id="toggleBloombrary" onchange="toggleFeature('bloombrary_enabled', this.checked)" style="opacity:0;width:0;height:0;">
+            <span id="toggleBloombraryTrack" class="toggle-track"></span>
+          </label>
+        </div>
       </div>
     </div>
   </div>
@@ -88,7 +96,7 @@ const SHORTCUTS = [
   { key:'admissions', href:'staff-admissions.html', title:'Admissions', desc:'Review and manage new applications.' },
   { key:'learners', href:'learners.html', title:'Learners', desc:'View and edit enrolled students.' },
   { key:'calendar', href:'staff-calendar.html', title:'Calendar', desc:'Manage the school calendar and term dates.' },
-  { key:'library', href:'https://bloombrary.learn2bloom.org/admin', title:'Library', desc:'Manage the book catalog, checkouts, and holds.' },
+  { key:'library', href:'https://bloombrary.learn2bloom.org/admin', title:'Bloombrary', desc:'Manage the book catalog, checkouts, and holds.' },
   { key:'archive', href:'archive.html', title:'Archive', desc:'Restore or review archived records.' },
   { key:'team', href:'staff-team.html', title:'Team', desc:'See the staff directory, update your contact info.' },
   { key:'permissions', href:'staff-permissions.html', title:'Permissions', desc:'Manage roles, access, and approvals.', adminOnly:true }
@@ -112,12 +120,24 @@ async function onStaffReady(staffRow){
 
   // Quick stats
   const stats = [];
+  let requestsData = { enquiries: [], parentRequests: [] };
 
   if(canAccess('students', 'view')){
     const { count: activeCount } = await sb.from('students').select('*', { count: 'exact', head: true }).not('status', 'in', '("archived")');
-    const { count: enquiryCount } = await sb.from('students').select('*', { count: 'exact', head: true }).eq('status', 'enquiry');
     stats.push({ num: activeCount ?? '—', label: 'Active students' });
-    stats.push({ num: enquiryCount ?? '—', label: 'New enquiries' });
+
+    const { data: enquiries } = await sb.from('students').select('id, first_name, last_name, student_id_code').eq('status', 'enquiry');
+    requestsData.enquiries = enquiries || [];
+
+    const { data: parentNotes } = await sb
+      .from('parent_notes')
+      .select('id, note, student_id, students(first_name, last_name, student_id_code)')
+      .eq('resolved', false)
+      .order('created_at', { ascending: false });
+    requestsData.parentRequests = parentNotes || [];
+
+    const total = requestsData.enquiries.length + requestsData.parentRequests.length;
+    stats.push({ num: total, label: 'Requests', clickable: true });
   }
 
   if(isAdminOrIt){
@@ -126,29 +146,78 @@ async function onStaffReady(staffRow){
   }
 
   document.getElementById('statRow').innerHTML = stats.map(s => `
-    <div class="stat-card">
+    <div class="stat-card" ${s.clickable ? 'onclick="toggleRequestsPanel()" style="cursor:pointer;"' : ''}>
       <div class="stat-num">${s.num}</div>
       <div class="stat-label">${s.label}</div>
     </div>
   `).join('');
 
+  window._requestsData = requestsData;
+  renderRequestsPanel();
+
   if(isAdminOrIt){
     document.getElementById('siteFeaturesCard').style.display = 'block';
     const { data: settings } = await sb.from('bloom_settings').select('calendar_enabled, bloombrary_enabled').maybeSingle();
-    document.getElementById('toggleCalendar').checked = settings?.calendar_enabled !== false;
-    document.getElementById('toggleBloombrary').checked = settings?.bloombrary_enabled !== false;
+    setToggleState('toggleCalendar', settings?.calendar_enabled !== false);
+    setToggleState('toggleBloombrary', settings?.bloombrary_enabled !== false);
   }
 }
 
+function toggleRequestsPanel(){
+  const panel = document.getElementById('requestsPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+function renderRequestsPanel(){
+  const { enquiries, parentRequests } = window._requestsData || { enquiries: [], parentRequests: [] };
+  const panel = document.getElementById('requestsPanel');
+
+  if(enquiries.length === 0 && parentRequests.length === 0){
+    panel.innerHTML = `<p style="font-size:13px;color:#888780;margin:0;">No pending requests right now.</p>`;
+    return;
+  }
+
+  let html = '';
+  if(enquiries.length > 0){
+    html += `<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888780;margin-bottom:8px;">New Enquiries (${enquiries.length})</div>`;
+    html += enquiries.map(e => `
+      <a href="staff-admissions.html" style="display:block;padding:8px 0;border-bottom:1px solid #E8E3D8;text-decoration:none;color:#2C2C2A;font-size:14px;">
+        ${e.first_name} ${e.last_name || ''} ${e.student_id_code ? `<span style="color:#888780;font-size:12px;">· ${e.student_id_code}</span>` : ''}
+      </a>
+    `).join('');
+    html += '<div style="height:14px;"></div>';
+  }
+  if(parentRequests.length > 0){
+    html += `<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888780;margin-bottom:8px;">Parent Requests (${parentRequests.length})</div>`;
+    html += parentRequests.map(n => {
+      const s = n.students || {};
+      const link = s.student_id_code ? `learners.html?student=${encodeURIComponent(s.student_id_code)}` : 'learners.html';
+      return `
+        <a href="${link}" style="display:block;padding:8px 0;border-bottom:1px solid #E8E3D8;text-decoration:none;color:#2C2C2A;font-size:14px;">
+          <div style="font-weight:600;">${s.first_name || ''} ${s.last_name || ''}</div>
+          <div style="font-size:13px;color:#5F5E5A;">${n.note}</div>
+        </a>
+      `;
+    }).join('');
+  }
+  panel.innerHTML = html;
+}
+
+function setToggleState(id, isOn){
+  document.getElementById(id).checked = isOn;
+  document.getElementById(id + 'Status').textContent = isOn ? 'On' : 'Off';
+}
+
 async function toggleFeature(column, enabled){
+  const toggleId = column === 'calendar_enabled' ? 'toggleCalendar' : 'toggleBloombrary';
   const { error } = await sb.from('bloom_settings').update({ [column]: enabled }).eq('location_id', (await sb.from('bloom_locations').select('id').limit(1).single()).data.id);
   if(error){
     showToast('Error: ' + error.message);
     // Revert the checkbox visually on failure
-    if(column === 'calendar_enabled') document.getElementById('toggleCalendar').checked = !enabled;
-    if(column === 'bloombrary_enabled') document.getElementById('toggleBloombrary').checked = !enabled;
+    setToggleState(toggleId, !enabled);
     return;
   }
+  setToggleState(toggleId, enabled);
   showToast(enabled ? 'Turned back on.' : 'Turned off — visitors will see a maintenance message.');
 }
 

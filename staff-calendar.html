@@ -2269,7 +2269,7 @@ async function sbInit(){
 async function sbSaveEvent(date,dayType,label=''){
   if(!_locId||!_yearId){markUnsynced(date,dayType,label,false);return false;}
   if(typeof requiresApproval==='function' && requiresApproval('calendar')){
-    const {error}=await submitForApproval('calendar','update','bloom_calendar_events',date,{date,day_type:dayType,label,location_id:_locId,academic_year_id:_yearId});
+    const {error}=await submitForApproval('calendar','update','bloom_calendar_events',null,{date,day_type:dayType,label,location_id:_locId,academic_year_id:_yearId});
     if(error){alert('Could not submit for approval: '+error.message);return false;}
     alert('Submitted for approval — an Admin or Director will review this before it goes live.');
     return false;
@@ -2297,7 +2297,7 @@ async function sbDeleteEvent(date){
 async function sbSyncDates(dates,type,label,isRemove){
   if(!_locId||!_yearId){dates.forEach(d=>markUnsynced(d,type,label,isRemove));return;}
   if(!isRemove && typeof requiresApproval==='function' && requiresApproval('calendar')){
-    const {error}=await submitForApproval('calendar','update','bloom_calendar_events',dates.join(','),{dates,type,label,location_id:_locId,academic_year_id:_yearId});
+    const {error}=await submitForApproval('calendar','update','bloom_calendar_events',null,{dates,type,label,location_id:_locId,academic_year_id:_yearId});
     if(error){alert('Could not submit for approval: '+error.message);return;}
     alert(`Submitted for approval — an Admin or Director will review ${dates.length>1?'these '+dates.length+' days':'this day'} before it goes live.`);
     return;

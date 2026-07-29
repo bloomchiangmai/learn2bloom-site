@@ -149,19 +149,17 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
 
       <div id="newStaffResult" style="display:none;margin-top:16px;padding:16px;border:1px solid #ddd8cc;border-radius:8px;background:#FDFAF5;">
         <p style="font-weight:700;margin:0 0 10px;">Staff member added</p>
-        <div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;font-size:13px;">
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:8px 12px;font-size:13px;margin-bottom:12px;">
           <span style="color:#888780;">Staff ID</span>
           <span id="resultStaffId" style="font-family:monospace;user-select:all;"></span>
-          <button type="button" class="btn-copy" onclick="copyResultField('resultStaffId', this)">Copy</button>
 
           <span style="color:#888780;">Email</span>
           <span id="resultEmail" style="font-family:monospace;user-select:all;"></span>
-          <button type="button" class="btn-copy" onclick="copyResultField('resultEmail', this)">Copy</button>
 
-          <span style="color:#888780;">Password</span>
+          <span style="color:#888780;" id="resultPasswordRow">Password</span>
           <span id="resultPassword" style="font-family:monospace;user-select:all;"></span>
-          <button type="button" class="btn-copy" onclick="copyResultField('resultPassword', this)">Copy</button>
         </div>
+        <button type="button" class="btn-copy" id="copyAllBtn" onclick="copyAllResultFields(this)">Copy all</button>
         <p id="resultNote" style="font-size:12px;color:#888780;margin:10px 0 0;"></p>
       </div>
     </div>
@@ -726,8 +724,11 @@ async function addStaff(){
 function showInviteSentPanel(email, staffIdCode){
   document.getElementById('resultStaffId').textContent = staffIdCode;
   document.getElementById('resultEmail').textContent = email;
-  document.getElementById('resultPassword').textContent = '(sent by email)';
-  document.getElementById('resultNote').textContent = `An invite email was sent to ${email}. They'll set their own password by clicking the link — nothing more to copy here.`;
+  document.getElementById('resultPassword').textContent = '';
+  document.getElementById('resultPasswordRow').style.display = 'none';
+  document.getElementById('resultPassword').style.display = 'none';
+  document.getElementById('copyAllBtn').style.display = 'none';
+  document.getElementById('resultNote').textContent = `An invite email was sent to ${email}. They'll set their own password by clicking the link.`;
   const panel = document.getElementById('newStaffResult');
   panel.style.display = 'block';
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -737,6 +738,9 @@ function showTempPasswordModal(email, tempPassword, staffIdCode, wasCustomPasswo
   document.getElementById('resultStaffId').textContent = staffIdCode;
   document.getElementById('resultEmail').textContent = email;
   document.getElementById('resultPassword').textContent = tempPassword;
+  document.getElementById('resultPasswordRow').style.display = '';
+  document.getElementById('resultPassword').style.display = '';
+  document.getElementById('copyAllBtn').style.display = '';
   document.getElementById('resultNote').textContent = wasCustomPassword
     ? 'They can sign in with their Staff ID and this password.'
     : 'They can sign in with their Staff ID and this password. This won\'t be shown again after you leave this page — copy it now.';
@@ -745,8 +749,11 @@ function showTempPasswordModal(email, tempPassword, staffIdCode, wasCustomPasswo
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function copyResultField(elId, btn){
-  const text = document.getElementById(elId).textContent;
+function copyAllResultFields(btn){
+  const staffId = document.getElementById('resultStaffId').textContent;
+  const email = document.getElementById('resultEmail').textContent;
+  const password = document.getElementById('resultPassword').textContent;
+  const text = `Staff ID: ${staffId}\nEmail: ${email}\nPassword: ${password}`;
   navigator.clipboard.writeText(text).then(()=>{
     const original = btn.textContent;
     btn.textContent = 'Copied!';

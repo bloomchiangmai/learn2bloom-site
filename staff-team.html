@@ -167,6 +167,10 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
       .btn-copy.copied{background:#2f7a3e;color:white;border-color:#2f7a3e;}
     </style>
 
+    <div style="margin-bottom:16px;">
+      <input type="text" id="teamSearchInput" placeholder="Search by name, email, role, or Staff ID…" oninput="renderDirectory()" style="width:100%;max-width:420px;padding:10px 12px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;background:#fff;">
+    </div>
+
     <div class="directory-grid" id="directoryGrid"></div>
 
   </div>
@@ -225,20 +229,60 @@ function roleLabel(role){
   }[role] || role;
 }
 
+const ROLE_ORDER = [
+  'admin','director',
+  'education_lead','education_consultant','lead_teacher',
+  'learning_coach','learning_coach_assistant','teaching_assistant',
+  'admissions','enrollment','front_desk',
+  'it'
+];
+
 function renderDirectory(){
   const grid = document.getElementById('directoryGrid');
   if(!directoryCache.length){
     grid.innerHTML = '<div class="empty-state">No staff yet.</div>';
     return;
   }
-  grid.innerHTML = directoryCache.map(s => `
-    <div class="person-card" onclick="openStaffProfile('${s.id}')">
-      <div class="person-name">${s.name}${s.id === window.currentStaff.id ? '<span class="you-badge">You</span>' : ''}</div>
-      <div class="person-role">${roleLabel(s.role)}</div>
-      <div class="person-detail">${s.staff_id_code || '—'}</div>
-      <div class="person-detail">${s.email}</div>
-      ${s.contact_phone ? `<div class="person-detail">${s.contact_phone}</div>` : ''}
+
+  const query = (document.getElementById('teamSearchInput')?.value || '').trim().toLowerCase();
+  const filtered = directoryCache.filter(s => {
+    if(!query) return true;
+    return (s.name || '').toLowerCase().includes(query)
+      || (s.email || '').toLowerCase().includes(query)
+      || (s.staff_id_code || '').toLowerCase().includes(query)
+      || roleLabel(s.role).toLowerCase().includes(query);
+  });
+
+  if(!filtered.length){
+    grid.innerHTML = '<div class="empty-state">No staff match your search.</div>';
+    return;
+  }
+
+  // Group by role, ordered by seniority/function rather than alphabetically.
+  const groups = {};
+  filtered.forEach(s => {
+    if(!groups[s.role]) groups[s.role] = [];
+    groups[s.role].push(s);
+  });
+
+  const orderedRoles = Object.keys(groups).sort((a, b) => {
+    const ia = ROLE_ORDER.indexOf(a), ib = ROLE_ORDER.indexOf(b);
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+  });
+
+  grid.innerHTML = orderedRoles.map(role => `
+    <div class="role-group-header" style="grid-column:1/-1;font-size:12px;font-weight:700;letter-spacing:.5px;color:#888780;text-transform:uppercase;margin-top:8px;">
+      ${roleLabel(role)}
     </div>
+    ${groups[role].map(s => `
+      <div class="person-card" onclick="openStaffProfile('${s.id}')">
+        <div class="person-name">${s.name}${s.id === window.currentStaff.id ? '<span class="you-badge">You</span>' : ''}</div>
+        <div class="person-role">${roleLabel(s.role)}</div>
+        <div class="person-detail">${s.staff_id_code || '—'}</div>
+        <div class="person-detail">${s.email}</div>
+        ${s.contact_phone ? `<div class="person-detail">${s.contact_phone}</div>` : ''}
+      </div>
+    `).join('')}
   `).join('');
 }
 

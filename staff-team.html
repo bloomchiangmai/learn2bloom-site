@@ -158,6 +158,9 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
 
           <span style="color:#888780;" id="resultPasswordRow">Password</span>
           <span id="resultPassword" style="font-family:monospace;user-select:all;"></span>
+
+          <span style="color:#888780;">Sign-in link</span>
+          <span id="resultLoginLink" style="font-family:monospace;user-select:all;word-break:break-all;">https://learn2bloom.org/staff-login.html</span>
         </div>
         <button type="button" class="btn-copy" id="copyAllBtn" onclick="copyAllResultFields(this)">Copy all</button>
         <p id="resultNote" style="font-size:12px;color:#888780;margin:10px 0 0;"></p>
@@ -753,8 +756,11 @@ function copyAllResultFields(btn){
   const staffId = document.getElementById('resultStaffId').textContent;
   const email = document.getElementById('resultEmail').textContent;
   const password = document.getElementById('resultPassword').textContent;
-  const text = `Staff ID: ${staffId}\nEmail: ${email}\nPassword: ${password}`;
-  navigator.clipboard.writeText(text).then(()=>{
+  const loginLink = document.getElementById('resultLoginLink').textContent;
+  const lines = [`Staff ID: ${staffId}`, `Email: ${email}`];
+  if(password) lines.push(`Password: ${password}`);
+  lines.push(`Sign in here: ${loginLink}`);
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>{
     const original = btn.textContent;
     btn.textContent = 'Copied!';
     btn.classList.add('copied');

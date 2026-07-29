@@ -42,12 +42,12 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request body' }) };
   }
 
-  const { accessToken, name, email, role, password } = body;
+  const { accessToken, name, email, role, password, sendInvite } = body;
 
   if (!accessToken || !name || !email || !role) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Missing required fields' }) };
   }
-  if (password && password.length < 8) {
+  if (!sendInvite && password && password.length < 8) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Password must be at least 8 characters' }) };
   }
   if (!VALID_ROLES.includes(role)) {
@@ -73,9 +73,13 @@ exports.handler = async (event) => {
   }
 
   // Create the Supabase Auth account and look up existing Staff IDs in parallel — independent of each other.
-  const tempPassword = password || genTempPassword();
+  const tempPassword = sendInvite ? null : (password || genTempPassword());
+  const createAccountPromise = sendInvite
+    ? admin.auth.admin.inviteUserByEmail(email, { redirectTo: 'https://learn2bloom.org/staff-reset-password.html' })
+    : admin.auth.admin.createUser({ email, password: tempPassword, email_confirm: true });
+
   const [{ data: newUser, error: createErr }, { data: existingStaff }] = await Promise.all([
-    admin.auth.admin.createUser({ email, password: tempPassword, email_confirm: true }),
+    createAccountPromise,
     admin.from('staff').select('staff_id_code')
   ]);
 
@@ -108,7 +112,7 @@ exports.handler = async (event) => {
 
   return {
     statusCode: 200,
-    body: JSON.stringify({ success: true, email, tempPassword, staffIdCode })
+    body: JSON.stringify({ success: true, email, tempPassword, staffIdCode, invited: !!sendInvite })
   };
 };
 // redeploy trigger 1785164373

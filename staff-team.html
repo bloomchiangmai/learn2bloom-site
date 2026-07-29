@@ -140,6 +140,10 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
           <input type="text" id="newStaffPassword" placeholder="Leave blank to auto-generate">
         </div>
       </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#5F5E5A;margin-bottom:18px;cursor:pointer;">
+        <input type="checkbox" id="sendInviteEmail" onchange="toggleInviteMode()" style="width:auto;">
+        Email them a secure link to set their own password instead (recommended for real staff — skips the password field above)
+      </label>
       <button class="btn-primary" id="addStaffBtn" onclick="addStaff()">Add staff member</button>
       <div class="error-msg" id="addStaffError"></div>
 
@@ -658,11 +662,20 @@ async function saveStaffProfile(staffId){
 window.STAFF_PAGE_KEY = 'team';
 checkStaffAndInit();
 
+function toggleInviteMode(){
+  const invite = document.getElementById('sendInviteEmail').checked;
+  const pwField = document.getElementById('newStaffPassword');
+  pwField.disabled = invite;
+  pwField.value = '';
+  pwField.placeholder = invite ? 'Not needed — they set their own via email' : 'Leave blank to auto-generate';
+}
+
 async function addStaff(){
   const name = document.getElementById('newStaffName').value.trim();
   const email = document.getElementById('newStaffEmail').value.trim();
   const role = document.getElementById('newStaffRole').value;
-  const password = document.getElementById('newStaffPassword').value;
+  const sendInvite = document.getElementById('sendInviteEmail').checked;
+  const password = sendInvite ? '' : document.getElementById('newStaffPassword').value;
   const errEl = document.getElementById('addStaffError');
   const btn = document.getElementById('addStaffBtn');
   errEl.textContent = '';
@@ -674,7 +687,7 @@ async function addStaff(){
   if(!session){ errEl.textContent = 'Session expired, please sign in again.'; return; }
 
   const originalLabel = btn.textContent;
-  btn.textContent = 'Adding…';
+  btn.textContent = sendInvite ? 'Sending invite…' : 'Adding…';
   btn.disabled = true;
 
   let res;
@@ -682,7 +695,7 @@ async function addStaff(){
     res = await fetch('/.netlify/functions/create-staff', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken: session.access_token, name, email, role, password: password || undefined })
+      body: JSON.stringify({ accessToken: session.access_token, name, email, role, password: password || undefined, sendInvite })
     });
   } catch (e) {
     errEl.textContent = 'Network error: ' + e.message;
@@ -701,8 +714,23 @@ async function addStaff(){
   document.getElementById('newStaffName').value = '';
   document.getElementById('newStaffEmail').value = '';
   document.getElementById('newStaffPassword').value = '';
-  showTempPasswordModal(result.email, result.tempPassword, result.staffIdCode, !!password);
+
+  if(result.invited){
+    showInviteSentPanel(result.email, result.staffIdCode);
+  } else {
+    showTempPasswordModal(result.email, result.tempPassword, result.staffIdCode, !!password);
+  }
   loadDirectory();
+}
+
+function showInviteSentPanel(email, staffIdCode){
+  document.getElementById('resultStaffId').textContent = staffIdCode;
+  document.getElementById('resultEmail').textContent = email;
+  document.getElementById('resultPassword').textContent = '(sent by email)';
+  document.getElementById('resultNote').textContent = `An invite email was sent to ${email}. They'll set their own password by clicking the link — nothing more to copy here.`;
+  const panel = document.getElementById('newStaffResult');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function showTempPasswordModal(email, tempPassword, staffIdCode, wasCustomPassword){

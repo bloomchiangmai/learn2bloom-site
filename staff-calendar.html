@@ -365,7 +365,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </header>
 
   <div class="attention-strip" id="attentionStrip">
-    <div class="attention-item" id="attnPending" onclick="switchTab('approvals')" style="display:none">
+    <div class="attention-item" id="attnPending" onclick="switchTab('calendar')" style="display:none">
       <span class="attention-dot"></span><span id="attnPendingTxt"></span>
     </div>
     <div class="attention-item" id="attnAbsence" onclick="switchTab('absences')" style="display:none">
@@ -383,9 +383,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <button class="tab-btn active" id="tab-calendar" onclick="switchTab('calendar')">📅 Calendar</button>
     <button class="tab-btn" id="tab-absences" onclick="switchTab('absences')">
       🙋 Absences<span class="tab-badge" id="absenceBadge"></span>
-    </button>
-    <button class="tab-btn" id="tab-approvals" onclick="switchTab('approvals')">
-      ✅ Approvals<span class="tab-badge" id="approvalBadge"></span>
     </button>
     <button class="tab-btn" id="tab-settings" onclick="switchTab('settings')">⚙️ Settings</button>
   </div>
@@ -468,15 +465,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="absence-list" id="absenceList"></div>
   </div>
 
-  <!-- APPROVALS TAB -->
-  <div class="tab-content" id="content-approvals">
-    <div style="margin-bottom:16px;">
-      <div style="font-family:'Fraunces',serif;font-size:18px;color:var(--purple);">Pending Approvals</div>
-      <div style="font-size:13px;color:var(--text-muted);">Changes awaiting sign-off</div>
-    </div>
-    <div id="approvalList"></div>
-  </div>
-
   <!-- SETTINGS TAB -->
   <div class="tab-content" id="content-settings">
     <div style="font-family:'Fraunces',serif;font-size:18px;color:var(--purple);margin-bottom:20px;">Settings</div>
@@ -496,12 +484,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="toggle-wrap">
         <div class="toggle-info">
           <div class="toggle-label">Approval Required</div>
-          <div class="toggle-sub" id="approvalSub">Off — staff changes go live instantly</div>
+          <div class="toggle-sub">Now controlled per-role in Permissions → Roles & Access, not a single on/off switch here. Roles with "requires approval" on Calendar will have their changes routed there automatically.</div>
         </div>
-        <label class="toggle">
-          <input type="checkbox" id="toggleApproval" onchange="toggleSetting('approval')">
-          <span class="toggle-slider"></span>
-        </label>
       </div>
     </div>
 
@@ -599,11 +583,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <span class="mobile-nav-icon">🙋</span>
         Absences
         <span class="mob-badge" id="mAbsenceBadge"></span>
-      </button>
-      <button class="mobile-nav-btn" id="mnav-approvals" onclick="switchTab('approvals')">
-        <span class="mobile-nav-icon">✅</span>
-        Approvals
-        <span class="mob-badge" id="mApprovalBadge"></span>
       </button>
       <button class="mobile-nav-btn" id="mnav-settings" onclick="switchTab('settings')">
         <span class="mobile-nav-icon">⚙️</span>
@@ -990,7 +969,7 @@ function setVEMode(mode){
   document.getElementById('veModeRemove').style.background=mode==='remove'?'#dc2626':'white';
   document.getElementById('veModeRemove').style.color=mode==='remove'?'white':'var(--text-muted)';
   document.getElementById('veModeHint').textContent=mode==='assign'?'Click days to assign · Weekends allowed':'Click existing days to mark for removal';
-  document.getElementById('veApplyBtn').textContent=mode==='remove'?(settings.approval?'Submit Removal':'Remove Days'):(settings.approval?'Submit for Approval':'Apply Changes');
+  document.getElementById('veApplyBtn').textContent=mode==='remove'?(requiresApproval('calendar')?'Submit Removal':'Remove Days'):(requiresApproval('calendar')?'Submit for Approval':'Apply Changes');
   document.getElementById('veApplyBtn').style.background=mode==='remove'?'#dc2626':'';
   renderVE();
 }
@@ -1340,16 +1319,13 @@ async function showApp(){
   calcDays();
   renderAdminCalendar();
   await renderAbsences();
-  renderApprovals();
   updateAttention();
   renderAuditLog();
 }
 
 function loadSettings(){
   document.getElementById('toggleLive').checked=settings.live;
-  document.getElementById('toggleApproval').checked=settings.approval;
   document.getElementById('statusSub').textContent='Coming in Phase 3';
-  document.getElementById('approvalSub').textContent=settings.approval?'On — staff changes need approval':'Off — staff changes go live instantly';
 }
 
 function toggleSetting(key){
@@ -1431,13 +1407,13 @@ function calcDays(){
 
 // ── ATTENTION ────────────────────────────────────────────────────
 function updateAttention(){
-  const pending=pendingChanges.filter(p=>p.status==='pending').length;
+  const draftCount=Object.values(overrides).filter(o=>o&&o.isDraft).length;
   const newAbs=absences.filter(a=>a.status==='new').length;
   const total=parseInt(document.getElementById('totalDaysDisplay').textContent)||0;
   let hasAny=false;
 
   const ap=document.getElementById('attnPending');
-  if(pending>0){ap.style.display='flex';document.getElementById('attnPendingTxt').textContent=`${pending} pending approval`;hasAny=true;}
+  if(draftCount>0){ap.style.display='flex';document.getElementById('attnPendingTxt').textContent=`${draftCount} unpublished change${draftCount===1?'':'s'}`;hasAny=true;}
   else ap.style.display='none';
 
   const aa=document.getElementById('attnAbsence');
@@ -1455,11 +1431,8 @@ function updateAttention(){
   document.getElementById('attentionStrip').classList.toggle('has-items',hasAny);
 
   const ab=document.getElementById('absenceBadge');
-  const apb=document.getElementById('approvalBadge');
   ab.classList.toggle('show',newAbs>0);ab.textContent=newAbs;
-  apb.classList.toggle('show',pending>0);apb.textContent=pending;
   document.getElementById('mAbsenceBadge').classList.toggle('show',newAbs>0);
-  document.getElementById('mApprovalBadge').classList.toggle('show',pending>0);
 }
 
 // ── ADMIN CALENDAR ────────────────────────────────────────────────
@@ -1618,7 +1591,7 @@ function openEditDay(y,m,d){
   const dow=new Date(y,m,d).getDay();
   const isWeekend=dow===0||dow===6;
   const dateStr=new Date(y,m,d).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const needsApproval=settings.approval;
+  const needsApproval=requiresApproval('calendar');
 
   document.getElementById('crTitle').textContent=data?'Change Day':'Assign Day';
   document.getElementById('crDate').textContent=(isWeekend?'⚠️ Weekend day · ':'')+( data?`${dateStr} · Currently: ${data.type}`:dateStr);
@@ -1637,31 +1610,18 @@ function openEditDay(y,m,d){
 function submitChangeRequest(){
   const type=document.getElementById('crType').value;
   const label=document.getElementById('crLabel').value.trim();
-  const reason=document.getElementById('crReason').value.trim();
 
-  if(settings.approval&&!reason){alert('Please add a reason.');return;}
-
-  if(!settings.approval){
-    if(type==='none'){
-      delete overrides[crDateKey];
-      sbDeleteEvent(crDateKey);
-    } else {
-      overrides[crDateKey]={type,label};
-      sbSaveEvent(crDateKey,type,label);
-    }
-    localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-    addAuditEntry(`${crDateKey} → ${type==='none'?'removed':type}${label?' ('+label+')':''}`, 'Admin');
-    closeModal('changeRequestModal');
-    calcDays();renderAdminCalendar();updateAttention();
+  if(type==='none'){
+    delete overrides[crDateKey];
+    sbDeleteEvent(crDateKey);
   } else {
-    const change={id:Date.now(),dateKey:crDateKey,type,label,reason,submittedBy:'Staff',
-      submittedAt:new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}),status:'pending'};
-    pendingChanges.push(change);
-    localStorage.setItem('bloom_cal_pending',JSON.stringify(pendingChanges));
-    addAuditEntry(`Change requested: ${crDateKey} → ${type}`,'Staff');
-    closeModal('changeRequestModal');
-    renderAdminCalendar();renderApprovals();updateAttention();
+    overrides[crDateKey]={type,label};
+    sbSaveEvent(crDateKey,type,label);
   }
+  localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+  addAuditEntry(`${crDateKey} → ${type==='none'?'removed':type}${label?' ('+label+')':''}`, 'Admin');
+  closeModal('changeRequestModal');
+  calcDays();renderAdminCalendar();updateAttention();
 }
 
 // ── VISUAL EDITOR ────────────────────────────────────────────────
@@ -1674,8 +1634,8 @@ function openVE(type,label){
   document.getElementById('veCount').style.color=TYPE_COLORS[type];
   document.getElementById('veReason').value='';
   document.getElementById('veLabel').value='';
-  document.getElementById('veReason').placeholder=settings.approval?'Reason for change (required)...':'Reason for change (optional)...';
-  document.getElementById('veApplyBtn').textContent=settings.approval?'Submit for Approval':'Apply Changes';
+  document.getElementById('veReason').placeholder='Reason for change (optional)...';
+  document.getElementById('veApplyBtn').textContent=requiresApproval('calendar')?'Submit for Approval':'Apply Changes';
   document.getElementById('veApplyBtn').style.background='';
   document.getElementById('veModeAssign').style.background=TYPE_COLORS[type];
   document.getElementById('veModeAssign').style.color='white';
@@ -1772,38 +1732,19 @@ function veClearAll(){veSelected.clear();renderVE();document.getElementById('veC
 
 function veApply(){
   if(veSelected.size===0){alert(`Please select at least one day.`);return;}
-  const reason=document.getElementById('veReason').value.trim();
-  if(settings.approval&&!reason){alert('Please add a reason.');return;}
   const label=document.getElementById('veLabel').value.trim();
   const dates=Array.from(veSelected).sort();
   const isRemove=veMode==='remove';
 
-  if(!settings.approval){
-    if(isRemove){
-      dates.forEach(dateKey=>delete overrides[dateKey]);
-    } else {
-      dates.forEach(dateKey=>overrides[dateKey]={type:veType,label});
-    }
-    localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-    sbSyncDates(dates,veType,label,isRemove);
-    addAuditEntry(`${dates.length} days ${isRemove?'removed':'set to '+veType}${label?' ('+label+')':''}`,'Admin');
-    closeVE();calcDays();renderAdminCalendar();updateAttention();
+  if(isRemove){
+    dates.forEach(dateKey=>delete overrides[dateKey]);
   } else {
-    const change={id:Date.now(),
-      dateKey:`${dates[0]}${dates.length>1?' +more':''}`,
-      isMulti:true,dates,
-      type:isRemove?'none':veType,
-      label,reason,
-      submittedBy:'Staff',
-      submittedAt:new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}),
-      status:'pending'
-    };
-    pendingChanges.push(change);
-    localStorage.setItem('bloom_cal_pending',JSON.stringify(pendingChanges));
-    addAuditEntry(`${dates.length} days submitted for ${isRemove?'removal':'change to '+veType}`,'Staff');
-    closeVE();renderAdminCalendar();renderApprovals();updateAttention();
-    alert(`✓ ${dates.length} day${dates.length!==1?'s':''} submitted for ${isRemove?'removal':'approval'}.`);
+    dates.forEach(dateKey=>overrides[dateKey]={type:veType,label});
   }
+  localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+  sbSyncDates(dates,veType,label,isRemove);
+  addAuditEntry(`${dates.length} days ${isRemove?'removed':'set to '+veType}${label?' ('+label+')':''}`,'Admin');
+  closeVE();calcDays();renderAdminCalendar();updateAttention();
 }
 
 function closeVE(){document.getElementById('veOverlay').classList.remove('open');veSelected.clear();}
@@ -1821,22 +1762,13 @@ function submitEvent(){
   const date=document.getElementById('eventDate').value;
   const name=document.getElementById('eventName').value.trim();
   const type=document.getElementById('eventType').value;
-  const reason=document.getElementById('eventReason').value.trim();
   if(!date||!name){alert('Please fill in date and name.');return;}
 
-  if(!settings.approval){
-    overrides[date]={type,label:name};
-    localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-    sbSyncDates([date],type,name,false);
-    addAuditEntry(`Event "${name}" added on ${date} (direct)`,'Admin');
-    closeModal('addEventModal');calcDays();renderAdminCalendar();
-  } else {
-    pendingChanges.push({id:Date.now(),dateKey:date,type,label:name,reason:reason||'New event',
-      submittedBy:'Staff',submittedAt:new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}),status:'pending'});
-    localStorage.setItem('bloom_cal_pending',JSON.stringify(pendingChanges));
-    addAuditEntry(`Event "${name}" submitted for ${date}`,'Staff');
-    closeModal('addEventModal');renderApprovals();updateAttention();
-  }
+  overrides[date]={type,label:name};
+  localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+  sbSyncDates([date],type,name,false);
+  addAuditEntry(`Event "${name}" added on ${date}`,'Admin');
+  closeModal('addEventModal');calcDays();renderAdminCalendar();
 }
 
 // ── MULTI SELECT ─────────────────────────────────────────────────
@@ -1850,10 +1782,8 @@ function submitMultiSelect(){
   const from=document.getElementById('msFrom').value;
   const to=document.getElementById('msTo').value;
   const type=document.getElementById('msType').value;
-  const reason=document.getElementById('msReason').value.trim();
   const incWeekends=document.getElementById('msWeekends').checked;
   if(!from||!to){alert('Please select date range.');return;}
-  if(!reason){alert('Please add a reason.');return;}
   if(new Date(from)>new Date(to)){alert('Start must be before end.');return;}
 
   const dates=[];
@@ -1864,19 +1794,11 @@ function submitMultiSelect(){
     c.setDate(c.getDate()+1);
   }
 
-  if(!settings.approval){
-    dates.forEach(d=>overrides[d]={type,label:''});
-    localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-    sbSyncDates(dates,type,'',false);
-    addAuditEntry(`${dates.length} days (${from}→${to}) set to ${type} (direct)`,'Admin');
-    closeModal('multiSelectModal');calcDays();renderAdminCalendar();
-  } else {
-    pendingChanges.push({id:Date.now(),dateKey:`${from} to ${to}`,isMulti:true,dates,type,label:'',reason,
-      submittedBy:'Staff',submittedAt:new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}),status:'pending'});
-    localStorage.setItem('bloom_cal_pending',JSON.stringify(pendingChanges));
-    addAuditEntry(`Range ${from}→${to} (${dates.length} days) submitted as ${type}`,'Staff');
-    closeModal('multiSelectModal');renderApprovals();updateAttention();
-  }
+  dates.forEach(d=>overrides[d]={type,label:''});
+  localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+  sbSyncDates(dates,type,'',false);
+  addAuditEntry(`${dates.length} days (${from}→${to}) set to ${type}`,'Admin');
+  closeModal('multiSelectModal');calcDays();renderAdminCalendar();
 }
 
 // ── ABSENCES ─────────────────────────────────────────────────────
@@ -1923,58 +1845,6 @@ async function acknowledgeAbsence(id){
 }
 
 // ── APPROVALS ────────────────────────────────────────────────────
-function renderApprovals(){
-  const list=document.getElementById('approvalList');
-  const pending=pendingChanges.filter(p=>p.status==='pending');
-  if(!pending.length){list.innerHTML=`<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">All clear</div><div style="font-size:14px;color:var(--text-muted);">No pending changes.</div></div>`;return;}
-  const typeLabels={school:'School Day',early:'Early Dismissal',event:'School Event',pd:'PD Day',holiday:'Public Holiday',break:'School Break',closure:'Emergency Closure',makeup:'Make-up Day',none:'Remove'};
-  list.innerHTML=pending.map(p=>`
-    <div class="approval-card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-        <div>
-          <div class="approval-date">${p.isMulti?`${p.dates?.length||'Multiple'} days`:formatDate(p.dateKey)}</div>
-          <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">→ ${typeLabels[p.type]||p.type}${p.label?' · '+p.label:''}</div>
-        </div>
-        <span class="status-badge pending">Pending</span>
-      </div>
-      <div class="approval-reason">"${p.reason}"</div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">${p.submittedBy} · ${p.submittedAt}</div>
-      <div class="approval-actions">
-        <button class="btn btn-success btn-sm" onclick="approveChange(${p.id})">✓ Approve</button>
-        <button class="btn btn-danger btn-sm" onclick="rejectChange(${p.id})">✕ Reject</button>
-      </div>
-    </div>`).join('');
-}
-
-function approveChange(id){
-  const change=pendingChanges.find(p=>p.id===id);
-  if(!change)return;
-  const dates=change.isMulti?change.dates:[change.dateKey];
-  dates.forEach(dateKey=>{
-    if(change.type==='none'){
-      delete overrides[dateKey];
-      sbDeleteEvent(dateKey);
-    } else {
-      overrides[dateKey]={type:change.type,label:change.label||''};
-      sbSaveEvent(dateKey,change.type,change.label||'');
-    }
-  });
-  localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-  pendingChanges=pendingChanges.filter(p=>p.id!==id);
-  localStorage.setItem('bloom_cal_pending',JSON.stringify(pendingChanges));
-  addAuditEntry(`Approved: ${dates.length} day(s) → ${change.type}`,'Admin');
-  calcDays();renderAdminCalendar();renderApprovals();updateAttention();
-}
-
-function rejectChange(id){
-  const reason=prompt('Reason for rejection (optional):');
-  const change=pendingChanges.find(p=>p.id===id);
-  if(!change)return;
-  pendingChanges=pendingChanges.filter(p=>p.id!==id);
-  localStorage.setItem('bloom_cal_pending',JSON.stringify(pendingChanges));
-  addAuditEntry(`Rejected: ${change.dateKey}${reason?' — '+reason:''}`,'Admin');
-  renderApprovals();updateAttention();
-}
 
 // ── TERM BREAKDOWN ───────────────────────────────────────────────
 function openTermBreakdown(term){
@@ -2286,7 +2156,6 @@ function switchTab(tab){
   document.getElementById(`tab-${tab}`)?.classList.add('active');
   document.getElementById(`mnav-${tab}`)?.classList.add('active');
   if(tab==='absences')renderAbsences();
-  if(tab==='approvals')renderApprovals();
   if(tab==='calendar'){
     renderAuditLog();
     if(isMobileAdmin()&&wasCalendarActive){
@@ -2399,6 +2268,12 @@ async function sbInit(){
 
 async function sbSaveEvent(date,dayType,label=''){
   if(!_locId||!_yearId){markUnsynced(date,dayType,label,false);return false;}
+  if(typeof requiresApproval==='function' && requiresApproval('calendar')){
+    const {error}=await submitForApproval('calendar','update','bloom_calendar_events',date,{date,day_type:dayType,label,location_id:_locId,academic_year_id:_yearId});
+    if(error){alert('Could not submit for approval: '+error.message);return false;}
+    alert('Submitted for approval — an Admin or Director will review this before it goes live.');
+    return false;
+  }
   try{
     await _sb.from('bloom_calendar_events').upsert(
       {location_id:_locId,academic_year_id:_yearId,date,day_type:dayType,label,is_draft:true,updated_at:new Date().toISOString()},
@@ -2421,6 +2296,12 @@ async function sbDeleteEvent(date){
 // Sync a batch of dates to the same type/label (Add Event, Multi-select, Visual Editor)
 async function sbSyncDates(dates,type,label,isRemove){
   if(!_locId||!_yearId){dates.forEach(d=>markUnsynced(d,type,label,isRemove));return;}
+  if(!isRemove && typeof requiresApproval==='function' && requiresApproval('calendar')){
+    const {error}=await submitForApproval('calendar','update','bloom_calendar_events',dates.join(','),{dates,type,label,location_id:_locId,academic_year_id:_yearId});
+    if(error){alert('Could not submit for approval: '+error.message);return;}
+    alert(`Submitted for approval — an Admin or Director will review ${dates.length>1?'these '+dates.length+' days':'this day'} before it goes live.`);
+    return;
+  }
   try{
     if(isRemove){
       for(const d of dates)await _sb.from('bloom_calendar_events').delete().eq('location_id',_locId).eq('date',d);
@@ -2441,6 +2322,12 @@ async function sbDeleteAllEvents(){
 
 async function sbSaveBulk(events){
   if(!_locId||!_yearId)return;
+  if(typeof requiresApproval==='function' && requiresApproval('calendar')){
+    const {error}=await submitForApproval('calendar','create','bloom_calendar_events',null,{events,location_id:_locId,academic_year_id:_yearId});
+    if(error){alert('Could not submit for approval: '+error.message);return;}
+    alert(`Submitted for approval — an Admin or Director will review these ${events.length} days before they go live.`);
+    return;
+  }
   try{
     const rows=events.map(e=>({location_id:_locId,academic_year_id:_yearId,date:e.date,day_type:e.type,label:e.label||'',is_draft:true,updated_at:new Date().toISOString()}));
     for(let i=0;i<rows.length;i+=100){

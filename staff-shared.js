@@ -38,6 +38,7 @@ const NAV_ITEMS = [
   { key: 'admissions', label: 'Admissions', href: 'staff-admissions.html', group: 'Students' },
   { key: 'learners', label: 'Learners', href: 'learners.html', group: 'Students' },
   { key: 'calendar', label: 'Calendar', href: 'staff-calendar.html', group: 'Tools' },
+  { key: 'library', label: 'Library', href: 'https://bloombrary.learn2bloom.org/admin', group: 'Tools' },
   { key: 'team', label: 'Team', href: 'staff-team.html', group: 'Staff' },
   { key: 'permissions', label: 'Permissions', href: 'staff-permissions.html', group: 'Staff', adminOnly: true },
   { key: 'archive', label: 'Archived Learners', href: 'archive.html', group: 'History' },

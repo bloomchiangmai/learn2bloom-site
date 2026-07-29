@@ -76,6 +76,9 @@ h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin
 
 .toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
 .empty-state{color:#888780;font-size:14px;padding:20px;text-align:center;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th{text-align:left;padding:10px 12px;border-bottom:2px solid #E8E3D8;color:#5F5E5A;font-size:12px;text-transform:uppercase;letter-spacing:.5px;}
+td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
 
 @media (max-width: 768px) {
   nav{flex-direction:column;gap:10px;padding:14px 20px;}
@@ -166,6 +169,18 @@ h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin
 
     <div class="directory-grid" id="directoryGrid"></div>
 
+    <div class="card" id="archivedStaffCard" style="display:none;margin-top:32px;">
+      <h2>Archived Staff</h2>
+      <p style="font-size:13px;color:#888780;margin-top:-12px;margin-bottom:16px;">Their login is disabled. Restore to reactivate their account and access.</p>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Contact</th><th>Role</th><th>Archived</th><th></th></tr>
+        </thead>
+        <tbody id="archivedStaffTable"></tbody>
+      </table>
+      <div id="archivedStaffEmpty" class="empty-state" style="display:none;">No archived staff.</div>
+    </div>
+
   </div>
 
   <div class="modal-overlay" id="profileModal">
@@ -182,13 +197,13 @@ h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin
   <div class="modal-overlay" id="deleteStaffModal">
     <div class="modal-box" style="max-width:480px;">
       <button class="modal-close" onclick="closeDeleteStaffModal()">&times;</button>
-      <h2 style="color:#B23A3A;">Delete staff member</h2>
+      <h2 style="color:#B23A3A;">Archive staff member</h2>
       <p class="modal-sub" id="deleteStaffModalSub"></p>
-      <p style="font-size:13px;color:#5F5E5A;margin-bottom:8px;">This removes their staff record and their login — they will no longer be able to sign in. Type their name exactly to confirm.</p>
+      <p style="font-size:13px;color:#5F5E5A;margin-bottom:8px;">This moves them to Archived Staff and blocks their login — they will no longer be able to sign in, but their record can be restored later. Type their name exactly to confirm.</p>
       <input type="text" id="deleteStaffConfirmInput" class="detail-input" style="width:100%;margin-bottom:16px;" oninput="checkDeleteStaffMatch()" autocomplete="off">
       <div class="modal-save-bar" style="position:static;border-top:none;padding-top:0;">
         <button class="btn-small-outline" onclick="closeDeleteStaffModal()">Cancel</button>
-        <button class="btn-primary" id="confirmDeleteStaffBtn" style="background:#B23A3A;opacity:.5;pointer-events:none;" onclick="confirmDeleteStaff()">Delete</button>
+        <button class="btn-primary" id="confirmDeleteStaffBtn" style="background:#B23A3A;opacity:.5;pointer-events:none;" onclick="confirmDeleteStaff()">Archive</button>
       </div>
     </div>
   </div>
@@ -203,7 +218,61 @@ let directoryCache = [];
 async function onStaffReady(staffRow){
   const canAddStaff = ['admin','director','it'].includes(staffRow.role);
   document.getElementById('addStaffCard').style.display = canAddStaff ? 'block' : 'none';
+  document.getElementById('archivedStaffCard').style.display = canAddStaff ? 'block' : 'none';
+  if(canAddStaff) loadArchivedStaff();
   loadDirectory();
+}
+
+async function loadArchivedStaff(){
+  const card = document.getElementById('archivedStaffCard');
+  if(card.style.display === 'none') return;
+  const { data, error } = await sb.rpc('get_archived_staff');
+  const tbody = document.getElementById('archivedStaffTable');
+  const emptyEl = document.getElementById('archivedStaffEmpty');
+  if(error || !data || data.length === 0){
+    tbody.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  tbody.innerHTML = data.map(s => `
+    <tr>
+      <td style="font-weight:600;">${s.name}</td>
+      <td>${s.email}</td>
+      <td>${roleLabel(s.role)}</td>
+      <td>${s.archived_at ? new Date(s.archived_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—'}</td>
+      <td><button class="btn-small-outline" onclick="restoreStaffMember('${s.id}','${(s.name||'').replace(/'/g,"\\'")}')">Restore</button></td>
+    </tr>
+  `).join('');
+}
+
+async function restoreStaffMember(staffId, name){
+  const ok = confirm(`Restore ${name}? Their login will be re-enabled and they'll be able to sign in again.`);
+  if(!ok) return;
+
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session){ showToast('Session expired, please sign in again.'); return; }
+
+  let res;
+  try {
+    res = await fetch('/.netlify/functions/restore-staff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken: session.access_token, staffId })
+    });
+  } catch (e) {
+    showToast('Network error: ' + e.message);
+    return;
+  }
+
+  const result = await res.json();
+  if(!res.ok){
+    showToast(result.error || 'Something went wrong.');
+    return;
+  }
+  showToast(result.warning || `${name} restored.`);
+  loadDirectory();
+  loadArchivedStaff();
 }
 
 async function loadDirectory(){
@@ -328,7 +397,7 @@ async function openStaffProfile(staffId){
       <div class="modal-save-bar">
         <button class="btn-small-outline" onclick="closeStaffProfile()">Cancel</button>
         <button class="btn-primary" onclick="saveStaffProfile('${staffId}')">Save changes</button>
-        ${(canEditAdminFields && !isSelf) ? `<button class="btn-small-danger" onclick="openDeleteStaffModal('${staffId}', '${(s.name||'').replace(/'/g,"\\'")}')">Delete staff member</button>` : ''}
+        ${(canEditAdminFields && !isSelf) ? `<button class="btn-small-danger" onclick="openDeleteStaffModal('${staffId}', '${(s.name||'').replace(/'/g,"\\'")}')">Archive staff member</button>` : ''}
       </div>
     `;
   } else {
@@ -444,7 +513,7 @@ async function confirmDeleteStaff(){
   if(!pendingDeleteStaffId) return;
   const btn = document.getElementById('confirmDeleteStaffBtn');
   const originalLabel = btn.textContent;
-  btn.textContent = 'Deleting…';
+  btn.textContent = 'Archiving…';
   btn.disabled = true;
 
   const { data: { session } } = await sb.auth.getSession();
@@ -452,7 +521,7 @@ async function confirmDeleteStaff(){
 
   let res;
   try {
-    res = await fetch('/.netlify/functions/delete-staff', {
+    res = await fetch('/.netlify/functions/archive-staff', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accessToken: session.access_token, staffId: pendingDeleteStaffId })
@@ -473,11 +542,12 @@ async function confirmDeleteStaff(){
   if(result.warning){
     showToast(result.warning);
   } else {
-    showToast('Staff member and their login deleted.');
+    showToast('Staff member archived. Their login is disabled — restore them from Archived Staff to reactivate it.');
   }
   closeDeleteStaffModal();
   closeStaffProfile();
   loadDirectory();
+  loadArchivedStaff();
 }
 
 async function resetPasswordFromTeam(staffId){

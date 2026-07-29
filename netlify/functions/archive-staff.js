@@ -7,7 +7,6 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
-
   if (!SERVICE_ROLE_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: 'Server misconfigured: missing service role key' }) };
   }
@@ -26,7 +25,6 @@ exports.handler = async (event) => {
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-  // Verify the caller is a logged-in admin/IT staff member before doing anything privileged.
   const { data: callerUser, error: callerErr } = await admin.auth.getUser(accessToken);
   if (callerErr || !callerUser?.user) {
     return { statusCode: 401, body: JSON.stringify({ error: 'Not authenticated' }) };
@@ -34,18 +32,17 @@ exports.handler = async (event) => {
 
   const { data: callerStaff, error: callerStaffErr } = await admin
     .from('staff')
-    .select('role')
+    .select('role, status')
     .eq('auth_user_id', callerUser.user.id)
     .maybeSingle();
 
-  if (callerStaffErr || !callerStaff || !['admin', 'director', 'it'].includes(callerStaff.role)) {
-    return { statusCode: 403, body: JSON.stringify({ error: 'Only Admin, Director, or IT can delete staff' }) };
+  if (callerStaffErr || !callerStaff || callerStaff.status !== 'active' || !['admin', 'director', 'it'].includes(callerStaff.role)) {
+    return { statusCode: 403, body: JSON.stringify({ error: 'Only Admin, Director, or IT can archive staff' }) };
   }
 
-  // Look up the target staff row to get their auth_user_id before deleting.
   const { data: targetStaff, error: targetErr } = await admin
     .from('staff')
-    .select('id, auth_user_id, role')
+    .select('id, auth_user_id, role, status')
     .eq('id', staffId)
     .maybeSingle();
 
@@ -54,33 +51,31 @@ exports.handler = async (event) => {
   }
 
   if (targetStaff.auth_user_id === callerUser.user.id) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'You cannot delete your own staff record.' }) };
+    return { statusCode: 400, body: JSON.stringify({ error: 'You cannot archive your own staff record.' }) };
   }
 
-  // Never allow the last remaining admin to be deleted.
-  if (targetStaff.role === 'admin') {
-    const { count } = await admin
-      .from('staff')
-      .select('id', { count: 'exact', head: true })
-      .eq('role', 'admin')
-      .neq('id', staffId);
-    if (!count) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Cannot delete: at least one Admin must remain in the system.' }) };
-    }
+  if (targetStaff.status === 'archived') {
+    return { statusCode: 400, body: JSON.stringify({ error: 'This staff member is already archived.' }) };
   }
 
-  // Delete the staff row first.
-  const { error: deleteStaffErr } = await admin.from('staff').delete().eq('id', staffId);
-  if (deleteStaffErr) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Could not delete staff record: ' + deleteStaffErr.message }) };
+  // Archive the record. The staff_protect_last_admin_archiving trigger blocks
+  // this if it would remove the last active Admin.
+  const { error: archiveErr } = await admin
+    .from('staff')
+    .update({ status: 'archived', archived_at: new Date().toISOString() })
+    .eq('id', staffId);
+
+  if (archiveErr) {
+    return { statusCode: 400, body: JSON.stringify({ error: archiveErr.message }) };
   }
 
-  // Then delete their login, so no orphaned auth account is left behind.
+  // Block their login without deleting the account, so it can be restored later.
   if (targetStaff.auth_user_id) {
-    const { error: deleteAuthErr } = await admin.auth.admin.deleteUser(targetStaff.auth_user_id);
-    if (deleteAuthErr) {
-      // Staff row is already gone; surface this so it can be cleaned up manually if needed.
-      return { statusCode: 207, body: JSON.stringify({ success: true, warning: 'Staff record deleted, but the login could not be removed: ' + deleteAuthErr.message }) };
+    const { error: banErr } = await admin.auth.admin.updateUserById(targetStaff.auth_user_id, {
+      ban_duration: '876000h' // effectively indefinite (100 years)
+    });
+    if (banErr) {
+      return { statusCode: 207, body: JSON.stringify({ success: true, warning: 'Staff member archived, but their login could not be disabled: ' + banErr.message }) };
     }
   }
 

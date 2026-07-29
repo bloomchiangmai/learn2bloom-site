@@ -110,17 +110,20 @@ async function loadArchivedStaff(){
       <td>${s.email}</td>
       <td>${roleLabel(s.role)}</td>
       <td>${s.archived_at ? new Date(s.archived_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—'}</td>
-      <td><button class="btn-small-outline" onclick="restoreStaffMember('${s.id}','${(s.name||'').replace(/'/g,"\\'")}')">Restore</button></td>
+      <td><button class="btn-small-outline" onclick="restoreStaffMember('${s.id}','${(s.name||'').replace(/'/g,"\\'")}', this)">Restore</button></td>
     </tr>
   `).join('');
 }
 
-async function restoreStaffMember(staffId, name){
+async function restoreStaffMember(staffId, name, btn){
   const ok = confirm(`Restore ${name}? Their login will be re-enabled and they'll be able to sign in again.`);
   if(!ok) return;
 
+  const originalLabel = btn ? btn.textContent : null;
+  if(btn){ btn.textContent = 'Restoring…'; btn.disabled = true; }
+
   const { data: { session } } = await sb.auth.getSession();
-  if(!session){ showToast('Session expired, please sign in again.'); return; }
+  if(!session){ showToast('Session expired, please sign in again.'); if(btn){btn.textContent=originalLabel;btn.disabled=false;} return; }
 
   let res;
   try {
@@ -131,15 +134,26 @@ async function restoreStaffMember(staffId, name){
     });
   } catch (e) {
     showToast('Network error: ' + e.message);
+    if(btn){btn.textContent=originalLabel;btn.disabled=false;}
     return;
   }
 
   const result = await res.json();
   if(!res.ok){
     showToast(result.error || 'Something went wrong.');
+    if(btn){btn.textContent=originalLabel;btn.disabled=false;}
     return;
   }
   showToast(result.warning || `${name} restored.`);
+
+  // Remove the row immediately rather than waiting on a full re-fetch.
+  const row = btn ? btn.closest('tr') : null;
+  if(row) row.remove();
+  const tbody = document.getElementById('archivedStaffTable');
+  if(tbody && tbody.children.length === 0){
+    document.getElementById('archivedStaffEmpty').style.display = 'block';
+  }
+
   loadArchivedStaff();
 }
 

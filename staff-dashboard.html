@@ -27,6 +27,9 @@ h2{font-family:Georgia,serif;font-size:20px;margin-bottom:16px;}
 .shortcut-desc{font-size:13px;color:#5F5E5A;}
 
 #authLoading{text-align:center;padding:80px 20px;color:#888780;font-size:14px;}
+.toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
+.btn-small-outline{padding:6px 12px;font-size:12px;border:1px solid #534AB7;border-radius:6px;background:#fff;color:#534AB7;cursor:pointer;font-weight:600;}
+.btn-small-outline:hover{background:#f5f3ee;}
 
 input#toggleCalendar:checked + span, input#toggleBloombrary:checked + span{background:#534AB7;}
 input#toggleCalendar + span::before, input#toggleBloombrary + span::before{
@@ -89,6 +92,8 @@ input#toggleCalendar:checked + span::before, input#toggleBloombrary:checked + sp
     </div>
   </div>
 </main>
+
+<div class="toast" id="toast"></div>
 </div>
 
 <script>

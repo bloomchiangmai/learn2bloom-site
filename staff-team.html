@@ -228,6 +228,14 @@ async function loadDirectory(){
   const { data, error } = await sb.rpc('get_team_directory');
   directoryCache = data || [];
   renderDirectory();
+
+  // Support deep-linking from other apps (e.g. Bloombrary) straight to a person's profile.
+  const params = new URLSearchParams(window.location.search);
+  const targetCode = params.get('staff');
+  if(targetCode){
+    const match = directoryCache.find(s => s.staff_id_code === targetCode);
+    if(match) openStaffProfile(match.id);
+  }
 }
 
 function roleLabel(role){

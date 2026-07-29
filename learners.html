@@ -215,6 +215,14 @@ async function loadStudents(){
   allData = data;
   currentPage = 1;
   applyFiltersAndRender();
+
+  // Support deep-linking from other apps (e.g. Bloombrary) straight to a student's profile.
+  const params = new URLSearchParams(window.location.search);
+  const targetCode = params.get('student');
+  if(targetCode){
+    const match = allData.find(s => s.student_id_code === targetCode);
+    if(match) openModal(match.id);
+  }
 }
 
 function applyFiltersAndRender(){

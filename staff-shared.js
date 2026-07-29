@@ -3,7 +3,30 @@
 
 const SUPABASE_URL = 'https://ndlcfgkhxjoancdvmgmr.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_EzlLIeKJDqtMs0mKD0gfgA_C86iHZal';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Shared cross-subdomain session storage for the whole Bloom Space Hub
+// (Internal Admin + Calendar + Bloombrary + Portal). Same cookie key/domain
+// scheme everywhere, so signing in on any one of them is recognized on the rest.
+const bloomHubCookieStorage = {
+  getItem(key){
+    const m = document.cookie.match('(^|; )' + key.replace(/[-[\]{}()*+?.,\\^$|#\s]/g,'\\$&') + '=([^;]*)');
+    return m ? decodeURIComponent(m[2]) : null;
+  },
+  setItem(key, value){
+    let cookie = key + '=' + encodeURIComponent(value) + '; Max-Age=' + (60*60*24*30) + '; Path=/; SameSite=Lax; Secure';
+    if(location.hostname.endsWith('learn2bloom.org')) cookie += '; Domain=.learn2bloom.org';
+    document.cookie = cookie;
+  },
+  removeItem(key){
+    let cookie = key + '=; Max-Age=0; Path=/; SameSite=Lax; Secure';
+    if(location.hostname.endsWith('learn2bloom.org')) cookie += '; Domain=.learn2bloom.org';
+    document.cookie = cookie;
+  }
+};
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { storage: bloomHubCookieStorage, storageKey: 'bloom-hub-auth', persistSession: true, autoRefreshToken: true }
+});
 
 function showToast(msg){
   const t = document.getElementById('toast');

@@ -168,7 +168,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
             <input type="text" id="previousSchool" placeholder="Optional">
           </div>
           <div class="full-width">
-            <label>Health / learning notes</label>
+            <label>Allergies / Medical Conditions</label>
             <input type="text" id="healthNotes" placeholder="Optional — anything staff should know">
           </div>
         </div>
@@ -436,7 +436,7 @@ function renderModal(studentId, editMode){
       ${field('Other languages', studIntake.other_languages, `<input class="detail-input" id="f-other-languages" value="${studIntake.other_languages || ''}">`)}
       ${field('Current school', studIntake.current_school, `<input class="detail-input" id="f-current-school" value="${studIntake.current_school || ''}">`)}
       ${field('Previous school', studIntake.previous_school, `<input class="detail-input" id="f-previous-school" value="${studIntake.previous_school || ''}">`)}
-      ${field('Health / learning notes', studIntake.health_learning_notes, `<input class="detail-input" id="f-health-notes" value="${studIntake.health_learning_notes || ''}">`)}
+      ${field('Allergies / Medical Conditions', studIntake.health_learning_notes, `<input class="detail-input" id="f-health-notes" value="${studIntake.health_learning_notes || ''}">`)}
     </div>
 
     <div class="detail-section">

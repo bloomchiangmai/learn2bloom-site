@@ -36,8 +36,9 @@ h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin
 .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
 .signout-link{font-size:13px;color:#888780;cursor:pointer;text-decoration:underline;}
 
-.directory-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:16px;}
-.person-card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:20px;cursor:pointer;transition:border-color .15s;}
+.directory-grid{display:flex;flex-wrap:wrap;gap:16px;}
+.person-card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:20px;cursor:pointer;transition:border-color .15s;flex:1 1 240px;max-width:340px;}
+.role-group-header{flex-basis:100%;width:100%;}
 .person-card:hover{border-color:#534AB7;}
 .person-name{font-weight:700;font-size:16px;margin-bottom:2px;}
 .person-role{font-size:12px;color:#534AB7;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;}

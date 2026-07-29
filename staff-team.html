@@ -169,18 +169,6 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
 
     <div class="directory-grid" id="directoryGrid"></div>
 
-    <div class="card" id="archivedStaffCard" style="display:none;margin-top:32px;">
-      <h2>Archived Staff</h2>
-      <p style="font-size:13px;color:#888780;margin-top:-12px;margin-bottom:16px;">Their login is disabled. Restore to reactivate their account and access.</p>
-      <table>
-        <thead>
-          <tr><th>Name</th><th>Contact</th><th>Role</th><th>Archived</th><th></th></tr>
-        </thead>
-        <tbody id="archivedStaffTable"></tbody>
-      </table>
-      <div id="archivedStaffEmpty" class="empty-state" style="display:none;">No archived staff.</div>
-    </div>
-
   </div>
 
   <div class="modal-overlay" id="profileModal">
@@ -218,61 +206,7 @@ let directoryCache = [];
 async function onStaffReady(staffRow){
   const canAddStaff = ['admin','director','it'].includes(staffRow.role);
   document.getElementById('addStaffCard').style.display = canAddStaff ? 'block' : 'none';
-  document.getElementById('archivedStaffCard').style.display = canAddStaff ? 'block' : 'none';
-  if(canAddStaff) loadArchivedStaff();
   loadDirectory();
-}
-
-async function loadArchivedStaff(){
-  const card = document.getElementById('archivedStaffCard');
-  if(card.style.display === 'none') return;
-  const { data, error } = await sb.rpc('get_archived_staff');
-  const tbody = document.getElementById('archivedStaffTable');
-  const emptyEl = document.getElementById('archivedStaffEmpty');
-  if(error || !data || data.length === 0){
-    tbody.innerHTML = '';
-    emptyEl.style.display = 'block';
-    return;
-  }
-  emptyEl.style.display = 'none';
-  tbody.innerHTML = data.map(s => `
-    <tr>
-      <td style="font-weight:600;">${s.name}</td>
-      <td>${s.email}</td>
-      <td>${roleLabel(s.role)}</td>
-      <td>${s.archived_at ? new Date(s.archived_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—'}</td>
-      <td><button class="btn-small-outline" onclick="restoreStaffMember('${s.id}','${(s.name||'').replace(/'/g,"\\'")}')">Restore</button></td>
-    </tr>
-  `).join('');
-}
-
-async function restoreStaffMember(staffId, name){
-  const ok = confirm(`Restore ${name}? Their login will be re-enabled and they'll be able to sign in again.`);
-  if(!ok) return;
-
-  const { data: { session } } = await sb.auth.getSession();
-  if(!session){ showToast('Session expired, please sign in again.'); return; }
-
-  let res;
-  try {
-    res = await fetch('/.netlify/functions/restore-staff', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken: session.access_token, staffId })
-    });
-  } catch (e) {
-    showToast('Network error: ' + e.message);
-    return;
-  }
-
-  const result = await res.json();
-  if(!res.ok){
-    showToast(result.error || 'Something went wrong.');
-    return;
-  }
-  showToast(result.warning || `${name} restored.`);
-  loadDirectory();
-  loadArchivedStaff();
 }
 
 async function loadDirectory(){
@@ -547,7 +481,6 @@ async function confirmDeleteStaff(){
   closeDeleteStaffModal();
   closeStaffProfile();
   loadDirectory();
-  loadArchivedStaff();
 }
 
 async function resetPasswordFromTeam(staffId){

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Archived Staff — Bloom Chiangmai</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="staff-shared.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#FDFAF5;color:#2C2C2A;width:100%;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:10px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.logo{font-family:Georgia,serif;font-size:22px;font-weight:700;color:#2C2C2A;text-decoration:none;}
+
+main{max-width:1100px;margin:0 auto;padding:60px 24px 100px;min-height:70vh;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#534AB7;text-transform:uppercase;margin-bottom:14px;}
+h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin-bottom:8px;}
+.sub{font-size:15px;color:#5F5E5A;margin-bottom:40px;}
+
+.card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:28px;margin-bottom:32px;}
+.card h2{font-family:Georgia,serif;font-size:20px;font-weight:700;margin-bottom:20px;color:#2C2C2A;}
+
+.btn-primary{padding:12px 24px;border:none;border-radius:8px;background:#534AB7;color:#fff;font-size:14px;font-weight:600;cursor:pointer;}
+.btn-primary:hover{background:#443c99;}
+.btn-small-outline{padding:6px 12px;font-size:12px;border:1px solid #534AB7;border-radius:6px;background:#fff;color:#534AB7;cursor:pointer;}
+
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th{text-align:left;padding:10px 12px;border-bottom:2px solid #E8E3D8;color:#5F5E5A;font-size:12px;text-transform:uppercase;letter-spacing:.5px;}
+td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
+.empty-state{color:#888780;font-size:14px;padding:20px;text-align:center;}
+
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+.toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
+
+@media (max-width: 768px) {
+  nav{flex-direction:column;gap:10px;padding:14px 20px;}
+  table{font-size:12px;}
+  th,td{padding:8px 6px;}
+}
+</style>
+</head>
+<body>
+
+<main class="page-content">
+
+  <div id="authLoading" style="text-align:center;padding:80px 20px;color:#888780;font-size:14px;">Loading…</div>
+
+  <div id="pageContent" style="display:none;">
+    <div class="top-bar">
+      <div>
+        <div class="eyebrow">History</div>
+        <h1>Archived Staff</h1>
+        <p class="sub" style="margin-bottom:0;">Former staff removed from active views. Their login is disabled — restore to reactivate.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Archived staff</h2>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Contact</th><th>Role</th><th>Archived</th><th></th></tr>
+        </thead>
+        <tbody id="archivedStaffTable">
+          <tr><td colspan="5" style="color:#888780;">Loading…</td></tr>
+        </tbody>
+      </table>
+      <div id="archivedStaffEmpty" class="empty-state" style="display:none;">No archived staff.</div>
+    </div>
+  </div>
+
+<footer style="background:#F7F3EC;padding:22px max(48px, calc((100% - 1200px) / 2 + 48px)) 40px;border-top:1px solid #E8E3D8;">
+  <p style="text-align:center;font-size:12px;color:#888780;">© 2026 Bloom Chiangmai Learning Hub. All rights reserved.</p>
+</footer>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function roleLabel(role){
+  return {
+    admin:'Admin', director:'Director',
+    education_lead:'Education Lead', education_consultant:'Education Consultant', lead_teacher:'Lead Teacher',
+    learning_coach:'Learning Coach', learning_coach_assistant:'Learning Coach Assistant',
+    admissions:'Admissions Officer', enrollment:'Enrollment Coordinator', front_desk:'Front Desk / Office Manager',
+    it:'IT Support', teaching_assistant:'Teaching Assistant'
+  }[role] || role;
+}
+
+async function onStaffReady(staffRow){
+  if(!['admin','director','it'].includes(staffRow.role)){
+    window.location.href = 'staff-dashboard.html';
+    return;
+  }
+  loadArchivedStaff();
+}
+
+async function loadArchivedStaff(){
+  const { data, error } = await sb.rpc('get_archived_staff');
+  const tbody = document.getElementById('archivedStaffTable');
+  const emptyEl = document.getElementById('archivedStaffEmpty');
+  if(error || !data || data.length === 0){
+    tbody.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  tbody.innerHTML = data.map(s => `
+    <tr>
+      <td style="font-weight:600;">${s.name}</td>
+      <td>${s.email}</td>
+      <td>${roleLabel(s.role)}</td>
+      <td>${s.archived_at ? new Date(s.archived_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—'}</td>
+      <td><button class="btn-small-outline" onclick="restoreStaffMember('${s.id}','${(s.name||'').replace(/'/g,"\\'")}')">Restore</button></td>
+    </tr>
+  `).join('');
+}
+
+async function restoreStaffMember(staffId, name){
+  const ok = confirm(`Restore ${name}? Their login will be re-enabled and they'll be able to sign in again.`);
+  if(!ok) return;
+
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session){ showToast('Session expired, please sign in again.'); return; }
+
+  let res;
+  try {
+    res = await fetch('/.netlify/functions/restore-staff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken: session.access_token, staffId })
+    });
+  } catch (e) {
+    showToast('Network error: ' + e.message);
+    return;
+  }
+
+  const result = await res.json();
+  if(!res.ok){
+    showToast(result.error || 'Something went wrong.');
+    return;
+  }
+  showToast(result.warning || `${name} restored.`);
+  loadArchivedStaff();
+}
+
+window.STAFF_PAGE_KEY = 'staff-archive';
+checkStaffAndInit();
+</script>
+
+</body>
+</html>

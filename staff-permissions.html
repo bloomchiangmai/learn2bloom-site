@@ -336,12 +336,15 @@ async function setOverride(staffId, module, level){
   }
 }
 
+let approvalsCache = [];
+
 async function loadApprovals(){
   const { data, error } = await sb.from('approval_requests')
     .select('*, staff:requested_by(name)')
     .eq('status', 'pending')
     .order('created_at', { ascending: false });
 
+  approvalsCache = data || [];
   const tbody = document.getElementById('approvalsTable');
   const emptyEl = document.getElementById('approvalsEmpty');
   if(error || !data || data.length === 0){
@@ -370,12 +373,35 @@ function escapeHtml(str){
 }
 
 async function reviewRequest(id, status){
+  const item = approvalsCache.find(r => r.id === id);
+
+  if(status === 'approved' && item && item.module === 'calendar'){
+    const p = item.payload || {};
+    try {
+      if(p.events){
+        const rows = p.events.map(e => ({location_id:p.location_id, academic_year_id:p.academic_year_id, date:e.date, day_type:e.type, label:e.label||'', is_draft:false, updated_at:new Date().toISOString()}));
+        for(let i=0;i<rows.length;i+=100) await sb.from('bloom_calendar_events').upsert(rows.slice(i,i+100), {onConflict:'location_id,date'});
+      } else if(p.dates){
+        const rows = p.dates.map(d => ({location_id:p.location_id, academic_year_id:p.academic_year_id, date:d, day_type:p.type, label:p.label||'', is_draft:false, updated_at:new Date().toISOString()}));
+        for(let i=0;i<rows.length;i+=100) await sb.from('bloom_calendar_events').upsert(rows.slice(i,i+100), {onConflict:'location_id,date'});
+      } else if(p.date){
+        await sb.from('bloom_calendar_events').upsert(
+          {location_id:p.location_id, academic_year_id:p.academic_year_id, date:p.date, day_type:p.day_type, label:p.label||'', is_draft:false, updated_at:new Date().toISOString()},
+          {onConflict:'location_id,date'}
+        );
+      }
+    } catch(e){
+      showToast('Error applying calendar change: ' + e.message);
+      return;
+    }
+  }
+
   const { error } = await sb.from('approval_requests').update({
     status, reviewed_by: window.currentStaff.id, reviewed_at: new Date().toISOString()
   }).eq('id', id);
   if(error){ showToast('Error: ' + error.message); return; }
   showToast(status === 'approved'
-    ? 'Approved. Remember: this only marks the request approved — apply the actual change if it hasn\'t already taken effect.'
+    ? (item && item.module === 'calendar' ? 'Approved and published to the live calendar.' : 'Approved. Remember: this only marks the request approved — apply the actual change if it hasn\'t already taken effect.')
     : 'Rejected.');
   loadApprovals();
 }

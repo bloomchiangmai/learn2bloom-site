@@ -2385,6 +2385,19 @@ async function sbSaveYear(data){
 // which replaces the old password-gated boot sequence.
 window.STAFF_PAGE_KEY = 'calendar';
 
+async function refreshCalendarEvents(){
+  if(!_locId)return;
+  try{
+    const{data:events}=await _sb.from('bloom_calendar_events').select('*').eq('location_id',_locId);
+    overrides={};
+    if(events&&events.length>0){
+      events.forEach(ev=>{overrides[ev.date]={type:ev.day_type,label:ev.label||'',sbId:ev.id,isDraft:!!ev.is_draft};});
+    }
+    localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+    calcDays();renderAdminCalendar();updateAttention();
+  }catch(e){console.log('Calendar refresh failed',e);}
+}
+
 async function onStaffReady(staffRow){
   document.getElementById('authLoading').style.display = 'none';
   await sbInit();
@@ -2393,6 +2406,9 @@ async function onStaffReady(staffRow){
   routeAfterAuth(setupDone);
   loadPublicAccessSettings();
   refreshArchiveSettingsUI();
+
+  // Reflect newly-approved changes (or edits from other staff) without needing a manual refresh.
+  setInterval(refreshCalendarEvents, 5000);
 }
 
 checkStaffAndInit();

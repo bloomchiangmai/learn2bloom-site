@@ -2216,7 +2216,7 @@ document.getElementById('veOverlay').addEventListener('click',function(e){if(e.t
 // ── SUPABASE ─────────────────────────────────────────────────────
 const SB_URL='https://ndlcfgkhxjoancdvmgmr.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kbGNmZ2toeGpvYW5jZHZtZ21yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MDYwODUsImV4cCI6MjA5Nzk4MjA4NX0.q0F6_ej0CTneazs6ey7mR3HOsGpqrU0BLe8Y-JHatu8';
-const _sb=window.supabase.createClient(SB_URL,SB_KEY);
+const _sb=sb; // Use the same authenticated client as everything else on the page (staff-shared.js), not a separate unauthenticated one.
 let _locId=null,_yearId=null,_yearLabel='';
 let unsyncedQueue=JSON.parse(localStorage.getItem('bloom_cal_unsynced')||'[]');
 

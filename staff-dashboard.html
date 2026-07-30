@@ -229,18 +229,22 @@ function describeApprovalPayload(a){
   const p = a.payload || {};
   if(a.module === 'calendar'){
     const typeLabels = {school:'School Day',early:'Early Dismissal',event:'School Event',pd:'PD Day',holiday:'Public Holiday',break:'School Break',closure:'Emergency Closure',makeup:'Make-up Day',none:'Remove'};
+    let title, from;
     if(p.events){
-      return `${p.events.length} day${p.events.length===1?'':'s'} imported`;
+      title = `${p.events.length} day${p.events.length===1?'':'s'} imported`;
+    } else if(p.dates){
+      title = `${p.dates.length} day${p.dates.length===1?'':'s'} → ${typeLabels[p.type]||p.type}${p.label?' ('+p.label+')':''}`;
+    } else {
+      const toLabel = `${typeLabels[p.day_type]||p.day_type}${p.label?' ('+p.label+')':''}`;
+      from = p.previous_day_type ? `${typeLabels[p.previous_day_type]||p.previous_day_type}${p.previous_label?' ('+p.previous_label+')':''}` : null;
+      title = `${p.date}: ${from ? from+' → ' : ''}${toLabel}`;
     }
-    if(p.dates){
-      return `${p.dates.length} day${p.dates.length===1?'':'s'} → ${typeLabels[p.type]||p.type}${p.label?' ('+p.label+')':''}`;
-    }
-    return `${p.date} → ${typeLabels[p.day_type]||p.day_type}${p.label?' ('+p.label+')':''}`;
+    return { title, reason: p.reason || null };
   }
   if(a.module === 'students'){
-    return 'Learner profile update';
+    return { title: 'Learner profile update', reason: null };
   }
-  return `${a.action_type} on ${a.entity_table || a.module}`;
+  return { title: `${a.action_type} on ${a.entity_table || a.module}`, reason: null };
 }
 
 function renderApprovalsPanel(){
@@ -252,11 +256,14 @@ function renderApprovalsPanel(){
     return;
   }
 
-  panel.innerHTML = items.map(a => `
+  panel.innerHTML = items.map(a => {
+    const d = describeApprovalPayload(a);
+    return `
     <div style="padding:12px 0;border-bottom:1px solid #E8E3D8;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
         <div>
-          <div style="font-weight:600;font-size:14px;">${describeApprovalPayload(a)}</div>
+          <div style="font-weight:600;font-size:14px;">${d.title}</div>
+          ${d.reason ? `<div style="font-size:13px;color:#5F5E5A;margin-top:2px;">"${d.reason}"</div>` : ''}
           <div style="font-size:12px;color:#888780;margin-top:2px;">
             ${a.staff?.name || 'Unknown'} · ${a.module} · ${new Date(a.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
           </div>
@@ -267,7 +274,8 @@ function renderApprovalsPanel(){
         </div>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 async function reviewApproval(id, status){

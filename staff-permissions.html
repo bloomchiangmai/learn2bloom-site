@@ -338,6 +338,28 @@ async function setOverride(staffId, module, level){
 
 let approvalsCache = [];
 
+function describeApprovalPayload(a){
+  const p = a.payload || {};
+  if(a.module === 'calendar'){
+    const typeLabels = {school:'School Day',early:'Early Dismissal',event:'School Event',pd:'PD Day',holiday:'Public Holiday',break:'School Break',closure:'Emergency Closure',makeup:'Make-up Day',none:'Remove'};
+    let title;
+    if(p.events){
+      title = `${p.events.length} day${p.events.length===1?'':'s'} imported`;
+    } else if(p.dates){
+      title = `${p.dates.length} day${p.dates.length===1?'':'s'} → ${typeLabels[p.type]||p.type}${p.label?' ('+p.label+')':''}`;
+    } else {
+      const toLabel = `${typeLabels[p.day_type]||p.day_type}${p.label?' ('+p.label+')':''}`;
+      const from = p.previous_day_type ? `${typeLabels[p.previous_day_type]||p.previous_day_type}${p.previous_label?' ('+p.previous_label+')':''}` : null;
+      title = `${p.date}: ${from ? from+' → ' : ''}${toLabel}`;
+    }
+    return { title, reason: p.reason || null };
+  }
+  if(a.module === 'students'){
+    return { title: 'Learner profile update', reason: null };
+  }
+  return { title: `${a.action_type} on ${a.entity_table || a.module}`, reason: null };
+}
+
 async function loadApprovals(){
   const { data, error } = await sb.from('approval_requests')
     .select('*, staff:requested_by(name)')
@@ -353,19 +375,25 @@ async function loadApprovals(){
     return;
   }
   emptyEl.style.display = 'none';
-  tbody.innerHTML = data.map(r => `
+  tbody.innerHTML = data.map(r => {
+    const d = describeApprovalPayload(r);
+    return `
     <tr>
       <td>${r.staff ? r.staff.name : '—'}</td>
       <td>${r.module}</td>
       <td>${r.action_type}</td>
-      <td><div class="approval-payload">${escapeHtml(JSON.stringify(r.payload, null, 2))}</div></td>
+      <td>
+        <div>${d.title}</div>
+        ${d.reason ? `<div style="font-size:12px;color:#888780;margin-top:2px;">"${escapeHtml(d.reason)}"</div>` : ''}
+      </td>
       <td>${new Date(r.created_at).toLocaleString()}</td>
       <td>
         <button class="btn-small-outline" onclick="reviewRequest('${r.id}','approved')">Approve</button>
         <button class="btn-small-danger" onclick="reviewRequest('${r.id}','rejected')">Reject</button>
       </td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function escapeHtml(str){

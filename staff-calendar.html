@@ -1584,10 +1584,14 @@ function adminChangeMonth(delta){
 }
 
 // ── EDIT DAY (single click on calendar) ──────────────────────────
+let crPreviousType=null, crPreviousLabel=null;
+
 function openEditDay(y,m,d){
   const data=getDayData(y,m,d);
   const key=dk(y,m,d);
   crDateKey=key;
+  crPreviousType=data?data.type:null;
+  crPreviousLabel=data?data.label||'':null;
   const dow=new Date(y,m,d).getDay();
   const isWeekend=dow===0||dow===6;
   const dateStr=new Date(y,m,d).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -1610,13 +1614,16 @@ function openEditDay(y,m,d){
 function submitChangeRequest(){
   const type=document.getElementById('crType').value;
   const label=document.getElementById('crLabel').value.trim();
+  const reason=document.getElementById('crReason').value.trim();
+
+  if(requiresApproval('calendar')&&!reason){alert('Please add a reason.');return;}
 
   if(type==='none'){
     delete overrides[crDateKey];
     sbDeleteEvent(crDateKey);
   } else {
     overrides[crDateKey]={type,label};
-    sbSaveEvent(crDateKey,type,label);
+    sbSaveEvent(crDateKey,type,label,reason,crPreviousType,crPreviousLabel);
   }
   localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
   addAuditEntry(`${crDateKey} → ${type==='none'?'removed':type}${label?' ('+label+')':''}`, 'Admin');
@@ -1733,8 +1740,11 @@ function veClearAll(){veSelected.clear();renderVE();document.getElementById('veC
 function veApply(){
   if(veSelected.size===0){alert(`Please select at least one day.`);return;}
   const label=document.getElementById('veLabel').value.trim();
+  const reason=document.getElementById('veReason').value.trim();
   const dates=Array.from(veSelected).sort();
   const isRemove=veMode==='remove';
+
+  if(!isRemove&&requiresApproval('calendar')&&!reason){alert('Please add a reason.');return;}
 
   if(isRemove){
     dates.forEach(dateKey=>delete overrides[dateKey]);
@@ -1742,7 +1752,7 @@ function veApply(){
     dates.forEach(dateKey=>overrides[dateKey]={type:veType,label});
   }
   localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-  sbSyncDates(dates,veType,label,isRemove);
+  sbSyncDates(dates,veType,label,isRemove,reason);
   addAuditEntry(`${dates.length} days ${isRemove?'removed':'set to '+veType}${label?' ('+label+')':''}`,'Admin');
   closeVE();calcDays();renderAdminCalendar();updateAttention();
 }
@@ -1762,11 +1772,13 @@ function submitEvent(){
   const date=document.getElementById('eventDate').value;
   const name=document.getElementById('eventName').value.trim();
   const type=document.getElementById('eventType').value;
+  const reason=document.getElementById('eventReason').value.trim();
   if(!date||!name){alert('Please fill in date and name.');return;}
+  if(requiresApproval('calendar')&&!reason){alert('Please add a reason.');return;}
 
   overrides[date]={type,label:name};
   localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-  sbSyncDates([date],type,name,false);
+  sbSyncDates([date],type,name,false,reason);
   addAuditEntry(`Event "${name}" added on ${date}`,'Admin');
   closeModal('addEventModal');calcDays();renderAdminCalendar();
 }
@@ -1782,9 +1794,11 @@ function submitMultiSelect(){
   const from=document.getElementById('msFrom').value;
   const to=document.getElementById('msTo').value;
   const type=document.getElementById('msType').value;
+  const reason=document.getElementById('msReason').value.trim();
   const incWeekends=document.getElementById('msWeekends').checked;
   if(!from||!to){alert('Please select date range.');return;}
   if(new Date(from)>new Date(to)){alert('Start must be before end.');return;}
+  if(requiresApproval('calendar')&&!reason){alert('Please add a reason.');return;}
 
   const dates=[];
   let c=new Date(from);const e=new Date(to);
@@ -1796,7 +1810,7 @@ function submitMultiSelect(){
 
   dates.forEach(d=>overrides[d]={type,label:''});
   localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-  sbSyncDates(dates,type,'',false);
+  sbSyncDates(dates,type,'',false,reason);
   addAuditEntry(`${dates.length} days (${from}→${to}) set to ${type}`,'Admin');
   closeModal('multiSelectModal');calcDays();renderAdminCalendar();
 }
@@ -2266,10 +2280,10 @@ async function sbInit(){
   }catch(e){console.log('Supabase init failed, using localStorage',e);}
 }
 
-async function sbSaveEvent(date,dayType,label=''){
+async function sbSaveEvent(date,dayType,label='',reason='',previousType=null,previousLabel=null){
   if(!_locId||!_yearId){markUnsynced(date,dayType,label,false);return false;}
   if(typeof requiresApproval==='function' && requiresApproval('calendar')){
-    const {error}=await submitForApproval('calendar','update','bloom_calendar_events',null,{date,day_type:dayType,label,location_id:_locId,academic_year_id:_yearId});
+    const {error}=await submitForApproval('calendar','update','bloom_calendar_events',null,{date,day_type:dayType,label,reason,previous_day_type:previousType,previous_label:previousLabel,location_id:_locId,academic_year_id:_yearId});
     if(error){alert('Could not submit for approval: '+error.message);return false;}
     alert('Submitted for approval — an Admin or Director will review this before it goes live.');
     return false;
@@ -2294,10 +2308,10 @@ async function sbDeleteEvent(date){
 }
 
 // Sync a batch of dates to the same type/label (Add Event, Multi-select, Visual Editor)
-async function sbSyncDates(dates,type,label,isRemove){
+async function sbSyncDates(dates,type,label,isRemove,reason=''){
   if(!_locId||!_yearId){dates.forEach(d=>markUnsynced(d,type,label,isRemove));return;}
   if(!isRemove && typeof requiresApproval==='function' && requiresApproval('calendar')){
-    const {error}=await submitForApproval('calendar','update','bloom_calendar_events',null,{dates,type,label,location_id:_locId,academic_year_id:_yearId});
+    const {error}=await submitForApproval('calendar','update','bloom_calendar_events',null,{dates,type,label,reason,location_id:_locId,academic_year_id:_yearId});
     if(error){alert('Could not submit for approval: '+error.message);return;}
     alert(`Submitted for approval — an Admin or Director will review ${dates.length>1?'these '+dates.length+' days':'this day'} before it goes live.`);
     return;

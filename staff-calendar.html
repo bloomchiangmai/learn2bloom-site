@@ -2303,6 +2303,7 @@ async function sbInit(){
         events.forEach(ev=>{overrides[ev.date]={type:ev.day_type,label:ev.label||'',sbId:ev.id,isDraft:!!ev.is_draft};});
       }
       localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+      checkAndAutoSyncPDF(events);
     }
   }catch(e){console.log('Supabase init failed, using localStorage',e);}
 }
@@ -2401,6 +2402,8 @@ async function sbSaveYear(data){
 // which replaces the old password-gated boot sequence.
 window.STAFF_PAGE_KEY = 'calendar';
 
+let _pdfSyncInProgress=false;
+
 async function refreshCalendarEvents(){
   if(!_locId)return;
   try{
@@ -2411,7 +2414,47 @@ async function refreshCalendarEvents(){
     }
     localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
     calcDays();renderAdminCalendar();updateAttention();
+
+    // Auto-sync the downloadable PDF if published calendar data has changed
+    // since it was last generated — so nobody has to remember to click a button.
+    checkAndAutoSyncPDF(events);
   }catch(e){console.log('Calendar refresh failed',e);}
+}
+
+async function checkAndAutoSyncPDF(events){
+  if(_pdfSyncInProgress)return;
+  try{
+    const published=(events||[]).filter(ev=>!ev.is_draft);
+    if(published.length===0)return;
+    const latestChange=published.reduce((max,ev)=>{
+      const t=new Date(ev.updated_at).getTime();
+      return t>max?t:max;
+    },0);
+
+    const{data:doc}=await _sb.from('site_documents').select('updated_at').eq('key','academic_calendar_pdf').maybeSingle();
+    const pdfSyncedAt=doc?new Date(doc.updated_at).getTime():0;
+
+    if(latestChange>pdfSyncedAt){
+      _pdfSyncInProgress=true;
+      const pdfDoc=await buildCalendarPDFDoc();
+      const pdfBlob=pdfDoc.output('blob');
+      const storagePath='calendar/Bloom-Chiangmai-Academic-Calendar-2026-2027.pdf';
+      const{error:uploadErr}=await _sb.storage.from('public-documents').upload(storagePath,pdfBlob,{contentType:'application/pdf',upsert:true});
+      if(uploadErr)throw uploadErr;
+      const{data:{user}}=await _sb.auth.getUser();
+      await _sb.from('site_documents').upsert({
+        key:'academic_calendar_pdf',
+        storage_path:storagePath,
+        updated_at:new Date().toISOString(),
+        updated_by:(user?.email||user?.id||'unknown')+' (auto-sync)'
+      },{onConflict:'key'});
+      console.log('PDF auto-synced — calendar had changed since last sync.');
+    }
+  }catch(e){
+    console.log('Auto PDF sync check failed',e);
+  }finally{
+    _pdfSyncInProgress=false;
+  }
 }
 
 async function onStaffReady(staffRow){

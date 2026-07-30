@@ -799,7 +799,7 @@ footer {
       </div>
     </div>
     <div style="text-align:left;margin-top:28px;">
-      <a id="calendarPdfLink" href="https://ndlcfgkhxjoancdvmgmr.supabase.co/storage/v1/object/public/public-documents/calendar/Bloom-Chiangmai-Academic-Calendar-2026-2027.pdf" download style="display:inline-flex;align-items:center;gap:8px;background:#3D3670;color:#FDFAF5;font-family:Georgia,serif;font-size:14px;font-weight:700;padding:12px 24px;border-radius:999px;text-decoration:none;">
+      <a id="calendarPdfLink" href="https://ndlcfgkhxjoancdvmgmr.supabase.co/storage/v1/object/public/public-documents/calendar/Bloom-Chiangmai-Academic-Calendar-2026-2027.pdf" onclick="return downloadCalendarPdf(event)" style="display:inline-flex;align-items:center;gap:8px;background:#3D3670;color:#FDFAF5;font-family:Georgia,serif;font-size:14px;font-weight:700;padding:12px 24px;border-radius:999px;text-decoration:none;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
         Download full calendar (PDF)
       </a>
@@ -828,6 +828,30 @@ footer {
       .catch(function(){});
   }catch(e){}
 })();
+
+async function downloadCalendarPdf(event){
+  event.preventDefault();
+  const link = document.getElementById('calendarPdfLink');
+  const originalText = link.textContent;
+  try{
+    const url = link.getAttribute('href');
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('Fetch failed');
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = 'Bloom-Chiangmai-Academic-Calendar-2026-2027.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+  }catch(e){
+    // Fallback: if the fetch/blob approach fails for any reason, just open it directly.
+    window.open(link.getAttribute('href'), '_blank');
+  }
+  return false;
+}
 </script>
 
 <div class="visit-section">

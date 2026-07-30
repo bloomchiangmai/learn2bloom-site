@@ -112,12 +112,12 @@ const SHORTCUTS = [
 async function onStaffReady(staffRow){
   document.getElementById('greeting').textContent = `Welcome, ${staffRow.name.split(' ')[0]}`;
 
-  const isAdminOrIt = window.currentStaffRole === 'admin' || window.currentStaffRole === 'director' || window.currentStaffRole === 'it';
+  window._isAdminOrIt = window.currentStaffRole === 'admin' || window.currentStaffRole === 'director' || window.currentStaffRole === 'it';
 
   // Shortcuts, filtered by role
   const grid = document.getElementById('shortcutGrid');
   grid.innerHTML = SHORTCUTS
-    .filter(s => !s.adminOnly || isAdminOrIt)
+    .filter(s => !s.adminOnly || window._isAdminOrIt)
     .map(s => `
       <a href="${s.href}" class="shortcut-card">
         <div class="shortcut-title">${s.title}</div>
@@ -125,7 +125,21 @@ async function onStaffReady(staffRow){
       </a>
     `).join('');
 
-  // Quick stats
+  await loadDashboardStats();
+
+  if(window._isAdminOrIt){
+    document.getElementById('siteFeaturesCard').style.display = 'block';
+    const { data: settings } = await sb.from('bloom_settings').select('calendar_enabled, bloombrary_enabled').maybeSingle();
+    setToggleState('toggleCalendar', settings?.calendar_enabled !== false);
+    setToggleState('toggleBloombrary', settings?.bloombrary_enabled !== false);
+  }
+
+  // Keep Requests/Approvals fresh without needing a manual refresh.
+  setInterval(loadDashboardStats, 30000);
+}
+
+async function loadDashboardStats(){
+  const isAdminOrIt = window._isAdminOrIt;
   const stats = [];
   let requestsData = { enquiries: [], parentRequests: [] };
 
@@ -169,13 +183,6 @@ async function onStaffReady(staffRow){
   window._approvalsData = approvalsData;
   renderRequestsPanel();
   renderApprovalsPanel();
-
-  if(isAdminOrIt){
-    document.getElementById('siteFeaturesCard').style.display = 'block';
-    const { data: settings } = await sb.from('bloom_settings').select('calendar_enabled, bloombrary_enabled').maybeSingle();
-    setToggleState('toggleCalendar', settings?.calendar_enabled !== false);
-    setToggleState('toggleBloombrary', settings?.bloombrary_enabled !== false);
-  }
 }
 
 function togglePanel(which){

@@ -2304,6 +2304,7 @@ async function sbInit(){
       }
       localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
       checkAndAutoSyncPDF(events);
+      checkMyApprovalResults();
     }
   }catch(e){console.log('Supabase init failed, using localStorage',e);}
 }
@@ -2418,7 +2419,48 @@ async function refreshCalendarEvents(){
     // Auto-sync the downloadable PDF if published calendar data has changed
     // since it was last generated — so nobody has to remember to click a button.
     checkAndAutoSyncPDF(events);
+
+    // Let the requester know if any of their own submissions were just resolved.
+    checkMyApprovalResults();
   }catch(e){console.log('Calendar refresh failed',e);}
+}
+
+async function checkMyApprovalResults(){
+  if(!window.currentStaff)return;
+  try{
+    const{data:resolved}=await _sb
+      .from('approval_requests')
+      .select('id,status,payload,reviewed_at')
+      .eq('requested_by',window.currentStaff.id)
+      .in('status',['approved','rejected'])
+      .not('reviewed_at','is',null)
+      .order('reviewed_at',{ascending:false})
+      .limit(20);
+    if(!resolved||resolved.length===0)return;
+
+    const seenKey='bloom_seen_approval_results';
+    const seen=new Set(JSON.parse(localStorage.getItem(seenKey)||'[]'));
+    const typeLabels={school:'School Day',early:'Early Dismissal',event:'School Event',pd:'PD Day',holiday:'Public Holiday',break:'School Break',closure:'Emergency Closure',makeup:'Make-up Day',none:'Remove'};
+
+    const newlyResolved=resolved.filter(r=>!seen.has(r.id));
+    newlyResolved.forEach(r=>{
+      const p=r.payload||{};
+      let what;
+      if(p.events)what=`${p.events.length} imported day(s)`;
+      else if(p.dates)what=`${p.dates.length} day(s) → ${typeLabels[p.type]||p.type}`;
+      else what=`${p.date} → ${typeLabels[p.day_type]||p.day_type}`;
+
+      if(r.status==='approved'){
+        alert(`✓ Approved: ${what}\n\nThis is now live on the public calendar and the downloadable PDF.`);
+      }else{
+        alert(`✕ Rejected: ${what}\n\nThis change was not approved and will not go live.`);
+      }
+      seen.add(r.id);
+    });
+    if(newlyResolved.length>0){
+      localStorage.setItem(seenKey,JSON.stringify([...seen]));
+    }
+  }catch(e){console.log('Approval result check failed',e);}
 }
 
 async function checkAndAutoSyncPDF(events){

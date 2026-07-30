@@ -414,12 +414,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <button class="btn btn-primary" onclick="openAddEvent()">+ Add Event</button>
       <button class="btn btn-outline" onclick="openMultiSelect()">⊞ Multi-select</button>
       <button class="btn btn-outline" id="pdfExportBtn" onclick="exportCalendarPDF()">↗ Export PDF</button>
-      <button class="btn btn-outline" id="pdfSyncBtn" onclick="syncPublicPDF()">⟳ Sync Public PDF</button>
-      <button class="btn btn-primary" id="publishChangesBtn" onclick="publishCalendarChanges()">✓ Publish Changes<span id="draftCount" style="display:none;"></span></button>
+      <button class="btn btn-primary" id="publishChangesBtn" onclick="publishToCalendar()">✓ Publish to Calendar<span id="draftCount" style="display:none;"></span></button>
     </div>
 
-    <p id="pdfSyncStatus" style="font-size:12px;color:#888780;margin:6px 0 0;"></p>
-    <p id="publishStatus" style="font-size:12px;color:#888780;margin:2px 0 0;"></p>
+    <p id="publishStatus" style="font-size:12px;color:#888780;margin:6px 0 0;"></p>
 
     <div class="card" style="margin-bottom:16px;">
       <div class="card-header">
@@ -1510,7 +1508,7 @@ function updateDraftCount(){
   }
 }
 
-async function publishCalendarChanges(){
+async function publishToCalendar(){
   const btn=document.getElementById('publishChangesBtn');
   const statusEl=document.getElementById('publishStatus');
   const draftDates=Object.keys(overrides).filter(k=>overrides[k]&&overrides[k].isDraft);
@@ -1518,23 +1516,41 @@ async function publishCalendarChanges(){
     if(statusEl)statusEl.textContent='No unpublished changes right now.';
     return;
   }
-  if(!confirm(`Publish ${draftDates.length} unconfirmed change${draftDates.length===1?'':'s'} to the public calendar? Parents will see these immediately.`))return;
+  if(!confirm(`Publish ${draftDates.length} unconfirmed change${draftDates.length===1?'':'s'} to the public calendar? Parents will see these immediately, and the downloadable PDF will also be updated to match.`))return;
 
   const originalLabel=btn.textContent;
   btn.textContent='Publishing\u2026';btn.disabled=true;
   try{
+    // 1. Publish the pending day changes.
     await _sb.from('bloom_calendar_events').update({is_draft:false}).eq('location_id',_locId).eq('is_draft',true);
     draftDates.forEach(k=>{if(overrides[k])overrides[k].isDraft=false;});
     localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
     renderAdminCalendar();
+
+    // 2. Regenerate and sync the downloadable PDF so it reflects the same changes.
+    const pdfDoc=await buildCalendarPDFDoc();
+    const pdfBlob=pdfDoc.output('blob');
+    const storagePath='calendar/Bloom-Chiangmai-Academic-Calendar-2026-2027.pdf';
+    const{error:uploadErr}=await _sb.storage.from('public-documents').upload(storagePath,pdfBlob,{contentType:'application/pdf',upsert:true});
+    if(uploadErr)throw uploadErr;
+
+    const{data:{user}}=await _sb.auth.getUser();
+    const nowIso=new Date().toISOString();
+    await _sb.from('site_documents').upsert({
+      key:'academic_calendar_pdf',
+      storage_path:storagePath,
+      updated_at:nowIso,
+      updated_by:user?.email||user?.id||'unknown'
+    },{onConflict:'key'});
+
     if(statusEl){
-      const formatted=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'});
-      statusEl.textContent='Published '+draftDates.length+' change'+(draftDates.length===1?'':'s')+' — live on public calendar as of '+formatted;
+      const formatted=new Date(nowIso).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'});
+      statusEl.textContent='Published '+draftDates.length+' change'+(draftDates.length===1?'':'s')+' and updated the PDF — live as of '+formatted;
     }
   }catch(err){
     console.error('Publish failed',err);
     if(statusEl)statusEl.textContent='Publish failed. Please check your connection and try again.';
-    alert('Something went wrong publishing changes. Please try again.');
+    alert('Something went wrong publishing to the calendar. Please try again.');
   }finally{
     btn.textContent=originalLabel;btn.disabled=false;
     updateDraftCount();
@@ -2407,6 +2423,14 @@ async function onStaffReady(staffRow){
   loadPublicAccessSettings();
   refreshArchiveSettingsUI();
 
+  // Roles that require approval never accumulate drafts of their own to publish —
+  // their edits go straight to a pending approval request instead. Hide the button
+  // for them since it would never do anything.
+  const publishBtn = document.getElementById('publishChangesBtn');
+  if(publishBtn && typeof requiresApproval === 'function' && requiresApproval('calendar')){
+    publishBtn.style.display = 'none';
+  }
+
   // Reflect newly-approved changes (or edits from other staff) without needing a manual refresh.
   setInterval(refreshCalendarEvents, 5000);
 }
@@ -2781,40 +2805,7 @@ async function exportCalendarPDF(){
 
 // ===== Sync Public PDF (publishes the current calendar as the official
 // public download on the marketing site and public calendar) =====
-async function syncPublicPDF(){
-  const btn=document.getElementById('pdfSyncBtn');
-  const statusEl=document.getElementById('pdfSyncStatus');
-  const originalLabel=btn.textContent;
-  btn.textContent='Syncing…';btn.disabled=true;
-  if(statusEl)statusEl.textContent='';
-  try{
-    const pdfDoc=await buildCalendarPDFDoc();
-    const pdfBlob=pdfDoc.output('blob');
-    const storagePath='calendar/Bloom-Chiangmai-Academic-Calendar-2026-2027.pdf';
-    const{error:uploadErr}=await _sb.storage.from('public-documents').upload(storagePath,pdfBlob,{contentType:'application/pdf',upsert:true});
-    if(uploadErr)throw uploadErr;
 
-    const{data:{user}}=await _sb.auth.getUser();
-    const nowIso=new Date().toISOString();
-    await _sb.from('site_documents').upsert({
-      key:'academic_calendar_pdf',
-      storage_path:storagePath,
-      updated_at:nowIso,
-      updated_by:user?.email||user?.id||'unknown'
-    },{onConflict:'key'});
-
-    if(statusEl){
-      const formatted=new Date(nowIso).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'});
-      statusEl.textContent='Synced to website — last published '+formatted;
-    }
-  }catch(err){
-    console.error('Sync public PDF failed',err);
-    if(statusEl)statusEl.textContent='Sync failed. Please check your connection and try again.';
-    alert('Something went wrong publishing the PDF to the website. Please try again.');
-  }finally{
-    btn.textContent=originalLabel;btn.disabled=false;
-  }
-}
 </script>
 </div>
 </body>

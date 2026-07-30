@@ -1611,22 +1611,27 @@ function openEditDay(y,m,d){
   document.getElementById('changeRequestModal').classList.add('open');
 }
 
-function submitChangeRequest(){
+async function submitChangeRequest(){
   const type=document.getElementById('crType').value;
   const label=document.getElementById('crLabel').value.trim();
   const reason=document.getElementById('crReason').value.trim();
 
   if(requiresApproval('calendar')&&!reason){alert('Please add a reason.');return;}
 
+  let applied=true;
   if(type==='none'){
     delete overrides[crDateKey];
-    sbDeleteEvent(crDateKey);
+    applied=await sbDeleteEvent(crDateKey);
   } else {
-    overrides[crDateKey]={type,label};
-    sbSaveEvent(crDateKey,type,label,reason,crPreviousType,crPreviousLabel);
+    applied=await sbSaveEvent(crDateKey,type,label,reason,crPreviousType,crPreviousLabel);
+    if(applied){
+      overrides[crDateKey]={type,label};
+    }
   }
-  localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-  addAuditEntry(`${crDateKey} → ${type==='none'?'removed':type}${label?' ('+label+')':''}`, 'Admin');
+  if(applied){
+    localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+    addAuditEntry(`${crDateKey} → ${type==='none'?'removed':type}${label?' ('+label+')':''}`, 'Admin');
+  }
   closeModal('changeRequestModal');
   calcDays();renderAdminCalendar();updateAttention();
 }
@@ -1737,7 +1742,7 @@ function veClick(el,y,m,d){
 
 function veClearAll(){veSelected.clear();renderVE();document.getElementById('veCount').textContent='0 selected';}
 
-function veApply(){
+async function veApply(){
   if(veSelected.size===0){alert(`Please select at least one day.`);return;}
   const label=document.getElementById('veLabel').value.trim();
   const reason=document.getElementById('veReason').value.trim();
@@ -1746,14 +1751,16 @@ function veApply(){
 
   if(!isRemove&&requiresApproval('calendar')&&!reason){alert('Please add a reason.');return;}
 
-  if(isRemove){
-    dates.forEach(dateKey=>delete overrides[dateKey]);
-  } else {
-    dates.forEach(dateKey=>overrides[dateKey]={type:veType,label});
+  const applied=await sbSyncDates(dates,veType,label,isRemove,reason);
+  if(applied){
+    if(isRemove){
+      dates.forEach(dateKey=>delete overrides[dateKey]);
+    } else {
+      dates.forEach(dateKey=>overrides[dateKey]={type:veType,label});
+    }
+    localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+    addAuditEntry(`${dates.length} days ${isRemove?'removed':'set to '+veType}${label?' ('+label+')':''}`,'Admin');
   }
-  localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-  sbSyncDates(dates,veType,label,isRemove,reason);
-  addAuditEntry(`${dates.length} days ${isRemove?'removed':'set to '+veType}${label?' ('+label+')':''}`,'Admin');
   closeVE();calcDays();renderAdminCalendar();updateAttention();
 }
 
@@ -1768,7 +1775,7 @@ function openAddEvent(){
   document.getElementById('addEventModal').classList.add('open');
 }
 
-function submitEvent(){
+async function submitEvent(){
   const date=document.getElementById('eventDate').value;
   const name=document.getElementById('eventName').value.trim();
   const type=document.getElementById('eventType').value;
@@ -1776,10 +1783,12 @@ function submitEvent(){
   if(!date||!name){alert('Please fill in date and name.');return;}
   if(requiresApproval('calendar')&&!reason){alert('Please add a reason.');return;}
 
-  overrides[date]={type,label:name};
-  localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-  sbSyncDates([date],type,name,false,reason);
-  addAuditEntry(`Event "${name}" added on ${date}`,'Admin');
+  const applied=await sbSyncDates([date],type,name,false,reason);
+  if(applied){
+    overrides[date]={type,label:name};
+    localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+    addAuditEntry(`Event "${name}" added on ${date}`,'Admin');
+  }
   closeModal('addEventModal');calcDays();renderAdminCalendar();
 }
 
@@ -1790,7 +1799,7 @@ function openMultiSelect(){
   document.getElementById('multiSelectModal').classList.add('open');
 }
 
-function submitMultiSelect(){
+async function submitMultiSelect(){
   const from=document.getElementById('msFrom').value;
   const to=document.getElementById('msTo').value;
   const type=document.getElementById('msType').value;
@@ -1808,10 +1817,12 @@ function submitMultiSelect(){
     c.setDate(c.getDate()+1);
   }
 
-  dates.forEach(d=>overrides[d]={type,label:''});
-  localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-  sbSyncDates(dates,type,'',false,reason);
-  addAuditEntry(`${dates.length} days (${from}→${to}) set to ${type}`,'Admin');
+  const applied=await sbSyncDates(dates,type,'',false,reason);
+  if(applied){
+    dates.forEach(d=>overrides[d]={type,label:''});
+    localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+    addAuditEntry(`${dates.length} days (${from}→${to}) set to ${type}`,'Admin');
+  }
   closeModal('multiSelectModal');calcDays();renderAdminCalendar();
 }
 
@@ -2309,12 +2320,12 @@ async function sbDeleteEvent(date){
 
 // Sync a batch of dates to the same type/label (Add Event, Multi-select, Visual Editor)
 async function sbSyncDates(dates,type,label,isRemove,reason=''){
-  if(!_locId||!_yearId){dates.forEach(d=>markUnsynced(d,type,label,isRemove));return;}
+  if(!_locId||!_yearId){dates.forEach(d=>markUnsynced(d,type,label,isRemove));return false;}
   if(!isRemove && typeof requiresApproval==='function' && requiresApproval('calendar')){
     const {error}=await submitForApproval('calendar','update','bloom_calendar_events',null,{dates,type,label,reason,location_id:_locId,academic_year_id:_yearId});
-    if(error){alert('Could not submit for approval: '+error.message);return;}
+    if(error){alert('Could not submit for approval: '+error.message);return false;}
     alert(`Submitted for approval — an Admin or Director will review ${dates.length>1?'these '+dates.length+' days':'this day'} before it goes live.`);
-    return;
+    return false;
   }
   try{
     if(isRemove){
@@ -2324,7 +2335,8 @@ async function sbSyncDates(dates,type,label,isRemove,reason=''){
       for(let i=0;i<rows.length;i+=100)await _sb.from('bloom_calendar_events').upsert(rows.slice(i,i+100),{onConflict:'location_id,date'});
     }
     dates.forEach(d=>clearUnsynced(d));
-  }catch(e){console.log('Bulk sync failed',e);dates.forEach(d=>markUnsynced(d,type,label,isRemove));}
+    return true;
+  }catch(e){console.log('Bulk sync failed',e);dates.forEach(d=>markUnsynced(d,type,label,isRemove));return false;}
 }
 
 async function sbDeleteAllEvents(){

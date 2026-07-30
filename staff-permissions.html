@@ -428,6 +428,18 @@ async function reviewRequest(id, status){
     status, reviewed_by: window.currentStaff.id, reviewed_at: new Date().toISOString()
   }).eq('id', id);
   if(error){ showToast('Error: ' + error.message); return; }
+
+  if(item && item.module === 'calendar'){
+    const desc = describeApprovalPayload(item).title;
+    try {
+      await sb.from('calendar_audit_log').insert({
+        staff_id: window.currentStaff.id,
+        staff_name: window.currentStaff.name,
+        action_text: `${status === 'approved' ? 'Approved' : 'Rejected'} (requested by ${item.staff?.name || 'staff'}): ${desc}`
+      });
+    } catch(e){ console.log('Failed to log audit entry', e); }
+  }
+
   showToast(status === 'approved'
     ? (item && item.module === 'calendar' ? 'Approved and published to the live calendar.' : 'Approved. Remember: this only marks the request approved — apply the actual change if it hasn\'t already taken effect.')
     : 'Rejected.');

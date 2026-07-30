@@ -953,7 +953,7 @@ buildCalendarFromTerms();
 // ── STATE ────────────────────────────────────────────────────────
 let overrides = JSON.parse(localStorage.getItem('bloom_cal_overrides')||'{}');
 let pendingChanges = JSON.parse(localStorage.getItem('bloom_cal_pending')||'[]');
-let auditLog = JSON.parse(localStorage.getItem('bloom_cal_audit')||'[]');
+let auditLog = [];
 let absences = [];
 let settings = JSON.parse(localStorage.getItem('bloom_cal_settings')||'{"live":false,"approval":true}');
 let veType=null, veSelected=new Set(), crDateKey=null, veMode='assign';
@@ -1302,7 +1302,7 @@ async function finishSetup(){
     }
   }catch(e){console.log('Supabase setup save failed',e);}
 
-  addAuditEntry('Calendar setup completed','Admin');
+  addAuditEntry('Calendar setup completed',window.currentStaff?.name||'Staff');
   document.getElementById('onboarding').classList.remove('visible');
   showApp();
 }
@@ -1318,7 +1318,7 @@ async function showApp(){
   renderAdminCalendar();
   await renderAbsences();
   updateAttention();
-  renderAuditLog();
+  loadAuditLog();
 }
 
 function loadSettings(){
@@ -1330,7 +1330,7 @@ function toggleSetting(key){
   settings[key]=!settings[key];
   localStorage.setItem('bloom_cal_settings',JSON.stringify(settings));
   loadSettings();
-  addAuditEntry(`${key==='live'?'Calendar status':'Approval required'} set to ${settings[key]?'ON':'OFF'}`,'Admin');
+  addAuditEntry(`${key==='live'?'Calendar status':'Approval required'} set to ${settings[key]?'ON':'OFF'}`,window.currentStaff?.name||'Staff');
 }
 
 // ── PUBLIC SITE ACCESS (Notify / Sign In toggles, Supabase-backed) ──
@@ -1363,7 +1363,7 @@ async function togglePublicAccess(key){
     sub.textContent=newValue
       ?(key==='notify'?'Live — parents can report absences':'Live — parents can create accounts and sign in')
       :'Off — parents see "coming soon"';
-    addAuditEntry(`Public ${key==='notify'?'Notify':'Sign In'} set to ${newValue?'ON':'OFF'}`,'Admin');
+    addAuditEntry(`Public ${key==='notify'?'Notify':'Sign In'} set to ${newValue?'ON':'OFF'}`,window.currentStaff?.name||'Staff');
   }catch(e){
     checkbox.checked=!newValue;
     alert('Failed to update setting. Please check your connection and try again.');
@@ -1646,7 +1646,7 @@ async function submitChangeRequest(){
   }
   if(applied){
     localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-    addAuditEntry(`${crDateKey} → ${type==='none'?'removed':type}${label?' ('+label+')':''}`, 'Admin');
+    addAuditEntry(`${crDateKey} → ${type==='none'?'removed':type}${label?' ('+label+')':''}`, window.currentStaff?.name||'Staff');
   }
   closeModal('changeRequestModal');
   calcDays();renderAdminCalendar();updateAttention();
@@ -1775,7 +1775,7 @@ async function veApply(){
       dates.forEach(dateKey=>overrides[dateKey]={type:veType,label});
     }
     localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-    addAuditEntry(`${dates.length} days ${isRemove?'removed':'set to '+veType}${label?' ('+label+')':''}`,'Admin');
+    addAuditEntry(`${dates.length} days ${isRemove?'removed':'set to '+veType}${label?' ('+label+')':''}`,window.currentStaff?.name||'Staff');
   }
   closeVE();calcDays();renderAdminCalendar();updateAttention();
 }
@@ -1803,7 +1803,7 @@ async function submitEvent(){
   if(applied){
     overrides[date]={type,label:name};
     localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-    addAuditEntry(`Event "${name}" added on ${date}`,'Admin');
+    addAuditEntry(`Event "${name}" added on ${date}`,window.currentStaff?.name||'Staff');
   }
   closeModal('addEventModal');calcDays();renderAdminCalendar();
 }
@@ -1837,7 +1837,7 @@ async function submitMultiSelect(){
   if(applied){
     dates.forEach(d=>overrides[d]={type,label:''});
     localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-    addAuditEntry(`${dates.length} days (${from}→${to}) set to ${type}`,'Admin');
+    addAuditEntry(`${dates.length} days (${from}→${to}) set to ${type}`,window.currentStaff?.name||'Staff');
   }
   closeModal('multiSelectModal');calcDays();renderAdminCalendar();
 }
@@ -1881,7 +1881,7 @@ async function acknowledgeAbsence(id){
   const {error}=await _sb.from('bloom_absence_reports').update({status:'acknowledged'}).eq('id',id);
   if(error){alert('Could not update: '+(error.message||'error'));return;}
   a.status='acknowledged';
-  addAuditEntry(`Absence acknowledged: ${a.learner_name} on ${a.date_start}`,'Admin');
+  addAuditEntry(`Absence acknowledged: ${a.learner_name} on ${a.date_start}`,window.currentStaff?.name||'Staff');
   renderAbsences();updateAttention();
 }
 
@@ -1926,13 +1926,33 @@ function openTermBreakdown(term){
   document.getElementById('termBreakdownModal').classList.add('open');
 }
 
-// ── AUDIT LOG ────────────────────────────────────────────────────
-function addAuditEntry(text,who){
-  const now=new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-  auditLog.unshift({text,who,time:now});
-  if(auditLog.length>50)auditLog=auditLog.slice(0,50);
-  localStorage.setItem('bloom_cal_audit',JSON.stringify(auditLog));
-  renderAuditLog();
+// ── AUDIT LOG (shared across all staff/devices via the database) ─────
+async function addAuditEntry(text,who){
+  try{
+    await _sb.from('calendar_audit_log').insert({
+      staff_id: window.currentStaff?.id || null,
+      staff_name: who || window.currentStaff?.name || 'Staff',
+      action_text: text
+    });
+  }catch(e){console.log('Failed to write audit entry',e);}
+  loadAuditLog();
+}
+
+async function loadAuditLog(){
+  try{
+    const{data,error}=await _sb
+      .from('calendar_audit_log')
+      .select('staff_name,action_text,created_at')
+      .order('created_at',{ascending:false})
+      .limit(10);
+    if(error)throw error;
+    auditLog=(data||[]).map(r=>({
+      text:r.action_text,
+      who:r.staff_name,
+      time:new Date(r.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})
+    }));
+    renderAuditLog();
+  }catch(e){console.log('Failed to load audit log',e);}
 }
 
 function renderAuditLog(){
@@ -1943,7 +1963,7 @@ function renderAuditLog(){
     <span><span class="log-who">${e.who}</span> — ${e.text}</span></div>`).join('');
 }
 
-function clearLog(){if(!confirm('Clear history?'))return;auditLog=[];localStorage.setItem('bloom_cal_audit','[]');renderAuditLog();}
+function clearLog(){alert('This is now a shared history across all staff and can\'t be cleared from here.');}
 
 // ── ARCHIVE ──────────────────────────────────────────────────────
 async function syncToCloud(){
@@ -2052,7 +2072,7 @@ async function confirmRestoreYear(){
     }
     const{error:restoreErr}=await _sb.from('bloom_academic_years').update({is_active:true,archived_at:null}).eq('id',_restoreTargetId);
     if(restoreErr)throw restoreErr;
-    addAuditEntry(`${_restoreTargetLabel} restored as active year (${_yearLabel||'previous year'} archived)`,'Admin');
+    addAuditEntry(`${_restoreTargetLabel} restored as active year (${_yearLabel||'previous year'} archived)`,window.currentStaff?.name||'Staff');
     closeModal('restoreYearConfirmModal');
     location.reload();
   }catch(e){
@@ -2074,7 +2094,7 @@ async function confirmArchiveYear(){
     localStorage.removeItem('bloom_cal_overrides');
     localStorage.removeItem('bloom_cal_pending');
     overrides={};pendingChanges=[];
-    addAuditEntry(`${_yearLabel||'Academic year'} archived, new setup started`,'Admin');
+    addAuditEntry(`${_yearLabel||'Academic year'} archived, new setup started`,window.currentStaff?.name||'Staff');
     closeModal('archiveYearModal');
     document.getElementById('app').classList.remove('visible');
     showOnboarding();
@@ -2179,7 +2199,7 @@ async function confirmSaveTermDates(){
     };
     buildCalendarFromTerms();
     calcDays();renderAdminCalendar();
-    addAuditEntry(`Term dates updated: T1 ${t1s}–${t1e}, Break1 ${b1s}–${b1e}, T2 ${t2s}–${t2e}, Break2 ${b2s}–${b2e}, Hours ${hDays} ${hRs}-${hRe}, Wed ${hWs}-${hWe}`,'Admin');
+    addAuditEntry(`Term dates updated: T1 ${t1s}–${t1e}, Break1 ${b1s}–${b1e}, T2 ${t2s}–${t2e}, Break2 ${b2s}–${b2e}, Hours ${hDays} ${hRs}-${hRe}, Wed ${hWs}-${hWe}`,window.currentStaff?.name||'Staff');
     _pendingTermDates=null;
     closeModal('confirmTermDatesModal');
   }catch(e){
@@ -2314,6 +2334,7 @@ async function sbSaveEvent(date,dayType,label='',reason='',previousType=null,pre
   if(typeof requiresApproval==='function' && requiresApproval('calendar')){
     const {error}=await submitForApproval('calendar','update','bloom_calendar_events',null,{date,day_type:dayType,label,reason,previous_day_type:previousType,previous_label:previousLabel,location_id:_locId,academic_year_id:_yearId});
     if(error){alert('Could not submit for approval: '+error.message);return false;}
+    addAuditEntry(`Submitted for approval: ${date} → ${dayType}${label?' ('+label+')':''}`);
     alert('Submitted for approval — an Admin or Director will review this before it goes live.');
     return false;
   }
@@ -2342,6 +2363,7 @@ async function sbSyncDates(dates,type,label,isRemove,reason=''){
   if(!isRemove && typeof requiresApproval==='function' && requiresApproval('calendar')){
     const {error}=await submitForApproval('calendar','update','bloom_calendar_events',null,{dates,type,label,reason,location_id:_locId,academic_year_id:_yearId});
     if(error){alert('Could not submit for approval: '+error.message);return false;}
+    addAuditEntry(`Submitted for approval: ${dates.length} day${dates.length===1?'':'s'} → ${type}${label?' ('+label+')':''}`);
     alert(`Submitted for approval — an Admin or Director will review ${dates.length>1?'these '+dates.length+' days':'this day'} before it goes live.`);
     return false;
   }
@@ -2369,6 +2391,7 @@ async function sbSaveBulk(events){
   if(typeof requiresApproval==='function' && requiresApproval('calendar')){
     const {error}=await submitForApproval('calendar','create','bloom_calendar_events',null,{events,location_id:_locId,academic_year_id:_yearId});
     if(error){alert('Could not submit for approval: '+error.message);return;}
+    addAuditEntry(`Submitted for approval: ${events.length} imported day(s)`);
     alert(`Submitted for approval — an Admin or Director will review these ${events.length} days before they go live.`);
     return;
   }
@@ -2422,6 +2445,9 @@ async function refreshCalendarEvents(){
 
     // Let the requester know if any of their own submissions were just resolved.
     checkMyApprovalResults();
+
+    // Keep the shared Recent Changes log fresh across all staff/devices.
+    loadAuditLog();
   }catch(e){console.log('Calendar refresh failed',e);}
 }
 

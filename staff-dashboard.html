@@ -316,6 +316,17 @@ async function reviewApproval(id, status){
 
   if(error){ showToast('Error: ' + error.message); return; }
 
+  if(item.module === 'calendar'){
+    const desc = describeApprovalPayload(item).title;
+    try {
+      await sb.from('calendar_audit_log').insert({
+        staff_id: window.currentStaff.id,
+        staff_name: window.currentStaff.name,
+        action_text: `${status === 'approved' ? 'Approved' : 'Rejected'} (requested by ${item.staff?.name || 'staff'}): ${desc}`
+      });
+    } catch(e){ console.log('Failed to log audit entry', e); }
+  }
+
   if(status === 'approved'){
     showToast(item.module === 'calendar' ? 'Approved and published to the live calendar.' : 'Approved. If this change needs to be applied elsewhere, do that now.');
   } else {

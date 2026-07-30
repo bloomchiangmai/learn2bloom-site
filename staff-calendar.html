@@ -82,7 +82,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .app.visible{display:block;}
 
 /* HEADER */
-.header{background:var(--purple);padding:0 4%;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;width:92%;margin:0 auto;box-sizing:border-box;}
+.header{background:var(--purple);padding:0 4%;height:60px;display:flex;align-items:center;justify-content:flex-end;position:sticky;top:0;z-index:100;width:92%;margin:0 auto;box-sizing:border-box;}
 .header-logo{font-family:'Fraunces',serif;font-size:20px;color:white;font-weight:600;}
 .header-dot{display:inline-block;width:7px;height:7px;background:var(--orange);border-radius:50%;margin-left:1px;vertical-align:middle;position:relative;top:-2px;}
 .header-sub{font-size:10px;color:rgba(255,255,255,0.65);letter-spacing:0.08em;text-transform:uppercase;margin-top:1px;}
@@ -308,8 +308,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <!-- MOBILE SETUP BLOCKED -->
 <div class="login-screen" id="mobileSetupRequired" style="display:none;">
   <div class="login-card">
-    <div class="login-logo">bloom<span class="login-dot"></span></div>
-    <div class="login-sub">Chiangmai · Admin</div>
     <div style="font-size:15px;color:var(--text);line-height:1.5;margin:16px 0;text-align:center;">
       Initial setup needs to be completed on a desktop browser first.<br><br>
       Please sign in on a computer to finish setting up your academic year, then return here to manage things on the go.
@@ -349,12 +347,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <!-- MAIN APP -->
 <div class="app" id="app">
   <header class="header">
-    <div style="display:flex;align-items:center;gap:10px;">
-      <div>
-        <div class="header-logo">bloom<span class="header-dot"></span></div>
-        <div class="header-sub">chiangmai · admin</div>
-      </div>
-    </div>
     <div class="header-right">
       <a href="https://bloomcalendar.learn2bloom.org" target="_blank" rel="noopener" class="pub-link">Public view</a>
       <div class="day-counter" id="dayCounter" onclick="switchTab('calendar')">

@@ -1,3 +1,15 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+
+# HTML pages carry live data (calendar, dates, published changes) and should
+# never be cached by the browser — always fetch the current version.
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"

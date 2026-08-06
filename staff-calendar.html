@@ -1526,7 +1526,7 @@ async function publishToCalendar(){
     const pdfDoc=await buildCalendarPDFDoc();
     const pdfBlob=pdfDoc.output('blob');
     const storagePath='calendar/Bloom-Chiangmai-Academic-Calendar-2026-2027.pdf';
-    const{error:uploadErr}=await _sb.storage.from('public-documents').upload(storagePath,pdfBlob,{contentType:'application/pdf',upsert:true});
+    const{error:uploadErr}=await _sb.storage.from('public-documents').upload(storagePath,pdfBlob,{contentType:'application/pdf',upsert:true,cacheControl:'0'});
     if(uploadErr)throw uploadErr;
 
     const{data:{user}}=await _sb.auth.getUser();
@@ -2504,7 +2504,7 @@ async function checkAndAutoSyncPDF(events){
       const pdfDoc=await buildCalendarPDFDoc();
       const pdfBlob=pdfDoc.output('blob');
       const storagePath='calendar/Bloom-Chiangmai-Academic-Calendar-2026-2027.pdf';
-      const{error:uploadErr}=await _sb.storage.from('public-documents').upload(storagePath,pdfBlob,{contentType:'application/pdf',upsert:true});
+      const{error:uploadErr}=await _sb.storage.from('public-documents').upload(storagePath,pdfBlob,{contentType:'application/pdf',upsert:true,cacheControl:'0'});
       if(uploadErr)throw uploadErr;
       const{data:{user}}=await _sb.auth.getUser();
       await _sb.from('site_documents').upsert({

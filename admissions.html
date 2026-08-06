@@ -823,6 +823,13 @@ footer {
           var d=new Date(res.data.updated_at);
           var formatted=d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
           document.getElementById('calendarPdfUpdated').textContent='Last updated: '+formatted;
+          // Cache-bust the download link so a new publish always fetches the fresh file,
+          // instead of a browser- or CDN-cached copy of the old PDF at the same URL.
+          var link=document.getElementById('calendarPdfLink');
+          if(link){
+            var baseHref=link.getAttribute('href').split('?')[0];
+            link.setAttribute('href',baseHref+'?v='+encodeURIComponent(res.data.updated_at));
+          }
         }
       })
       .catch(function(){});
@@ -835,7 +842,7 @@ async function downloadCalendarPdf(event){
   const originalText = link.textContent;
   try{
     const url = link.getAttribute('href');
-    const res = await fetch(url);
+    const res = await fetch(url,{cache:'no-store'});
     if(!res.ok) throw new Error('Fetch failed');
     const blob = await res.blob();
     const blobUrl = URL.createObjectURL(blob);

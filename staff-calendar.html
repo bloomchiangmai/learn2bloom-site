@@ -1504,22 +1504,25 @@ async function publishToCalendar(){
   const btn=document.getElementById('publishChangesBtn');
   const statusEl=document.getElementById('publishStatus');
   const draftDates=Object.keys(overrides).filter(k=>overrides[k]&&overrides[k].isDraft);
-  if(draftDates.length===0){
-    if(statusEl)statusEl.textContent='No unpublished changes right now.';
-    return;
-  }
-  if(!confirm(`Publish ${draftDates.length} unconfirmed change${draftDates.length===1?'':'s'} to the public calendar? Parents will see these immediately, and the downloadable PDF will also be updated to match.`))return;
+  const hasDrafts=draftDates.length>0;
+
+  const confirmMsg=hasDrafts
+    ? `Publish ${draftDates.length} unconfirmed change${draftDates.length===1?'':'s'} to the public calendar? Parents will see these immediately, and the downloadable PDF will also be updated to match.`
+    : `No pending changes to publish. Re-generate and re-sync the downloadable PDF from the current live calendar anyway?`;
+  if(!confirm(confirmMsg))return;
 
   const originalLabel=btn.textContent;
   btn.textContent='Publishing\u2026';btn.disabled=true;
   try{
-    // 1. Publish the pending day changes.
-    await _sb.from('bloom_calendar_events').update({is_draft:false}).eq('location_id',_locId).eq('is_draft',true);
-    draftDates.forEach(k=>{if(overrides[k])overrides[k].isDraft=false;});
-    localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
-    renderAdminCalendar();
+    // 1. Publish the pending day changes, if any.
+    if(hasDrafts){
+      await _sb.from('bloom_calendar_events').update({is_draft:false}).eq('location_id',_locId).eq('is_draft',true);
+      draftDates.forEach(k=>{if(overrides[k])overrides[k].isDraft=false;});
+      localStorage.setItem('bloom_cal_overrides',JSON.stringify(overrides));
+      renderAdminCalendar();
+    }
 
-    // 2. Regenerate and sync the downloadable PDF so it reflects the same changes.
+    // 2+3. Always regenerate and sync the downloadable PDF, whether or not there were drafts.
     const pdfDoc=await buildCalendarPDFDoc();
     const pdfBlob=pdfDoc.output('blob');
     const storagePath='calendar/Bloom-Chiangmai-Academic-Calendar-2026-2027.pdf';
@@ -1537,7 +1540,9 @@ async function publishToCalendar(){
 
     if(statusEl){
       const formatted=new Date(nowIso).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'});
-      statusEl.textContent='Published '+draftDates.length+' change'+(draftDates.length===1?'':'s')+' and updated the PDF — live as of '+formatted;
+      statusEl.textContent=hasDrafts
+        ? 'Published '+draftDates.length+' change'+(draftDates.length===1?'':'s')+' and updated the PDF — live as of '+formatted
+        : 'PDF re-synced — live as of '+formatted;
     }
   }catch(err){
     console.error('Publish failed',err);

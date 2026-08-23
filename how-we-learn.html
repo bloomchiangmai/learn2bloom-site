@@ -72,7 +72,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:10px m
 .pathways-section h2{font-family:Georgia,serif;font-size:28px;font-weight:700;color:#2C2C2A;margin-bottom:8px;}
 .pathways-intro{font-size:14px;`0;line-height:1.7;margin-bottom:32px;max-width:600px;}
 .pathways-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
-.pathway-card{border:1px solid #E8E3D8;border-radius:12px;padding:28px;background:#F7F3EC;}
+.pathway-card{border:1px solid #E8E3D8;border-radius:12px;padding:28px;background:#F7F3EC;display:flex;flex-direction:column;}
+.pathway-card-body{flex:1;display:flex;flex-direction:column;}
+.pathway-card-body .pathway-cta{margin-top:auto;align-self:flex-start;}
 .pathway-flag{font-size:28px;margin-bottom:14px;}
 .pathway-name{font-family:Georgia,serif;font-size:18px;font-weight:700;color:#2C2C2A;margin-bottom:6px;}
 .pathway-sub{font-size:13px;color:#888780;font-weight:400;margin-bottom:3px;}
@@ -671,7 +673,7 @@ footer {
 
   <div class="pathways-grid">
     <div class="pathway-card">
-      <div style="padding:28px 28px 24px;">
+      <div class="pathway-card-body" style="padding:28px 28px 24px;">
         <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
           <div>
             <p class="pathway-name">UK Curriculum</p>
@@ -686,7 +688,7 @@ footer {
           <div style="display:flex;align-items:flex-start;gap:8px;"><div style="width:5px;height:5px;border-radius:50%;background:#534AB7;flex-shrink:0;margin-top:6px;"></div><p style="font-size:12px;`0;line-height:1.6;"><strong style="font-weight:600;color:#2C2C2A;">Exit qualification</strong>, Pearson Edexcel International GCSE and A-Level qualifications</p></div>
           <div style="display:flex;align-items:flex-start;gap:8px;"><div style="width:5px;height:5px;border-radius:50%;background:#534AB7;flex-shrink:0;margin-top:6px;"></div><p style="font-size:12px;`0;line-height:1.6;"><strong style="font-weight:600;color:#2C2C2A;">Recognised by</strong> universities in 160+ countries</p></div>
         </div>
-        <a href="BGA_UK_Overview_V1.pdf" download style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#534AB7;text-decoration:none;padding:8px 14px;background:#EEEDFE;border-radius:20px;border:0.5px solid #AFA9EC;">↓ Download UK pathway overview</a>
+        <a href="BGA_UK_Overview_V1.pdf" download class="pathway-cta" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#534AB7;text-decoration:none;padding:8px 14px;background:#EEEDFE;border-radius:20px;border:0.5px solid #AFA9EC;">↓ Download UK pathway overview</a>
       </div>
       <div style="padding:16px 28px;border-top:1px solid #E8E3D8;background:#F7F3EC;display:flex;justify-content:space-between;align-items:center;">
         <div><p style="font-size:11px;color:#888780;font-weight:300;margin-bottom:3px;letter-spacing:0.3px;text-transform:uppercase;">Best for families heading to</p><p style="font-size:13px;color:#2C2C2A;font-weight:400;font-family:Georgia,serif;">UK, Australia, Europe, Singapore, Hong Kong</p></div>
@@ -694,7 +696,7 @@ footer {
     </div>
 
     <div class="pathway-card">
-      <div style="padding:28px 28px 24px;">
+      <div class="pathway-card-body" style="padding:28px 28px 24px;">
         <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
           <div>
             <p class="pathway-name">US Curriculum</p>
@@ -709,7 +711,7 @@ footer {
           <div style="display:flex;align-items:flex-start;gap:8px;"><div style="width:5px;height:5px;border-radius:50%;background:#D85A30;flex-shrink:0;margin-top:6px;"></div><p style="font-size:12px;`0;line-height:1.6;"><strong style="font-weight:600;color:#2C2C2A;">Exit qualification</strong>, US High School Diploma with official transcript</p></div>
           <div style="display:flex;align-items:flex-start;gap:8px;"><div style="width:5px;height:5px;border-radius:50%;background:#D85A30;flex-shrink:0;margin-top:6px;"></div><p style="font-size:12px;`0;line-height:1.6;"><strong style="font-weight:600;color:#2C2C2A;">Recognised by</strong> US universities and international institutions globally</p></div>
         </div>
-        <a href="BGA_US_Overview_V1.pdf" download style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#534AB7;text-decoration:none;padding:8px 14px;background:#EEEDFE;border-radius:20px;border:0.5px solid #AFA9EC;">↓ Download US pathway overview</a>
+        <a href="BGA_US_Overview_V1.pdf" download class="pathway-cta" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#534AB7;text-decoration:none;padding:8px 14px;background:#EEEDFE;border-radius:20px;border:0.5px solid #AFA9EC;">↓ Download US pathway overview</a>
       </div>
       <div style="padding:16px 28px;border-top:1px solid #E8E3D8;background:#F7F3EC;display:flex;justify-content:space-between;align-items:center;">
         <div><p style="font-size:11px;color:#888780;font-weight:300;margin-bottom:3px;letter-spacing:0.3px;text-transform:uppercase;">Best for families heading to</p><p style="font-size:13px;color:#2C2C2A;font-weight:400;font-family:Georgia,serif;">USA, Canada, Thailand, international schools globally</p></div>

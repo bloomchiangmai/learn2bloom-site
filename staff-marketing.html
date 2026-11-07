@@ -310,7 +310,7 @@ textarea[readonly],input[readonly]{background:#F7F3EC!important;color:#5F5E5A;}
   .wl>:nth-child(4){grid-row:2;grid-column:3;font-size:12px;} .wl>:nth-child(5){grid-row:1;grid-column:3;}
   .wo{grid-template-columns:110px minmax(0,1fr);} .wo>:nth-child(3){grid-column:1/3;}
   .stepcols{grid-template-columns:repeat(2,minmax(0,1fr));}
-  .note-in{min-width:0;}
+  .note-in{min-width:0;flex:1 1 100%;order:-1;}
   .tm{grid-template-columns:1fr 1fr;} .tm>:nth-child(3){display:none;}
   .emptyweeks span{flex-basis:100%;}
   .sgl{grid-template-columns:1fr;gap:4px;}
@@ -571,7 +571,7 @@ let lastTab = null;
 function tabs(){
   const v = view();
   if(v !== 'post') lastTab = v;
-  const mine = POSTS.filter(p=>isMine(p) && (p.post_date || p.sent_back)).length;
+  const mine = POSTS.filter(p=>isMine(p) && (p.post_date || p.sent_back)).length + POSTS.filter(p=>p.en_post_edit && p.pic===ME && p.step!=='cancelled').length;
   $('#tabs').innerHTML = tabsFor().map(([k,l]) => `<button class="tab ${k===(v==='post'?lastTab:v)?'on':''}" onclick="go('${k}')">${l}${k==='turn'&&mine?`<span class="n">${mine}</span>`:''}</button>`).join('');
   $('#subtabs').innerHTML = v==='ref'
     ? `<div class="subtabs">${REF_GROUPS.map(g=>`<button class="pill ${g.k===refKey?'on':''}" onclick="refKey='${g.k}';render()">${g.t}<span class="n">${g.secs.reduce((a,k)=>a+(DATA[k]||[]).length,0)}</span></button>`).join('')}</div>` : '';
@@ -619,6 +619,8 @@ function myTurn(){
     ${(()=>{ const n = POSTS.filter(p=>isMine(p) && !p.post_date && !p.sent_back).length;
       return n ? `<p class="meta" style="padding:10px 0 0"><a href="javascript:void 0" onclick="calMode='ideas';go('calendar')">${n} idea${n>1?'s':''} with no date</a>. To use one, open it and set a date and person in charge with Edit topic.</p>` : ''; })()}
   </div>
+  ${(()=>{ const ch = POSTS.filter(p=>p.en_post_edit && p.pic===ME && p.step!=='cancelled');
+    return ch.length ? `<div class="box"><h3 class="bh">Changed after you approved: ${ch.length}</h3><p class="meta" style="font-size:13px;margin-bottom:6px">The writer changed the English at the Post step. Open it, check the change, then click Seen.</p>${ch.map(p=>line(p,true)).join('')}</div>` : ''; })()}
   ${(()=>{ const bk = POSTS.filter(p=>backupFor(p) && p.post_date).sort((a,b)=>String(dueOf(a)).localeCompare(String(dueOf(b))));
     return ['writer_backup','translator_backup'].includes(d) ? `<div class="box"><h3 class="bh">As backup</h3><p class="meta" style="font-size:13px;margin-bottom:6px">You cover these if the ${d==='writer_backup'?'writer':'translator'} is away. Step in when one is late.</p>${bk.length ? bk.map(p=>line(p)).join('') : '<p class="meta" style="padding:8px 0">Nothing at this step right now.</p>'}</div>` : ''; })()}
   ${!writers().length || !translators().length ? `<p class="meta" style="margin-top:14px">${!writers().length?'No writer is set yet. ':''}${!translators().length?'No translator is set yet. ':''}${canDelete?'Set them in the Team tab.':''}</p>` : ''}`;
@@ -722,6 +724,22 @@ function calendarView(){
 }
 
 // ---------- Post page ----------
+// Item 31: the button names the step; this line names the person and the due date.
+function nextLine(p){
+  const who = ids => ids.map(nameOf).filter(Boolean).join(' or ');
+  const due = back => p.post_date ? fmtShort(addDays(p.post_date, -back)) : '';
+  const pic = nameOf(p.pic), tr = who(translators()), wr = who(writers());
+  const thaiPart = p.needs_thai ? (tr ? `${tr} does the Thai${due(1)?', due '+due(1):''}` : 'No translator set yet') : '';
+  const postPart = wr ? `${wr} posts it${p.post_date?' on '+fmtShort(p.post_date):''}` : 'No writer set yet';
+  const parts = {
+    english: [pic ? `${pic} reviews it${due(2)?', due '+due(2):''}` : 'No PIC set yet'],
+    review: [thaiPart || postPart],
+    thai: [postPart],
+    post: ['Post it on Facebook, then mark it as posted.']
+  }[p.step];
+  if(!parts) return '';
+  return p.step === 'post' ? 'Last step: ' + esc(parts[0]) : 'Next: ' + esc(parts[0]) + '.';
+}
 let draft = null;
 const BOX_KEYS = ['copy_en','copy_th','hashtags','video_url'], EXTRA_KEYS = ['note','url'];
 // Unsaved text on the open post: caption boxes that differ from the saved post, or a send-back note / Facebook link being typed.
@@ -751,7 +769,7 @@ async function renderPost(el){
   }
   const mine = isMine(p), pic = p.pic === ME, adm = isAdmin() && openStep(p), bk = backupFor(p);
   const W = isWriterish(), T = isTranslatorish();
-  const canEn = (W && p.step==='english') || (pic && p.step==='review') || adm;
+  const canEn = (W && ['english','post'].includes(p.step)) || (pic && p.step==='review') || adm;
   const canTh = p.needs_thai && ((T && p.step==='thai') || adm);
   const canTags = (W && ['english','post'].includes(p.step)) || (pic && p.step==='review') || adm;
   const canImg = (W && openStep(p)) || (pic && p.step==='review') || adm;
@@ -768,11 +786,13 @@ async function renderPost(el){
   const asAdmin = !mine && !bk && adm ? ' <span class="adm">(as admin)</span>' : '';
   let actions = '';
   if(canAct){
-    if(p.step==='english') actions = `<button class="btn-primary" onclick="doAct('send_on')">Send to ${esc(nameOf(p.pic)||'the PIC')} (PIC) for review</button>`;
+    if(p.step==='english') actions = `<button class="btn-primary" onclick="doAct('send_on')">Send to Review</button>`;
     if(p.step==='review' && (pic || adm)) actions = `<input id="f-note" placeholder="Note to the writer (needed to send back)" class="note-in">
-      <button class="btn-outline" onclick="doAct('send_back')">Send back</button>
-      <button class="btn-primary" onclick="doAct('approve')">${p.en_written_by===ME&&isAdmin()?'Approve my own post':'Approve'}${p.needs_thai?', send to the translator':', ready to post'}</button>`;
-    if(p.step==='thai') actions = `<button class="btn-primary" onclick="doAct('thai_checked')">Thai done, ready to post</button>`;
+      <button class="btn-outline" onclick="doAct('send_back')">Send back to English</button>
+      <button class="btn-primary" onclick="doAct('approve')">${p.en_written_by===ME&&isAdmin()?'Approve my own post':'Approve'}${p.needs_thai?', send to Thai':', send to Post'}</button>`;
+    if(p.step==='thai') actions = `<input id="f-note" placeholder="Note if the English is wrong" class="note-in">
+      <button class="btn-outline" onclick="doAct('translator_back')">Send back to Review</button>
+      <button class="btn-primary" onclick="doAct('thai_checked')">Thai done, send to Post</button>`;
     if(p.step==='post') actions = p.needs_thai && p.th_stale && !isAdmin()
       ? `<span class="muted">The English changed after the Thai was checked. Ask the admin to update the Thai before this goes out.</span>`
       : `<button class="btn-outline" onclick="copyCaption()">Copy caption</button>
@@ -781,12 +801,7 @@ async function renderPost(el){
   }
   const stepWho = {english:'the writer', review:(nameOf(p.pic)||'the PIC')+' (PIC)', thai:'the translator', post:'the writer'}[p.step] || '';
   const adminLine = actions && asAdmin ? `<p class="adminline">You're doing ${esc(stepWho)}'s step as admin. This is logged.</p>` : '';
-  const nextHint = !openStep(p) ? '' : ({
-    english: `Next: ${esc(nameOf(p.pic)||'the PIC')} approves the English${p.needs_thai?', then the translator checks the Thai':''}, then it gets posted.`,
-    review: p.needs_thai ? 'Next: the translator checks the Thai, then the writer posts.' : 'Next: the writer posts it.',
-    thai: 'Next: the writer posts it.',
-    post: 'Last step: post it on Facebook, then mark it as posted.'
-  })[p.step] || '';
+  const nextHint = !openStep(p) ? '' : nextLine(p);
   const briefHtml = (p.brief_goal || p.brief_format || (p.brief_audience||[]).length || p.brief)
     ? `<div class="briefbox"><span><b>For</b>${esc((p.brief_audience||[]).join(', ')||'Not set')}</span><span><b>Goal</b>${esc(goalName(p.brief_goal)||'Not set')}</span><span><b>Format</b>${esc(formatName(p.brief_format)||'Not set')}</span>${canBrief?`<button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Edit brief</button>`:''}${p.brief?`<span class="kp"><b>Key points</b>${esc(p.brief)}</span>`:''}</div>`
     : (canBrief ? `<div class="briefbox"><span class="meta">No brief yet.</span><button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Add brief</button></div>` : '');
@@ -802,10 +817,12 @@ async function renderPost(el){
     </div>
     <div class="stepbar">${bar}</div>
     ${p.step==='english'&&p.sent_back&&p.back_note?`<div class="banner bad">${esc(nameOf(p.pic)||'PIC')}: ${esc(p.back_note)}</div>`:''}
+    ${p.step==='review'&&p.sent_back&&p.back_note?`<div class="banner bad">Sent back by the translator: ${esc(p.back_note)}</div>`:''}
+    ${p.en_post_edit&&(pic||isAdmin())?`<div class="banner warn" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span>The English was changed after you approved it. See History and earlier versions below.</span><button class="btn-outline sm" onclick="doAct('ack_change')">Seen</button></div>`:''}
     ${briefHtml}
     <div id="aiSlot"></div>
     <div class="grid-2" style="margin-bottom:12px">
-      <div class="f"><label>English${canEn?'':' <span class="hint">view only</span>'}</label><textarea id="f-copy_en" class="tall" ${canEn?'':'readonly'} placeholder="${canEn?'Write or paste the English caption':''}">${esc(p.copy_en||'')}</textarea>${canEn?`<div class="aibar"><button class="btn-outline sm" id="aiBtn-rewrite" onclick="aiRun('rewrite')">Rewrite with AI</button>${backBtn(p,'en')}</div>`:''}</div>
+      <div class="f"><label>English${canEn?(p.step==='post'?` <span class="hint" style="color:#854F0B">already approved: changes are logged and ${esc(nameOf(p.pic)||'the PIC')} is told${p.needs_thai?'. Saving sends it back to Thai to check the Thai':''}</span>`:''):' <span class="hint">view only</span>'}</label><textarea id="f-copy_en" class="tall" ${canEn?'':'readonly'} placeholder="${canEn?'Write or paste the English caption':''}">${esc(p.copy_en||'')}</textarea>${canEn?`<div class="aibar"><button class="btn-outline sm" id="aiBtn-rewrite" onclick="aiRun('rewrite')">Rewrite with AI</button>${backBtn(p,'en')}</div>`:''}</div>
       ${p.needs_thai ? `<div class="f"><label>Thai${p.th_machine?' <span class="hint" style="color:#854F0B">machine draft, not checked</span>':''}${canTh?'':' <span class="hint">'+(canAiTh?'AI draft only until the Thai step':'view only')+'</span>'}</label>
         ${p.th_stale?`<div class="thnote">The English changed after this Thai was made.${canAiTh?`<button class="btn-outline sm" onclick="aiRun('thai')">Redo Thai with AI</button>`:''}</div>`:''}
         <textarea id="f-copy_th" class="tall" ${canTh?'':'readonly'} placeholder="${canTh?'Write or fix the Thai caption':(canAiTh?'Use Draft Thai with AI below, or leave it for the translator':'The translator writes the Thai after the English is approved')}">${esc(p.copy_th||'')}</textarea>
@@ -1010,11 +1027,12 @@ async function doAct(a){
     pay.confirm_current = true;
   }
   if(!(await saveFields(true))) return;
+  if(a==='translator_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the person in charge knows what to check.'); $('#f-note').focus(); return; } }
   if(a==='send_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the writer knows what to change.'); $('#f-note').focus(); return; } }
   if(a==='mark_posted') pay.post_url = (($('#f-url')||{}).value||'').trim();
   const r = await act(a, p.id, pay); if(!r) return;
   EXTRA_KEYS.forEach(k => { const e = $('#f-'+k); if(e) e.value = ''; });
-  showToast({send_on:'Sent for review.', thai_checked:'Thai done. Ready to post.', send_back:'Sent back with your note.', approve: p.needs_thai ? 'Approved. Sent to the translator.' : 'Approved. Ready to post.', mark_posted:'Marked as posted.'}[a] || 'Done.');
+  showToast({send_on:'Sent to Review.', thai_checked:'Thai done. Sent to Post.', send_back:'Sent back to English with your note.', translator_back:'Sent back to Review with your note.', approve: p.needs_thai ? 'Approved. Sent to Thai.' : 'Approved. Sent to Post.', mark_posted:'Marked as posted.', ack_change:'Marked as seen.'}[a] || 'Done.');
   delete EVENTS[p.id]; await reloadPosts(true);
 }
 async function copyCaption(){

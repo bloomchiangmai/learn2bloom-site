@@ -182,6 +182,8 @@ details.orig summary{cursor:pointer;font-size:13px;font-weight:600;color:#534AB7
 .dot{width:10px;height:10px;border-radius:50%;flex:none;}
 a.btn-primary{text-decoration:none;color:#fff;display:inline-block;} a.btn-outline{text-decoration:none;color:#2C2C2A;display:inline-block;}
 .cap.ro{background:#F3EFE7;border:0;border-left:3px solid #DCD5C6;border-radius:4px;}
+.donebox{background:#E1F5EE;color:#085041;border-radius:10px;padding:14px 16px;margin-top:18px;font-size:13px;font-weight:600;}
+.donebox .f label{color:#888780;}
 .warn-t{color:#9A5D0C;font-weight:600;}
 .warnbox{background:#FAEEDA;color:#633806;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;font-weight:600;}
 .sync{display:flex;align-items:center;gap:10px;color:#888780;font-size:12.5px;margin-top:6px;padding:8px 2px;transition:color .3s;}
@@ -236,12 +238,12 @@ button.tile{font:inherit;color:inherit;width:100%;}
 
 <script>
 // ---------- Content plan definitions ----------
-const STAGES = ['Topic','Draft','Thai','Review','Ready','Posted','Skipped'];
+const STAGES = ['Writing','Thai','Review','Ready','Posted','Skipped'];
 const STAGE_HINT = {
-  'Topic':'Michel picks the topic','Draft':'Amber writes it','Thai':'Thai translation','Review':'Michel reviews and fine-tunes',
+  'Topic':'Michel picks the topic','Writing':'Amber writes the English caption','Thai':'Thai translation','Review':'Michel reviews and fine-tunes',
   'Ready':'Amber posts it on the day','Posted':'Live on Facebook','Skipped':'Not going out'
 };
-const STAGE_OWNER = {'Topic':'Michel','Draft':'Amber','Thai':'Thai translation','Review':'Michel','Ready':'Amber'};
+const STAGE_OWNER = {'Topic':'Michel','Writing':'Amber','Thai':'Thai translation','Review':'Michel','Ready':'Amber'};
 const PEOPLE = ['Michel','Amber','Thai translation','Casy','Ronnie'];
 const FORMATS = ['Post','Reel','Story','Video'];
 const CHANNELS = ['Facebook Page','Instagram','Facebook + Instagram','Redbook','LINE','WeChat','Facebook groups'];
@@ -277,9 +279,9 @@ const REF_GROUPS = [
   {k:'who', t:'Who and where', d:'Who we talk to, the accounts we own, and the groups where families gather.', secs:['audiences','channels','groups']},
   {k:'market', t:'Market', d:'Who families compare us with, and what we have learned.', secs:['competitors','insights']},
 ];
-const STAGE_COLOR = {'Topic':'#B4B2A9','Draft':'#B4B2A9','Thai':'#EF9F27','Review':'#EF9F27','Ready':'#378ADD','Posted':'#1D9E75','Skipped':'#D85A30'};
-const STAGE_TEXT = {'Topic':'#444441','Draft':'#444441','Thai':'#633806','Review':'#633806','Ready':'#0C447C','Posted':'#085041','Skipped':'#712B13'};
-const STAGE_BG = {'Topic':'#F1EFE8','Draft':'#F1EFE8','Thai':'#FAEEDA','Review':'#FAEEDA','Ready':'#E6F1FB','Posted':'#E1F5EE','Skipped':'#FAECE7'};
+const STAGE_COLOR = {'Topic':'#B4B2A9','Writing':'#B4B2A9','Thai':'#EF9F27','Review':'#EF9F27','Ready':'#378ADD','Posted':'#1D9E75','Skipped':'#D85A30'};
+const STAGE_TEXT = {'Topic':'#444441','Writing':'#444441','Thai':'#633806','Review':'#633806','Ready':'#0C447C','Posted':'#085041','Skipped':'#712B13'};
+const STAGE_BG = {'Topic':'#F1EFE8','Writing':'#F1EFE8','Thai':'#FAEEDA','Review':'#FAEEDA','Ready':'#E6F1FB','Posted':'#E1F5EE','Skipped':'#FAECE7'};
 const LATE_BG = '#FCEBEB', LATE_TEXT = '#791F1F';
 const $ = (s,el=document)=>el.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -289,7 +291,7 @@ const tone = v => { v=String(v||'');
   if(/^(Ready)/.test(v)) return 'blue';
   if(/^(To confirm|To verify|Pending|Waiting|Thai|Review|Specific|Admin|Secondary|Doing|Joined)/.test(v)) return 'amber';
   if(/^(Outdated|Avoid|No$|To create|Not set|Skipped)/.test(v)) return 'rust';
-  if(/^(Topic|Draft|To do|Unknown|Watch)/.test(v)) return '';
+  if(/^(Topic|Draft|Writing|To do|Unknown|Watch)/.test(v)) return '';
   return 'plum'; };
 const chip = v => v ? `<span class="chip ${tone(v)}">${esc(v)}</span>` : '';
 const fmtDate = v => { if(!v) return ''; const d=new Date(v+'T00:00:00'); return isNaN(d)?esc(v):d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); };
@@ -304,16 +306,25 @@ const go = k => { location.hash = k; };
 // ---------- Data ----------
 // Posts come from the Google Sheet (marketing_sheet_posts, kept in sync by the sheet itself).
 // Reference, goal and tasks still live in marketing_entries and are edited here.
-let SHEET = null, sheetTimer = null, flashT = null;
+let SHEET = null, sheetTimer = null, flashT = null, PENDING = {};
 const sheetLink = (gid, row) => {
   const base = SHEET && SHEET.sheet_url ? SHEET.sheet_url.split('#')[0].replace(/\/edit.*$/,'/edit') : '';
   if(!base) return '';
   return base + (gid != null ? `#gid=${gid}` + (row ? `&range=A${row}` : '') : '');
 };
+// The sheet only has Posted / Schedule / On process. Where a post really is comes from what is filled in.
+const blank = v => { const t = String(v||'').trim(); return t.length < 15 || /^(tbc|tbd|todo|x+|-+|n\/?a)$/i.test(t); };
+function stageFrom(d){
+  const st = d.stage || 'Draft';
+  if(st !== 'Draft') return st;
+  if(blank(d.copy)) return 'Writing';
+  if(blank(d.th)) return 'Thai';
+  return 'Review';
+}
 function mapPost(r){
   const d = r.data || {};
   return { id:'s'+r.id, tab:r.tab, gid:r.gid, row:r.row_num, title:d.title || '(no topic)', date:d.date || '', time:d.time || '',
-    format:d.format || '', status:d.stage || 'Draft', raw:d.status_raw || '', copy:d.copy || '', th:d.th || '',
+    format:d.format || '', status:stageFrom(d), sid:r.id, raw:d.status_raw || '', copy:d.copy || '', th:d.th || '',
     hashtags:d.hashtags || '', image:d.image || '', post_url:d.post_url || '' };
 }
 async function loadSheet(){
@@ -324,6 +335,8 @@ async function loadSheet(){
   if(error){ showToast('Could not load the sheet: ' + error.message); return false; }
   SHEET = meta || null;
   DATA.content = (data||[]).map(mapPost);
+  const { data: acts } = await sb.from('marketing_sheet_actions').select('id,sheet_post_id,status').eq('status','pending');
+  PENDING = {}; (acts||[]).forEach(a => { PENDING['s'+a.sheet_post_id] = a.id; });
   return true;
 }
 async function loadAll(){
@@ -353,6 +366,10 @@ function listen(){
   sb.channel('marketing-sheet')
     .on('postgres_changes', {event:'*', schema:'public', table:'marketing_sheet_posts'}, again)
     .on('postgres_changes', {event:'*', schema:'public', table:'marketing_sheet_meta'}, again)
+    .on('postgres_changes', {event:'UPDATE', schema:'public', table:'marketing_sheet_actions'}, p => {
+      const n = p.new || {}; if(n.status === 'done') showToast('Marked as posted in the sheet.');
+      else if(n.status === 'failed') showToast('Could not update the sheet: ' + (n.error || 'unknown') );
+      again(); })
     .subscribe();
 }
 function ago(ts){
@@ -400,7 +417,7 @@ function render(){
 const todayISO = () => localISO(new Date());
 const addDays = (iso, n) => { const d = new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return localISO(d); };
 const PLACEHOLDER = /\[[A-Z][A-Z \-]{2,}\]/;
-const stageOf = x => x.status || 'Draft';
+const stageOf = x => x.status || 'Writing';
 const open = x => !['Posted','Skipped'].includes(stageOf(x));
 const weekStart = iso => { const d = new Date(iso+'T00:00:00'); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return localISO(d); };
 
@@ -457,7 +474,7 @@ function postRow(x, sub){
   return `<div class="prow" onclick="viewPost('${x.id}')">
     <span class="dot" style="background:${isLate?'#E24B4A':STAGE_COLOR[st]}"></span>
     <div class="step-tx"><div class="t">${esc(x.title)}</div><div class="s">${sub}</div></div>
-    <span class="hide-m" style="min-width:150px;text-align:right">${isLate?'<span class="chip rust">Late</span> ':''}${chip(st)}${who?`<span class="muted" style="font-size:12px;margin-left:6px">${esc(who)}</span>`:''}</span>
+    <span class="hide-m" style="min-width:150px;text-align:right">${PENDING[x.id]?'<span class="chip leaf">Posting…</span> ':''}${isLate&&!PENDING[x.id]?'<span class="chip rust">Late</span> ':''}${chip(st)}${who?`<span class="muted" style="font-size:12px;margin-left:6px">${esc(who)}</span>`:''}</span>
     ${act}</div>`;
 }
 
@@ -483,7 +500,7 @@ function calendar(){
       <button class="cal-nav" aria-label="Next month" onclick="calMonth='${shift(1)}';render()">&#8250;</button>
       <button class="link-btn" style="margin-left:auto" onclick="month='${calMonth}';stageFilter='';go('content')">List view</button></div>
     <div class="cal">${cells}</div>
-    <div class="legend"><span><i style="background:#1D9E75"></i>Posted</span><span><i style="background:#378ADD"></i>Ready</span><span><i style="background:#EF9F27"></i>Thai or review</span><span><i style="background:#B4B2A9"></i>Topic or draft</span><span><i style="background:#E24B4A"></i>Late</span></div>
+    <div class="legend"><span><i style="background:#1D9E75"></i>Posted</span><span><i style="background:#378ADD"></i>Ready</span><span><i style="background:#EF9F27"></i>Thai or review</span><span><i style="background:#B4B2A9"></i>Writing</span><span><i style="background:#E24B4A"></i>Late</span></div>
   </div>`;
 }
 
@@ -553,10 +570,24 @@ function viewPost(id){
       ${capBlock('th','Thai',r.th)}
       ${safeUrl(r.image)?`<p style="margin-bottom:6px"><a href="${esc(r.image)}" target="_blank" rel="noopener" style="font-weight:600">Open the image or video</a></p>`:r.image?`<p class="meta">Image: ${esc(r.image)}</p>`:''}
       ${safeUrl(r.post_url)?`<p><a href="${esc(r.post_url)}" target="_blank" rel="noopener" style="font-weight:600">View the live post</a></p>`:''}
+      ${PENDING[r.id] ? `<div class="donebox">Marked as posted. The sheet updates within a minute.</div>`
+        : canEdit && open(r) && r.copy ? `<div class="donebox" style="background:#F7F3EC;color:#2C2C2A"><div style="font-weight:700;margin-bottom:8px">Posted it on Facebook?</div>
+        <div class="f" style="margin-bottom:10px"><label>Facebook post link <span class="hint">optional</span></label><input id="pu" type="url" placeholder="https://www.facebook.com/..."></div>
+        <button class="btn-primary" id="mp" onclick="markPosted('${r.id}')">Mark as posted</button><span id="mpmsg" class="meta" style="margin-left:10px"></span>
+        <div class="meta" style="margin-top:8px">Writes Posted and the link into the sheet. Nothing else changes.</div></div>` : ''}
     </div>
     <footer><span class="meta">Sheet: ${esc(r.tab)}, row ${esc(r.row)}</span>
       <div style="display:flex;gap:8px">${link?`<a class="btn-primary" href="${esc(link)}" target="_blank" rel="noopener">Edit in sheet</a>`:''}<button class="btn-outline" onclick="closeD()">Close</button></div></footer>`;
   $('#dw').classList.add('dw-open');
+}
+async function markPosted(id){
+  const r = (DATA.content||[]).find(x=>x.id===id); if(!r) return;
+  const u = String(($('#pu')||{}).value||'').trim();
+  if(u && !/^https:\/\//i.test(u)){ $('#mpmsg').textContent = 'The link should start with https://'; return; }
+  $('#mp').disabled = true; $('#mpmsg').textContent = 'Sending…';
+  const { error } = await sb.from('marketing_sheet_actions').insert({ sheet_post_id: r.sid, action:'posted', post_url: u || null });
+  if(error){ $('#mp').disabled = false; $('#mpmsg').textContent = 'Could not send: ' + error.message; return; }
+  PENDING[id] = true; viewPost(id); render(); showToast('Sent. The sheet updates within a minute.');
 }
 async function copyText(k){
   const el = $('#cap-'+k); if(!el) return;

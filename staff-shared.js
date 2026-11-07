@@ -225,24 +225,24 @@ async function doLogin(){
   errEl.textContent = '';
   if(!staffIdCode || !password){ errEl.textContent = 'Enter your Staff ID and password.'; return; }
 
-  let resolveRes;
+  // Sign-in happens on the server, so the page never learns which email belongs to a Staff ID.
+  let res, out;
   try {
-    resolveRes = await fetch('https://ndlcfgkhxjoancdvmgmr.supabase.co/functions/v1/resolve-staff-login-identity', {
+    res = await fetch('https://ndlcfgkhxjoancdvmgmr.supabase.co/functions/v1/id-sign-in', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ staff_id_code: staffIdCode })
+      body: JSON.stringify({ kind: 'staff', id: staffIdCode, password })
     });
+    out = await res.json();
   } catch (e) {
     errEl.textContent = 'Network error: ' + e.message;
     return;
   }
-  const resolveData = await resolveRes.json();
-  if(!resolveRes.ok){
-    errEl.textContent = resolveData.error || 'Could not find that Staff ID.';
+  if(!res.ok || !out.access_token){
+    errEl.textContent = out.error || 'Incorrect Staff ID or password.';
     return;
   }
-
-  const { error } = await sb.auth.signInWithPassword({ email: resolveData.email, password });
+  const { error } = await sb.auth.setSession({ access_token: out.access_token, refresh_token: out.refresh_token });
   if(error){ errEl.textContent = error.message; return; }
 
   const { data: { session } } = await sb.auth.getSession();

@@ -181,6 +181,7 @@ details.orig summary{cursor:pointer;font-size:13px;font-weight:600;color:#534AB7
 .prow:hover .t{color:#534AB7;}
 .dot{width:10px;height:10px;border-radius:50%;flex:none;}
 a.btn-primary{text-decoration:none;color:#fff;display:inline-block;} a.btn-outline{text-decoration:none;color:#2C2C2A;display:inline-block;}
+.cap.ro{background:#F3EFE7;border:0;border-left:3px solid #DCD5C6;border-radius:4px;}
 .warn-t{color:#9A5D0C;font-weight:600;}
 .warnbox{background:#FAEEDA;color:#633806;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;font-weight:600;}
 .sync{display:flex;align-items:center;gap:10px;color:#888780;font-size:12.5px;margin-top:6px;padding:8px 2px;transition:color .3s;}
@@ -532,25 +533,29 @@ function renderContent(el){
     ${syncLine()}`;
 }
 
-// ---------- One post (read-only; changes happen in the sheet) ----------
+// ---------- One post (view only; changes happen in the sheet) ----------
 function viewPost(id){
   const r = (DATA.content||[]).find(x=>x.id===id); if(!r) return;
-  const st = stageOf(r), pr = open(r) ? problems(r) : [], link = sheetLink(r.gid, r.row);
+  const st = stageOf(r), link = sheetLink(r.gid, r.row);
   const late = r.date && r.date < todayISO() && open(r);
+  const missing = open(r) ? [!r.copy&&'English caption', !r.th&&'Thai caption', !r.image&&'image'].filter(Boolean) : [];
+  const ph = ((r.copy||'')+' '+(r.th||'')).match(PLACEHOLDER);
+  const capBlock = (k, lbl, txt) => txt
+    ? `<div class="f"><label>${lbl}<button type="button" class="copybtn" onclick="copyText('${k}')">Copy</button></label><div class="cap ro" id="cap-${k}">${esc(txt)}${r.hashtags?'\n\n'+esc(r.hashtags):''}</div></div>` : '';
   cur = {post:id};
   $('#drawer').className = 'drawer';
-  $('#drawer').innerHTML = `<header><h3>${esc(r.title)}</h3><button class="x" onclick="closeD()">×</button></header>
+  $('#drawer').innerHTML = `<header><div><h3>${esc(r.title)}</h3><div class="meta" style="margin-top:2px">View only · edit in the sheet</div></div><button class="x" onclick="closeD()">×</button></header>
     <div class="body">
       <p style="margin-bottom:14px">${late?'<span class="chip rust">Late</span> ':''}${chip(st)}
         <span class="meta" style="font-size:13px;margin-left:6px">${r.date?fmtDay(r.date):'No date'}${r.time?' · '+esc(r.time):''}${open(r)&&STAGE_OWNER[st]?' · with '+esc(STAGE_OWNER[st]):''}</span></p>
-      ${pr.length?`<div class="warnbox">${pr.map(esc).join('<br>')}</div>`:''}
-      <div class="f"><label>English<button type="button" class="copybtn" onclick="copyText('copy')">Copy</button></label><div class="cap" id="cap-copy">${esc(r.copy||'No English caption yet.')}${r.copy&&r.hashtags?'\n\n'+esc(r.hashtags):''}</div></div>
-      <div class="f"><label>Thai<button type="button" class="copybtn" onclick="copyText('th')">Copy</button></label><div class="cap" id="cap-th">${esc(r.th||'No Thai caption yet.')}${r.th&&r.hashtags?'\n\n'+esc(r.hashtags):''}</div></div>
-      <p style="margin-bottom:6px">${safeUrl(r.image)?`<a href="${esc(r.image)}" target="_blank" rel="noopener" style="font-weight:600">Open the image or video</a>`:r.image?`<span class="meta">Image: ${esc(r.image)}</span>`:'<span class="meta">No image linked yet.</span>'}</p>
+      ${missing.length||ph?`<div class="warnbox">${missing.length?'Missing in the sheet: '+missing.join(', '):''}${missing.length&&ph?'<br>':''}${ph?'Caption still says '+esc(ph[0]):''}</div>`:''}
+      ${capBlock('copy','English',r.copy)}
+      ${capBlock('th','Thai',r.th)}
+      ${safeUrl(r.image)?`<p style="margin-bottom:6px"><a href="${esc(r.image)}" target="_blank" rel="noopener" style="font-weight:600">Open the image or video</a></p>`:r.image?`<p class="meta">Image: ${esc(r.image)}</p>`:''}
       ${safeUrl(r.post_url)?`<p><a href="${esc(r.post_url)}" target="_blank" rel="noopener" style="font-weight:600">View the live post</a></p>`:''}
     </div>
-    <footer><span class="meta">Sheet tab ${esc(r.tab)}, row ${esc(r.row)}</span>
-      <div style="display:flex;gap:8px">${link?`<a class="btn-primary" href="${esc(link)}" target="_blank" rel="noopener">Open in sheet</a>`:''}<button class="btn-outline" onclick="closeD()">Close</button></div></footer>`;
+    <footer><span class="meta">Sheet: ${esc(r.tab)}, row ${esc(r.row)}</span>
+      <div style="display:flex;gap:8px">${link?`<a class="btn-primary" href="${esc(link)}" target="_blank" rel="noopener">Edit in sheet</a>`:''}<button class="btn-outline" onclick="closeD()">Close</button></div></footer>`;
   $('#dw').classList.add('dw-open');
 }
 async function copyText(k){

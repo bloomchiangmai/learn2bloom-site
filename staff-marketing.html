@@ -221,9 +221,49 @@ a.mk:hover{border-color:#534AB7;color:#534AB7;}
 .live{width:8px;height:8px;border-radius:50%;background:#1D9E75;box-shadow:0 0 0 3px #E1F5EE;}
 .sync.flash{color:#0F6E56;} .sync.flash b{color:#0F6E56;}
 button.tile{font:inherit;color:inherit;width:100%;}
+.tiles.four{grid-template-columns:repeat(4,minmax(0,1fr));}
+div.tile{cursor:default;}
+.wl{display:grid;grid-template-columns:112px minmax(0,1fr) 92px 130px 92px;gap:10px;align-items:center;padding:10px 2px;border-top:1px solid #F0ECE3;cursor:pointer;font-size:13.5px;}
+.bh+p+.wl,.bh+.wl{border-top:0;}
+.wl:hover .ptt{color:#534AB7;}
+.wl-due{text-align:right;} .wl-act{text-align:right;}
+.stepcols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0 10px;}
+.stepcol{background:#F7F3EC;border-radius:10px;padding:10px;text-align:center;}
+.stepcol .h{font-size:12px;color:#5F5E5A;} .stepcol .c{font-family:Georgia,serif;font-size:24px;font-weight:700;}
+.dots{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;min-height:8px;margin-top:4px;}
+.dots i{width:8px;height:8px;border-radius:50%;background:#B4B2A9;display:inline-block;} .dots i.r{background:#E24B4A;}
+.wo{display:grid;grid-template-columns:150px minmax(0,1fr) 220px;gap:12px;align-items:center;padding:8px 0;border-top:1px solid #F0ECE3;font-size:13.5px;}
+.wbar{display:flex;height:10px;border-radius:5px;background:#F1EFE8;overflow:hidden;}
+.seg{display:inline-flex;border:1px solid #DCD5C6;border-radius:8px;overflow:hidden;}
+.seg button{background:#fff;border:0;padding:6px 12px;font-size:13px;cursor:pointer;color:#5F5E5A;} .seg button.on{background:#2C2C2A;color:#fff;}
+.stepbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.sb{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#A8A39A;} .sb.now{color:#2C2C2A;font-weight:600;}
+.sd{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;border:1px solid #DCD5C6;}
+.sb.done .sd{background:#E1F5EE;color:#085041;border-color:#E1F5EE;} .sb.now .sd{background:#534AB7;color:#fff;border-color:#534AB7;}
+.sl{flex:1;height:1px;background:#DCD5C6;min-width:12px;}
+.banner{border-radius:10px;padding:10px 14px;font-size:13.5px;font-weight:600;margin-bottom:14px;}
+.banner.bad{background:#FCEBEB;color:#791F1F;} .banner.warn{background:#FAEEDA;color:#633806;}
+.brief{background:#F7F3EC;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-bottom:14px;} .brief b{margin-right:6px;}
+textarea[readonly],input[readonly]{background:#F7F3EC!important;color:#5F5E5A;}
+.imgs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.im{position:relative;width:84px;height:84px;border-radius:8px;overflow:hidden;background:#EEEDFE;display:flex;align-items:center;justify-content:center;}
+.im img{width:84px;height:84px;object-fit:cover;display:block;} .im .ext{font-size:11px;font-weight:600;color:#534AB7;padding:4px;text-align:center;}
+.imx{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:0;background:rgba(44,44,42,.7);color:#fff;cursor:pointer;line-height:1;}
+.f .imadd{display:flex;margin:0;text-transform:none;letter-spacing:0;font-weight:600;}
+.imadd{width:84px;height:84px;border-radius:8px;border:1px dashed #DCD5C6;display:flex;align-items:center;justify-content:center;color:#888780;font-size:13px;cursor:pointer;}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;padding-top:14px;border-top:1px solid #F0ECE3;}
+.note-in{border:1px solid #DCD5C6;border-radius:8px;padding:9px 11px;font-size:14px;min-width:240px;flex:1;}
+.hist{font-size:12px;color:#888780;line-height:1.8;padding:12px 4px;}
 .toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
 
 @media (max-width: 860px){
+  .tiles.four{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .wl{grid-template-columns:auto minmax(0,1fr) auto;row-gap:4px;}
+  .wl>:nth-child(1){grid-row:2;grid-column:1;font-size:12px;} .wl>:nth-child(2){grid-row:1;grid-column:1/3;} .wl>:nth-child(3){grid-row:2;grid-column:2;}
+  .wl>:nth-child(4){grid-row:2;grid-column:3;font-size:12px;} .wl>:nth-child(5){grid-row:1;grid-column:3;}
+  .wo{grid-template-columns:110px minmax(0,1fr);} .wo>:nth-child(3){grid-column:1/3;}
+  .stepcols{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .note-in{min-width:0;}
   main{padding:28px 16px 80px;}
   .goal{grid-template-columns:1fr 1fr;} .goal>div:first-child{grid-column:span 2;}
   .ov{grid-template-columns:1fr;}
@@ -258,7 +298,7 @@ button.tile{font:inherit;color:inherit;width:100%;}
       <div>
         <div class="eyebrow">Tools</div>
         <h1>Marketing HQ</h1>
-        <p class="sub">Follows the team's Google Sheet live. Posts are edited in the sheet.</p>
+        <p class="sub">Every post, from topic to Facebook, and whose turn it is.</p>
       </div>
     </div>
     <nav class="tabs" id="tabs"></nav>
@@ -275,18 +315,6 @@ button.tile{font:inherit;color:inherit;width:100%;}
 <div class="toast" id="toast"></div>
 
 <script>
-// ---------- Content plan definitions ----------
-const STAGES = ['Writing','Thai','Review','Ready','Posted','Skipped'];
-const STAGE_HINT = {
-  'Topic':'Michel picks the topic','Writing':'Amber writes the English caption','Thai':'Thai translation','Review':'Michel reviews and fine-tunes',
-  'Ready':'Amber posts it on the day','Posted':'Live on Facebook','Skipped':'Not going out'
-};
-const STAGE_OWNER = {'Topic':'Michel','Writing':'Amber','Thai':'Thai translation','Review':'Michel','Ready':'Amber'};
-const PEOPLE = ['Michel','Amber','Thai translation','Casy','Ronnie'];
-const FORMATS = ['Post','Reel','Story','Video'];
-const CHANNELS = ['Facebook Page','Instagram','Facebook + Instagram','Redbook','LINE','WeChat','Facebook groups'];
-const CONTENT_FIELDS = ['title','date','time','format','channel','status','original','copy','review_note','th','hashtags','image','post_url','notes','source'];
-
 // ---------- Reference sections ----------
 const AUD = ['Expat English','Thai','Chinese','Alt-ed / homeschool','Mixed','All'];
 const REF = [
@@ -307,19 +335,11 @@ const TASKS = {k:'tasks',t:'Tasks',view:'table',d:'What has to happen next, and 
   f:[['title','Task','text'],['owner','Owner','text'],['due','Due','date'],['status','Status','select',['To do','Doing','Waiting','Done']],['notes','Notes','long']]};
 const SEC = Object.fromEntries([...REF, TASKS].map(s=>[s.k,s]));
 const PLAN_FIELDS = [['goal','Goal','long'],['deadline','Deadline','date'],['budget','Ad budget per month','text'],['measure','How we measure success','text']];
-
-let DATA = {}, PLAN = null, STAFF_NAMES = {}, loaded = false;
-let canEdit = false, canDelete = false;
-const filt = {q:'', s:''};
-let month = null, stageFilter = '', refKey = 'about', calMonth = null, who = null, showUndated = false;
 const REF_GROUPS = [
   {k:'about', t:'About Bloom', d:'The facts every post should match.', secs:['facts']},
   {k:'who', t:'Who and where', d:'Who we talk to, the accounts we own, and the groups where families gather.', secs:['audiences','channels','groups']},
   {k:'market', t:'Market', d:'Who families compare us with, and what we have learned.', secs:['competitors','insights']},
 ];
-const STAGE_COLOR = {'Topic':'#B4B2A9','Writing':'#B4B2A9','Thai':'#EF9F27','Review':'#EF9F27','Ready':'#378ADD','Posted':'#1D9E75','Skipped':'#D85A30'};
-const STAGE_TEXT = {'Topic':'#444441','Writing':'#444441','Thai':'#633806','Review':'#633806','Ready':'#0C447C','Posted':'#085041','Skipped':'#712B13'};
-const STAGE_BG = {'Topic':'#F1EFE8','Writing':'#F1EFE8','Thai':'#FAEEDA','Review':'#FAEEDA','Ready':'#E6F1FB','Posted':'#E1F5EE','Skipped':'#FAECE7'};
 const LATE_BG = '#FCEBEB', LATE_TEXT = '#791F1F';
 const $ = (s,el=document)=>el.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -338,339 +358,419 @@ const monthKey = v => v ? String(v).slice(0,7) : 'undated';
 const monthLabel = k => k==='undated' ? 'No date yet' : new Date(k+'-01T00:00:00').toLocaleDateString('en-GB',{month:'short',year:'numeric'});
 const localISO = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const thisMonth = () => localISO(new Date()).slice(0,7);
-const view = () => { const h=location.hash.slice(1); return ['overview','content','tasks','ref'].includes(h) ? h : 'overview'; };
-const go = k => { location.hash = k; };
+
+// ---------- Workflow ----------
+// Posts live in marketing_posts. Every change goes through the mkt_post() database function,
+// which checks who you are and which step the post is at.
+const STEP_LABEL = {english:'English', thai:'Thai', review:'Review', post:'Post', posted:'Posted', cancelled:'Cancelled'};
+const STEP_BG = {english:'#EEEDFE', thai:'#FAEEDA', review:'#E6F1FB', post:'#E1F5EE', posted:'#F1EFE8', cancelled:'#FAECE7', back:'#FCEBEB'};
+const STEP_FG = {english:'#3C3489', thai:'#633806', review:'#0C447C', post:'#085041', posted:'#444441', cancelled:'#712B13', back:'#791F1F'};
+const LABELS = ['Education','Event','Holiday','Admissions','Other'];
+const IMG_BUCKET = 'marketing-media';
+
+let POSTS = [], STAFF = {}, TEAM = {}, EVENTS = {}, PLAN = null, DATA = {}, loaded = false;
+let canEdit = false, canDelete = false, ME = null;
+let refKey = 'about', calMonth = null, calMode = 'month', postTimer = null;
+const filt = {q:'', s:''};
+
+const todayISO = () => localISO(new Date());
+const addDays = (iso, n) => { const d = new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return localISO(d); };
+const nameOf = id => (STAFF[id]||{}).name ? STAFF[id].name.split(' ')[0] : '';
+const myDuty = () => TEAM[ME] || null;
+const isOverseer = () => myDuty() === 'overseer';
+const writers = () => Object.keys(TEAM).filter(id => TEAM[id] === 'writer');
+const translators = () => Object.keys(TEAM).filter(id => TEAM[id] === 'translator');
+const openStep = p => !['posted','cancelled'].includes(p.step);
+
+// Who has the post now
+function ownerIds(p){
+  if(p.step === 'english' || p.step === 'post') return writers();
+  if(p.step === 'thai') return translators();
+  if(p.step === 'review') return p.pic ? [p.pic] : [];
+  return [];
+}
+function ownerName(p){
+  if(!openStep(p)) return '';
+  const ids = ownerIds(p);
+  if(ids.length) return ids.map(nameOf).join(', ');
+  return {english:'Writer (not set)', post:'Writer (not set)', thai:'Translator (not set)', review:'PIC (not set)'}[p.step] || '';
+}
+const isMine = p => openStep(p) && ownerIds(p).includes(ME);
+// Due date for the step the post is at
+function dueOf(p){
+  if(!p.post_date || !openStep(p)) return null;
+  const back = {english: p.needs_thai ? 3 : 2, thai: 2, review: 1, post: 0}[p.step];
+  return back === undefined ? null : addDays(p.post_date, -back);
+}
+const isLate = p => { const d = dueOf(p); return !!d && d < todayISO(); };
+function dueText(p){
+  const d = dueOf(p), t = todayISO();
+  if(!d) return p.post_date ? '' : 'No date';
+  if(d < t){ const n = Math.round((new Date(t) - new Date(d))/864e5); return `Late ${n} day${n>1?'s':''}`; }
+  if(d === t) return 'Due today';
+  if(d === addDays(t,1)) return 'Due tomorrow';
+  return 'Due ' + new Date(d+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'});
+}
+function stepChip(p){
+  const k = p.step === 'english' && p.sent_back ? 'back' : p.step;
+  const t = p.step === 'english' && p.sent_back ? 'Sent back' : STEP_LABEL[p.step];
+  return `<span class="chip" style="background:${STEP_BG[k]};color:${STEP_FG[k]}">${t}</span>`;
+}
+const actionWord = p => ({english: p.sent_back ? 'Fix' : 'Write', thai:'Translate', review:'Review', post:'Post it'}[p.step] || 'Open');
 
 // ---------- Data ----------
-// Posts come from the Google Sheet (marketing_sheet_posts, kept in sync by the sheet itself).
-// Reference, goal and tasks still live in marketing_entries and are edited here.
-let SHEET = null, sheetTimer = null, flashT = null, PENDING = {};
-const sheetLink = (gid, row, col) => {
-  const base = SHEET && SHEET.sheet_url ? SHEET.sheet_url.split('#')[0].replace(/\/edit.*$/,'/edit') : '';
-  if(!base) return '';
-  return base + (gid != null ? `#gid=${gid}` + (row ? `&range=${col||'A'}${row}` : '') : '');
-};
-// The sheet only has Posted / Schedule / On process. Where a post really is comes from what is filled in.
-const blank = v => { const t = String(v||'').trim(); return t.length < 15 || /^(tbc|tbd|todo|x+|-+|n\/?a)$/i.test(t); };
-function stageFrom(d){
-  const st = d.stage || 'Draft';
-  if(st !== 'Draft') return st;
-  if(blank(d.copy)) return 'Writing';
-  if(blank(d.th)) return 'Thai';
-  return 'Review';
-}
-function mapPost(r){
-  const d = r.data || {};
-  return { id:'s'+r.id, tab:r.tab, gid:r.gid, row:r.row_num, title:d.title || '(no topic)', date:d.date || '', time:d.time || '',
-    format:d.format || '', status:stageFrom(d), sid:r.id, raw:d.status_raw || '', copy:d.copy || '', th:d.th || '',
-    hashtags:d.hashtags || '', image:d.image || '', post_url:d.post_url || '',
-    col:{EN:d.col_en, TH:d.col_th, Img:d.col_img} };
-}
-async function loadSheet(){
-  const [{ data, error }, { data: meta }] = await Promise.all([
-    sb.from('marketing_sheet_posts').select('id,tab,gid,row_num,data').order('tab').order('row_num'),
-    sb.from('marketing_sheet_meta').select('sheet_id,sheet_url,last_sync,last_full_sync').eq('id', 1).maybeSingle()
-  ]);
-  if(error){ showToast('Could not load the sheet: ' + error.message); return false; }
-  SHEET = meta || null;
-  DATA.content = (data||[]).map(mapPost);
-  const { data: acts } = await sb.from('marketing_sheet_actions').select('id,sheet_post_id,status').eq('status','pending');
-  PENDING = {}; (acts||[]).forEach(a => { PENDING['s'+a.sheet_post_id] = a.id; });
-  return true;
-}
 async function loadAll(){
-  const [{ data, error }, { data: staff }] = await Promise.all([
-    sb.from('marketing_entries').select('id,collection,data,updated_at,updated_by').neq('collection','content').order('created_at'),
-    sb.from('staff').select('id,name')
+  const [posts, staff, team, ent] = await Promise.all([
+    sb.from('marketing_posts').select('*').order('post_date', {ascending:true, nullsFirst:false}),
+    sb.from('staff').select('id,name,status'),
+    sb.from('marketing_team').select('staff_id,duty'),
+    sb.from('marketing_entries').select('id,collection,data,updated_at,updated_by').neq('collection','content').order('created_at')
   ]);
-  if(error){ showToast('Could not load marketing data: ' + error.message); return; }
-  STAFF_NAMES = Object.fromEntries((staff||[]).map(s=>[s.id, s.name]));
-  const content = DATA.content; DATA = {}; PLAN = null;
-  (data||[]).forEach(r => {
-    if(r.collection === 'content') return;
+  if(posts.error){ showToast('Could not load posts: ' + posts.error.message); return; }
+  POSTS = posts.data || [];
+  STAFF = Object.fromEntries((staff.data||[]).map(s=>[s.id, s]));
+  TEAM = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, t.duty]));
+  DATA = {}; PLAN = null;
+  (ent.data||[]).forEach(r => {
     const row = { id:r.id, ...r.data, _updated:r.updated_at, _by:r.updated_by };
-    if(r.collection === 'plan') PLAN = row;
-    else (DATA[r.collection] = DATA[r.collection] || []).push(row);
+    if(r.collection === 'plan') PLAN = row; else (DATA[r.collection] = DATA[r.collection] || []).push(row);
   });
-  DATA.content = content || [];
-  await loadSheet();
   loaded = true;
   render();
 }
-// Live: the sheet pushes a change, Supabase tells this page, we reload just the posts.
+async function reloadPosts(){
+  const { data } = await sb.from('marketing_posts').select('*').order('post_date', {ascending:true, nullsFirst:false});
+  if(data){ POSTS = data; const id = postId(); if(id) delete EVENTS[id]; if(!dirty()) render(); }
+}
 function listen(){
   if(!sb.channel) return;
-  const again = () => { clearTimeout(sheetTimer); sheetTimer = setTimeout(async () => {
-    if(await loadSheet()){ if(!cur) render(); else updateSync(); flash(); } }, 400); };
-  sb.channel('marketing-sheet')
-    .on('postgres_changes', {event:'*', schema:'public', table:'marketing_sheet_posts'}, again)
-    .on('postgres_changes', {event:'*', schema:'public', table:'marketing_sheet_meta'}, again)
-    .on('postgres_changes', {event:'UPDATE', schema:'public', table:'marketing_sheet_actions'}, p => {
-      const n = p.new || {}; if(n.status === 'done') showToast('Marked as posted in the sheet.');
-      else if(n.status === 'failed') showToast('Could not update the sheet: ' + (n.error || 'unknown') );
-      again(); })
-    .subscribe();
+  sb.channel('marketing-posts').on('postgres_changes', {event:'*', schema:'public', table:'marketing_posts'}, () => {
+    clearTimeout(postTimer); postTimer = setTimeout(reloadPosts, 300);
+  }).subscribe();
 }
-function ago(ts){
-  if(!ts) return 'never';
-  const s = Math.max(0, (Date.now() - new Date(ts).getTime())/1000);
-  if(s < 60) return 'just now';
-  if(s < 3600) return Math.floor(s/60) + ' min ago';
-  if(s < 86400) return Math.floor(s/3600) + ' h ago';
-  return new Date(ts).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+async function act(action, id, payload){
+  const { data, error } = await sb.rpc('mkt_post', { p_action: action, p_id: id || null, p: payload || {} });
+  if(error){ showToast(error.message.replace(/^.*?: /,'')); return null; }
+  return data || {};
 }
-function syncLine(){
-  const url = sheetLink();
-  return `<div class="sync" id="sync"><span class="live"></span><span>From the Google Sheet · updated <b id="ago">${ago(SHEET && SHEET.last_sync)}</b></span>
-    ${url?`<a href="${esc(url)}" target="_blank" rel="noopener">Open sheet</a>`:''}</div>`;
-}
-function updateSync(){ const a = $('#ago'); if(a) a.textContent = ago(SHEET && SHEET.last_sync); }
-function flash(){ const s = $('#sync'); if(!s) return; s.classList.add('flash'); clearTimeout(flashT); flashT = setTimeout(()=>s.classList.remove('flash'), 1200); }
-setInterval(updateSync, 30000);
 
-// ---------- Tabs ----------
+// ---------- Routing ----------
+const view = () => {
+  const h = location.hash.slice(1);
+  if(h.startsWith('post/')) return 'post';
+  const allowed = tabsFor().map(t=>t[0]);
+  return allowed.includes(h) ? h : allowed[0];
+};
+const postId = () => { const h = location.hash.slice(1); return h.startsWith('post/') ? h.slice(5) : null; };
+const go = k => { location.hash = k; };
+function tabsFor(){
+  const d = myDuty(), t = [];
+  if(d !== 'overseer') t.push(['turn','My turn']);
+  if(!['writer','translator'].includes(d)) t.push(['overview','Overview']);
+  t.push(['calendar','Calendar']);
+  t.push(['ref','Reference']);
+  if(canDelete) t.push(['team','Team']);
+  return t;
+}
+let lastTab = null;
 function tabs(){
-  const cur = view();
-  const n = k => (DATA[k]||[]).length;
-  $('#tabs').innerHTML = `
-    <button class="tab ${cur==='overview'?'on':''}" onclick="go('overview')">Summary</button>
-    <button class="tab ${cur==='content'?'on':''}" onclick="go('content')">All posts<span class="n">${n('content')}</span></button>
-    <button class="tab ${cur==='tasks'?'on':''}" onclick="go('tasks')">Tasks<span class="n">${(DATA.tasks||[]).filter(t=>t.status!=='Done').length}</span></button>
-    <span class="tab-sep"></span>
-    <button class="tab ${cur==='ref'?'on':''}" onclick="go('ref')">Reference</button>`;
-  $('#subtabs').innerHTML = cur==='ref'
-    ? `<div class="subtabs">${REF_GROUPS.map(g=>`<button class="pill ${g.k===refKey?'on':''}" onclick="refKey='${g.k}';render()">${g.t}<span class="n">${g.secs.reduce((a,k)=>a+n(k),0)}</span></button>`).join('')}</div>` : '';
+  const v = view();
+  if(v !== 'post') lastTab = v;
+  const mine = POSTS.filter(p=>isMine(p) && (p.post_date || p.sent_back)).length;
+  $('#tabs').innerHTML = tabsFor().map(([k,l]) => `<button class="tab ${k===(v==='post'?lastTab:v)?'on':''}" onclick="go('${k}')">${l}${k==='turn'&&mine?`<span class="n">${mine}</span>`:''}</button>`).join('');
+  $('#subtabs').innerHTML = v==='ref'
+    ? `<div class="subtabs">${REF_GROUPS.map(g=>`<button class="pill ${g.k===refKey?'on':''}" onclick="refKey='${g.k}';render()">${g.t}<span class="n">${g.secs.reduce((a,k)=>a+(DATA[k]||[]).length,0)}</span></button>`).join('')}</div>` : '';
 }
-
 function render(){
   tabs();
   const el = $('#view'), v = view();
   if(!loaded){ el.innerHTML = '<div class="empty-state">Loading…</div>'; return; }
-  if(v==='overview') el.innerHTML = overview();
-  else if(v==='content') renderContent(el);
-  else if(v==='tasks') renderList(el, TASKS);
+  if(v==='turn') el.innerHTML = myTurn();
+  else if(v==='overview') el.innerHTML = overview();
+  else if(v==='calendar') el.innerHTML = calendarView();
+  else if(v==='team') el.innerHTML = teamView();
+  else if(v==='post') renderPost(el);
   else renderGroup(el, REF_GROUPS.find(g=>g.k===refKey) || REF_GROUPS[0]);
 }
 
-// ---------- Summary ----------
-const todayISO = () => localISO(new Date());
-const addDays = (iso, n) => { const d = new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return localISO(d); };
-const PLACEHOLDER = /\[[A-Z][A-Z \-]{2,}\]/;
-const stageOf = x => x.status || 'Writing';
-const open = x => !['Posted','Skipped'].includes(stageOf(x));
-const weekStart = iso => { const d = new Date(iso+'T00:00:00'); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return localISO(d); };
-
-// What is wrong with a post that still has to go out. Only checked for the next 14 days and late posts.
-function problems(x){
-  const out = [], today = todayISO(), near = x.date && x.date <= addDays(today, 7);
-  const ph = ((x.copy||'')+' '+(x.th||'')).match(PLACEHOLDER);
-  if(ph) out.push(`Caption says ${ph[0]}`);
-  if(near && !x.copy && stageOf(x)!=='Topic') out.push('No English caption');
-  if(near && !x.th && ['Review','Ready'].includes(stageOf(x))) out.push('No Thai caption');
-  if(near && !x.image && ['Review','Ready'].includes(stageOf(x))) out.push('No image');
-  return out;
+// ---------- Lines ----------
+function line(p, showWho){
+  const late = isLate(p);
+  return `<div class="wl" onclick="go('post/${p.id}')">
+    <span class="${late?'late-d':'muted'}">${p.post_date?fmtShort(p.post_date):'No date'}</span>
+    <span class="pt"><span class="ptt">${esc(p.title)}</span>${p.label?`<span class="fmt">${esc(p.label)}</span>`:''}</span>
+    <span>${stepChip(p)}</span>
+    <span class="wl-due ${late?'late-d':'muted'}">${showWho ? esc(ownerName(p)||'Done') : esc(dueText(p))}</span>
+    <span class="wl-act">${showWho ? (late?'<span class="chip rust">Late</span>':'') : `<button class="btn-outline sm">${actionWord(p)}</button>`}</span>
+  </div>`;
 }
-function overview(){
-  const P = PLAN || {}, c = DATA.content || [], today = todayISO();
-  const late = c.filter(x=>x.date && x.date < today && open(x)).sort((a,b)=>a.date.localeCompare(b.date));
-  const fix = c.filter(x=>x.date && open(x) && x.date >= today && x.date <= addDays(today,14) && problems(x).length)
-    .sort((a,b)=>a.date.localeCompare(b.date));
-  const ws = weekStart(today), we = addDays(ws, 6);
-  const week = c.filter(x=>x.date >= ws && x.date <= we && stageOf(x)!=='Skipped' && !(x.date < today && open(x)))
-    .sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
-  const next = !week.length ? c.filter(x=>x.date > we && open(x)).sort((a,b)=>a.date.localeCompare(b.date))[0] : null;
-  return `
-  <div class="goal-line" onclick="${canEdit?'editPlan()':''}">
-    <span class="lbl">Goal</span><span class="val">${esc(P.goal||'Not set yet')}</span>
-    ${P.deadline?`<span class="meta2">by ${fmtDate(P.deadline)}</span>`:''}
-  </div>
-  <div class="tiles">
-    <button class="tile" onclick="jump('late')"><div class="n ${late.length?'bad':'good'}">${late.length}</div><div class="l">Late, not posted</div></button>
-    <button class="tile" onclick="jump('fix')"><div class="n ${fix.length?'warn':'good'}">${fix.length}</div><div class="l">To fix before posting</div></button>
-    <button class="tile" onclick="jump('week')"><div class="n">${week.length}</div><div class="l">Posts this week</div></button>
-  </div>
-  ${late.length ? `<div class="box" id="late"><h3 class="bh bad">Late</h3>${rows(late.slice(0,8))}
-    ${late.length>8?`<p class="meta" style="padding:8px 0">${late.length-8} more in All posts.</p>`:''}</div>` : ''}
-  ${fix.length ? `<div class="box" id="fix"><h3 class="bh warn">Fix before posting</h3>${rows(fix)}</div>` : ''}
-  <div class="box" id="week"><h3 class="bh">This week <span class="muted" style="font-weight:400">${fmtDay(ws)} to ${fmtDay(we)}</span></h3>
-    ${week.length ? rows(week)
-      : `<p class="meta" style="padding:10px 0">Nothing else this week.${next?` Next post: ${esc(next.title)}, ${fmtDay(next.date)}.`:''}</p>`}
-  </div>
-  ${calendar()}
-  ${syncLine()}`;
-}
-
-// ---------- One line per post ----------
-// Everything about a post fits on one line. Only a Ready post opens up, for posting.
-let openId = null;
-const jump = k => { const e = document.getElementById(k); if(e) e.scrollIntoView({behavior:'smooth', block:'start'}); };
-function marks(x){
-  const today = todayISO(), urgent = open(x) && x.date && x.date <= addDays(today, 7);
-  const m = (have, l) => { const u = sheetLink(x.gid, x.row, (x.col||{})[l]);
-    return u ? `<a class="mk ${have?'ok':urgent?'no':''}" href="${esc(u)}" target="_blank" rel="noopener" title="Open this cell in the sheet">${l}</a>`
-             : `<span class="mk ${have?'ok':urgent?'no':''}">${l}</span>`; };
-  return `<span class="mks">${m(!blank(x.copy),'EN')}${m(!blank(x.th),'TH')}${m(!!x.image,'Img')}</span>`;
-}
-function rows(list){
-  return `<div class="plist"><div class="pl head"><span>Date</span><span>Post</span><span>Stage</span><span class="hide-m">With</span><span class="hide-m">Done</span><span></span></div>${list.map(row).join('')}</div>${KEY}`;
-}
-const KEY = `<div class="mkey"><span class="mk ok">EN</span> done <span class="mk no">TH</span> missing, due within 7 days <span class="mk">Img</span> not needed yet · click a mark to open that cell in the sheet</div>`;
-function row(x){
-  const st = stageOf(x), today = todayISO();
-  const isLate = x.date && x.date < today && open(x);
-  const ready = st==='Ready' && canEdit && !PENDING[x.id];
-  const ph = ((x.copy||'')+' '+(x.th||'')).match(PLACEHOLDER);
-  const link = sheetLink(x.gid, x.row);
-  const isOpen = openId === x.id && ready;
-  const act = PENDING[x.id] ? `<span class="chip leaf">Posting…</span>`
-    : ready ? `<button class="btn-primary sm" onclick="togglePost('${x.id}')">${isOpen?'Close':'Post it'}</button>`
-    : st==='Posted' && safeUrl(x.post_url) ? `<a class="btn-outline sm" href="${esc(x.post_url)}" target="_blank" rel="noopener">View post</a>`
-    : link ? `<a class="btn-outline sm" href="${esc(link)}" target="_blank" rel="noopener">Open sheet</a>` : '';
-  return `<div class="pl ${isOpen?'opened':''}" id="row-${x.id}">
-    <span class="${isLate?'late-d':'muted'}">${x.date?fmtShort(x.date):'No date'}</span>
-    <span class="pt"><span class="ptt">${esc(x.title)}</span>${x.format&&x.format!=='Post'?`<span class="fmt">${esc(x.format)}</span>`:''}${ph&&open(x)?` <span class="chip amber" style="margin-left:4px">${esc(ph[0])}</span>`:''}</span>
-    <span>${chip(st)}</span>
-    <span class="hide-m muted">${open(x)?esc(STAGE_OWNER[st]||''):''}</span>
-    <span class="hide-m">${marks(x)}</span>
-    <span style="text-align:right">${act}</span>
-  </div>${isOpen?postPanel(x):''}`;
-}
-function postPanel(x){
-  const link = sheetLink(x.gid, x.row);
-  const img = safeUrl(x.image);
-  return `<div class="ppanel"><div class="pcard">
-    <div class="pstep">1. Copy</div>
-    <div class="pbtns">
-      <button class="pbig" onclick="copyPost('${x.id}','copy')"><span class="pic">${ICON.copy}</span>English</button>
-      ${x.th ? `<button class="pbig" onclick="copyPost('${x.id}','th')"><span class="pic">${ICON.copy}</span>Thai</button>` : `<span class="pbig off"><span class="pic">${ICON.copy}</span>No Thai</span>`}
-      ${img ? `<a class="pbig" href="${esc(x.image)}" target="_blank" rel="noopener"><span class="pic">${ICON.img}</span>Image</a>` : `<span class="pbig off"><span class="pic">${ICON.img}</span>No image</span>`}
-    </div>
-    <div class="pstep">2. Post on Facebook, then</div>
-    <input id="pu-${x.id}" type="url" placeholder="Paste Facebook link (optional)">
-    <button class="btn-primary pmark" id="mp-${x.id}" onclick="markPosted('${x.id}')">Mark as posted</button>
-    <div id="mpmsg-${x.id}" class="muted" style="font-size:12px;text-align:center;min-height:16px;margin-top:6px"></div>
-    ${link?`<a class="popen" href="${esc(link)}" target="_blank" rel="noopener">Open in sheet</a>`:''}
-  </div></div>`;
-}
-const ICON = {
-  copy:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>',
-  img:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>',
-};
-function togglePost(id){ openId = openId === id ? null : id; render(); const e = document.getElementById('row-'+id); if(e) e.scrollIntoView({block:'nearest'}); }
 const fmtShort = v => { const d = new Date(v+'T00:00:00'); return isNaN(d) ? esc(v) : d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); };
 
-function calendar(){
-  const c = DATA.content||[]; const today = todayISO();
-  if(!calMonth) calMonth = today.slice(0,7);
+// ---------- My turn ----------
+function myTurn(){
+  const d = myDuty();
+  const mine = POSTS.filter(p=>isMine(p) && (p.post_date || p.sent_back))
+    .sort((a,b)=>(Number(isLate(b))-Number(isLate(a))) || String(dueOf(a)||'9').localeCompare(String(dueOf(b)||'9')));
+  const sub = {writer:'Write English, fix what comes back, post when it is approved', translator:'Check and fix the Thai'}[d]
+    || 'Review and approve the posts you are in charge of';
+  const canCreate = canEdit && d !== 'overseer';
+  return `
+  <div class="box">
+    <h3 class="bh">${mine.length ? `Your turn: ${mine.length}` : 'All clear'}</h3>
+    <p class="meta" style="font-size:13px;margin-bottom:6px">${sub}</p>
+    ${mine.length ? mine.map(p=>line(p)).join('') : '<p class="meta" style="padding:10px 0">Nothing is waiting on you right now.</p>'}
+  </div>
+  ${canCreate ? `<button class="btn-outline" style="width:100%;border-style:dashed;padding:12px" onclick="newTopic()">+ New topic</button>` : ''}
+  ${!writers().length || !translators().length ? `<p class="meta" style="margin-top:14px">${!writers().length?'No writer is set yet. ':''}${!translators().length?'No translator is set yet. ':''}${canDelete?'Set them in the Team tab.':''}</p>` : ''}`;
+}
+
+// ---------- Overview ----------
+function overview(){
+  const P = PLAN || {}, t = todayISO(), live = POSTS.filter(p=>openStep(p) && p.post_date);
+  const late = live.filter(isLate);
+  const ws = weekStart(t);
+  const week = live.filter(p=>{ const d = dueOf(p); return d && d >= t && d <= addDays(t,6); });
+  const mk = t.slice(0,7), posted = POSTS.filter(p=>p.step==='posted' && String(p.posted_at||p.post_date||'').slice(0,7)===mk).length;
+  let empty = 0; for(let w=0; w<4; w++){ const a = addDays(ws, 7*w), b = addDays(a, 6); if(!POSTS.some(p=>p.step!=='cancelled' && p.post_date>=a && p.post_date<=b)) empty++; }
+  const steps = ['english','thai','review','post'];
+  const ppl = {}; live.forEach(p=>{ const k = ownerName(p); (ppl[k] = ppl[k] || []).push(p); });
+  const max = Math.max(1, ...Object.values(ppl).map(a=>a.length));
+  const ideas = POSTS.filter(p=>openStep(p) && !p.post_date).length;
+  return `
+  <div class="goal-line" onclick="${canEdit?'editPlan()':''}"><span class="lbl">Goal</span><span class="val">${esc(P.goal||'Not set yet')}</span>${P.deadline?`<span class="meta2">by ${fmtDate(P.deadline)}</span>`:''}</div>
+  <div class="tiles four">
+    <div class="tile"><div class="n ${late.length?'bad':'good'}">${late.length}</div><div class="l">Late</div></div>
+    <div class="tile"><div class="n">${week.length}</div><div class="l">Due in the next 7 days</div></div>
+    <div class="tile"><div class="n">${posted}</div><div class="l">Posted this month</div></div>
+    <div class="tile"><div class="n ${empty?'warn':'good'}">${empty}</div><div class="l">Weeks with nothing planned (next 4)</div></div>
+  </div>
+  <div class="box"><h3 class="bh">Where posts are now</h3>
+    <div class="stepcols">${steps.map(s=>{ const a = live.filter(p=>p.step===s); return `<div class="stepcol"><div class="h">${STEP_LABEL[s]}</div><div class="c">${a.length}</div><div class="dots">${a.map(p=>`<i class="${isLate(p)?'r':''}" title="${esc(p.title)}"></i>`).join('')}</div></div>`; }).join('')}</div>
+  </div>
+  <div class="box"><h3 class="bh">Waiting on</h3>
+    ${Object.keys(ppl).length ? Object.entries(ppl).sort((a,b)=>b[1].length-a[1].length).map(([n,a])=>{ const l = a.filter(isLate).length;
+      return `<div class="wo"><span style="font-weight:600">${esc(n)}</span><span class="wbar"><span style="width:${l/max*100}%;background:#E24B4A"></span><span style="width:${(a.length-l)/max*100}%;background:#AFA9EC"></span></span><span class="muted">${a.length}${l?` · <span class="late-d">${l} late</span>`:''}</span></div>`; }).join('')
+      : '<p class="meta" style="padding:8px 0">Nothing in progress.</p>'}
+  </div>
+  <div class="box"><h3 class="bh">Everything in progress</h3>
+    ${live.length ? live.sort((a,b)=>Number(isLate(b))-Number(isLate(a)) || a.post_date.localeCompare(b.post_date)).map(p=>line(p,true)).join('') : '<p class="meta" style="padding:8px 0">Nothing in progress.</p>'}
+    ${ideas?`<p class="meta" style="padding:10px 0"><a href="javascript:void 0" onclick="calMode='ideas';go('calendar')">${ideas} ideas with no date</a></p>`:''}
+  </div>`;
+}
+const weekStart = iso => { const d = new Date(iso+'T00:00:00'); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return localISO(d); };
+
+// ---------- Calendar ----------
+function calendarView(){
+  const t = todayISO();
+  if(!calMonth) calMonth = t.slice(0,7);
   const [y,m] = calMonth.split('-').map(Number);
+  const shift = k => { const d = new Date(y, m-1+k, 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; };
+  const inMonth = POSTS.filter(p=>p.step!=='cancelled' && monthKey(p.post_date)===calMonth).sort((a,b)=>(a.post_date+(a.post_time||'')).localeCompare(b.post_date+(b.post_time||'')));
+  const ideas = POSTS.filter(p=>openStep(p) && !p.post_date);
+  const head = `<div class="mnav">
+    ${calMode==='ideas' ? `<h2 style="text-align:left;min-width:0">Ideas with no date</h2>` : `<button class="cal-nav" aria-label="Previous month" onclick="calMonth='${shift(-1)}';render()">&#8249;</button>
+    <h2>${new Date(y,m-1,1).toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</h2>
+    <button class="cal-nav" aria-label="Next month" onclick="calMonth='${shift(1)}';render()">&#8250;</button>
+    ${calMonth!==t.slice(0,7)?`<button class="link-btn" onclick="calMonth=null;render()">This month</button>`:''}`}
+    <span style="flex:1"></span>
+    <span class="seg">${[['month','Month'],['list','List'],['ideas',`Ideas (${ideas.length})`]].map(([k,l])=>`<button class="${calMode===k?'on':''}" onclick="calMode='${k}';render()">${l}</button>`).join('')}</span>
+  </div>`;
+  if(calMode==='ideas') return head + `<div class="box">${ideas.length ? ideas.map(p=>line(p,true)).join('') : '<p class="meta" style="padding:8px 0">No ideas waiting.</p>'}</div>`;
+  if(calMode==='list') return head + `<div class="box">${inMonth.length ? inMonth.map(p=>line(p,true)).join('') : '<p class="meta" style="padding:8px 0">Nothing planned this month.</p>'}</div>`;
   const first = new Date(y, m-1, 1), days = new Date(y, m, 0).getDate(), lead = first.getDay();
-  const byDay = {}; c.filter(x=>monthKey(x.date)===calMonth).forEach(x=>{ (byDay[+x.date.slice(8,10)] = byDay[+x.date.slice(8,10)] || []).push(x); });
   let cells = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="dow">${d}</div>`).join('');
   for(let i=0;i<lead;i++) cells += '<div class="day out"></div>';
   for(let d=1; d<=days; d++){
     const iso = `${calMonth}-${String(d).padStart(2,'0')}`;
-    const cls = iso===today ? 'today' : iso<today ? 'past' : '';
-    const posts = (byDay[d]||[]).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
-    cells += `<div class="day ${cls}">${d}${posts.map(x=>{const st=stageOf(x); const late = iso<today && open(x);
-      return `<span class="pp" title="${esc(x.title)} · ${late?'Late':esc(st)}" style="background:${late?LATE_BG:STAGE_BG[st]};color:${late?LATE_TEXT:STAGE_TEXT[st]}" onclick="fromCal('${x.id}')">${esc(x.title)}</span>`;}).join('')}</div>`;
+    const ps = inMonth.filter(p=>p.post_date===iso);
+    cells += `<div class="day ${iso===t?'today':iso<t?'past':''}">${d}${ps.map(p=>{ const late = isLate(p), k = p.step==='english'&&p.sent_back?'back':p.step;
+      return `<span class="pp" title="${esc(p.title)} · ${late?'Late':STEP_LABEL[p.step]}" style="background:${late?LATE_BG:STEP_BG[k]};color:${late?LATE_TEXT:STEP_FG[k]}" onclick="go('post/${p.id}')">${esc(p.title)}</span>`; }).join('')}</div>`;
   }
-  const shift = k => { const d = new Date(y, m-1+k, 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; };
-  return `<div class="cal-wrap">
-    <div class="cal-head"><button class="cal-nav" aria-label="Previous month" onclick="calMonth='${shift(-1)}';render()">&#8249;</button>
-      <h2>${new Date(y,m-1,1).toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</h2>
-      <button class="cal-nav" aria-label="Next month" onclick="calMonth='${shift(1)}';render()">&#8250;</button>
-      <button class="link-btn" style="margin-left:auto" onclick="month='${calMonth}';stageFilter='';go('content')">List view</button></div>
-    <div class="cal">${cells}</div>
-    <div class="legend"><span><i style="background:#1D9E75"></i>Posted</span><span><i style="background:#378ADD"></i>Ready</span><span><i style="background:#EF9F27"></i>Thai or review</span><span><i style="background:#B4B2A9"></i>Writing</span><span><i style="background:#E24B4A"></i>Late</span></div>
+  return head + `<div class="cal-wrap"><div class="cal">${cells}</div>
+    <div class="legend">${['english','thai','review','post','posted'].map(s=>`<span><i style="background:${STEP_FG[s]}"></i>${STEP_LABEL[s]}</span>`).join('')}<span><i style="background:#E24B4A"></i>Late</span></div></div>`;
+}
+
+// ---------- Post page ----------
+let draft = null;
+const dirty = () => !!draft && !!$('#pg') && ['copy_en','copy_th','hashtags','video_url'].some(k => (($('#f-'+k)||{}).value ?? null) !== null && $('#f-'+k).value !== (draft[k]||''));
+async function renderPost(el){
+  const id = postId(), p = POSTS.find(x=>x.id===id);
+  if(!p){ el.innerHTML = '<div class="empty-state">This post was not found.</div>'; return; }
+  draft = p;
+  if(!EVENTS[id]){
+    EVENTS[id] = [];
+    sb.from('marketing_post_events').select('actor,kind,note,created_at').eq('post_id', id).order('created_at').then(({data})=>{ EVENTS[id] = data || []; if(postId()===id && !dirty()) renderPost($('#view')); });
+  }
+  const mine = isMine(p), d = myDuty(), pic = p.pic === ME;
+  const canEn = (d==='writer' && p.step==='english') || (pic && p.step==='review');
+  const canTh = (d==='translator' && p.step==='thai') || (pic && p.step==='review');
+  const canTags = (d==='writer' && ['english','post'].includes(p.step)) || (pic && p.step==='review');
+  const canImg = (d==='writer' && ['english','thai','review','post'].includes(p.step)) || (pic && p.step==='review');
+  const canTopic = (p.created_by===ME || canDelete) && openStep(p);
+  const steps = ['english', ...(p.needs_thai?['thai']:[]), 'review', 'post'];
+  const cur = p.step==='posted' ? steps.length : steps.indexOf(p.step);
+  const bar = steps.map((s,i)=>`<span class="sb ${i<cur?'done':i===cur?'now':''}"><span class="sd">${i<cur?'&#10003;':i+1}</span>${STEP_LABEL[s]}${s==='review'?` · ${esc(nameOf(p.pic)||'PIC not set')}`:''}</span>`).join('<span class="sl"></span>');
+  const imgs = (p.images||[]);
+  let actions = '';
+  if(mine){
+    if(p.step==='english') actions = `<button class="btn-primary" onclick="doAct('send_on')">${p.needs_thai?'Send to translator':'Send to '+esc(nameOf(p.pic)||'PIC')}</button>`;
+    if(p.step==='thai') actions = `<button class="btn-primary" onclick="doAct('thai_checked')">Thai checked, send to ${esc(nameOf(p.pic)||'PIC')}</button>`;
+    if(p.step==='review') actions = `<input id="f-note" placeholder="Note to the writer (needed to send back)" class="note-in">
+      <button class="btn-outline" onclick="doAct('send_back')">Send back</button>
+      ${p.needs_thai?`<button class="btn-outline" onclick="doAct('to_translator')">Send to translator</button>`:''}
+      <button class="btn-primary" onclick="doAct('approve')">Approve</button>`;
+    if(p.step==='post') actions = `<button class="btn-outline" onclick="copyCaption()">Copy caption</button>
+      <input id="f-url" placeholder="Facebook link (optional)" class="note-in">
+      <button class="btn-primary" onclick="doAct('mark_posted')">Mark as posted</button>`;
+  }
+  const waiting = !mine && openStep(p) ? `<span class="muted">Waiting on ${esc(ownerName(p))}${isLate(p)?' · <span class="late-d">late</span>':''}</span>` : '';
+  const hist = (EVENTS[id]||[]).map(e=>`${esc(nameOf(e.actor)||'System')} ${esc(e.kind)}${e.note?` ("${esc(e.note)}")`:''} · ${new Date(e.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`).join('<br>');
+  el.innerHTML = `<div id="pg">
+  <button class="link-btn" style="margin-bottom:14px" onclick="history.length>1?history.back():go('${lastTab||'turn'}')">&#8249; Back</button>
+  <div class="box" style="padding:20px 22px">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px">
+      <div><h2 style="font-family:Georgia,serif;font-size:22px;font-weight:700">${esc(p.title)}</h2>
+        <p class="meta" style="font-size:13px;margin-top:2px">${p.post_date?'Posts '+fmtShort(p.post_date):'No date yet'}${p.post_time?', '+esc(p.post_time):''} · PIC ${esc(nameOf(p.pic)||'not set')}${p.label?' · '+esc(p.label):''}${p.needs_thai?'':' · English only'}</p></div>
+      <div style="display:flex;gap:8px;align-items:center">${openStep(p)&&dueOf(p)?`<span class="chip ${isLate(p)?'rust':''}">${esc(dueText(p))}</span>`:''}${stepChip(p)}${canTopic?`<button class="btn-outline sm" onclick="editTopic('${p.id}')">Edit topic</button>`:''}</div>
+    </div>
+    <div class="stepbar">${bar}</div>
+    ${p.step==='english'&&p.sent_back&&p.back_note?`<div class="banner bad">${esc(nameOf(p.pic)||'PIC')}: ${esc(p.back_note)}</div>`:''}
+    ${p.en_changed_after_th&&p.step==='review'?`<div class="banner warn">The English changed after the Thai was written. Check the Thai still matches, or send it to the translator.</div>`:''}
+    ${p.brief?`<p class="brief"><b>Brief</b> ${esc(p.brief)}</p>`:''}
+    <div class="grid-2" style="margin-bottom:12px">
+      <div class="f"><label>English${canEn?'':' <span class="hint">view only</span>'}</label><textarea id="f-copy_en" class="tall" ${canEn?'':'readonly'} placeholder="${canEn?'Write the English caption':''}">${esc(p.copy_en||'')}</textarea></div>
+      ${p.needs_thai?`<div class="f"><label>Thai${p.th_machine?' <span class="hint" style="color:#854F0B">machine draft, not checked</span>':''}${canTh?'':' <span class="hint">view only</span>'}</label><textarea id="f-copy_th" class="tall" ${canTh?'':'readonly'} placeholder="${canTh?'Write or fix the Thai caption':''}">${esc(p.copy_th||'')}</textarea></div>`:'<div class="f"><label>Thai</label><p class="meta">English only for this post.</p></div>'}
+    </div>
+    <div class="f"><label>Hashtags${canTags?'':' <span class="hint">view only</span>'}</label><input id="f-hashtags" ${canTags?'':'readonly'} value="${esc(p.hashtags||'')}" placeholder="#BloomChiangmai"></div>
+    <div class="f"><label>Images</label><div class="imgs">${imgs.map((im,i)=>`<span class="im">${safeUrl(im.url)?`<a href="${esc(im.url)}" target="_blank" rel="noopener">${im.external?'<span class="ext">Drive link</span>':`<img src="${esc(im.url)}" alt="">`}</a>`:''}${canImg?`<button class="imx" title="Remove" onclick="removeImg(${i})">×</button>`:''}</span>`).join('')}
+      ${canImg?`<label class="imadd">+ Add<input type="file" accept="image/*" multiple onchange="addImgs(this.files)" hidden></label>`:''}${!imgs.length&&!canImg?'<span class="meta">No images yet.</span>':''}</div></div>
+    <div class="f"><label>Video link <span class="hint">reels: paste a link for now</span></label><input id="f-video_url" ${canImg?'':'readonly'} value="${esc(p.video_url||'')}" placeholder="https://"></div>
+    ${p.post_url?`<p style="margin-bottom:12px"><a href="${esc(safeUrl(p.post_url))}" target="_blank" rel="noopener" style="font-weight:600">View the live post</a></p>`:''}
+    <div class="actions">${(canEn||canTh||canTags||canImg)?`<button class="btn-outline" onclick="saveFields()">Save</button>`:''}${waiting}<span style="flex:1"></span>${actions}</div>
+  </div>
+  <div class="hist"><b>History</b><br>${hist||'…'}</div>
   </div>`;
 }
-// Calendar click: show that post's line in its month.
-function fromCal(id){
-  const x = (DATA.content||[]).find(p=>p.id===id); if(!x) return;
-  month = monthKey(x.date); stageFilter = ''; showUndated = false;
-  openId = stageOf(x)==='Ready' ? id : null;
-  if(view()!=='content') go('content'); else render();
-  setTimeout(()=>{ const e = document.getElementById('row-'+id); if(e){ e.scrollIntoView({block:'center'}); e.classList.add('hl'); setTimeout(()=>e.classList.remove('hl'),1500); } }, 60);
+function fieldVals(){
+  const o = {};
+  ['copy_en','copy_th','hashtags','video_url'].forEach(k=>{ const e = $('#f-'+k); if(e && !e.readOnly) o[k] = e.value; });
+  return o;
 }
-
-// ---------- All posts (by month) ----------
-function tabFor(mk){
-  const n = {}; (DATA.content||[]).filter(x=>monthKey(x.date)===mk).forEach(x=>{ n[x.gid] = (n[x.gid]||0)+1; });
-  const best = Object.entries(n).sort((a,b)=>b[1]-a[1])[0];
-  return best ? best[0] : null;
+async function saveFields(quiet){
+  const p = draft, o = fieldVals(), ch = {};
+  Object.keys(o).forEach(k=>{ if(o[k] !== (p[k]||'')) ch[k] = o[k]; });
+  if(!Object.keys(ch).length){ if(!quiet) showToast('Nothing to save.'); return true; }
+  const r = await act('save', p.id, ch); if(!r) return false;
+  Object.assign(p, ch); delete EVENTS[p.id];
+  if(!quiet){ showToast('Saved.'); await reloadPosts(); }
+  return true;
 }
-function renderContent(el){
-  const all = DATA.content || [];
-  if(!month) month = thisMonth();
-  const [y,m] = month.split('-').map(Number);
-  const shift = k => { const d = new Date(y, m-1+k, 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; };
-  const undated = all.filter(x=>!x.date);
-  const base = showUndated ? undated : all.filter(x=>monthKey(x.date)===month);
-  let list = base;
-  if(stageFilter) list = list.filter(x=>stageOf(x)===stageFilter);
-  list = list.slice().sort((a,b)=>(String(a.date||'')+(a.time||'')).localeCompare(String(b.date||'')+(b.time||'')) || a.row-b.row);
-  const counts = STAGES.map(st=>[st, base.filter(x=>stageOf(x)===st).length]).filter(x=>x[1] || stageFilter===x[0]);
-  const tabGid = showUndated ? (undated[0]||{}).gid : tabFor(month);
-  const sheetHere = sheetLink(tabGid ?? undefined);
-  el.innerHTML = `
-    <div class="mnav">
-      ${showUndated ? `<button class="btn-outline" onclick="showUndated=false;stageFilter='';render()">&#8249; Back to months</button><h2 style="text-align:left">No date yet</h2>`
-      : `<button class="cal-nav" aria-label="Previous month" onclick="month='${shift(-1)}';stageFilter='';render()">&#8249;</button>
-         <h2>${new Date(y,m-1,1).toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</h2>
-         <button class="cal-nav" aria-label="Next month" onclick="month='${shift(1)}';stageFilter='';render()">&#8250;</button>
-         ${month!==thisMonth()?`<button class="link-btn" onclick="month=null;render()">This month</button>`:''}`}
-      <span style="flex:1"></span>
-      ${showUndated || !undated.length ? '' : `<button class="link-btn" onclick="showUndated=true;stageFilter='';render()">No date yet (${undated.length})</button>`}
-      ${sheetHere?`<a class="btn-outline" href="${esc(sheetHere)}" target="_blank" rel="noopener">Open in sheet</a>`:''}
-    </div>
-    ${counts.length ? `<div class="chips">${counts.map(([st,n])=>`<button class="chip ${tone(st)} ${stageFilter===st?'on':''}" title="${esc(STAGE_HINT[st]||'')}" onclick="stageFilter=stageFilter==='${st}'?'':'${st}';render()">${n} ${st.toLowerCase()}</button>`).join('')}</div>` : ''}
-    ${!list.length ? `<div class="empty-state">${base.length?'Nothing matches.':'No posts this month in the sheet.'}</div>` : `<div class="box">${rows(list)}</div>`}
-    ${syncLine()}`;
+async function doAct(a){
+  const p = draft;
+  if(!(await saveFields(true))) return;
+  const pay = {};
+  if(a==='send_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the writer knows what to change.'); $('#f-note').focus(); return; } }
+  if(a==='mark_posted') pay.post_url = (($('#f-url')||{}).value||'').trim();
+  if(a==='approve' && p.en_changed_after_th){ if(!confirm('The English changed after the Thai was written. Approve anyway?')) return; pay.force = true; }
+  const r = await act(a, p.id, pay); if(!r) return;
+  showToast({send_on:'Sent on.', thai_checked:'Sent for review.', send_back:'Sent back with your note.', to_translator:'Sent to the translator.', approve:'Approved. Ready to post.', mark_posted:'Marked as posted.'}[a] || 'Done.');
+  delete EVENTS[p.id]; await reloadPosts();
 }
-
-async function markPosted(id){
-  const r = (DATA.content||[]).find(x=>x.id===id); if(!r) return;
-  const msg = $('#mpmsg-'+id), btn = $('#mp-'+id);
-  const u = String(($('#pu-'+id)||{}).value||'').trim();
-  if(u && !/^https:\/\//i.test(u)){ msg.textContent = 'The link should start with https://'; return; }
-  btn.disabled = true; msg.textContent = 'Sending…';
-  const { error } = await sb.from('marketing_sheet_actions').insert({ sheet_post_id: r.sid, action:'posted', post_url: u || null });
-  if(error){ btn.disabled = false; msg.textContent = 'Could not send: ' + error.message; return; }
-  PENDING[id] = true; openId = null; render(); showToast('Sent. The sheet updates within a minute.');
-}
-async function copyPost(id, k){
-  const r = (DATA.content||[]).find(x=>x.id===id); if(!r) return;
-  const text = [r[k], r.hashtags].filter(Boolean).join('\n\n');
+async function copyCaption(){
+  const p = draft;
+  const text = [p.copy_en, p.needs_thai ? p.copy_th : '', p.hashtags].filter(x=>x && x.trim()).join('\n\n');
   try { await navigator.clipboard.writeText(text); }
   catch(e){ const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
-  showToast((k==='th'?'Thai':'English') + ' caption copied with hashtags.');
+  showToast('Caption copied: English, Thai, then hashtags.');
+}
+async function addImgs(files){
+  const p = draft, list = [...(p.images||[])];
+  for(const f of files){
+    if(f.size > 10*1024*1024){ showToast(f.name + ' is over 10 MB.'); continue; }
+    const path = `${p.id}/${Date.now()}-${f.name.replace(/[^\w.\-]+/g,'_')}`;
+    const { error } = await sb.storage.from(IMG_BUCKET).upload(path, f, { cacheControl:'3600', upsert:false });
+    if(error){ showToast('Upload failed: ' + error.message); continue; }
+    list.push({ path, url: sb.storage.from(IMG_BUCKET).getPublicUrl(path).data.publicUrl });
+  }
+  const r = await act('save', p.id, { images: list }); if(r){ showToast('Images updated.'); await reloadPosts(); }
+}
+async function removeImg(i){
+  const p = draft, list = [...(p.images||[])], [gone] = list.splice(i,1);
+  const r = await act('save', p.id, { images: list }); if(!r) return;
+  if(gone && gone.path) await sb.storage.from(IMG_BUCKET).remove([gone.path]);
+  await reloadPosts();
 }
 
-// ---------- Generic list (tasks + reference) ----------
-function renderList(el, s){
-  const all = DATA[s.k] || [];
-  const rows = all.filter(r => {
-    if(filt.s && r[s.chip] !== filt.s) return false;
-    if(filt.q){ const q = filt.q.toLowerCase(); return s.f.some(f => String(r[f[0]]||'').toLowerCase().includes(q)); }
-    return true; });
-  if(s.sort) rows.sort((a,b)=>String(a[s.sort]||'9999').localeCompare(String(b[s.sort]||'9999')));
-  const chipField = s.f.find(x=>x[0]===s.chip);
-  const opts = chipField && chipField[3] ? chipField[3] : [];
-  el.innerHTML = `
-    <div class="top-bar" style="margin-bottom:16px;">
-      <p class="sub">${esc(s.d)}</p>
-      ${canEdit ? `<button class="btn-primary" onclick="editRef('${s.k}')">Add entry</button>` : ''}
-    </div>
-    <div class="tools">
-      <input id="q" placeholder="Search ${esc(s.t.toLowerCase())}" value="${esc(filt.q)}">
-      ${opts.length ? `<select id="sf"><option value="">All ${esc(chipField[1].toLowerCase())}</option>${opts.map(o=>`<option ${o===filt.s?'selected':''}>${esc(o)}</option>`).join('')}</select>` : ''}
-      <span class="count">${rows.length} of ${all.length}</span>
-    </div>
-    ${!rows.length ? `<div class="empty-state">${all.length ? 'Nothing matches that filter.' : 'Nothing here yet.'}</div>`
-      : s.view === 'table' ? table(s, rows) : cards(s, rows)}`;
-  const q = $('#q'); if(q) q.oninput = e => { filt.q = e.target.value; const p = e.target.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(p,p); };
-  const sf = $('#sf'); if(sf) sf.onchange = e => { filt.s = e.target.value; render(); };
+// ---------- New topic / edit topic ----------
+function picOptions(sel){
+  const ok = Object.values(STAFF).filter(s=>s.status==='active' && !['overseer','writer'].includes(TEAM[s.id])).sort((a,b)=>a.name.localeCompare(b.name));
+  return `<option value="">Choose a person</option>` + ok.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''}>${esc(s.name)}</option>`).join('');
 }
+function topicForm(p){
+  return `
+    <div class="f"><label>Topic</label><input name="title" value="${esc(p.title||'')}" placeholder="Loy Krathong at Bloom"></div>
+    <div class="grid-2"><div class="f"><label>Posting date</label><input name="post_date" type="date" value="${esc(p.post_date||'')}"></div>
+      <div class="f"><label>Time</label><input name="post_time" type="time" value="${esc(p.post_time||'')}"></div></div>
+    <div class="f"><label>Person in charge <span class="hint">reviews and approves</span></label><select name="pic">${picOptions(p.pic)}</select></div>
+    <div class="f"><label>Thai version</label><select name="needs_thai"><option value="true" ${p.needs_thai!==false?'selected':''}>Needed</option><option value="false" ${p.needs_thai===false?'selected':''}>English only</option></select></div>
+    <div class="f"><label>Label <span class="hint">optional</span></label><select name="label"><option value=""></option>${LABELS.map(l=>`<option ${l===p.label?'selected':''}>${l}</option>`).join('')}</select></div>
+    <div class="f"><label>Brief for the writer <span class="hint">optional</span></label><textarea name="brief">${esc(p.brief||'')}</textarea></div>`;
+}
+function topicPayload(){
+  const fd = new FormData($('#fm')), o = {};
+  ['title','post_date','post_time','pic','label','brief'].forEach(k=>o[k] = String(fd.get(k)||'').trim());
+  o.needs_thai = fd.get('needs_thai') === 'true';
+  return o;
+}
+function newTopic(){
+  cur = {topic:true};
+  drawerShell('New topic', topicForm({}), null, false);
+  $('#sv').textContent = 'Create';
+  $('#sv').onclick = async () => {
+    const o = topicPayload();
+    if(!o.title){ $('#msg').textContent = 'Add a topic.'; return; }
+    if(!o.pic){ $('#msg').textContent = 'Pick a person in charge.'; return; }
+    if(!o.post_date){ $('#msg').textContent = 'Pick a posting date.'; return; }
+    const r = await act('create', null, o); if(!r) return;
+    closeD(); showToast('Created. It is now with the writer.'); await reloadPosts(); go('post/'+r.id);
+  };
+}
+function editTopic(id){
+  const p = POSTS.find(x=>x.id===id); if(!p) return;
+  cur = {topic:true};
+  drawerShell('Edit topic', topicForm(p) + `<p style="margin-top:6px"><button type="button" class="link-btn" style="color:#A23F1C" onclick="cancelPost('${id}')">Cancel this post</button></p>`, null, false);
+  $('#sv').onclick = async () => {
+    const o = topicPayload();
+    if(!o.title || !o.pic){ $('#msg').textContent = 'Topic and person in charge are needed.'; return; }
+    const r = await act('edit_topic', id, o); if(!r) return;
+    closeD(); showToast('Topic updated.'); delete EVENTS[id]; await reloadPosts();
+  };
+}
+async function cancelPost(id){
+  if(!confirm('Cancel this post? It will not go out.')) return;
+  const r = await act('cancel', id, {}); if(!r) return;
+  closeD(); showToast('Cancelled.'); await reloadPosts();
+}
+
+// ---------- Team (marketing full only) ----------
+function teamView(){
+  const rows = Object.values(STAFF).filter(s=>s.status==='active').sort((a,b)=>a.name.localeCompare(b.name));
+  return `<div class="box"><h3 class="bh">Who does what</h3>
+    <p class="meta" style="font-size:13px;margin-bottom:10px">The writer writes English and posts. The translator checks the Thai. Overseers see everything but do not take part. Everyone else can be picked as person in charge.</p>
+    ${rows.map(s=>`<div class="wo"><span style="font-weight:600">${esc(s.name)}</span><span></span>
+      <select onchange="setDuty('${s.id}', this.value)" style="border:1px solid #DCD5C6;border-radius:8px;padding:6px 8px">${[['','Person in charge (if picked)'],['writer','Writer'],['translator','Translator'],['overseer','Overseer']].map(([v,l])=>`<option value="${v}" ${(TEAM[s.id]||'')===v?'selected':''}>${l}</option>`).join('')}</select></div>`).join('')}
+    <p class="meta" style="margin-top:10px">People also need Marketing access in Permissions to use the HQ.</p></div>`;
+}
+async function setDuty(id, duty){
+  const { error } = duty
+    ? await sb.from('marketing_team').upsert({ staff_id:id, duty }, { onConflict:'staff_id' })
+    : await sb.from('marketing_team').delete().eq('staff_id', id);
+  if(error){ showToast('Could not save: ' + error.message); return; }
+  if(duty) TEAM[id] = duty; else delete TEAM[id];
+  showToast('Saved.'); render();
+}
+
+// ---------- Reference (edited here) ----------
 function renderGroup(el, g){
   el.innerHTML = `<p class="sub" style="margin-bottom:22px">${esc(g.d)}</p>` + g.secs.map(k=>{
     const s = SEC[k]; const rows = (DATA[k]||[]).slice();
@@ -769,12 +869,13 @@ async function onStaffReady(){
   if(!canAccess('marketing', 'view')){ window.location.href = 'staff-dashboard.html'; return; }
   canEdit = canAccess('marketing', 'edit');
   canDelete = canAccess('marketing', 'full');
+  ME = window.currentStaff && window.currentStaff.id;
   render();
   await loadAll();
   listen();
 }
 window.addEventListener('hashchange', () => { filt.q=''; filt.s=''; closeD(); render(); window.scrollTo(0,0); });
-window.addEventListener('focus', () => { if(loaded && !cur) loadSheet().then(ok=>{ if(ok && !cur) render(); }); });
+window.addEventListener('beforeunload', e => { if(dirty()){ e.preventDefault(); e.returnValue = ''; } });
 
 window.STAFF_PAGE_KEY = 'marketing';
 checkStaffAndInit();

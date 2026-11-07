@@ -272,6 +272,16 @@ textarea[readonly],input[readonly]{background:#F7F3EC!important;color:#5F5E5A;}
 .briefbox{background:#F7F3EC;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;}
 .briefbox b{font-weight:600;color:#5F5E5A;margin-right:4px;} .briefbox .kp{flex-basis:100%;white-space:pre-wrap;}
 .adm{font-size:12px;color:#854F0B;}
+.aibar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px;}
+.aibar .btn-outline.sm{border-color:#CECBF6;color:#534AB7;}
+.aipanel{border:1px solid #CECBF6;background:#F7F6FE;border-radius:12px;padding:12px 14px;margin:0 0 14px;}
+.aipanel h4{font-size:13px;font-weight:700;color:#3C3489;margin-bottom:6px;display:flex;gap:8px;align-items:center;}
+.aipanel textarea{width:100%;min-height:200px;border:1px solid #DCD5C6;border-radius:8px;padding:10px 12px;background:#fff;font-size:14px;line-height:1.5;}
+.aipanel .row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap;align-items:center;}
+.aimsg{border-radius:10px;padding:10px 14px;font-size:13.5px;margin:0 0 14px;background:#FAEEDA;color:#633806;font-weight:600;}
+.aibanner{border-radius:12px;padding:10px 16px;font-size:13.5px;margin:0 0 14px;background:#FCEBEB;color:#791F1F;font-weight:600;}
+.vers{margin-top:8px;} .vers .v{display:grid;grid-template-columns:150px 110px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0;border-top:1px solid #F0ECE3;}
+.vers .v .pv{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#5F5E5A;}
 .hist{font-size:12px;color:#888780;line-height:1.8;padding:12px 4px;}
 .toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
 
@@ -421,6 +431,16 @@ function backupFor(p){
   return false;
 }
 let SUGG = [], SPECIAL = [], HIDDEN = new Set();
+let VERSIONS = {}, AISTATUS = null, AI_SUG = null, SHOW_VERS = false;
+const AI_MSG = {
+  no_credit: 'AI is paused: the AI credit has run out. Write it yourself for now, nothing is lost. Ronnie has been told.',
+  spend_limit: 'AI is paused: this month\'s AI limit is reached. Write it yourself for now, nothing is lost. Ronnie has been told.',
+  bad_key: 'AI is paused: the AI key has expired or stopped working. Write it yourself for now, nothing is lost. Ronnie has been told.',
+  busy: 'The AI is busy right now. Try again in a minute.',
+  network: 'Could not reach the AI. Check your connection and try again.',
+  api_error: 'The AI could not finish this one. Try again.',
+  auth: 'You cannot use AI on this caption at this step.',
+};
 const openStep = p => !['posted','cancelled'].includes(p.step);
 
 // Who has the post now
@@ -461,7 +481,7 @@ const actionWord = p => ({english: p.sent_back ? 'Fix' : 'Write', thai:'Translat
 
 // ---------- Data ----------
 async function loadAll(){
-  const [posts, staff, team, labels, ent, sch, spec, hid] = await Promise.all([
+  const [posts, staff, team, labels, ent, sch, spec, hid, ais] = await Promise.all([
     sb.from('marketing_posts').select('*').order('post_date', {ascending:true, nullsFirst:false}),
     sb.from('staff').select('id,name,status'),
     sb.from('marketing_team').select('staff_id,duty'),
@@ -469,7 +489,8 @@ async function loadAll(){
     sb.from('marketing_entries').select('id,collection,data,updated_at,updated_by').neq('collection','content').order('created_at'),
     sb.rpc('mkt_school_dates'),
     sb.from('marketing_special_dates').select('*').order('date'),
-    sb.from('marketing_hidden_suggestions').select('key')
+    sb.from('marketing_hidden_suggestions').select('key'),
+    sb.from('marketing_ai_status').select('*').maybeSingle()
   ]);
   if(posts.error){ showToast('Could not load posts: ' + posts.error.message); return; }
   POSTS = posts.data || [];
@@ -477,6 +498,7 @@ async function loadAll(){
   TEAM = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, t.duty]));
   LABELS = labels.data || [];
   SPECIAL = spec.data || [];
+  AISTATUS = (ais && ais.data) || null;
   HIDDEN = new Set((hid.data||[]).map(h=>h.key));
   SUGG = [...(sch.data||[]).map(x=>({date:x.date, name:x.name, kind:x.kind, confirmed:true})),
           ...SPECIAL.map(x=>({date:x.date, name:x.name, kind:'special', confirmed:x.confirmed, note:x.note}))]
@@ -491,7 +513,7 @@ async function loadAll(){
 }
 async function reloadPosts(){
   const { data } = await sb.from('marketing_posts').select('*').order('post_date', {ascending:true, nullsFirst:false});
-  if(data){ POSTS = data; const id = postId(); if(id) delete EVENTS[id]; if(!dirty()) render(); }
+  if(data){ POSTS = data; const id = postId(); if(id){ delete EVENTS[id]; delete VERSIONS[id]; } if(!dirty()) render(); }
 }
 function listen(){
   if(!sb.channel) return;
@@ -537,6 +559,8 @@ function render(){
   const nb = $('#newTopicBtn'); if(nb) nb.style.display = loaded && canEdit ? '' : 'none';
   const el = $('#view'), v = view();
   if(!loaded){ el.innerHTML = '<div class="empty-state">Loading…</div>'; return; }
+  let ab = $('#aiBanner'); if(!ab){ ab = document.createElement('div'); ab.id = 'aiBanner'; el.before(ab); }
+  ab.innerHTML = aiBannerHtml();
   if(v==='turn') el.innerHTML = myTurn();
   else if(v==='overview') el.innerHTML = overview();
   else if(v==='calendar') el.innerHTML = calendarView();
@@ -678,11 +702,16 @@ let draft = null;
 const dirty = () => !!draft && !!$('#pg') && ['copy_en','copy_th','hashtags','video_url'].some(k => (($('#f-'+k)||{}).value ?? null) !== null && $('#f-'+k).value !== (draft[k]||''));
 async function renderPost(el){
   const id = postId(), p = POSTS.find(x=>x.id===id);
+  if(AI_SUG && AI_SUG.post !== id) AI_SUG = null;
   if(!p){ el.innerHTML = '<div class="empty-state">This post was not found.</div>'; return; }
   draft = p;
   if(!EVENTS[id]){
     EVENTS[id] = [];
     sb.from('marketing_post_events').select('actor,kind,note,created_at').eq('post_id', id).order('created_at').then(({data})=>{ EVENTS[id] = data || []; if(postId()===id && !dirty()) renderPost($('#view')); });
+  }
+  if(!VERSIONS[id]){
+    VERSIONS[id] = [];
+    sb.from('marketing_post_versions').select('id,field,body,source,actor,created_at').eq('post_id', id).order('created_at', {ascending:false}).then(({data})=>{ VERSIONS[id] = data || []; if(postId()===id && !dirty() && !AI_SUG) renderPost($('#view')); });
   }
   const mine = isMine(p), pic = p.pic === ME, adm = isAdmin() && openStep(p), bk = backupFor(p);
   const W = isWriterish(), T = isTranslatorish();
@@ -692,6 +721,8 @@ async function renderPost(el){
   const canImg = (W && openStep(p)) || (pic && p.step==='review') || adm;
   const canTopic = (p.created_by===ME || canDelete) && openStep(p);
   const canBrief = (p.created_by===ME || pic || isAdmin()) && p.step==='english';
+  const canAiTh = canTh && (p.step==='thai' || adm) && !!(p.copy_en||'').trim();
+  window._canEdit = { en: canEn, th: canTh };
   const steps = ['english', 'review', ...(p.needs_thai?['thai']:[]), 'post'];
   const cur = p.step==='posted' ? steps.length : steps.indexOf(p.step);
   const bar = steps.map((s,i)=>`<span class="sb ${i<cur?'done':i===cur?'now':''}"><span class="sd">${i<cur?'&#10003;':i+1}</span>${STEP_LABEL[s]}${s==='review'?` · ${esc(nameOf(p.pic)||'PIC not set')}`:''}</span>`).join('<span class="sl"></span>');
@@ -726,9 +757,10 @@ async function renderPost(el){
     <div class="stepbar">${bar}</div>
     ${p.step==='english'&&p.sent_back&&p.back_note?`<div class="banner bad">${esc(nameOf(p.pic)||'PIC')}: ${esc(p.back_note)}</div>`:''}
     ${briefHtml}
+    <div id="aiSlot"></div>
     <div class="grid-2" style="margin-bottom:12px">
-      <div class="f"><label>English${canEn?'':' <span class="hint">view only</span>'}</label><textarea id="f-copy_en" class="tall" ${canEn?'':'readonly'} placeholder="${canEn?'Write the English caption':''}">${esc(p.copy_en||'')}</textarea></div>
-      ${p.needs_thai && !canTh && !(p.copy_th||'').trim() && ['english','review'].includes(p.step) ? '<div class="f"><label>Thai</label><p class="meta">The translator writes the Thai after the English is approved.</p></div>' : p.needs_thai?`<div class="f"><label>Thai${p.th_machine?' <span class="hint" style="color:#854F0B">machine draft, not checked</span>':''}${canTh?'':' <span class="hint">view only</span>'}</label><textarea id="f-copy_th" class="tall" ${canTh?'':'readonly'} placeholder="${canTh?'Write or fix the Thai caption':''}">${esc(p.copy_th||'')}</textarea></div>`:'<div class="f"><label>Thai</label><p class="meta">English only for this post.</p></div>'}
+      <div class="f"><label>English${canEn?'':' <span class="hint">view only</span>'}</label><textarea id="f-copy_en" class="tall" ${canEn?'':'readonly'} placeholder="${canEn?'Write or paste the English caption':''}">${esc(p.copy_en||'')}</textarea>${canEn?`<div class="aibar"><button class="btn-outline sm" id="aiBtn-rewrite" onclick="aiRun('rewrite')">Rewrite with AI</button>${backBtn(p,'en')}</div>`:''}</div>
+      ${p.needs_thai && !canTh && !(p.copy_th||'').trim() && ['english','review'].includes(p.step) ? '<div class="f"><label>Thai</label><p class="meta">The translator writes the Thai after the English is approved.</p></div>' : p.needs_thai?`<div class="f"><label>Thai${p.th_machine?' <span class="hint" style="color:#854F0B">machine draft, not checked</span>':''}${canTh?'':' <span class="hint">view only</span>'}</label><textarea id="f-copy_th" class="tall" ${canTh?'':'readonly'} placeholder="${canTh?'Write or fix the Thai caption':''}">${esc(p.copy_th||'')}</textarea>${canAiTh?`<div class="aibar"><button class="btn-outline sm" id="aiBtn-thai" onclick="aiRun('thai')">${(p.copy_th||'').trim()?'Redo Thai with AI':'Draft Thai with AI'}</button>${backBtn(p,'th')}</div>`:(canTh?`<div class="aibar">${backBtn(p,'th')}</div>`:'')}</div>`:'<div class="f"><label>Thai</label><p class="meta">English only for this post.</p></div>'}
     </div>
     <div class="f"><label>Hashtags${canTags?'':' <span class="hint">view only</span>'}</label><input id="f-hashtags" ${canTags?'':'readonly'} value="${esc(p.hashtags||'')}" placeholder="#BloomChiangmai"></div>
     <div class="f"><label>Images</label><div class="imgs">${imgs.map((im,i)=>`<span class="im">${safeUrl(im.url)?`<a href="${esc(im.url)}" target="_blank" rel="noopener">${im.external?'<span class="ext">Drive link</span>':`<img src="${esc(im.url)}" alt="">`}</a>`:''}${canImg?`<button class="imx" title="Remove" onclick="removeImg(${i})">×</button>`:''}</span>`).join('')}
@@ -737,8 +769,91 @@ async function renderPost(el){
     ${p.post_url?`<p style="margin-bottom:12px"><a href="${esc(safeUrl(p.post_url))}" target="_blank" rel="noopener" style="font-weight:600">View the live post</a></p>`:''}
     <div class="actions">${(canEn||canTh||canTags||canImg)?`<button class="btn-outline" onclick="saveFields()">Save</button>`:''}${waiting}<span style="flex:1"></span>${actions}</div>
   </div>
-  <div class="hist"><b>History</b><br>${hist||'…'}</div>
+  <div class="hist"><b>History</b><br>${hist||'…'}${(VERSIONS[id]||[]).length?`<br><a href="javascript:void 0" onclick="SHOW_VERS=!SHOW_VERS;renderPost($('#view'))">${SHOW_VERS?'Hide':'Show'} earlier versions (${VERSIONS[id].length})</a>${SHOW_VERS?versionsHtml(p):''}`:''}</div>
   </div>`;
+  if(AI_SUG && AI_SUG.post === id) aiShowPanel();
+}
+
+// ---------- AI ----------
+const SRC_LABEL = {human:'typed', ai:'AI', restore:'restored', original:'before tracking'};
+function fieldText(p, f){ return (f==='en' ? p.copy_en : p.copy_th) || ''; }
+// "Back to my version": when the current text is an AI version, restore the text from just before it.
+function backBtn(p, f){
+  const vs = (VERSIONS[p.id]||[]).filter(v=>v.field===f);
+  if(!vs.length || vs[0].source !== 'ai' || vs[0].body !== fieldText(p,f)) return '';
+  const prev = vs.slice(1).find(v=>v.source !== 'ai');
+  if(!prev) return '';
+  return `<button class="link-btn" onclick="restoreVersion('${prev.id}')">Back to my version</button><span class="meta">AI text in use</span>`;
+}
+function versionsHtml(p){
+  const vs = VERSIONS[p.id]||[];
+  return `<div class="vers">${vs.map(v=>{ const can = (window._canEdit||{})[v.field] && v.body !== fieldText(p, v.field);
+    return `<div class="v"><span>${v.field==='en'?'English':'Thai'} · ${esc(SRC_LABEL[v.source]||v.source)}${v.actor?' · '+esc(nameOf(v.actor)):''}</span>
+      <span>${new Date(v.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+      <span class="pv">${esc(v.body.slice(0,140))}</span>
+      ${can?`<button class="link-btn" onclick="restoreVersion('${v.id}')">Restore</button>`:'<span></span>'}</div>`; }).join('')}</div>`;
+}
+async function restoreVersion(vid){
+  const p = draft, v = (VERSIONS[p.id]||[]).find(x=>x.id===vid); if(!v) return;
+  if(!(await saveFields(true))) return;
+  const col = v.field==='en'?'copy_en':'copy_th';
+  const r = await act('save', p.id, { [col]: v.body, source: 'restore' }); if(!r) return;
+  p[col] = v.body; const box = $('#f-'+col); if(box) box.value = v.body;
+  showToast('Earlier version restored.'); delete EVENTS[p.id]; delete VERSIONS[p.id]; AI_SUG = null; await reloadPosts();
+}
+async function aiRun(action){
+  const p = draft, btn = $('#aiBtn-'+action);
+  const field = action==='rewrite' ? 'en' : 'th';
+  const text = action==='rewrite' ? (($('#f-copy_en')||{}).value||'').trim() : '';
+  if(action==='rewrite' && !text){ showToast('Write or paste some English first.'); return; }
+  if(btn){ btn.disabled = true; btn.textContent = 'Working…'; }
+  let out = null;
+  try{
+    const r = await sb.functions.invoke('mkt-ai', { body: { action, post_id: p.id, text } });
+    out = r.data;
+    if(r.error && r.error.context){ try{ out = await r.error.context.json(); }catch(e){} }
+    if(!out && r.error) out = { ok:false, reason:'network' };
+  }catch(e){ out = { ok:false, reason:'network' }; }
+  if(btn){ btn.disabled = false; btn.textContent = action==='rewrite' ? 'Rewrite with AI' : ((p.copy_th||'').trim()?'Redo Thai with AI':'Draft Thai with AI'); }
+  if(!out || !out.ok){
+    const reason = (out && out.reason) || 'api_error';
+    if(['no_credit','spend_limit','bad_key'].includes(reason)){ AISTATUS = Object.assign({}, AISTATUS||{}, { last_error: reason, last_error_at: new Date().toISOString() }); const ab = $('#aiBanner'); if(ab) ab.innerHTML = aiBannerHtml(); }
+    const slot = $('#aiSlot'); if(slot) slot.innerHTML = `<div class="aimsg">${esc((out && out.message) || AI_MSG[reason] || AI_MSG.api_error)}</div>`;
+    return;
+  }
+  if(AISTATUS) AISTATUS.last_ok_at = new Date().toISOString();
+  AI_SUG = { post: p.id, field, text: out.text };
+  aiShowPanel();
+}
+function aiShowPanel(){
+  const slot = $('#aiSlot'); if(!slot || !AI_SUG) return;
+  const en = AI_SUG.field === 'en';
+  slot.innerHTML = `<div class="aipanel">
+    <h4>${en?'AI rewrite':'AI Thai draft'} <span class="meta" style="font-weight:400">${en?'Your text stays as it is until you choose.':'Made from the approved English. The translator still checks it.'}</span></h4>
+    <textarea id="aiText">${esc(AI_SUG.text)}</textarea>
+    <div class="row"><span class="meta" style="margin-right:auto">You can edit it here before using it.</span>
+      <button class="btn-outline sm" onclick="aiDismiss()">${en?'Keep mine':'Not now'}</button>
+      <button class="btn-primary sm" onclick="aiUse()">Use this</button></div></div>`;
+}
+function aiDismiss(){ AI_SUG = null; const s = $('#aiSlot'); if(s) s.innerHTML = ''; }
+async function aiUse(){
+  if(!AI_SUG) return;
+  const p = draft, f = AI_SUG.field, text = ($('#aiText')||{}).value || AI_SUG.text;
+  // Save whatever is in the boxes first, so the person's own text is kept as a version.
+  if(!(await saveFields(true))) return;
+  const col = f==='en'?'copy_en':'copy_th';
+  const r = await act('save', p.id, { [col]: text, source: 'ai' }); if(!r) return;
+  p[col] = text; const box = $('#f-'+col); if(box) box.value = text;
+  AI_SUG = null; showToast(f==='en' ? 'AI rewrite in use. "Back to my version" restores yours.' : 'AI Thai in use. Check it before marking Thai done.');
+  delete EVENTS[p.id]; delete VERSIONS[p.id]; await reloadPosts();
+}
+function aiBannerHtml(){
+  if(!isAdmin() || !AISTATUS || !AISTATUS.last_error || !['no_credit','spend_limit','bad_key'].includes(AISTATUS.last_error)) return '';
+  if(AISTATUS.last_ok_at && AISTATUS.last_ok_at > AISTATUS.last_error_at) return '';
+  const when = new Date(AISTATUS.last_error_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  const what = {no_credit:'AI credit ran out', spend_limit:'AI monthly limit reached', bad_key:'AI key stopped working'}[AISTATUS.last_error];
+  const fix = AISTATUS.last_error==='bad_key' ? 'Make a new key in the Claude Console and save it in Supabase as ANTHROPIC_API_KEY.' : 'Top up at platform.claude.com/settings/billing.';
+  return `<div class="aibanner">${what} on ${when}. AI buttons are paused for everyone. ${fix}</div>`;
 }
 function fieldVals(){
   const o = {};

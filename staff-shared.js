@@ -62,6 +62,7 @@ const NAV_ITEMS = [
   { key: 'learners', label: 'Learners', href: 'learners.html', group: 'Students' },
   { key: 'calendar', label: 'Calendar', href: 'staff-calendar.html', group: 'Tools' },
   { key: 'library', label: 'Bloombrary', href: 'https://bloombrary.learn2bloom.org/admin', group: 'Tools' },
+  { key: 'marketing', label: 'Marketing HQ', href: 'staff-marketing.html', group: 'Tools', module: 'marketing' },
   { key: 'team', label: 'Team', href: 'staff-team.html', group: 'Staff' },
   { key: 'permissions', label: 'Permissions', href: 'staff-permissions.html', group: 'Staff', adminOnly: true },
   { key: 'archive', label: 'Archived Learners', href: 'archive.html', group: 'History' },
@@ -111,6 +112,7 @@ function renderSidebar(activeKey){
   const groups = [];
   NAV_ITEMS.forEach(item => {
     if(item.adminOnly && !isAdminOrIt) return;
+    if(item.module && !canAccess(item.module, 'view')) return;
     let group = groups.find(g => g.name === item.group);
     if(!group){ group = { name: item.group, items: [] }; groups.push(group); }
     group.items.push(item);

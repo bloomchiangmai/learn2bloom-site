@@ -571,7 +571,7 @@ let lastTab = null;
 function tabs(){
   const v = view();
   if(v !== 'post') lastTab = v;
-  const mine = POSTS.filter(p=>isMine(p) && (p.post_date || p.sent_back)).length + POSTS.filter(p=>p.en_post_edit && p.pic===ME && p.step!=='cancelled').length;
+  const mine = POSTS.filter(p=>isMine(p) && (p.post_date || p.sent_back)).length;
   $('#tabs').innerHTML = tabsFor().map(([k,l]) => `<button class="tab ${k===(v==='post'?lastTab:v)?'on':''}" onclick="go('${k}')">${l}${k==='turn'&&mine?`<span class="n">${mine}</span>`:''}</button>`).join('');
   $('#subtabs').innerHTML = v==='ref'
     ? `<div class="subtabs">${REF_GROUPS.map(g=>`<button class="pill ${g.k===refKey?'on':''}" onclick="refKey='${g.k}';render()">${g.t}<span class="n">${g.secs.reduce((a,k)=>a+(DATA[k]||[]).length,0)}</span></button>`).join('')}</div>` : '';
@@ -619,8 +619,6 @@ function myTurn(){
     ${(()=>{ const n = POSTS.filter(p=>isMine(p) && !p.post_date && !p.sent_back).length;
       return n ? `<p class="meta" style="padding:10px 0 0"><a href="javascript:void 0" onclick="calMode='ideas';go('calendar')">${n} idea${n>1?'s':''} with no date</a>. To use one, open it and set a date and person in charge with Edit topic.</p>` : ''; })()}
   </div>
-  ${(()=>{ const ch = POSTS.filter(p=>p.en_post_edit && p.pic===ME && p.step!=='cancelled');
-    return ch.length ? `<div class="box"><h3 class="bh">Changed after you approved: ${ch.length}</h3><p class="meta" style="font-size:13px;margin-bottom:6px">The writer changed the English at the Post step. Open it, check the change, then click Seen.</p>${ch.map(p=>line(p,true)).join('')}</div>` : ''; })()}
   ${(()=>{ const bk = POSTS.filter(p=>backupFor(p) && p.post_date).sort((a,b)=>String(dueOf(a)).localeCompare(String(dueOf(b))));
     return ['writer_backup','translator_backup'].includes(d) ? `<div class="box"><h3 class="bh">As backup</h3><p class="meta" style="font-size:13px;margin-bottom:6px">You cover these if the ${d==='writer_backup'?'writer':'translator'} is away. Step in when one is late.</p>${bk.length ? bk.map(p=>line(p)).join('') : '<p class="meta" style="padding:8px 0">Nothing at this step right now.</p>'}</div>` : ''; })()}
   ${!writers().length || !translators().length ? `<p class="meta" style="margin-top:14px">${!writers().length?'No writer is set yet. ':''}${!translators().length?'No translator is set yet. ':''}${canDelete?'Set them in the Team tab.':''}</p>` : ''}`;
@@ -817,12 +815,11 @@ async function renderPost(el){
     </div>
     <div class="stepbar">${bar}</div>
     ${p.step==='english'&&p.sent_back&&p.back_note?`<div class="banner bad">${esc(nameOf(p.pic)||'PIC')}: ${esc(p.back_note)}</div>`:''}
-    ${p.step==='review'&&p.sent_back&&p.back_note?`<div class="banner bad">Sent back by the translator: ${esc(p.back_note)}</div>`:''}
-    ${p.en_post_edit&&(pic||isAdmin())?`<div class="banner warn" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span>The English was changed after you approved it. See History and earlier versions below.</span><button class="btn-outline sm" onclick="doAct('ack_change')">Seen</button></div>`:''}
+    ${p.step==='review'&&p.sent_back&&p.back_note?`<div class="banner bad">${esc(p.back_note)}</div>`:''}
     ${briefHtml}
     <div id="aiSlot"></div>
     <div class="grid-2" style="margin-bottom:12px">
-      <div class="f"><label>English${canEn?(p.step==='post'?` <span class="hint" style="color:#854F0B">already approved: changes are logged and ${esc(nameOf(p.pic)||'the PIC')} is told${p.needs_thai?'. Saving sends it back to Thai to check the Thai':''}</span>`:''):' <span class="hint">view only</span>'}</label><textarea id="f-copy_en" class="tall" ${canEn?'':'readonly'} placeholder="${canEn?'Write or paste the English caption':''}">${esc(p.copy_en||'')}</textarea>${canEn?`<div class="aibar"><button class="btn-outline sm" id="aiBtn-rewrite" onclick="aiRun('rewrite')">Rewrite with AI</button>${backBtn(p,'en')}</div>`:''}</div>
+      <div class="f"><label>English${canEn?(p.step==='post'?` <span class="hint" style="color:#854F0B">already approved: saving a change sends it back to Review</span>`:''):' <span class="hint">view only</span>'}</label><textarea id="f-copy_en" class="tall" ${canEn?'':'readonly'} placeholder="${canEn?'Write or paste the English caption':''}">${esc(p.copy_en||'')}</textarea>${canEn?`<div class="aibar"><button class="btn-outline sm" id="aiBtn-rewrite" onclick="aiRun('rewrite')">Rewrite with AI</button>${backBtn(p,'en')}</div>`:''}</div>
       ${p.needs_thai ? `<div class="f"><label>Thai${p.th_machine?' <span class="hint" style="color:#854F0B">machine draft, not checked</span>':''}${canTh?'':' <span class="hint">'+(canAiTh?'AI draft only until the Thai step':'view only')+'</span>'}</label>
         ${p.th_stale?`<div class="thnote">The English changed after this Thai was made.${canAiTh?`<button class="btn-outline sm" onclick="aiRun('thai')">Redo Thai with AI</button>`:''}</div>`:''}
         <textarea id="f-copy_th" class="tall" ${canTh?'':'readonly'} placeholder="${canTh?'Write or fix the Thai caption':(canAiTh?'Use Draft Thai with AI below, or leave it for the translator':'The translator writes the Thai after the English is approved')}">${esc(p.copy_th||'')}</textarea>
@@ -1012,9 +1009,10 @@ async function saveFields(quiet){
   const p = draft, o = fieldVals(), ch = {};
   Object.keys(o).forEach(k=>{ if(o[k] !== (p[k]||'')) ch[k] = o[k]; });
   if(!Object.keys(ch).length){ if(!quiet) showToast('Nothing to save.'); return true; }
+  const wasPost = p.step === 'post';
   const r = await act('save', p.id, ch); if(!r) return false;
   Object.assign(p, ch); delete EVENTS[p.id];
-  if(!quiet){ showToast('Saved.'); await reloadPosts(true); }
+  if(!quiet){ showToast(wasPost && ch.copy_en !== undefined ? 'Saved. It goes back to Review for approval.' : 'Saved.'); await reloadPosts(true); }
   return true;
 }
 async function doAct(a){
@@ -1027,12 +1025,13 @@ async function doAct(a){
     pay.confirm_current = true;
   }
   if(!(await saveFields(true))) return;
+  if(a==='send_on' && !p.pic){ showToast('Pick the person in charge first.'); editTopic(p.id); return; }
   if(a==='translator_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the person in charge knows what to check.'); $('#f-note').focus(); return; } }
   if(a==='send_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the writer knows what to change.'); $('#f-note').focus(); return; } }
   if(a==='mark_posted') pay.post_url = (($('#f-url')||{}).value||'').trim();
   const r = await act(a, p.id, pay); if(!r) return;
   EXTRA_KEYS.forEach(k => { const e = $('#f-'+k); if(e) e.value = ''; });
-  showToast({send_on:'Sent to Review.', thai_checked:'Thai done. Sent to Post.', send_back:'Sent back to English with your note.', translator_back:'Sent back to Review with your note.', approve: p.needs_thai ? 'Approved. Sent to Thai.' : 'Approved. Sent to Post.', mark_posted:'Marked as posted.', ack_change:'Marked as seen.'}[a] || 'Done.');
+  showToast({send_on:'Sent to Review.', thai_checked:'Thai done. Sent to Post.', send_back:'Sent back to English with your note.', translator_back:'Sent back to Review with your note.', approve: p.needs_thai ? 'Approved. Sent to Thai.' : 'Approved. Sent to Post.', mark_posted:'Marked as posted.'}[a] || 'Done.');
   delete EVENTS[p.id]; await reloadPosts(true);
 }
 async function copyCaption(){
@@ -1096,15 +1095,15 @@ function editBrief(id){
   };
 }
 function topicForm(p, withBrief){
-  const thai = p.needs_thai === undefined ? '' : String(p.needs_thai);
+  const thai = p.needs_thai === undefined ? 'true' : String(p.needs_thai);
   return `
     <div class="f"><label>Topic</label><input name="title" value="${esc(p.title||'')}" placeholder="Loy Krathong at Bloom"></div>
     <div class="grid-2"><div class="f"><label>Posting date</label><input name="post_date" type="date" value="${esc(p.post_date||'')}"></div>
       <div class="f"><label>Time <span class="hint">optional</span></label><input name="post_time" type="time" value="${esc(p.post_time||'')}"></div></div>
-    <div class="f"><label>Label</label><select name="label" onchange="labelPicked(this.value)"><option value="">Choose a label</option>${LABELS.map(l=>`<option ${l.name===p.label?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div>
-    <div class="f"><label>Person in charge <span class="hint">reviews and approves</span></label><select name="pic" onchange="this.dataset.touched='1'">${picOptions(p.pic)}</select></div>
-    <div class="f"><label>Thai version</label><select name="needs_thai"><option value="" ${thai===''?'selected':''}>Choose</option><option value="true" ${thai==='true'?'selected':''}>Needed</option><option value="false" ${thai==='false'?'selected':''}>English only</option></select></div>
-    ${withBrief ? '<h4 style="font-size:13px;margin:16px 0 8px;color:#5F5E5A">Brief for the writer</h4>' + briefFields(p) : ''}`;
+    <div class="f"><label>Label <span class="hint">optional</span></label><select name="label" onchange="labelPicked(this.value)"><option value="">Choose a label</option>${LABELS.map(l=>`<option ${l.name===p.label?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div>
+    <div class="f"><label>Person in charge <span class="hint">needed before Send to Review</span></label><select name="pic" onchange="this.dataset.touched='1'">${picOptions(p.pic)}</select></div>
+    <div class="f"><label>Thai version</label><select name="needs_thai"><option value="true" ${thai==='true'?'selected':''}>Needed</option><option value="false" ${thai==='false'?'selected':''}>English only</option></select></div>
+    ${withBrief ? `<p style="margin:10px 0"><a href="javascript:void 0" onclick="$('#briefWrap').style.display='';this.parentElement.remove()">+ Add a brief (the AI writes better with it)</a></p><div id="briefWrap" style="display:none"><h4 style="font-size:13px;margin:16px 0 8px;color:#5F5E5A">Brief for the writer</h4>${briefFields(p)}</div>` : ''}`;
 }
 // A label suggests who usually approves it, unless a person was already picked by hand.
 function labelPicked(name){
@@ -1115,6 +1114,8 @@ function labelPicked(name){
 function topicPayload(){
   const fd = new FormData($('#fm')), o = {};
   ['title','post_date','post_time','pic','label'].forEach(k=>o[k] = String(fd.get(k)||'').trim());
+  // Leave out an empty label or PIC: not set yet is fine, and an edit never clears one by accident.
+  ['pic','label'].forEach(k=>{ if(!o[k]) delete o[k]; });
   const t = String(fd.get('needs_thai')||'');
   if(t) o.needs_thai = t === 'true';
   return o;
@@ -1122,9 +1123,6 @@ function topicPayload(){
 function topicMissing(o){
   if(!o.title) return 'Add a topic.';
   if(!o.post_date) return 'Pick a posting date.';
-  if(!o.label) return 'Pick a label.';
-  if(!o.pic) return 'Pick a person in charge.';
-  if(o.needs_thai === undefined) return 'Choose Thai needed or English only.';
   return '';
 }
 function newTopic(date, pre, suggKey){
@@ -1134,11 +1132,11 @@ function newTopic(date, pre, suggKey){
   if(pre.label) setTimeout(()=>labelPicked(pre.label), 0);
   $('#sv').textContent = 'Create';
   $('#sv').onclick = async () => {
-    const o = {...topicPayload(), ...briefPayload()}, miss = topicMissing(o) || briefMissing(o);
+    const o = {...topicPayload(), ...briefPayload()}, miss = topicMissing(o);
     if(miss){ $('#msg').textContent = miss; return; }
     const r = await act('create', null, o); if(!r) return;
     if(suggKey){ await sb.from('marketing_hidden_suggestions').insert({ key: suggKey }); HIDDEN.add(suggKey); }
-    closeD(); showToast('Created. It is now with the writer.'); await reloadPosts(true); go('post/'+r.id);
+    closeD(); showToast(o.pic ? 'Created. It is now with the writer.' : 'Created. Set the person in charge before it goes to Review.'); await reloadPosts(true); go('post/'+r.id);
   };
   setTimeout(()=>{ const f = $('#fm [name="title"]'); if(f) f.focus(); }, 50);
 }
@@ -1160,7 +1158,8 @@ async function cancelPost(id){
 }
 
 // ---------- Team (marketing full only) ----------
-const DUTIES = [['writer','Writer'],['writer_backup','Backup writer'],['translator','Translator'],['translator_backup','Backup translator'],['pic','Person in charge'],['overseer','Overseer']];
+const DUTIES_ALL = [['writer','Writer'],['writer_backup','Backup writer'],['translator','Translator'],['translator_backup','Backup translator'],['pic','Person in charge'],['overseer','Overseer']];
+const DUTIES = DUTIES_ALL.filter(d=>['writer','translator','pic'].includes(d[0]));
 const DUTY_NOTE = {writer:'Writes English and posts', writer_backup:'Covers the writer when away', translator:'Translates approved English', translator_backup:'Covers the translator when away', pic:'Reviews and approves posts', overseer:'Sees everything. As admin, can step in at any step'};
 function teamView(){
   const members = Object.keys(TEAM).filter(id=>STAFF[id]).sort((a,b)=>DUTIES.findIndex(d=>d[0]===TEAM[a]) - DUTIES.findIndex(d=>d[0]===TEAM[b]) || STAFF[a].name.localeCompare(STAFF[b].name));
@@ -1170,7 +1169,7 @@ function teamView(){
   return `<div class="box"><h3 class="bh">Marketing team</h3>
     <p class="meta" style="font-size:13px;margin-bottom:6px">Only people listed here take part. People also need Marketing access in Permissions to open the HQ.</p>
     ${members.length ? members.map(id=>`<div class="tm"><span style="font-weight:600">${esc(STAFF[id].name)}</span>
-      <select onchange="setDuty('${id}', this.value)" ${sel}>${DUTIES.map(([v,l])=>`<option value="${v}" ${TEAM[id]===v?'selected':''}>${l}</option>`).join('')}</select>
+      <select onchange="setDuty('${id}', this.value)" ${sel}>${DUTIES_ALL.filter(d=>DUTIES.includes(d)||TEAM[id]===d[0]).map(([v,l])=>`<option value="${v}" ${TEAM[id]===v?'selected':''}>${l}</option>`).join('')}</select>
       <span class="muted">${NO_ACCESS.has(id)?'<span style="color:#A23F1C;font-weight:600">Cannot open the HQ yet: give Marketing edit in Permissions</span>':(DUTY_NOTE[TEAM[id]]||'')}</span>
       <button class="link-btn" style="color:#A23F1C" onclick="removeMember('${id}')">Remove</button></div>`).join('') : '<p class="meta" style="padding:8px 0">No one yet.</p>'}
     ${others.length ? `<div class="tm add"><select id="addWho" ${sel}><option value="">Add a person</option>${others.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>

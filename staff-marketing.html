@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Marketing HQ — Bloom Chiangmai</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="staff-shared.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#FDFAF5;color:#2C2C2A;width:100%;font-size:14px;line-height:1.5;}
+button,input,select,textarea{font:inherit;color:inherit;}
+a{color:#534AB7;}
+
+main{max-width:1180px;margin:0 auto;padding:48px 32px 100px;min-height:70vh;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#534AB7;text-transform:uppercase;margin-bottom:14px;}
+h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin-bottom:8px;}
+.sub{font-size:15px;color:#5F5E5A;max-width:680px;}
+.top-bar{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
+
+/* section tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:4px 18px;border-bottom:1px solid #E8E3D8;margin-bottom:28px;}
+.tab-group{display:flex;align-items:center;gap:2px;}
+.tab-group-label{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#A8A39A;margin-right:6px;}
+.tab{background:none;border:0;padding:10px 10px;font-size:14px;font-weight:600;color:#5F5E5A;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;}
+.tab:hover{color:#2C2C2A;}
+.tab.on{color:#534AB7;border-bottom-color:#534AB7;}
+.tab .n{font-weight:400;color:#A8A39A;font-size:12px;margin-left:4px;}
+
+.btn-primary{padding:10px 20px;border:none;border-radius:8px;background:#534AB7;color:#fff;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.btn-primary:hover{background:#443c99;}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;}
+.btn-outline{padding:9px 16px;border:1px solid #DCD5C6;border-radius:8px;background:#fff;font-size:14px;font-weight:600;cursor:pointer;}
+.btn-outline:hover{border-color:#888780;}
+.btn-danger{padding:9px 16px;border:1px solid #EBC3B4;border-radius:8px;background:#fff;color:#A23F1C;font-size:14px;font-weight:600;cursor:pointer;}
+
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;}
+.tools input,.tools select{border:1px solid #DCD5C6;background:#fff;border-radius:8px;padding:8px 12px;font-size:14px;}
+.tools input{min-width:240px;}
+.tools .count{color:#888780;font-size:12px;}
+
+.card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:24px;}
+.card h2{font-family:Georgia,serif;font-size:19px;font-weight:700;margin-bottom:14px;color:#2C2C2A;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.card h2 a{font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;}
+
+/* table */
+.tbl{background:#fff;border:1px solid #E8E3D8;border-radius:12px;overflow:auto;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th{text-align:left;padding:10px 12px;border-bottom:2px solid #E8E3D8;color:#5F5E5A;font-size:12px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;background:#FCFBF8;}
+td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
+tr:last-child td{border-bottom:0;}
+tbody tr{cursor:pointer;} tbody tr:hover td{background:#FBF9F4;}
+td.main{font-weight:600;min-width:180px;}
+.clip{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:#5F5E5A;max-width:340px;}
+
+/* chips */
+.chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:#F1EFE8;color:#5F5E5A;white-space:nowrap;}
+.chip.plum{background:#EEEDFE;color:#534AB7;} .chip.amber{background:#FDF1DF;color:#9A5D0C;}
+.chip.rust{background:#FBE9E2;color:#A23F1C;} .chip.leaf{background:#E3F1EC;color:#0F6E56;}
+
+/* cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+.entry{background:#fff;border:1px solid #E8E3D8;border-radius:12px;padding:18px 20px;cursor:pointer;}
+.entry:hover{border-color:#DCD5C6;}
+.entry h3{font-family:Georgia,serif;font-weight:700;font-size:17px;margin-bottom:6px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
+.kv{margin-top:8px;}
+.kv b{display:block;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:#888780;font-weight:700;}
+.kv span{white-space:pre-wrap;}
+
+/* overview */
+.ov{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;}
+.goal{grid-column:span 12;background:#2C2C2A;color:#F7F3EC;border-radius:12px;padding:24px 26px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:20px;}
+.goal .lbl{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#B5B0A8;margin-bottom:4px;font-weight:700;}
+.goal .big{font-family:Georgia,serif;font-size:21px;line-height:1.3;}
+.goal .val{font-size:15px;font-weight:600;}
+.goal .edit{color:#F5C842;font-size:12px;cursor:pointer;background:none;border:0;padding:0;margin-top:8px;text-decoration:underline;}
+.stat{grid-column:span 3;}
+.stat .num{font-family:Georgia,serif;font-size:32px;font-weight:700;line-height:1.1;}
+.stat .cap{color:#5F5E5A;font-size:13px;}
+.bar{display:flex;height:6px;border-radius:4px;overflow:hidden;background:#E8E3D8;margin-top:12px;}
+.bar i{display:block;height:100%;}
+.half{grid-column:span 6;}
+.list{list-style:none;}
+.list li{padding:9px 0;border-bottom:1px solid #E8E3D8;display:flex;justify-content:space-between;gap:12px;cursor:pointer;}
+.list li:last-child{border-bottom:0;}
+.list .t{font-weight:600;}
+.list .s{color:#888780;font-size:12px;text-align:right;}
+.empty-state{color:#888780;font-size:14px;padding:24px;text-align:center;border:1px dashed #DCD5C6;border-radius:12px;background:#FCFBF8;}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(44,44,42,.28);display:none;z-index:80;}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100%);background:#FDFAF5;border-left:1px solid #E8E3D8;z-index:81;transform:translateX(100%);transition:transform .2s ease;display:flex;flex-direction:column;}
+.dw-open .scrim{display:block;} .dw-open .drawer{transform:none;}
+.drawer header{padding:18px 22px;border-bottom:1px solid #E8E3D8;display:flex;justify-content:space-between;align-items:center;}
+.drawer header h3{font-family:Georgia,serif;font-size:19px;font-weight:700;}
+.drawer .body{padding:18px 22px;overflow:auto;flex:1;}
+.drawer footer{padding:14px 22px;border-top:1px solid #E8E3D8;display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;}
+.f{margin-bottom:14px;}
+.f label{display:block;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:#888780;font-weight:700;margin-bottom:5px;}
+.f input,.f select,.f textarea{width:100%;border:1px solid #DCD5C6;background:#fff;border-radius:8px;padding:9px 11px;font-size:14px;}
+.f textarea{min-height:90px;resize:vertical;line-height:1.5;}
+.f input:focus,.f select:focus,.f textarea:focus{outline:2px solid #EEEDFE;border-color:#534AB7;}
+.x{background:none;border:0;font-size:24px;line-height:1;cursor:pointer;color:#888780;}
+.confirm{display:none;gap:8px;align-items:center;font-size:13px;color:#A23F1C;}
+.meta{color:#888780;font-size:12px;}
+.toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
+
+@media (max-width: 860px){
+  main{padding:28px 16px 80px;}
+  .goal{grid-template-columns:1fr 1fr;}
+  .goal>div:first-child{grid-column:span 2;}
+  .stat{grid-column:span 6;} .half{grid-column:span 12;}
+  .tools input{min-width:0;flex:1;}
+  .tab-group-label{display:none;}
+}
+</style>
+</head>
+<body>
+
+<main class="page-content">
+  <div id="authLoading" style="text-align:center;padding:80px 20px;color:#888780;font-size:14px;">Loading…</div>
+
+  <div id="pageContent" style="display:none;">
+    <div class="top-bar">
+      <div>
+        <div class="eyebrow">Tools</div>
+        <h1>Marketing HQ</h1>
+        <p class="sub">One place for what we say about Bloom, who we say it to, and what goes out next.</p>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+    <div id="view"></div>
+  </div>
+
+<footer style="background:#F7F3EC;padding:22px 48px 40px;border-top:1px solid #E8E3D8;margin-top:60px;">
+  <p style="text-align:center;font-size:12px;color:#888780;">© 2026 Bloom Chiangmai Learning Hub. All rights reserved.</p>
+</footer>
+</main>
+
+<div id="dw"><div class="scrim" id="scrim"></div><div class="drawer" id="drawer"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ---- Section definitions (ported from the claude.ai prototype) ----
+const AUD = ['Expat English','Thai','Chinese','Alt-ed / homeschool','Mixed','All'];
+const S = [
+ {k:'overview',t:'Overview',g:'',d:'Where BCM marketing stands right now, and what needs a decision.'},
+ {k:'facts',t:'Info bank',g:'Foundation',view:'cards',d:'The single source of truth about BCM. Everything posted anywhere should trace back to a line here.',
+  title:'label',chip:'status',
+  f:[['label','Fact','text'],['category','Category','select',['Identity','Programmes','Fees','Dates','Location','Proof points','Contact','Positioning']],['value','Detail','long'],['status','Status','select',['Confirmed','To confirm','Outdated']],['source','Source','text']]},
+ {k:'audiences',t:'Audiences',g:'Foundation',view:'cards',d:'Who we are talking to, what they worry about, and what we say to them.',
+  title:'name',chip:'priority',
+  f:[['name','Segment','text'],['priority','Priority','select',['Primary','Secondary','Watch']],['who','Who they are','long'],['worries','What they worry about','long'],['message','Our message to them','long'],['channels','Where they are','text'],['language','Language','text']]},
+ {k:'channels',t:'Channels',g:'Foundation',view:'cards',d:'Every account BCM owns, and how each one gets fed.',
+  title:'name',chip:'status',
+  f:[['name','Channel','text'],['type','Type','select',['Social','Messaging','Website','Email']],['handle','Handle or link','text'],['automation','How it is fed','select',['Buffer (automated)','Manual','Own app','Not set up']],['status','Status','select',['Active','To confirm','To create','Paused']],['audience','Main audience','text'],['notes','Notes','long']]},
+ {k:'groups',t:'Groups',g:'Research',view:'table',d:'Places where BCM families already gather. Check the rules before posting anything.',
+  title:'name',chip:'status',cols:['platform','audience','members','promo','status','last_posted'],
+  f:[['name','Group','text'],['platform','Platform','select',['Facebook group','Redbook','WeChat group','LINE group','Forum','Other']],['url','Link','url'],['audience','Audience','select',AUD.slice(0,5)],['members','Members','text'],['promo','Promotion allowed','select',['Unknown','Yes','Specific days only','Admin approval','No']],['status','Status','select',['To verify','Joined','Pending approval','Active','Avoid']],['last_posted','Last posted','date'],['angle','Best angle','long'],['rules','Rules','long'],['notes','Notes','long']]},
+ {k:'competitors',t:'Competitors',g:'Research',view:'table',d:'Who else families are comparing us with, and where we differ.',
+  title:'name',chip:'type',cols:['type','curriculum','fees','area'],
+  f:[['name','School','text'],['type','Type','select',['International school','Alt-ed / hub','Bilingual','Chinese-focused','Homeschool co-op']],['curriculum','Curriculum','text'],['fees','Fees (per year)','text'],['area','Area','text'],['positioning','How they position','long'],['vs_bcm','Where BCM differs','long'],['url','Link','url']]},
+ {k:'insights',t:'Research notes',g:'Research',view:'cards',d:'Findings worth acting on, with where they came from.',
+  title:'title',chip:'audience',
+  f:[['title','Finding','text'],['audience','Audience','select',['Expat English','Thai','Chinese','Alt-ed / homeschool','All']],['finding','What we found','long'],['implication','What it means for BCM','long'],['source','Source','url'],['date','Date','date']]},
+ {k:'content',t:'Content plan',g:'Execution',view:'table',d:'Every post, in every language, from idea to published.',
+  title:'title',chip:'status',cols:['date','channel','audience','language','status'],sort:'date',
+  f:[['title','Post','text'],['date','Date','date'],['channel','Channel','select',['Facebook Page','Instagram','Redbook','LINE','Facebook groups','WeChat','All Buffer']],['audience','Audience','select',['Expat English','Thai','Chinese','Alt-ed / homeschool','All']],['language','Language','select',['English','Thai','Chinese','EN + TH','EN + TH + ZH']],['status','Status','select',['Idea','Drafting','Ready','Scheduled','Published']],['copy','Copy','long'],['notes','Notes','long']]},
+ {k:'tasks',t:'Tasks',g:'Execution',view:'table',d:'What has to happen next, and who owns it.',
+  title:'title',chip:'status',cols:['owner','due','status'],sort:'due',
+  f:[['title','Task','text'],['owner','Owner','text'],['due','Due','date'],['status','Status','select',['To do','Doing','Waiting','Done']],['notes','Notes','long']]},
+];
+const SEC = Object.fromEntries(S.map(s=>[s.k,s]));
+const PLAN_FIELDS = [['goal','Goal','long'],['deadline','Deadline','date'],['budget','Ad budget per month','text'],['measure','How we measure success','text']];
+
+let DATA = {}, PLAN = null, STAFF_NAMES = {}, loaded = false;
+let canEdit = false, canDelete = false;
+const filt = {q:'', s:''};
+const $ = (s,el=document)=>el.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeUrl = v => /^https?:\/\//i.test(String(v||'')) ? v : '';
+const tone = v => { v=String(v||'');
+  if(/^(Confirmed|Active|Published|Done|Yes|Primary|Buffer)/.test(v)) return 'leaf';
+  if(/^(To confirm|To verify|Pending|Waiting|Drafting|Ready|Scheduled|Specific|Admin|Secondary|Doing|Joined)/.test(v)) return 'amber';
+  if(/^(Outdated|Avoid|No$|To create|Not set)/.test(v)) return 'rust';
+  if(/^(Idea|To do|Unknown|Watch)/.test(v)) return '';
+  return 'plum'; };
+const chip = v => v ? `<span class="chip ${tone(v)}">${esc(v)}</span>` : '';
+const fmtDate = v => { if(!v) return ''; const d=new Date(v+'T00:00:00'); return isNaN(d)?esc(v):d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); };
+const view = () => { const h=location.hash.slice(1); return SEC[h]?h:'overview'; };
+
+// ---- Data ----
+async function loadAll(){
+  const [{ data, error }, { data: staff }] = await Promise.all([
+    sb.from('marketing_entries').select('id,collection,data,updated_at,updated_by').order('created_at'),
+    sb.from('staff').select('id,name')
+  ]);
+  if(error){ showToast('Could not load marketing data: ' + error.message); return; }
+  STAFF_NAMES = Object.fromEntries((staff||[]).map(s=>[s.id, s.name]));
+  DATA = {}; PLAN = null;
+  (data||[]).forEach(r => {
+    const row = { id:r.id, ...r.data, _updated:r.updated_at, _by:r.updated_by };
+    if(r.collection === 'plan') PLAN = row;
+    else (DATA[r.collection] = DATA[r.collection] || []).push(row);
+  });
+  loaded = true;
+  render();
+}
+
+// ---- Rendering ----
+function tabs(){
+  const cur = view(); let html = '', group = null;
+  S.forEach(s => {
+    if(s.g !== group){ if(group !== null) html += '</div>'; html += `<div class="tab-group">${s.g?`<span class="tab-group-label">${s.g}</span>`:''}`; group = s.g; }
+    const n = s.k==='overview' ? '' : `<span class="n">${(DATA[s.k]||[]).length}</span>`;
+    html += `<button class="tab ${s.k===cur?'on':''}" onclick="go('${s.k}')">${s.t}${n}</button>`;
+  });
+  $('#tabs').innerHTML = html + '</div>';
+}
+function go(k){ location.hash = k; }
+
+function render(){
+  tabs();
+  const k = view(), s = SEC[k], el = $('#view');
+  if(!loaded){ el.innerHTML = '<div class="empty-state">Loading…</div>'; return; }
+  if(k === 'overview'){ el.innerHTML = overview(); return; }
+  const all = DATA[k] || [];
+  const rows = all.filter(r => {
+    if(filt.s && r[s.chip] !== filt.s) return false;
+    if(filt.q){ const q = filt.q.toLowerCase(); return s.f.some(f => String(r[f[0]]||'').toLowerCase().includes(q)); }
+    return true; });
+  if(s.sort) rows.sort((a,b)=>String(a[s.sort]||'9999').localeCompare(String(b[s.sort]||'9999')));
+  const chipField = s.f.find(x=>x[0]===s.chip);
+  const opts = chipField && chipField[3] ? chipField[3] : [];
+  el.innerHTML = `
+    <div class="top-bar" style="margin-bottom:16px;">
+      <p class="sub">${esc(s.d)}</p>
+      ${canEdit ? `<button class="btn-primary" onclick="edit('${k}')">Add entry</button>` : ''}
+    </div>
+    <div class="tools">
+      <input id="q" placeholder="Search ${esc(s.t.toLowerCase())}" value="${esc(filt.q)}">
+      ${opts.length ? `<select id="sf"><option value="">All ${esc(chipField[1].toLowerCase())}</option>${opts.map(o=>`<option ${o===filt.s?'selected':''}>${esc(o)}</option>`).join('')}</select>` : ''}
+      <span class="count">${rows.length} of ${all.length}</span>
+    </div>
+    ${!rows.length ? `<div class="empty-state">${all.length ? 'Nothing matches that filter.' : 'Nothing here yet.'}</div>`
+      : s.view === 'table' ? table(s, rows) : cards(s, rows)}`;
+  const q = $('#q'); if(q) q.oninput = e => { filt.q = e.target.value; const p = e.target.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(p,p); };
+  const sf = $('#sf'); if(sf) sf.onchange = e => { filt.s = e.target.value; render(); };
+}
+function label(s,key){ return (s.f.find(x=>x[0]===key)||[0,key])[1]; }
+function cell(s,key,v){ const f = s.f.find(x=>x[0]===key); if(!f) return esc(v);
+  if(f[2]==='date') return fmtDate(v); if(f[2]==='select') return chip(v); if(f[2]==='long') return `<span class="clip">${esc(v)}</span>`; return esc(v); }
+function table(s,rows){
+  return `<div class="tbl"><table><thead><tr><th>${label(s,s.title)}</th>${s.cols.map(c=>`<th>${label(s,c)}</th>`).join('')}</tr></thead><tbody>
+  ${rows.map(r=>`<tr onclick="edit('${s.k}','${r.id}')"><td class="main">${esc(r[s.title])}${safeUrl(r.url)?` <a href="${esc(r.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:400;font-size:12px">link</a>`:''}</td>
+  ${s.cols.map(c=>`<td>${cell(s,c,r[c])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+function cards(s,rows){
+  return `<div class="cards">${rows.map(r=>`<div class="entry" onclick="edit('${s.k}','${r.id}')">
+    <h3><span>${esc(r[s.title])}</span>${chip(r[s.chip])}</h3>
+    ${s.f.filter(f=>f[0]!==s.title&&f[0]!==s.chip&&r[f[0]]).map(f => f[2]==='url' && safeUrl(r[f[0]])
+      ? `<div class="kv"><b>${f[1]}</b><span><a href="${esc(r[f[0]])}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(String(r[f[0]]).replace(/^https?:\/\/(www\.)?/,'').slice(0,48))}</a></span></div>`
+      : `<div class="kv"><b>${f[1]}</b><span>${f[2]==='date'?fmtDate(r[f[0]]):esc(r[f[0]])}</span></div>`).join('')}
+  </div>`).join('')}</div>`;
+}
+function overview(){
+  const P = PLAN || {}; const g = DATA.groups||[], c = DATA.content||[], t = DATA.tasks||[], f = DATA.facts||[], ch = DATA.channels||[];
+  const cnt = (arr,key,val) => arr.filter(x=>x[key]===val).length;
+  const bar = parts => { const tot = parts.reduce((a,p)=>a+p[0],0)||1; return `<div class="bar">${parts.map(p=>`<i style="width:${p[0]/tot*100}%;background:${p[1]}"></i>`).join('')}</div>`; };
+  const today = new Date().toISOString().slice(0,10);
+  const upcoming = c.filter(x=>x.status!=='Published').sort((a,b)=>String(a.date||'9').localeCompare(String(b.date||'9'))).slice(0,6);
+  const decisions = [...f.filter(x=>x.status==='To confirm').map(x=>({t:x.label,s:'Info bank',k:'facts',id:x.id})),
+                     ...ch.filter(x=>x.status==='To confirm'||x.status==='To create').map(x=>({t:x.name+': '+String(x.status).toLowerCase(),s:'Channels',k:'channels',id:x.id}))];
+  const open = t.filter(x=>x.status!=='Done').sort((a,b)=>String(a.due||'9').localeCompare(String(b.due||'9'))).slice(0,6);
+  const insights = (DATA.insights||[]).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).slice(0,5);
+  const list = (items, empty) => items.length ? `<ul class="list">${items.join('')}</ul>` : `<div class="empty-state">${empty}</div>`;
+  return `<div class="ov">
+   <div class="goal">
+     <div><div class="lbl">Goal</div><div class="big">${esc(P.goal||'Not set yet')}</div>
+       ${canEdit?`<button class="edit" onclick="editPlan()">Edit goal, deadline and budget</button>`:''}</div>
+     <div><div class="lbl">Deadline</div><div class="val">${P.deadline?fmtDate(P.deadline):'Not set'}</div></div>
+     <div><div class="lbl">Ad budget / month</div><div class="val">${esc(P.budget||'Not set')}</div></div>
+     <div><div class="lbl">Success measure</div><div class="val">${esc(P.measure||'Not set')}</div></div>
+   </div>
+   <div class="card stat"><div class="num">${g.length}</div><div class="cap">Groups mapped, ${cnt(g,'status','Active')} active</div>
+     ${bar([[cnt(g,'status','Active'),'#0F6E56'],[g.filter(x=>/Joined|Pending/.test(x.status)).length,'#E8941E'],[cnt(g,'status','To verify'),'#D6D1C6'],[cnt(g,'status','Avoid'),'#D85A30']])}</div>
+   <div class="card stat"><div class="num">${c.length}</div><div class="cap">Posts planned, ${cnt(c,'status','Published')} published</div>
+     ${bar([[cnt(c,'status','Published'),'#0F6E56'],[c.filter(x=>/Ready|Scheduled/.test(x.status)).length,'#534AB7'],[c.filter(x=>/Idea|Drafting/.test(x.status)).length,'#D6D1C6']])}</div>
+   <div class="card stat"><div class="num">${ch.filter(x=>x.status==='Active').length}<span style="font-size:18px;color:#888780"> / ${ch.length}</span></div><div class="cap">Channels active</div>
+     ${bar([[ch.filter(x=>x.status==='Active').length,'#0F6E56'],[ch.filter(x=>x.status!=='Active').length,'#D6D1C6']])}</div>
+   <div class="card stat"><div class="num">${f.filter(x=>x.status==='To confirm').length}</div><div class="cap">Facts still to confirm</div>
+     ${bar([[cnt(f,'status','Confirmed'),'#0F6E56'],[cnt(f,'status','To confirm'),'#E8941E']])}</div>
+   <div class="card half"><h2>Needs a decision <a onclick="go('facts')">Info bank</a></h2>
+     ${list(decisions.slice(0,8).map(x=>`<li onclick="edit('${x.k}','${x.id}')"><span class="t">${esc(x.t)}</span><span class="s">${x.s}</span></li>`), 'Nothing waiting on a decision.')}</div>
+   <div class="card half"><h2>Open tasks <a onclick="go('tasks')">All tasks</a></h2>
+     ${list(open.map(x=>`<li onclick="edit('tasks','${x.id}')"><span class="t">${esc(x.title)}</span><span class="s">${esc(x.owner||'')}${x.due?' · '+fmtDate(x.due):''}${x.due&&x.due<today?' · <b style="color:#A23F1C">overdue</b>':''}</span></li>`), 'No open tasks.')}</div>
+   <div class="card half"><h2>Coming up <a onclick="go('content')">Content plan</a></h2>
+     ${list(upcoming.map(x=>`<li onclick="edit('content','${x.id}')"><span class="t">${esc(x.title)}</span><span class="s">${esc(x.channel||'')}${x.date?' · '+fmtDate(x.date):''}</span></li>`), 'No posts planned yet.')}</div>
+   <div class="card half"><h2>Latest research <a onclick="go('insights')">All notes</a></h2>
+     ${list(insights.map(x=>`<li onclick="edit('insights','${x.id}')"><span class="t">${esc(x.title)}</span><span class="s">${esc(x.audience||'')}</span></li>`), 'No research notes yet.')}</div>
+  </div>`;
+}
+
+// ---- Drawer editor ----
+let cur = null, saving = false;
+function closeD(){ $('#dw').classList.remove('dw-open'); cur = null; }
+$('#scrim').onclick = closeD;
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeD(); });
+function field(f, v){ const [k,l,t,o] = f; v = v ?? '';
+  const inp = t==='long' ? `<textarea name="${k}">${esc(v)}</textarea>`
+    : t==='select' ? `<select name="${k}"><option value=""></option>${o.map(x=>`<option ${x===v?'selected':''}>${esc(x)}</option>`).join('')}${v&&!o.includes(v)?`<option selected>${esc(v)}</option>`:''}</select>`
+    : `<input name="${k}" type="${t==='date'?'date':t==='url'?'url':'text'}" value="${esc(v)}">`;
+  return `<div class="f"><label>${l}</label>${inp}</div>`; }
+function metaLine(r){
+  if(!r || !r._updated) return '';
+  const who = r._by && STAFF_NAMES[r._by] ? ' by ' + esc(STAFF_NAMES[r._by]) : '';
+  return `<div class="meta">Last updated ${new Date(r._updated).toLocaleString('en-GB')}${who}</div>`;
+}
+function edit(k, id){
+  const s = SEC[k]; const r = id ? (DATA[k]||[]).find(x=>x.id===id) : {}; if(id && !r) return;
+  cur = {k, id}; const ro = !canEdit;
+  $('#drawer').innerHTML = `<header><h3>${id ? esc(r[s.title]||'Entry') : 'New entry'}</h3><button class="x" onclick="closeD()">×</button></header>
+    <form class="body" id="fm" onsubmit="return false">${s.f.map(f=>field(f, r[f[0]])).join('')}${metaLine(r)}</form>
+    <footer><div>${id && canDelete ? `<button class="btn-danger" id="del">Delete</button><span class="confirm" id="cf">Delete this entry? <button class="btn-danger" id="yes">Yes, delete</button><button class="btn-outline" id="no">Keep</button></span>` : ''}</div>
+    <div style="display:flex;gap:8px;align-items:center"><span id="msg" style="font-size:12px;color:#A23F1C"></span><button class="btn-outline" onclick="closeD()">${ro?'Close':'Cancel'}</button>${ro?'':'<button class="btn-primary" id="sv">Save</button>'}</div></footer>`;
+  if(ro) $('#fm').querySelectorAll('input,select,textarea').forEach(e=>e.disabled=true);
+  $('#dw').classList.add('dw-open');
+  if($('#sv')) $('#sv').onclick = save;
+  if($('#del')){
+    $('#del').onclick = () => { $('#del').style.display='none'; $('#cf').style.display='flex'; };
+    $('#no').onclick = () => { $('#del').style.display=''; $('#cf').style.display='none'; };
+    $('#yes').onclick = async () => {
+      const { error } = await sb.from('marketing_entries').delete().eq('id', id);
+      if(error){ $('#msg').textContent = 'Could not delete: ' + error.message; return; }
+      closeD(); showToast('Deleted.'); loadAll(); };
+  }
+  setTimeout(()=>{ const first = $('#fm [name]'); if(first && !id && !ro) first.focus(); }, 50);
+}
+function readForm(fields){
+  const fd = new FormData($('#fm')); const body = {};
+  fields.forEach(f => { const v = String(fd.get(f[0]) ?? '').trim(); if(v) body[f[0]] = v; });
+  return body;
+}
+async function save(){
+  if(saving || !cur) return; const {k, id} = cur; const s = SEC[k];
+  const body = readForm(s.f);
+  if(!body[s.title]){ $('#msg').textContent = label(s, s.title) + ' is required.'; return; }
+  saving = true; $('#sv').disabled = true;
+  const { error } = id
+    ? await sb.from('marketing_entries').update({ data: body }).eq('id', id)
+    : await sb.from('marketing_entries').insert({ collection: k, data: body });
+  saving = false; const b = $('#sv'); if(b) b.disabled = false;
+  if(error){ $('#msg').textContent = 'Could not save: ' + error.message; return; }
+  closeD(); showToast('Saved.'); loadAll();
+}
+function editPlan(){
+  const P = PLAN || {}; cur = {plan:true};
+  $('#drawer').innerHTML = `<header><h3>Goal and targets</h3><button class="x" onclick="closeD()">×</button></header>
+    <form class="body" id="fm" onsubmit="return false">${PLAN_FIELDS.map(f=>field(f, P[f[0]])).join('')}${metaLine(PLAN)}</form>
+    <footer><div></div><div style="display:flex;gap:8px;align-items:center"><span id="msg" style="font-size:12px;color:#A23F1C"></span><button class="btn-outline" onclick="closeD()">Cancel</button><button class="btn-primary" id="sv">Save</button></div></footer>`;
+  $('#dw').classList.add('dw-open');
+  $('#sv').onclick = async () => {
+    const body = readForm(PLAN_FIELDS); $('#sv').disabled = true;
+    const { error } = PLAN
+      ? await sb.from('marketing_entries').update({ data: body }).eq('id', PLAN.id)
+      : await sb.from('marketing_entries').insert({ collection: 'plan', data: body });
+    if(error){ $('#msg').textContent = 'Could not save: ' + error.message; $('#sv').disabled = false; return; }
+    closeD(); showToast('Saved.'); loadAll();
+  };
+}
+
+// ---- Boot ----
+async function onStaffReady(){
+  if(!canAccess('marketing', 'view')){ window.location.href = 'staff-dashboard.html'; return; }
+  canEdit = canAccess('marketing', 'edit');
+  canDelete = canAccess('marketing', 'full');
+  render();
+  loadAll();
+}
+window.addEventListener('hashchange', () => { filt.q=''; filt.s=''; closeD(); render(); window.scrollTo(0,0); });
+window.addEventListener('focus', () => { if(loaded && !cur) loadAll(); });
+
+window.STAFF_PAGE_KEY = 'marketing';
+checkStaffAndInit();
+</script>
+
+</body>
+</html>

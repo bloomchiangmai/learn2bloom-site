@@ -104,6 +104,7 @@ const SHORTCUTS = [
   { key:'learners', href:'learners.html', title:'Learners', desc:'View and edit enrolled students.' },
   { key:'calendar', href:'staff-calendar.html', title:'Calendar', desc:'Manage the school calendar and term dates.' },
   { key:'library', href:'https://bloombrary.learn2bloom.org/admin', title:'Bloombrary', desc:'Manage the book catalog, checkouts, and holds.' },
+  { key:'marketing', href:'staff-marketing.html', title:'Marketing HQ', desc:'Info bank, audiences, groups, content plan and tasks.', module:'marketing' },
   { key:'archive', href:'archive.html', title:'Archive', desc:'Restore or review archived records.' },
   { key:'team', href:'staff-team.html', title:'Team', desc:'See the staff directory, update your contact info.' },
   { key:'permissions', href:'staff-permissions.html', title:'Permissions', desc:'Manage roles, access, and approvals.', adminOnly:true }
@@ -118,6 +119,7 @@ async function onStaffReady(staffRow){
   const grid = document.getElementById('shortcutGrid');
   grid.innerHTML = SHORTCUTS
     .filter(s => !s.adminOnly || window._isAdminOrIt)
+    .filter(s => !s.module || canAccess(s.module, 'view'))
     .map(s => `
       <a href="${s.href}" class="shortcut-card">
         <div class="shortcut-title">${s.title}</div>

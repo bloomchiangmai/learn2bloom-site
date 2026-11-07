@@ -260,6 +260,18 @@ textarea[readonly],input[readonly]{background:#F7F3EC!important;color:#5F5E5A;}
 .emptyweeks b{color:#9A5D0C;margin-right:4px;}
 .emptyweeks span{margin-right:auto;}
 #newTopicBtn{align-self:flex-end;}
+.urgent{border:1px solid #F0C2C2;background:#FDF5F5;border-radius:14px;padding:12px 16px;margin:-4px 0 14px;}
+.urgent h3{font-size:14px;color:#791F1F;margin-bottom:4px;}
+.cal .sg{display:block;margin-top:3px;font-size:11px;line-height:1.25;border-radius:4px;padding:1px 5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px dashed #C9C3B6;color:#888780;background:transparent;}
+.cal .sg:hover{border-color:#534AB7;color:#534AB7;}
+.sgl{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px 0;border-top:1px solid #F0ECE3;font-size:13.5px;}
+.sgl:first-of-type{border-top:0;} .sgl .acts{display:flex;gap:6px;}
+.checks{display:flex;flex-wrap:wrap;gap:6px;}
+.checks label{display:inline-flex;align-items:center;gap:6px;border:1px solid #DCD5C6;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;margin:0;cursor:pointer;color:#2C2C2A;}
+.checks input{margin:0;width:auto;}
+.briefbox{background:#F7F3EC;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;}
+.briefbox b{font-weight:600;color:#5F5E5A;margin-right:4px;} .briefbox .kp{flex-basis:100%;white-space:pre-wrap;}
+.adm{font-size:12px;color:#854F0B;}
 .hist{font-size:12px;color:#888780;line-height:1.8;padding:12px 4px;}
 .toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
 
@@ -273,6 +285,7 @@ textarea[readonly],input[readonly]{background:#F7F3EC!important;color:#5F5E5A;}
   .note-in{min-width:0;}
   .tm{grid-template-columns:1fr 1fr;} .tm>:nth-child(3){display:none;}
   .emptyweeks span{flex-basis:100%;}
+  .sgl{grid-template-columns:1fr;gap:4px;}
   main{padding:28px 16px 80px;}
   .goal{grid-template-columns:1fr 1fr;} .goal>div:first-child{grid-column:span 2;}
   .ov{grid-template-columns:1fr;}
@@ -372,7 +385,8 @@ const thisMonth = () => localISO(new Date()).slice(0,7);
 // ---------- Workflow ----------
 // Posts live in marketing_posts. Every change goes through the mkt_post() database function,
 // which checks who you are and which step the post is at.
-const STEP_LABEL = {english:'English', thai:'Thai', review:'Review', post:'Post', posted:'Posted', cancelled:'Cancelled'};
+const STEP_LABEL = {english:'English', review:'Review', thai:'Thai', post:'Post', posted:'Posted', cancelled:'Cancelled'};
+const STEP_ORDER = ['english','review','thai','post'];
 const STEP_BG = {english:'#EEEDFE', thai:'#FAEEDA', review:'#E6F1FB', post:'#E1F5EE', posted:'#F1EFE8', cancelled:'#FAECE7', back:'#FCEBEB'};
 const STEP_FG = {english:'#3C3489', thai:'#633806', review:'#0C447C', post:'#085041', posted:'#444441', cancelled:'#712B13', back:'#791F1F'};
 let LABELS = [];
@@ -388,8 +402,25 @@ const addDays = (iso, n) => { const d = new Date(iso+'T00:00:00'); d.setDate(d.g
 const nameOf = id => (STAFF[id]||{}).name ? STAFF[id].name.split(' ')[0] : '';
 const myDuty = () => TEAM[ME] || null;
 const isOverseer = () => myDuty() === 'overseer';
+const isAdmin = () => canDelete;
 const writers = () => Object.keys(TEAM).filter(id => TEAM[id] === 'writer');
 const translators = () => Object.keys(TEAM).filter(id => TEAM[id] === 'translator');
+const isWriterish = () => ['writer','writer_backup'].includes(myDuty());
+const isTranslatorish = () => ['translator','translator_backup'].includes(myDuty());
+const GOALS = [['inform','Inform'],['invite','Invite to an event'],['enrol','Get enrolments'],['celebrate','Celebrate or thank']];
+const FORMATS = [['post','Post'],['reel','Reel script'],['announcement','Short announcement']];
+const goalName = k => (GOALS.find(g=>g[0]===k)||[0,''])[1];
+const formatName = k => (FORMATS.find(g=>g[0]===k)||[0,''])[1];
+const audienceList = () => { const a = (DATA.audiences||[]).map(r=>r.name).filter(Boolean); return a.length ? a : ['Parents','Prospective families','Students','Community']; };
+// Backups see posts at their step in their own box, without them counting as their turn
+function backupFor(p){
+  const d = myDuty();
+  if(!openStep(p)) return false;
+  if(d === 'writer_backup') return ['english','post'].includes(p.step);
+  if(d === 'translator_backup') return p.step === 'thai';
+  return false;
+}
+let SUGG = [], SPECIAL = [], HIDDEN = new Set();
 const openStep = p => !['posted','cancelled'].includes(p.step);
 
 // Who has the post now
@@ -409,7 +440,7 @@ const isMine = p => openStep(p) && ownerIds(p).includes(ME);
 // Due date for the step the post is at
 function dueOf(p){
   if(!p.post_date || !openStep(p)) return null;
-  const back = {english: p.needs_thai ? 3 : 2, thai: 2, review: 1, post: 0}[p.step];
+  const back = {english: 3, review: 2, thai: 1, post: 0}[p.step];
   return back === undefined ? null : addDays(p.post_date, -back);
 }
 const isLate = p => { const d = dueOf(p); return !!d && d < todayISO(); };
@@ -430,18 +461,26 @@ const actionWord = p => ({english: p.sent_back ? 'Fix' : 'Write', thai:'Translat
 
 // ---------- Data ----------
 async function loadAll(){
-  const [posts, staff, team, labels, ent] = await Promise.all([
+  const [posts, staff, team, labels, ent, sch, spec, hid] = await Promise.all([
     sb.from('marketing_posts').select('*').order('post_date', {ascending:true, nullsFirst:false}),
     sb.from('staff').select('id,name,status'),
     sb.from('marketing_team').select('staff_id,duty'),
     sb.from('marketing_labels').select('name,default_pic,sort').order('sort'),
-    sb.from('marketing_entries').select('id,collection,data,updated_at,updated_by').neq('collection','content').order('created_at')
+    sb.from('marketing_entries').select('id,collection,data,updated_at,updated_by').neq('collection','content').order('created_at'),
+    sb.rpc('mkt_school_dates'),
+    sb.from('marketing_special_dates').select('*').order('date'),
+    sb.from('marketing_hidden_suggestions').select('key')
   ]);
   if(posts.error){ showToast('Could not load posts: ' + posts.error.message); return; }
   POSTS = posts.data || [];
   STAFF = Object.fromEntries((staff.data||[]).map(s=>[s.id, s]));
   TEAM = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, t.duty]));
   LABELS = labels.data || [];
+  SPECIAL = spec.data || [];
+  HIDDEN = new Set((hid.data||[]).map(h=>h.key));
+  SUGG = [...(sch.data||[]).map(x=>({date:x.date, name:x.name, kind:x.kind, confirmed:true})),
+          ...SPECIAL.map(x=>({date:x.date, name:x.name, kind:'special', confirmed:x.confirmed, note:x.note}))]
+    .map(x=>({...x, key: x.date+'|'+x.name})).sort((a,b)=>a.date.localeCompare(b.date));
   DATA = {}; PLAN = null;
   (ent.data||[]).forEach(r => {
     const row = { id:r.id, ...r.data, _updated:r.updated_at, _by:r.updated_by };
@@ -478,7 +517,7 @@ const go = k => { location.hash = k; };
 function tabsFor(){
   const d = myDuty(), t = [];
   if(d !== 'overseer') t.push(['turn','My turn']);
-  if(!['writer','translator'].includes(d)) t.push(['overview','Overview']);
+  if(!['writer','translator','writer_backup','translator_backup'].includes(d)) t.push(['overview','Overview']);
   t.push(['calendar','Calendar']);
   t.push(['ref','Reference']);
   if(canDelete) t.push(['team','Team']);
@@ -524,7 +563,7 @@ function myTurn(){
   const d = myDuty();
   const mine = POSTS.filter(p=>isMine(p) && (p.post_date || p.sent_back))
     .sort((a,b)=>(Number(isLate(b))-Number(isLate(a))) || String(dueOf(a)||'9').localeCompare(String(dueOf(b)||'9')));
-  const sub = {writer:'Write English, fix what comes back, post when it is approved', translator:'Check and fix the Thai'}[d]
+  const sub = {writer:'Write English, fix what comes back, post when it is ready', translator:'Translate approved English into Thai', writer_backup:'Backup writer', translator_backup:'Backup translator'}[d]
     || 'Review and approve the posts you are in charge of';
   return `
   <div class="box">
@@ -532,6 +571,8 @@ function myTurn(){
     <p class="meta" style="font-size:13px;margin-bottom:6px">${sub}</p>
     ${mine.length ? mine.map(p=>line(p)).join('') : '<p class="meta" style="padding:10px 0">Nothing is waiting on you right now.</p>'}
   </div>
+  ${(()=>{ const bk = POSTS.filter(p=>backupFor(p) && p.post_date).sort((a,b)=>String(dueOf(a)).localeCompare(String(dueOf(b))));
+    return ['writer_backup','translator_backup'].includes(d) ? `<div class="box"><h3 class="bh">As backup</h3><p class="meta" style="font-size:13px;margin-bottom:6px">You cover these if the ${d==='writer_backup'?'writer':'translator'} is away. Step in when one is late.</p>${bk.length ? bk.map(p=>line(p)).join('') : '<p class="meta" style="padding:8px 0">Nothing at this step right now.</p>'}</div>` : ''; })()}
   ${!writers().length || !translators().length ? `<p class="meta" style="margin-top:14px">${!writers().length?'No writer is set yet. ':''}${!translators().length?'No translator is set yet. ':''}${canDelete?'Set them in the Team tab.':''}</p>` : ''}`;
 }
 
@@ -544,7 +585,8 @@ function overview(){
   const mk = t.slice(0,7), posted = POSTS.filter(p=>p.step==='posted' && String(p.posted_at||p.post_date||'').slice(0,7)===mk).length;
   const emptyWeeks = []; for(let w=0; w<4; w++){ const a = addDays(ws, 7*w), b = addDays(a, 6); if(!POSTS.some(p=>p.step!=='cancelled' && p.post_date>=a && p.post_date<=b)) emptyWeeks.push(a < t ? t : a); }
   const empty = emptyWeeks.length;
-  const steps = ['english','thai','review','post'];
+  const steps = STEP_ORDER;
+  const urgent = live.filter(p=>['english','review','thai'].includes(p.step) && p.post_date <= t).sort((a,b)=>a.post_date.localeCompare(b.post_date));
   const ppl = {}; live.forEach(p=>{ const k = ownerName(p); (ppl[k] = ppl[k] || []).push(p); });
   const max = Math.max(1, ...Object.values(ppl).map(a=>a.length));
   const ideas = POSTS.filter(p=>openStep(p) && !p.post_date).length;
@@ -556,6 +598,7 @@ function overview(){
     <div class="tile"><div class="n">${posted}</div><div class="l">Posted this month</div></div>
     <div class="tile"><div class="n ${empty?'warn':'good'}">${empty}</div><div class="l">Weeks with nothing planned (next 4)</div></div>
   </div>
+  ${urgent.length ? `<div class="urgent"><h3>Urgent: ${urgent.length} post${urgent.length>1?'s':''} due to go out but not ready</h3>${urgent.map(p=>line(p,true)).join('')}</div>` : ''}
   ${empty && canEdit ? `<div class="emptyweeks"><span><b>${empty} empty week${empty>1?'s':''}</b> coming up</span>${emptyWeeks.map(d=>`<button class="btn-outline sm" onclick="newTopic('${d}')">Plan a topic for ${fmtShort(d)}</button>`).join('')}</div>` : ''}
   <div class="box"><h3 class="bh">Where posts are now</h3>
     <div class="stepcols">${steps.map(s=>{ const a = live.filter(p=>p.step===s); return `<div class="stepcol"><div class="h">${STEP_LABEL[s]}</div><div class="c">${a.length}</div><div class="dots">${a.map(p=>`<i class="${isLate(p)?'r':''}" title="${esc(p.title)}"></i>`).join('')}</div></div>`; }).join('')}</div>
@@ -570,6 +613,31 @@ function overview(){
     ${ideas?`<p class="meta" style="padding:10px 0"><a href="javascript:void 0" onclick="calMode='ideas';go('calendar')">${ideas} ideas with no date</a></p>`:''}
   </div>`;
 }
+// Suggested posts: school calendar + special dates, minus dismissed or already planned
+const openSugg = () => SUGG.filter(x=>x.date >= todayISO() && !HIDDEN.has(x.key));
+const sgKind = x => ({break:'School calendar', term:'School calendar', holiday:'Holiday', special:'Special date'}[x.kind]||'');
+function sgLine(x){
+  return `<div class="sgl"><span class="muted">${fmtShort(x.date)}</span><span><b>${esc(x.name)}</b> <span class="muted">· ${sgKind(x)}</span>${x.confirmed?'':' <span class="chip amber">Date to confirm</span>'}${x.note?`<br><span class="meta">${esc(x.note)}</span>`:''}</span>
+    <span class="acts">${canEdit?`<button class="btn-outline sm" onclick="hideSg(${SUGG.indexOf(x)})">Not this year</button><button class="btn-primary sm" onclick="planSg(${SUGG.indexOf(x)})">Plan this</button>`:''}</span></div>`;
+}
+function openSg(i){
+  const x = SUGG[i]; if(!x) return; const key = i;
+  cur = {sugg:true};
+  drawerShell('Suggested post', `<p style="font-size:15px;font-weight:600;margin-bottom:4px">${esc(x.name)}</p><p class="meta" style="margin-bottom:10px">${fmtShort(x.date)} · ${sgKind(x)}</p>${x.confirmed?'':'<p class="banner warn">The date is not confirmed yet. Check it before planning.</p>'}${x.note?`<p class="meta">${esc(x.note)}</p>`:''}<p class="meta" style="margin-top:10px">Nothing is created until you plan it.</p>`, null, false);
+  if($('#sv')){ $('#sv').textContent = 'Plan this'; $('#sv').onclick = () => planSg(key); }
+  if(canEdit){ const b = document.createElement('button'); b.className = 'btn-outline'; b.textContent = 'Not this year'; b.onclick = () => { closeD(); hideSg(key); }; $('#sv').before(b); }
+}
+async function hideSg(i){
+  const x = SUGG[i]; if(!x) return; const key = x.key;
+  const { error } = await sb.from('marketing_hidden_suggestions').insert({ key });
+  if(error && !/duplicate/i.test(error.message)){ showToast('Could not hide: ' + error.message); return; }
+  HIDDEN.add(key); showToast('Hidden for this year.'); render();
+}
+function planSg(i){
+  const x = SUGG[i]; if(!x) return;
+  const lab = LABELS.find(l=>l.name===(x.kind==='term'||x.kind==='break' ? 'Event' : 'Holiday'));
+  newTopic(x.date, { title: x.name, label: lab ? lab.name : '' }, x.key);
+}
 const weekStart = iso => { const d = new Date(iso+'T00:00:00'); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return localISO(d); };
 
 // ---------- Calendar ----------
@@ -581,13 +649,15 @@ function calendarView(){
   const inMonth = POSTS.filter(p=>p.step!=='cancelled' && monthKey(p.post_date)===calMonth).sort((a,b)=>(a.post_date+(a.post_time||'')).localeCompare(b.post_date+(b.post_time||'')));
   const ideas = POSTS.filter(p=>openStep(p) && !p.post_date);
   const head = `<div class="mnav">
-    ${calMode==='ideas' ? `<h2 style="text-align:left;min-width:0">Ideas with no date</h2>` : `<button class="cal-nav" aria-label="Previous month" onclick="calMonth='${shift(-1)}';render()">&#8249;</button>
+    ${calMode==='ideas' ? `<h2 style="text-align:left;min-width:0">Ideas with no date</h2>` : calMode==='sugg' ? `<h2 style="text-align:left;min-width:0">Suggested posts for the school year</h2>` : `<button class="cal-nav" aria-label="Previous month" onclick="calMonth='${shift(-1)}';render()">&#8249;</button>
     <h2>${new Date(y,m-1,1).toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</h2>
     <button class="cal-nav" aria-label="Next month" onclick="calMonth='${shift(1)}';render()">&#8250;</button>
     ${calMonth!==t.slice(0,7)?`<button class="link-btn" onclick="calMonth=null;render()">This month</button>`:''}`}
     <span style="flex:1"></span>
-    <span class="seg">${[['month','Month'],['list','List'],['ideas',`Ideas (${ideas.length})`]].map(([k,l])=>`<button class="${calMode===k?'on':''}" onclick="calMode='${k}';render()">${l}</button>`).join('')}</span>
+    <span class="seg">${[['month','Month'],['list','List'],['sugg',`Suggested (${openSugg().length})`],['ideas',`Ideas (${ideas.length})`]].map(([k,l])=>`<button class="${calMode===k?'on':''}" onclick="calMode='${k}';render()">${l}</button>`).join('')}</span>
   </div>`;
+  if(calMode==='sugg'){ const a = openSugg();
+    return head + `<div class="box"><p class="meta" style="font-size:13px;margin-bottom:6px">From the school calendar and the special dates list. Nothing is created until someone plans it.</p>${a.length ? a.map(sgLine).join('') : '<p class="meta" style="padding:8px 0">No suggestions left.</p>'}</div>`; }
   if(calMode==='ideas') return head + `<div class="box">${ideas.length ? ideas.map(p=>line(p,true)).join('') : '<p class="meta" style="padding:8px 0">No ideas waiting.</p>'}</div>`;
   if(calMode==='list') return head + `<div class="box">${inMonth.length ? inMonth.map(p=>line(p,true)).join('') : '<p class="meta" style="padding:8px 0">Nothing planned this month.</p>'}</div>`;
   const first = new Date(y, m-1, 1), days = new Date(y, m, 0).getDate(), lead = first.getDay();
@@ -595,12 +665,12 @@ function calendarView(){
   for(let i=0;i<lead;i++) cells += '<div class="day out"></div>';
   for(let d=1; d<=days; d++){
     const iso = `${calMonth}-${String(d).padStart(2,'0')}`;
-    const ps = inMonth.filter(p=>p.post_date===iso);
+    const ps = inMonth.filter(p=>p.post_date===iso), sg = iso >= t ? openSugg().filter(x=>x.date===iso) : [];
     cells += `<div class="day ${iso===t?'today':iso<t?'past':''}">${d}${ps.map(p=>{ const late = isLate(p), k = p.step==='english'&&p.sent_back?'back':p.step;
-      return `<span class="pp" title="${esc(p.title)} · ${late?'Late':STEP_LABEL[p.step]}" style="background:${late?LATE_BG:STEP_BG[k]};color:${late?LATE_TEXT:STEP_FG[k]}" onclick="go('post/${p.id}')">${esc(p.title)}</span>`; }).join('')}</div>`;
+      return `<span class="pp" title="${esc(p.title)} · ${late?'Late':STEP_LABEL[p.step]}" style="background:${late?LATE_BG:STEP_BG[k]};color:${late?LATE_TEXT:STEP_FG[k]}" onclick="go('post/${p.id}')">${esc(p.title)}</span>`; }).join('')}${sg.map(x=>`<span class="sg" title="Suggested: ${esc(x.name)}${x.confirmed?'':' (date to confirm)'}" onclick="openSg(${SUGG.indexOf(x)})">${esc(x.name)}</span>`).join('')}</div>`;
   }
   return head + `<div class="cal-wrap"><div class="cal">${cells}</div>
-    <div class="legend">${['english','thai','review','post','posted'].map(s=>`<span><i style="background:${STEP_FG[s]}"></i>${STEP_LABEL[s]}</span>`).join('')}<span><i style="background:#E24B4A"></i>Late</span></div></div>`;
+    <div class="legend">${[...STEP_ORDER,'posted'].map(s=>`<span><i style="background:${STEP_FG[s]}"></i>${STEP_LABEL[s]}</span>`).join('')}<span><i style="background:#E24B4A"></i>Late</span><span><i style="background:transparent;border:1px dashed #A8A39A"></i>Suggested</span></div></div>`;
 }
 
 // ---------- Post page ----------
@@ -614,29 +684,36 @@ async function renderPost(el){
     EVENTS[id] = [];
     sb.from('marketing_post_events').select('actor,kind,note,created_at').eq('post_id', id).order('created_at').then(({data})=>{ EVENTS[id] = data || []; if(postId()===id && !dirty()) renderPost($('#view')); });
   }
-  const mine = isMine(p), d = myDuty(), pic = p.pic === ME;
-  const canEn = (d==='writer' && p.step==='english') || (pic && p.step==='review');
-  const canTh = (d==='translator' && p.step==='thai') || (pic && p.step==='review');
-  const canTags = (d==='writer' && ['english','post'].includes(p.step)) || (pic && p.step==='review');
-  const canImg = (d==='writer' && ['english','thai','review','post'].includes(p.step)) || (pic && p.step==='review');
+  const mine = isMine(p), pic = p.pic === ME, adm = isAdmin() && openStep(p), bk = backupFor(p);
+  const W = isWriterish(), T = isTranslatorish();
+  const canEn = (W && p.step==='english') || (pic && p.step==='review') || adm;
+  const canTh = p.needs_thai && ((T && p.step==='thai') || adm);
+  const canTags = (W && ['english','post'].includes(p.step)) || (pic && p.step==='review') || adm;
+  const canImg = (W && openStep(p)) || (pic && p.step==='review') || adm;
   const canTopic = (p.created_by===ME || canDelete) && openStep(p);
-  const steps = ['english', ...(p.needs_thai?['thai']:[]), 'review', 'post'];
+  const canBrief = (p.created_by===ME || pic || isAdmin()) && p.step==='english';
+  const steps = ['english', 'review', ...(p.needs_thai?['thai']:[]), 'post'];
   const cur = p.step==='posted' ? steps.length : steps.indexOf(p.step);
   const bar = steps.map((s,i)=>`<span class="sb ${i<cur?'done':i===cur?'now':''}"><span class="sd">${i<cur?'&#10003;':i+1}</span>${STEP_LABEL[s]}${s==='review'?` · ${esc(nameOf(p.pic)||'PIC not set')}`:''}</span>`).join('<span class="sl"></span>');
   const imgs = (p.images||[]);
+  const canAct = mine || bk || adm;
+  const asAdmin = !mine && !bk && adm ? ' <span class="adm">(as admin)</span>' : '';
   let actions = '';
-  if(mine){
-    if(p.step==='english') actions = `<button class="btn-primary" onclick="doAct('send_on')">${p.needs_thai?'Send to translator':'Send to '+esc(nameOf(p.pic)||'PIC')}</button>`;
-    if(p.step==='thai') actions = `<button class="btn-primary" onclick="doAct('thai_checked')">Thai checked, send to ${esc(nameOf(p.pic)||'PIC')}</button>`;
-    if(p.step==='review') actions = `<input id="f-note" placeholder="Note to the writer (needed to send back)" class="note-in">
+  if(canAct){
+    if(p.step==='english') actions = `<button class="btn-primary" onclick="doAct('send_on')">Send to ${esc(nameOf(p.pic)||'PIC')} for review</button>`;
+    if(p.step==='review' && (pic || adm)) actions = `<input id="f-note" placeholder="Note to the writer (needed to send back)" class="note-in">
       <button class="btn-outline" onclick="doAct('send_back')">Send back</button>
-      ${p.needs_thai?`<button class="btn-outline" onclick="doAct('to_translator')">Send to translator</button>`:''}
-      <button class="btn-primary" onclick="doAct('approve')">Approve</button>`;
+      <button class="btn-primary" onclick="doAct('approve')">${p.needs_thai?'Approve, send to translator':'Approve'}</button>`;
+    if(p.step==='thai') actions = `<button class="btn-primary" onclick="doAct('thai_checked')">Thai done, ready to post</button>`;
     if(p.step==='post') actions = `<button class="btn-outline" onclick="copyCaption()">Copy caption</button>
       <input id="f-url" placeholder="Facebook link (optional)" class="note-in">
       <button class="btn-primary" onclick="doAct('mark_posted')">Mark as posted</button>`;
+    if(actions && asAdmin) actions = asAdmin + actions;
   }
-  const waiting = !mine && openStep(p) ? `<span class="muted">Waiting on ${esc(ownerName(p))}${isLate(p)?' · <span class="late-d">late</span>':''}</span>` : '';
+  const briefHtml = (p.brief_goal || p.brief_format || (p.brief_audience||[]).length || p.brief)
+    ? `<div class="briefbox"><span><b>For</b>${esc((p.brief_audience||[]).join(', ')||'Not set')}</span><span><b>Goal</b>${esc(goalName(p.brief_goal)||'Not set')}</span><span><b>Format</b>${esc(formatName(p.brief_format)||'Not set')}</span>${canBrief?`<button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Edit brief</button>`:''}${p.brief?`<span class="kp"><b>Key points</b>${esc(p.brief)}</span>`:''}</div>`
+    : (canBrief ? `<div class="briefbox"><span class="meta">No brief yet.</span><button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Add brief</button></div>` : '');
+  const waiting = !canAct && openStep(p) ? `<span class="muted">Waiting on ${esc(ownerName(p))}${isLate(p)?' · <span class="late-d">late</span>':''}</span>` : '';
   const hist = (EVENTS[id]||[]).map(e=>`${esc(nameOf(e.actor)||'System')} ${esc(e.kind)}${e.note?` ("${esc(e.note)}")`:''} · ${new Date(e.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`).join('<br>');
   el.innerHTML = `<div id="pg">
   <button class="link-btn" style="margin-bottom:14px" onclick="history.length>1?history.back():go('${lastTab||'turn'}')">&#8249; Back</button>
@@ -648,11 +725,10 @@ async function renderPost(el){
     </div>
     <div class="stepbar">${bar}</div>
     ${p.step==='english'&&p.sent_back&&p.back_note?`<div class="banner bad">${esc(nameOf(p.pic)||'PIC')}: ${esc(p.back_note)}</div>`:''}
-    ${p.en_changed_after_th&&p.step==='review'?`<div class="banner warn">The English changed after the Thai was written. Check the Thai still matches, or send it to the translator.</div>`:''}
-    ${p.brief?`<p class="brief"><b>Brief</b> ${esc(p.brief)}</p>`:''}
+    ${briefHtml}
     <div class="grid-2" style="margin-bottom:12px">
       <div class="f"><label>English${canEn?'':' <span class="hint">view only</span>'}</label><textarea id="f-copy_en" class="tall" ${canEn?'':'readonly'} placeholder="${canEn?'Write the English caption':''}">${esc(p.copy_en||'')}</textarea></div>
-      ${p.needs_thai?`<div class="f"><label>Thai${p.th_machine?' <span class="hint" style="color:#854F0B">machine draft, not checked</span>':''}${canTh?'':' <span class="hint">view only</span>'}</label><textarea id="f-copy_th" class="tall" ${canTh?'':'readonly'} placeholder="${canTh?'Write or fix the Thai caption':''}">${esc(p.copy_th||'')}</textarea></div>`:'<div class="f"><label>Thai</label><p class="meta">English only for this post.</p></div>'}
+      ${p.needs_thai && !canTh && !(p.copy_th||'').trim() && ['english','review'].includes(p.step) ? '<div class="f"><label>Thai</label><p class="meta">The translator writes the Thai after the English is approved.</p></div>' : p.needs_thai?`<div class="f"><label>Thai${p.th_machine?' <span class="hint" style="color:#854F0B">machine draft, not checked</span>':''}${canTh?'':' <span class="hint">view only</span>'}</label><textarea id="f-copy_th" class="tall" ${canTh?'':'readonly'} placeholder="${canTh?'Write or fix the Thai caption':''}">${esc(p.copy_th||'')}</textarea></div>`:'<div class="f"><label>Thai</label><p class="meta">English only for this post.</p></div>'}
     </div>
     <div class="f"><label>Hashtags${canTags?'':' <span class="hint">view only</span>'}</label><input id="f-hashtags" ${canTags?'':'readonly'} value="${esc(p.hashtags||'')}" placeholder="#BloomChiangmai"></div>
     <div class="f"><label>Images</label><div class="imgs">${imgs.map((im,i)=>`<span class="im">${safeUrl(im.url)?`<a href="${esc(im.url)}" target="_blank" rel="noopener">${im.external?'<span class="ext">Drive link</span>':`<img src="${esc(im.url)}" alt="">`}</a>`:''}${canImg?`<button class="imx" title="Remove" onclick="removeImg(${i})">×</button>`:''}</span>`).join('')}
@@ -684,9 +760,8 @@ async function doAct(a){
   const pay = {};
   if(a==='send_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the writer knows what to change.'); $('#f-note').focus(); return; } }
   if(a==='mark_posted') pay.post_url = (($('#f-url')||{}).value||'').trim();
-  if(a==='approve' && p.en_changed_after_th){ if(!confirm('The English changed after the Thai was written. Approve anyway?')) return; pay.force = true; }
   const r = await act(a, p.id, pay); if(!r) return;
-  showToast({send_on:'Sent on.', thai_checked:'Sent for review.', send_back:'Sent back with your note.', to_translator:'Sent to the translator.', approve:'Approved. Ready to post.', mark_posted:'Marked as posted.'}[a] || 'Done.');
+  showToast({send_on:'Sent for review.', thai_checked:'Thai done. Ready to post.', send_back:'Sent back with your note.', approve: p.needs_thai ? 'Approved. Sent to the translator.' : 'Approved. Ready to post.', mark_posted:'Marked as posted.'}[a] || 'Done.');
   delete EVENTS[p.id]; await reloadPosts();
 }
 async function copyCaption(){
@@ -720,7 +795,36 @@ function picOptions(sel){
   return `<option value="">Choose a person</option>` + ok.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''}>${esc(s.name)}</option>`).join('')
     + (sel && !ok.some(s=>s.id===sel) && STAFF[sel] ? `<option value="${sel}" selected>${esc(STAFF[sel].name)} (no longer a PIC)</option>` : '');
 }
-function topicForm(p){
+function briefFields(p){
+  const aud = p.brief_audience || [], list = [...audienceList(), ...aud.filter(a=>!audienceList().includes(a))];
+  return `
+    <div class="f"><label>Who is it for? <span class="hint">pick one or more</span></label><div class="checks">${list.map(a=>`<label><input type="checkbox" name="brief_audience" value="${esc(a)}" ${aud.includes(a)?'checked':''}>${esc(a)}</label>`).join('')}</div></div>
+    <div class="grid-2"><div class="f"><label>Goal</label><select name="brief_goal"><option value="">Choose</option>${GOALS.map(([v,l])=>`<option value="${v}" ${p.brief_goal===v?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div class="f"><label>Format</label><select name="brief_format"><option value="">Choose</option>${FORMATS.map(([v,l])=>`<option value="${v}" ${p.brief_format===v?'selected':''}>${l}</option>`).join('')}</select></div></div>
+    <div class="f"><label>Key points <span class="hint">optional</span></label><textarea name="brief" placeholder="What must the post say? Dates, times, names, links.">${esc(p.brief||'')}</textarea></div>`;
+}
+function briefPayload(){
+  const fd = new FormData($('#fm'));
+  return { brief_audience: fd.getAll('brief_audience').map(String), brief_goal: String(fd.get('brief_goal')||''), brief_format: String(fd.get('brief_format')||''), brief: String(fd.get('brief')||'').trim() };
+}
+function briefMissing(o){
+  if(!o.brief_audience.length) return 'Pick who the post is for.';
+  if(!o.brief_goal) return 'Pick the goal.';
+  if(!o.brief_format) return 'Pick the format.';
+  return '';
+}
+function editBrief(id){
+  const p = POSTS.find(x=>x.id===id); if(!p) return;
+  cur = {topic:true};
+  drawerShell('Brief', briefFields(p), null, false);
+  $('#sv').onclick = async () => {
+    const o = briefPayload(), miss = briefMissing(o);
+    if(miss){ $('#msg').textContent = miss; return; }
+    const r = await act('brief', id, o); if(!r) return;
+    closeD(); showToast('Brief updated.'); delete EVENTS[id]; await reloadPosts();
+  };
+}
+function topicForm(p, withBrief){
   const thai = p.needs_thai === undefined ? '' : String(p.needs_thai);
   return `
     <div class="f"><label>Topic</label><input name="title" value="${esc(p.title||'')}" placeholder="Loy Krathong at Bloom"></div>
@@ -729,7 +833,7 @@ function topicForm(p){
     <div class="f"><label>Label</label><select name="label" onchange="labelPicked(this.value)"><option value="">Choose a label</option>${LABELS.map(l=>`<option ${l.name===p.label?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div>
     <div class="f"><label>Person in charge <span class="hint">reviews and approves</span></label><select name="pic" onchange="this.dataset.touched='1'">${picOptions(p.pic)}</select></div>
     <div class="f"><label>Thai version</label><select name="needs_thai"><option value="" ${thai===''?'selected':''}>Choose</option><option value="true" ${thai==='true'?'selected':''}>Needed</option><option value="false" ${thai==='false'?'selected':''}>English only</option></select></div>
-    <div class="f"><label>Brief for the writer <span class="hint">optional</span></label><textarea name="brief">${esc(p.brief||'')}</textarea></div>`;
+    ${withBrief ? '<h4 style="font-size:13px;margin:16px 0 8px;color:#5F5E5A">Brief for the writer</h4>' + briefFields(p) : ''}`;
 }
 // A label suggests who usually approves it, unless a person was already picked by hand.
 function labelPicked(name){
@@ -739,7 +843,7 @@ function labelPicked(name){
 }
 function topicPayload(){
   const fd = new FormData($('#fm')), o = {};
-  ['title','post_date','post_time','pic','label','brief'].forEach(k=>o[k] = String(fd.get(k)||'').trim());
+  ['title','post_date','post_time','pic','label'].forEach(k=>o[k] = String(fd.get(k)||'').trim());
   const t = String(fd.get('needs_thai')||'');
   if(t) o.needs_thai = t === 'true';
   return o;
@@ -752,14 +856,17 @@ function topicMissing(o){
   if(o.needs_thai === undefined) return 'Choose Thai needed or English only.';
   return '';
 }
-function newTopic(date){
+function newTopic(date, pre, suggKey){
   cur = {topic:true};
-  drawerShell('New topic', topicForm({post_date: date || ''}), null, false);
+  pre = pre || {};
+  drawerShell('New topic', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || ''}, true), null, false);
+  if(pre.label) setTimeout(()=>labelPicked(pre.label), 0);
   $('#sv').textContent = 'Create';
   $('#sv').onclick = async () => {
-    const o = topicPayload(), miss = topicMissing(o);
+    const o = {...topicPayload(), ...briefPayload()}, miss = topicMissing(o) || briefMissing(o);
     if(miss){ $('#msg').textContent = miss; return; }
     const r = await act('create', null, o); if(!r) return;
+    if(suggKey){ await sb.from('marketing_hidden_suggestions').insert({ key: suggKey }); HIDDEN.add(suggKey); }
     closeD(); showToast('Created. It is now with the writer.'); await reloadPosts(); go('post/'+r.id);
   };
   setTimeout(()=>{ const f = $('#fm [name="title"]'); if(f) f.focus(); }, 50);
@@ -767,7 +874,7 @@ function newTopic(date){
 function editTopic(id){
   const p = POSTS.find(x=>x.id===id); if(!p) return;
   cur = {topic:true};
-  drawerShell('Edit topic', topicForm(p) + `<p style="margin-top:6px"><button type="button" class="link-btn" style="color:#A23F1C" onclick="cancelPost('${id}')">Cancel this post</button></p>`, null, false);
+  drawerShell('Edit topic', topicForm(p, false) + `<p style="margin-top:6px"><button type="button" class="link-btn" style="color:#A23F1C" onclick="cancelPost('${id}')">Cancel this post</button></p>`, null, false);
   $('#sv').onclick = async () => {
     const o = topicPayload(), miss = topicMissing(o);
     if(miss){ $('#msg').textContent = miss; return; }
@@ -782,8 +889,8 @@ async function cancelPost(id){
 }
 
 // ---------- Team (marketing full only) ----------
-const DUTIES = [['writer','Writer'],['translator','Translator'],['pic','Person in charge'],['overseer','Overseer']];
-const DUTY_NOTE = {writer:'Writes English and posts', translator:'Checks the Thai', pic:'Reviews and approves posts', overseer:'Sees everything, does not take part'};
+const DUTIES = [['writer','Writer'],['writer_backup','Backup writer'],['translator','Translator'],['translator_backup','Backup translator'],['pic','Person in charge'],['overseer','Overseer']];
+const DUTY_NOTE = {writer:'Writes English and posts', writer_backup:'Covers the writer when away', translator:'Translates approved English', translator_backup:'Covers the translator when away', pic:'Reviews and approves posts', overseer:'Sees everything. As admin, can step in at any step'};
 function teamView(){
   const members = Object.keys(TEAM).filter(id=>STAFF[id]).sort((a,b)=>DUTIES.findIndex(d=>d[0]===TEAM[a]) - DUTIES.findIndex(d=>d[0]===TEAM[b]) || STAFF[a].name.localeCompare(STAFF[b].name));
   const others = Object.values(STAFF).filter(s=>s.status==='active' && !TEAM[s.id]).sort((a,b)=>a.name.localeCompare(b.name));
@@ -807,7 +914,35 @@ function teamView(){
       <button class="link-btn" style="color:#A23F1C" onclick="removeLabel('${esc(l.name)}')">Remove</button></div>`).join('')}
     <div class="tm add"><input id="newLabel" placeholder="New label" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
       <span></span><span></span><button class="btn-primary sm" onclick="addLabel()">Add</button></div>
+  </div>
+  <div class="box"><h3 class="bh">Special dates</h3>
+    <p class="meta" style="font-size:13px;margin-bottom:6px">These show as suggested posts in the Calendar, next to the school calendar dates. Dates that move each year (Loy Krathong, Makha Bucha) stay marked "to confirm" until checked.</p>
+    ${SPECIAL.map(x=>`<div class="tm"><span style="font-weight:600">${esc(x.name)}</span><span>${fmtDate(x.date)}</span>
+      <span>${x.confirmed?'<span class="muted">Confirmed</span>':`<button class="link-btn" onclick="confirmSpecial('${x.id}')">Mark confirmed</button>`}${x.note?` <span class="meta">${esc(x.note)}</span>`:''}</span>
+      <button class="link-btn" style="color:#A23F1C" onclick="removeSpecial('${x.id}')">Remove</button></div>`).join('')}
+    <div class="tm add"><input id="spName" placeholder="Name, e.g. Loy Krathong" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
+      <input id="spDate" type="date" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
+      <label style="font-size:13px;display:flex;gap:6px;align-items:center"><input id="spConf" type="checkbox" checked> Date confirmed</label>
+      <button class="btn-primary sm" onclick="addSpecial()">Add</button></div>
   </div>`;
+}
+async function addSpecial(){
+  const name = ($('#spName').value||'').trim(), date = $('#spDate').value, confirmed = $('#spConf').checked;
+  if(!name || !date){ showToast('Add a name and a date.'); return; }
+  const { error } = await sb.from('marketing_special_dates').insert({ name, date, confirmed });
+  if(error){ showToast('Could not add: ' + error.message); return; }
+  showToast('Added.'); loadAll();
+}
+async function confirmSpecial(id){
+  const { error } = await sb.from('marketing_special_dates').update({ confirmed:true, note:null }).eq('id', id);
+  if(error){ showToast('Could not save: ' + error.message); return; }
+  showToast('Marked confirmed.'); loadAll();
+}
+async function removeSpecial(id){
+  if(!confirm('Remove this special date?')) return;
+  const { error } = await sb.from('marketing_special_dates').delete().eq('id', id);
+  if(error){ showToast('Could not remove: ' + error.message); return; }
+  showToast('Removed.'); loadAll();
 }
 async function setDuty(id, duty){
   const { error } = await sb.from('marketing_team').upsert({ staff_id:id, duty }, { onConflict:'staff_id' });

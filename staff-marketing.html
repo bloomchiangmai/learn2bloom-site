@@ -753,7 +753,7 @@ async function renderPost(el){
     if(p.step==='english') actions = `<button class="btn-primary" onclick="doAct('send_on')">Send to ${esc(nameOf(p.pic)||'the PIC')} (PIC) for review</button>`;
     if(p.step==='review' && (pic || adm)) actions = `<input id="f-note" placeholder="Note to the writer (needed to send back)" class="note-in">
       <button class="btn-outline" onclick="doAct('send_back')">Send back</button>
-      <button class="btn-primary" onclick="doAct('approve')">${p.needs_thai?'Approve, send to the translator':'Approve, ready to post'}</button>`;
+      <button class="btn-primary" onclick="doAct('approve')">${p.en_written_by===ME&&isAdmin()?'Approve my own post':'Approve'}${p.needs_thai?', send to the translator':', ready to post'}</button>`;
     if(p.step==='thai') actions = `<button class="btn-primary" onclick="doAct('thai_checked')">Thai done, ready to post</button>`;
     if(p.step==='post') actions = `<button class="btn-outline" onclick="copyCaption()">Copy caption</button>
       <input id="f-url" placeholder="Facebook link (optional)" class="note-in">

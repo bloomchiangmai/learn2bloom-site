@@ -193,9 +193,11 @@ a.btn-primary{text-decoration:none;color:#fff;display:inline-block;} a.btn-outli
 .ptt{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .late-d{color:#A23F1C;font-weight:600;}
 .mks{display:inline-flex;gap:4px;}
-.mk{font-size:10.5px;font-weight:700;border-radius:4px;padding:1px 5px;color:#B5B0A8;border:1px solid #E8E3D8;}
+.mk{text-decoration:none;cursor:pointer;font-size:10.5px;font-weight:700;border-radius:4px;padding:1px 5px;color:#B5B0A8;border:1px solid #E8E3D8;}
 .mk.ok{background:#E3F1EC;border-color:#E3F1EC;color:#0F6E56;}
 .mk.no{background:#FCEBEB;border-color:#F7C1C1;color:#A32D2D;}
+a.mk:hover{border-color:#534AB7;color:#534AB7;}
+.mkey .mk{cursor:default;}
 .sm{padding:5px 11px;font-size:12.5px;border-radius:7px;white-space:nowrap;}
 .ppanel{background:#EEF4FC;border-radius:0 0 8px 8px;padding:4px 12px 16px 130px;margin-bottom:4px;}
 .pcard{background:#fff;border:1px solid #E8E3D8;border-radius:12px;padding:16px 18px;max-width:440px;}
@@ -343,10 +345,10 @@ const go = k => { location.hash = k; };
 // Posts come from the Google Sheet (marketing_sheet_posts, kept in sync by the sheet itself).
 // Reference, goal and tasks still live in marketing_entries and are edited here.
 let SHEET = null, sheetTimer = null, flashT = null, PENDING = {};
-const sheetLink = (gid, row) => {
+const sheetLink = (gid, row, col) => {
   const base = SHEET && SHEET.sheet_url ? SHEET.sheet_url.split('#')[0].replace(/\/edit.*$/,'/edit') : '';
   if(!base) return '';
-  return base + (gid != null ? `#gid=${gid}` + (row ? `&range=A${row}` : '') : '');
+  return base + (gid != null ? `#gid=${gid}` + (row ? `&range=${col||'A'}${row}` : '') : '');
 };
 // The sheet only has Posted / Schedule / On process. Where a post really is comes from what is filled in.
 const blank = v => { const t = String(v||'').trim(); return t.length < 15 || /^(tbc|tbd|todo|x+|-+|n\/?a)$/i.test(t); };
@@ -361,7 +363,8 @@ function mapPost(r){
   const d = r.data || {};
   return { id:'s'+r.id, tab:r.tab, gid:r.gid, row:r.row_num, title:d.title || '(no topic)', date:d.date || '', time:d.time || '',
     format:d.format || '', status:stageFrom(d), sid:r.id, raw:d.status_raw || '', copy:d.copy || '', th:d.th || '',
-    hashtags:d.hashtags || '', image:d.image || '', post_url:d.post_url || '' };
+    hashtags:d.hashtags || '', image:d.image || '', post_url:d.post_url || '',
+    col:{EN:d.col_en, TH:d.col_th, Img:d.col_img} };
 }
 async function loadSheet(){
   const [{ data, error }, { data: meta }] = await Promise.all([
@@ -503,13 +506,15 @@ let openId = null;
 const jump = k => { const e = document.getElementById(k); if(e) e.scrollIntoView({behavior:'smooth', block:'start'}); };
 function marks(x){
   const today = todayISO(), urgent = open(x) && x.date && x.date <= addDays(today, 7);
-  const m = (have, l) => `<span class="mk ${have?'ok':urgent?'no':''}" title="${l}: ${have?'done':'missing'}">${l}</span>`;
+  const m = (have, l) => { const u = sheetLink(x.gid, x.row, (x.col||{})[l]);
+    return u ? `<a class="mk ${have?'ok':urgent?'no':''}" href="${esc(u)}" target="_blank" rel="noopener" title="Open this cell in the sheet">${l}</a>`
+             : `<span class="mk ${have?'ok':urgent?'no':''}">${l}</span>`; };
   return `<span class="mks">${m(!blank(x.copy),'EN')}${m(!blank(x.th),'TH')}${m(!!x.image,'Img')}</span>`;
 }
 function rows(list){
   return `<div class="plist"><div class="pl head"><span>Date</span><span>Post</span><span>Stage</span><span class="hide-m">With</span><span class="hide-m">Done</span><span></span></div>${list.map(row).join('')}</div>${KEY}`;
 }
-const KEY = `<div class="mkey"><span class="mk ok">EN</span> done <span class="mk no">TH</span> missing, due within 7 days <span class="mk">Img</span> not needed yet</div>`;
+const KEY = `<div class="mkey"><span class="mk ok">EN</span> done <span class="mk no">TH</span> missing, due within 7 days <span class="mk">Img</span> not needed yet · click a mark to open that cell in the sheet</div>`;
 function row(x){
   const st = stageOf(x), today = todayISO();
   const isLate = x.date && x.date < today && open(x);

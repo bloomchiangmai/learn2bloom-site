@@ -253,6 +253,13 @@ textarea[readonly],input[readonly]{background:#F7F3EC!important;color:#5F5E5A;}
 .imadd{width:84px;height:84px;border-radius:8px;border:1px dashed #DCD5C6;display:flex;align-items:center;justify-content:center;color:#888780;font-size:13px;cursor:pointer;}
 .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;padding-top:14px;border-top:1px solid #F0ECE3;}
 .note-in{border:1px solid #DCD5C6;border-radius:8px;padding:9px 11px;font-size:14px;min-width:240px;flex:1;}
+.tm{display:grid;grid-template-columns:180px 220px minmax(0,1fr) 80px;gap:12px;align-items:center;padding:9px 0;border-top:1px solid #F0ECE3;font-size:13.5px;}
+.tm.add{border-top:1px dashed #DCD5C6;margin-top:4px;padding-top:12px;}
+.tm button{justify-self:end;}
+.emptyweeks{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px dashed #DCD5C6;border-radius:12px;padding:12px 16px;margin:-4px 0 14px;font-size:13.5px;color:#5F5E5A;}
+.emptyweeks b{color:#9A5D0C;margin-right:4px;}
+.emptyweeks span{margin-right:auto;}
+#newTopicBtn{align-self:flex-end;}
 .hist{font-size:12px;color:#888780;line-height:1.8;padding:12px 4px;}
 .toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
 
@@ -264,6 +271,8 @@ textarea[readonly],input[readonly]{background:#F7F3EC!important;color:#5F5E5A;}
   .wo{grid-template-columns:110px minmax(0,1fr);} .wo>:nth-child(3){grid-column:1/3;}
   .stepcols{grid-template-columns:repeat(2,minmax(0,1fr));}
   .note-in{min-width:0;}
+  .tm{grid-template-columns:1fr 1fr;} .tm>:nth-child(3){display:none;}
+  .emptyweeks span{flex-basis:100%;}
   main{padding:28px 16px 80px;}
   .goal{grid-template-columns:1fr 1fr;} .goal>div:first-child{grid-column:span 2;}
   .ov{grid-template-columns:1fr;}
@@ -300,6 +309,7 @@ textarea[readonly],input[readonly]{background:#F7F3EC!important;color:#5F5E5A;}
         <h1>Marketing HQ</h1>
         <p class="sub">Every post, from topic to Facebook, and whose turn it is.</p>
       </div>
+      <button class="btn-primary" id="newTopicBtn" style="display:none" onclick="newTopic()">+ New topic</button>
     </div>
     <nav class="tabs" id="tabs"></nav>
     <div id="subtabs"></div>
@@ -365,7 +375,7 @@ const thisMonth = () => localISO(new Date()).slice(0,7);
 const STEP_LABEL = {english:'English', thai:'Thai', review:'Review', post:'Post', posted:'Posted', cancelled:'Cancelled'};
 const STEP_BG = {english:'#EEEDFE', thai:'#FAEEDA', review:'#E6F1FB', post:'#E1F5EE', posted:'#F1EFE8', cancelled:'#FAECE7', back:'#FCEBEB'};
 const STEP_FG = {english:'#3C3489', thai:'#633806', review:'#0C447C', post:'#085041', posted:'#444441', cancelled:'#712B13', back:'#791F1F'};
-const LABELS = ['Education','Event','Holiday','Admissions','Other'];
+let LABELS = [];
 const IMG_BUCKET = 'marketing-media';
 
 let POSTS = [], STAFF = {}, TEAM = {}, EVENTS = {}, PLAN = null, DATA = {}, loaded = false;
@@ -420,16 +430,18 @@ const actionWord = p => ({english: p.sent_back ? 'Fix' : 'Write', thai:'Translat
 
 // ---------- Data ----------
 async function loadAll(){
-  const [posts, staff, team, ent] = await Promise.all([
+  const [posts, staff, team, labels, ent] = await Promise.all([
     sb.from('marketing_posts').select('*').order('post_date', {ascending:true, nullsFirst:false}),
     sb.from('staff').select('id,name,status'),
     sb.from('marketing_team').select('staff_id,duty'),
+    sb.from('marketing_labels').select('name,default_pic,sort').order('sort'),
     sb.from('marketing_entries').select('id,collection,data,updated_at,updated_by').neq('collection','content').order('created_at')
   ]);
   if(posts.error){ showToast('Could not load posts: ' + posts.error.message); return; }
   POSTS = posts.data || [];
   STAFF = Object.fromEntries((staff.data||[]).map(s=>[s.id, s]));
   TEAM = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, t.duty]));
+  LABELS = labels.data || [];
   DATA = {}; PLAN = null;
   (ent.data||[]).forEach(r => {
     const row = { id:r.id, ...r.data, _updated:r.updated_at, _by:r.updated_by };
@@ -483,6 +495,7 @@ function tabs(){
 }
 function render(){
   tabs();
+  const nb = $('#newTopicBtn'); if(nb) nb.style.display = loaded && canEdit ? '' : 'none';
   const el = $('#view'), v = view();
   if(!loaded){ el.innerHTML = '<div class="empty-state">Loading…</div>'; return; }
   if(v==='turn') el.innerHTML = myTurn();
@@ -513,14 +526,12 @@ function myTurn(){
     .sort((a,b)=>(Number(isLate(b))-Number(isLate(a))) || String(dueOf(a)||'9').localeCompare(String(dueOf(b)||'9')));
   const sub = {writer:'Write English, fix what comes back, post when it is approved', translator:'Check and fix the Thai'}[d]
     || 'Review and approve the posts you are in charge of';
-  const canCreate = canEdit && d !== 'overseer';
   return `
   <div class="box">
     <h3 class="bh">${mine.length ? `Your turn: ${mine.length}` : 'All clear'}</h3>
     <p class="meta" style="font-size:13px;margin-bottom:6px">${sub}</p>
     ${mine.length ? mine.map(p=>line(p)).join('') : '<p class="meta" style="padding:10px 0">Nothing is waiting on you right now.</p>'}
   </div>
-  ${canCreate ? `<button class="btn-outline" style="width:100%;border-style:dashed;padding:12px" onclick="newTopic()">+ New topic</button>` : ''}
   ${!writers().length || !translators().length ? `<p class="meta" style="margin-top:14px">${!writers().length?'No writer is set yet. ':''}${!translators().length?'No translator is set yet. ':''}${canDelete?'Set them in the Team tab.':''}</p>` : ''}`;
 }
 
@@ -531,7 +542,8 @@ function overview(){
   const ws = weekStart(t);
   const week = live.filter(p=>{ const d = dueOf(p); return d && d >= t && d <= addDays(t,6); });
   const mk = t.slice(0,7), posted = POSTS.filter(p=>p.step==='posted' && String(p.posted_at||p.post_date||'').slice(0,7)===mk).length;
-  let empty = 0; for(let w=0; w<4; w++){ const a = addDays(ws, 7*w), b = addDays(a, 6); if(!POSTS.some(p=>p.step!=='cancelled' && p.post_date>=a && p.post_date<=b)) empty++; }
+  const emptyWeeks = []; for(let w=0; w<4; w++){ const a = addDays(ws, 7*w), b = addDays(a, 6); if(!POSTS.some(p=>p.step!=='cancelled' && p.post_date>=a && p.post_date<=b)) emptyWeeks.push(a < t ? t : a); }
+  const empty = emptyWeeks.length;
   const steps = ['english','thai','review','post'];
   const ppl = {}; live.forEach(p=>{ const k = ownerName(p); (ppl[k] = ppl[k] || []).push(p); });
   const max = Math.max(1, ...Object.values(ppl).map(a=>a.length));
@@ -544,6 +556,7 @@ function overview(){
     <div class="tile"><div class="n">${posted}</div><div class="l">Posted this month</div></div>
     <div class="tile"><div class="n ${empty?'warn':'good'}">${empty}</div><div class="l">Weeks with nothing planned (next 4)</div></div>
   </div>
+  ${empty && canEdit ? `<div class="emptyweeks"><span><b>${empty} empty week${empty>1?'s':''}</b> coming up</span>${emptyWeeks.map(d=>`<button class="btn-outline sm" onclick="newTopic('${d}')">Plan a topic for ${fmtShort(d)}</button>`).join('')}</div>` : ''}
   <div class="box"><h3 class="bh">Where posts are now</h3>
     <div class="stepcols">${steps.map(s=>{ const a = live.filter(p=>p.step===s); return `<div class="stepcol"><div class="h">${STEP_LABEL[s]}</div><div class="c">${a.length}</div><div class="dots">${a.map(p=>`<i class="${isLate(p)?'r':''}" title="${esc(p.title)}"></i>`).join('')}</div></div>`; }).join('')}</div>
   </div>
@@ -703,45 +716,61 @@ async function removeImg(i){
 
 // ---------- New topic / edit topic ----------
 function picOptions(sel){
-  const ok = Object.values(STAFF).filter(s=>s.status==='active' && !['overseer','writer'].includes(TEAM[s.id])).sort((a,b)=>a.name.localeCompare(b.name));
-  return `<option value="">Choose a person</option>` + ok.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''}>${esc(s.name)}</option>`).join('');
+  const ok = Object.keys(TEAM).filter(id=>TEAM[id]==='pic' && STAFF[id] && STAFF[id].status==='active').map(id=>STAFF[id]).sort((a,b)=>a.name.localeCompare(b.name));
+  return `<option value="">Choose a person</option>` + ok.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''}>${esc(s.name)}</option>`).join('')
+    + (sel && !ok.some(s=>s.id===sel) && STAFF[sel] ? `<option value="${sel}" selected>${esc(STAFF[sel].name)} (no longer a PIC)</option>` : '');
 }
 function topicForm(p){
+  const thai = p.needs_thai === undefined ? '' : String(p.needs_thai);
   return `
     <div class="f"><label>Topic</label><input name="title" value="${esc(p.title||'')}" placeholder="Loy Krathong at Bloom"></div>
     <div class="grid-2"><div class="f"><label>Posting date</label><input name="post_date" type="date" value="${esc(p.post_date||'')}"></div>
-      <div class="f"><label>Time</label><input name="post_time" type="time" value="${esc(p.post_time||'')}"></div></div>
-    <div class="f"><label>Person in charge <span class="hint">reviews and approves</span></label><select name="pic">${picOptions(p.pic)}</select></div>
-    <div class="f"><label>Thai version</label><select name="needs_thai"><option value="true" ${p.needs_thai!==false?'selected':''}>Needed</option><option value="false" ${p.needs_thai===false?'selected':''}>English only</option></select></div>
-    <div class="f"><label>Label <span class="hint">optional</span></label><select name="label"><option value=""></option>${LABELS.map(l=>`<option ${l===p.label?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div class="f"><label>Time <span class="hint">optional</span></label><input name="post_time" type="time" value="${esc(p.post_time||'')}"></div></div>
+    <div class="f"><label>Label</label><select name="label" onchange="labelPicked(this.value)"><option value="">Choose a label</option>${LABELS.map(l=>`<option ${l.name===p.label?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div>
+    <div class="f"><label>Person in charge <span class="hint">reviews and approves</span></label><select name="pic" onchange="this.dataset.touched='1'">${picOptions(p.pic)}</select></div>
+    <div class="f"><label>Thai version</label><select name="needs_thai"><option value="" ${thai===''?'selected':''}>Choose</option><option value="true" ${thai==='true'?'selected':''}>Needed</option><option value="false" ${thai==='false'?'selected':''}>English only</option></select></div>
     <div class="f"><label>Brief for the writer <span class="hint">optional</span></label><textarea name="brief">${esc(p.brief||'')}</textarea></div>`;
+}
+// A label suggests who usually approves it, unless a person was already picked by hand.
+function labelPicked(name){
+  const l = LABELS.find(x=>x.name===name), sel = $('#fm [name="pic"]');
+  if(!l || !l.default_pic || !sel || sel.dataset.touched) return;
+  if([...sel.options].some(o=>o.value===l.default_pic)) sel.value = l.default_pic;
 }
 function topicPayload(){
   const fd = new FormData($('#fm')), o = {};
   ['title','post_date','post_time','pic','label','brief'].forEach(k=>o[k] = String(fd.get(k)||'').trim());
-  o.needs_thai = fd.get('needs_thai') === 'true';
+  const t = String(fd.get('needs_thai')||'');
+  if(t) o.needs_thai = t === 'true';
   return o;
 }
-function newTopic(){
+function topicMissing(o){
+  if(!o.title) return 'Add a topic.';
+  if(!o.post_date) return 'Pick a posting date.';
+  if(!o.label) return 'Pick a label.';
+  if(!o.pic) return 'Pick a person in charge.';
+  if(o.needs_thai === undefined) return 'Choose Thai needed or English only.';
+  return '';
+}
+function newTopic(date){
   cur = {topic:true};
-  drawerShell('New topic', topicForm({}), null, false);
+  drawerShell('New topic', topicForm({post_date: date || ''}), null, false);
   $('#sv').textContent = 'Create';
   $('#sv').onclick = async () => {
-    const o = topicPayload();
-    if(!o.title){ $('#msg').textContent = 'Add a topic.'; return; }
-    if(!o.pic){ $('#msg').textContent = 'Pick a person in charge.'; return; }
-    if(!o.post_date){ $('#msg').textContent = 'Pick a posting date.'; return; }
+    const o = topicPayload(), miss = topicMissing(o);
+    if(miss){ $('#msg').textContent = miss; return; }
     const r = await act('create', null, o); if(!r) return;
     closeD(); showToast('Created. It is now with the writer.'); await reloadPosts(); go('post/'+r.id);
   };
+  setTimeout(()=>{ const f = $('#fm [name="title"]'); if(f) f.focus(); }, 50);
 }
 function editTopic(id){
   const p = POSTS.find(x=>x.id===id); if(!p) return;
   cur = {topic:true};
   drawerShell('Edit topic', topicForm(p) + `<p style="margin-top:6px"><button type="button" class="link-btn" style="color:#A23F1C" onclick="cancelPost('${id}')">Cancel this post</button></p>`, null, false);
   $('#sv').onclick = async () => {
-    const o = topicPayload();
-    if(!o.title || !o.pic){ $('#msg').textContent = 'Topic and person in charge are needed.'; return; }
+    const o = topicPayload(), miss = topicMissing(o);
+    if(miss){ $('#msg').textContent = miss; return; }
     const r = await act('edit_topic', id, o); if(!r) return;
     closeD(); showToast('Topic updated.'); delete EVENTS[id]; await reloadPosts();
   };
@@ -753,21 +782,70 @@ async function cancelPost(id){
 }
 
 // ---------- Team (marketing full only) ----------
+const DUTIES = [['writer','Writer'],['translator','Translator'],['pic','Person in charge'],['overseer','Overseer']];
+const DUTY_NOTE = {writer:'Writes English and posts', translator:'Checks the Thai', pic:'Reviews and approves posts', overseer:'Sees everything, does not take part'};
 function teamView(){
-  const rows = Object.values(STAFF).filter(s=>s.status==='active').sort((a,b)=>a.name.localeCompare(b.name));
-  return `<div class="box"><h3 class="bh">Who does what</h3>
-    <p class="meta" style="font-size:13px;margin-bottom:10px">The writer writes English and posts. The translator checks the Thai. Overseers see everything but do not take part. Everyone else can be picked as person in charge.</p>
-    ${rows.map(s=>`<div class="wo"><span style="font-weight:600">${esc(s.name)}</span><span></span>
-      <select onchange="setDuty('${s.id}', this.value)" style="border:1px solid #DCD5C6;border-radius:8px;padding:6px 8px">${[['','Person in charge (if picked)'],['writer','Writer'],['translator','Translator'],['overseer','Overseer']].map(([v,l])=>`<option value="${v}" ${(TEAM[s.id]||'')===v?'selected':''}>${l}</option>`).join('')}</select></div>`).join('')}
-    <p class="meta" style="margin-top:10px">People also need Marketing access in Permissions to use the HQ.</p></div>`;
+  const members = Object.keys(TEAM).filter(id=>STAFF[id]).sort((a,b)=>DUTIES.findIndex(d=>d[0]===TEAM[a]) - DUTIES.findIndex(d=>d[0]===TEAM[b]) || STAFF[a].name.localeCompare(STAFF[b].name));
+  const others = Object.values(STAFF).filter(s=>s.status==='active' && !TEAM[s.id]).sort((a,b)=>a.name.localeCompare(b.name));
+  const pics = Object.keys(TEAM).filter(id=>TEAM[id]==='pic' && STAFF[id]);
+  const sel = 'style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px;background:#fff"';
+  return `<div class="box"><h3 class="bh">Marketing team</h3>
+    <p class="meta" style="font-size:13px;margin-bottom:6px">Only people listed here take part. People also need Marketing access in Permissions to open the HQ.</p>
+    ${members.length ? members.map(id=>`<div class="tm"><span style="font-weight:600">${esc(STAFF[id].name)}</span>
+      <select onchange="setDuty('${id}', this.value)" ${sel}>${DUTIES.map(([v,l])=>`<option value="${v}" ${TEAM[id]===v?'selected':''}>${l}</option>`).join('')}</select>
+      <span class="muted">${DUTY_NOTE[TEAM[id]]||''}</span>
+      <button class="link-btn" style="color:#A23F1C" onclick="removeMember('${id}')">Remove</button></div>`).join('') : '<p class="meta" style="padding:8px 0">No one yet.</p>'}
+    ${others.length ? `<div class="tm add"><select id="addWho" ${sel}><option value="">Add a person</option>${others.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>
+      <select id="addRole" ${sel}>${DUTIES.map(([v,l])=>`<option value="${v}" ${v==='pic'?'selected':''}>${l}</option>`).join('')}</select>
+      <span></span><button class="btn-primary sm" onclick="addMember()">Add</button></div>` : ''}
+  </div>
+  <div class="box"><h3 class="bh">Labels</h3>
+    <p class="meta" style="font-size:13px;margin-bottom:6px">Every topic needs a label. Picking a label suggests who usually approves it. The person can still be changed on each post.</p>
+    ${LABELS.map(l=>`<div class="tm"><span style="font-weight:600">${esc(l.name)}</span>
+      <select onchange="setLabelPic('${esc(l.name)}', this.value)" ${sel}><option value="">No usual person</option>${pics.map(id=>`<option value="${id}" ${l.default_pic===id?'selected':''}>${esc(STAFF[id].name)}</option>`).join('')}</select>
+      <span class="muted">${(n=>n+' post'+(n===1?'':'s'))(POSTS.filter(p=>p.label===l.name).length)}</span>
+      <button class="link-btn" style="color:#A23F1C" onclick="removeLabel('${esc(l.name)}')">Remove</button></div>`).join('')}
+    <div class="tm add"><input id="newLabel" placeholder="New label" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
+      <span></span><span></span><button class="btn-primary sm" onclick="addLabel()">Add</button></div>
+  </div>`;
 }
 async function setDuty(id, duty){
-  const { error } = duty
-    ? await sb.from('marketing_team').upsert({ staff_id:id, duty }, { onConflict:'staff_id' })
-    : await sb.from('marketing_team').delete().eq('staff_id', id);
+  const { error } = await sb.from('marketing_team').upsert({ staff_id:id, duty }, { onConflict:'staff_id' });
+  if(error){ showToast('Could not save: ' + error.message); render(); return; }
+  TEAM[id] = duty; showToast('Saved.'); render();
+}
+async function addMember(){
+  const id = $('#addWho').value, duty = $('#addRole').value;
+  if(!id){ showToast('Pick a person to add.'); return; }
+  await setDuty(id, duty);
+}
+async function removeMember(id){
+  const open = POSTS.filter(p=>openStep(p) && p.pic===id).length;
+  if(!confirm(`Remove ${STAFF[id].name} from the marketing team?` + (open ? ` They are person in charge on ${open} post${open>1?'s':''} in progress, which will need a new person.` : ''))) return;
+  const { error } = await sb.from('marketing_team').delete().eq('staff_id', id);
+  if(error){ showToast('Could not remove: ' + error.message); return; }
+  delete TEAM[id]; showToast('Removed.'); render();
+}
+async function setLabelPic(name, pic){
+  const { error } = await sb.from('marketing_labels').update({ default_pic: pic || null }).eq('name', name);
   if(error){ showToast('Could not save: ' + error.message); return; }
-  if(duty) TEAM[id] = duty; else delete TEAM[id];
-  showToast('Saved.'); render();
+  const l = LABELS.find(x=>x.name===name); if(l) l.default_pic = pic || null; showToast('Saved.');
+}
+async function addLabel(){
+  const name = ($('#newLabel').value||'').trim();
+  if(!name){ showToast('Type a label name.'); return; }
+  if(LABELS.some(l=>l.name.toLowerCase()===name.toLowerCase())){ showToast('That label already exists.'); return; }
+  const sort = (LABELS.reduce((m,l)=>Math.max(m,l.sort||0),0)) + 1;
+  const { error } = await sb.from('marketing_labels').insert({ name, sort });
+  if(error){ showToast('Could not add: ' + error.message); return; }
+  LABELS.push({ name, default_pic:null, sort }); showToast('Label added.'); render();
+}
+async function removeLabel(name){
+  const n = POSTS.filter(p=>p.label===name).length;
+  if(!confirm(`Remove the label "${name}"?` + (n ? ` ${n} post${n>1?'s':''} will lose this label.` : ''))) return;
+  const { error } = await sb.from('marketing_labels').delete().eq('name', name);
+  if(error){ showToast('Could not remove: ' + error.message); return; }
+  LABELS = LABELS.filter(l=>l.name!==name); POSTS.forEach(p=>{ if(p.label===name) p.label = null; }); showToast('Removed.'); render();
 }
 
 // ---------- Reference (edited here) ----------

@@ -118,7 +118,25 @@ td.nowrap{white-space:nowrap;}
 .f label .hint{text-transform:none;letter-spacing:0;font-weight:400;color:#A8A39A;}
 .f input,.f select,.f textarea{width:100%;border:1px solid #DCD5C6;background:#fff;border-radius:8px;padding:9px 11px;font-size:14px;}
 .f textarea{min-height:90px;resize:vertical;line-height:1.5;}
-.f textarea.tall{min-height:260px;}
+.f textarea.tall{min-height:220px;overflow:hidden;resize:none;line-height:1.55;}
+.thnote{background:#FAEEDA;color:#633806;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;margin-bottom:6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.aicmp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;}
+.aicmp .lbl2{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#3C3489;margin-bottom:4px;}
+.aicmp .txt{background:#fff;border:1px solid #DCD5C6;border-radius:8px;padding:10px 12px;font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
+.aicmp ins{background:#E1F5EE;color:#085041;text-decoration:none;border-radius:3px;}
+.aicmp del{background:#FCEBEB;color:#791F1F;border-radius:3px;}
+.tagchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.tagchip{border:1px solid #DCD5C6;border-radius:999px;padding:4px 10px;font-size:12.5px;background:#fff;cursor:pointer;color:#5F5E5A;}
+.tagchip.on{background:#EEEDFE;border-color:#AFA9EC;color:#3C3489;font-weight:600;}
+.adminline{font-size:12.5px;color:#854F0B;margin:10px 0 0;}
+.nexthint{font-size:12px;color:#888780;text-align:right;margin-top:6px;}
+.fbwrap{background:#F1EFE8;border-radius:12px;padding:16px;margin:4px 0 14px;}
+.fbcard{max-width:500px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #E5E1D8;padding:14px 16px;font-family:Helvetica,Arial,sans-serif;}
+.fbhead{display:flex;gap:10px;align-items:center;margin-bottom:10px;} .fbav{width:40px;height:40px;border-radius:50%;background:#EEEDFE;color:#3C3489;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.fbname{font-weight:700;font-size:14px;} .fbtime{font-size:12px;color:#65676B;}
+.fbtext{font-size:14.5px;line-height:1.45;white-space:pre-wrap;word-break:break-word;color:#050505;}
+.fbmore{border-top:1px dashed #C9C3B6;margin:8px 0;padding-top:4px;font-size:11.5px;color:#888780;}
+.fbrest{color:#9A968C;} .fbimg{margin-top:10px;border-radius:6px;max-width:100%;display:block;}
 .f input:focus,.f select:focus,.f textarea:focus{outline:2px solid #EEEDFE;border-color:#534AB7;}
 .grid-meta{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1.3fr;gap:10px;}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
@@ -721,7 +739,8 @@ async function renderPost(el){
   const canImg = (W && openStep(p)) || (pic && p.step==='review') || adm;
   const canTopic = (p.created_by===ME || canDelete) && openStep(p);
   const canBrief = (p.created_by===ME || pic || isAdmin()) && p.step==='english';
-  const canAiTh = canTh && (p.step==='thai' || adm) && !!(p.copy_en||'').trim();
+  // Thai AI draft is available as soon as there is English (item 12): translator at Thai, writer at English, PIC at Review, admin.
+  const canAiTh = p.needs_thai && openStep(p) && (canTh || (W && p.step==='english') || (pic && p.step==='review'));
   window._canEdit = { en: canEn, th: canTh };
   const steps = ['english', 'review', ...(p.needs_thai?['thai']:[]), 'post'];
   const cur = p.step==='posted' ? steps.length : steps.indexOf(p.step);
@@ -731,16 +750,23 @@ async function renderPost(el){
   const asAdmin = !mine && !bk && adm ? ' <span class="adm">(as admin)</span>' : '';
   let actions = '';
   if(canAct){
-    if(p.step==='english') actions = `<button class="btn-primary" onclick="doAct('send_on')">Send to ${esc(nameOf(p.pic)||'PIC')} for review</button>`;
+    if(p.step==='english') actions = `<button class="btn-primary" onclick="doAct('send_on')">Send to ${esc(nameOf(p.pic)||'the PIC')} (PIC) for review</button>`;
     if(p.step==='review' && (pic || adm)) actions = `<input id="f-note" placeholder="Note to the writer (needed to send back)" class="note-in">
       <button class="btn-outline" onclick="doAct('send_back')">Send back</button>
-      <button class="btn-primary" onclick="doAct('approve')">${p.needs_thai?'Approve, send to translator':'Approve'}</button>`;
+      <button class="btn-primary" onclick="doAct('approve')">${p.needs_thai?'Approve, send to the translator':'Approve, ready to post'}</button>`;
     if(p.step==='thai') actions = `<button class="btn-primary" onclick="doAct('thai_checked')">Thai done, ready to post</button>`;
     if(p.step==='post') actions = `<button class="btn-outline" onclick="copyCaption()">Copy caption</button>
       <input id="f-url" placeholder="Facebook link (optional)" class="note-in">
       <button class="btn-primary" onclick="doAct('mark_posted')">Mark as posted</button>`;
-    if(actions && asAdmin) actions = asAdmin + actions;
   }
+  const stepWho = {english:'the writer', review:(nameOf(p.pic)||'the PIC')+' (PIC)', thai:'the translator', post:'the writer'}[p.step] || '';
+  const adminLine = actions && asAdmin ? `<p class="adminline">You're doing ${esc(stepWho)}'s step as admin. This is logged.</p>` : '';
+  const nextHint = !openStep(p) ? '' : ({
+    english: `Next: ${esc(nameOf(p.pic)||'the PIC')} approves the English${p.needs_thai?', then the translator checks the Thai':''}, then it gets posted.`,
+    review: p.needs_thai ? 'Next: the translator checks the Thai, then the writer posts.' : 'Next: the writer posts it.',
+    thai: 'Next: the writer posts it.',
+    post: 'Last step: post it on Facebook, then mark it as posted.'
+  })[p.step] || '';
   const briefHtml = (p.brief_goal || p.brief_format || (p.brief_audience||[]).length || p.brief)
     ? `<div class="briefbox"><span><b>For</b>${esc((p.brief_audience||[]).join(', ')||'Not set')}</span><span><b>Goal</b>${esc(goalName(p.brief_goal)||'Not set')}</span><span><b>Format</b>${esc(formatName(p.brief_format)||'Not set')}</span>${canBrief?`<button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Edit brief</button>`:''}${p.brief?`<span class="kp"><b>Key points</b>${esc(p.brief)}</span>`:''}</div>`
     : (canBrief ? `<div class="briefbox"><span class="meta">No brief yet.</span><button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Add brief</button></div>` : '');
@@ -760,19 +786,32 @@ async function renderPost(el){
     <div id="aiSlot"></div>
     <div class="grid-2" style="margin-bottom:12px">
       <div class="f"><label>English${canEn?'':' <span class="hint">view only</span>'}</label><textarea id="f-copy_en" class="tall" ${canEn?'':'readonly'} placeholder="${canEn?'Write or paste the English caption':''}">${esc(p.copy_en||'')}</textarea>${canEn?`<div class="aibar"><button class="btn-outline sm" id="aiBtn-rewrite" onclick="aiRun('rewrite')">Rewrite with AI</button>${backBtn(p,'en')}</div>`:''}</div>
-      ${p.needs_thai && !canTh && !(p.copy_th||'').trim() && ['english','review'].includes(p.step) ? '<div class="f"><label>Thai</label><p class="meta">The translator writes the Thai after the English is approved.</p></div>' : p.needs_thai?`<div class="f"><label>Thai${p.th_machine?' <span class="hint" style="color:#854F0B">machine draft, not checked</span>':''}${canTh?'':' <span class="hint">view only</span>'}</label><textarea id="f-copy_th" class="tall" ${canTh?'':'readonly'} placeholder="${canTh?'Write or fix the Thai caption':''}">${esc(p.copy_th||'')}</textarea>${canAiTh?`<div class="aibar"><button class="btn-outline sm" id="aiBtn-thai" onclick="aiRun('thai')">${(p.copy_th||'').trim()?'Redo Thai with AI':'Draft Thai with AI'}</button>${backBtn(p,'th')}</div>`:(canTh?`<div class="aibar">${backBtn(p,'th')}</div>`:'')}</div>`:'<div class="f"><label>Thai</label><p class="meta">English only for this post.</p></div>'}
+      ${p.needs_thai ? `<div class="f"><label>Thai${p.th_machine?' <span class="hint" style="color:#854F0B">machine draft, not checked</span>':''}${canTh?'':' <span class="hint">'+(canAiTh?'AI draft only until the Thai step':'view only')+'</span>'}</label>
+        ${p.th_stale?`<div class="thnote">The English changed after this Thai was made.${canAiTh?`<button class="btn-outline sm" onclick="aiRun('thai')">Redo Thai with AI</button>`:''}</div>`:''}
+        <textarea id="f-copy_th" class="tall" ${canTh?'':'readonly'} placeholder="${canTh?'Write or fix the Thai caption':(canAiTh?'Use Draft Thai with AI below, or leave it for the translator':'The translator writes the Thai after the English is approved')}">${esc(p.copy_th||'')}</textarea>
+        ${canAiTh?`<div class="aibar"><button class="btn-outline sm" id="aiBtn-thai" onclick="aiRun('thai')">${(p.copy_th||'').trim()?'Redo Thai with AI':'Draft Thai with AI'}</button>${backBtn(p,'th')}</div>`:(canTh?`<div class="aibar">${backBtn(p,'th')}</div>`:'')}</div>`
+      : '<div class="f"><label>Thai</label><p class="meta">English only for this post.</p></div>'}
     </div>
-    <div class="f"><label>Hashtags${canTags?'':' <span class="hint">view only</span>'}</label><input id="f-hashtags" ${canTags?'':'readonly'} value="${esc(p.hashtags||'')}" placeholder="#BloomChiangmai"></div>
+    <div class="f"><label>Hashtags${canTags?'':' <span class="hint">view only</span>'}</label><input id="f-hashtags" ${canTags?'':'readonly'} value="${esc(p.hashtags||'')}" placeholder="#BloomChiangMai" oninput="renderTagChips()">
+      ${canTags?`<div class="aibar"><button class="btn-outline sm" id="aiBtn-hashtags" onclick="suggestTags()">Suggest hashtags</button><span class="meta">From Bloom's own tags. About 5 is enough on Facebook.</span></div><div class="tagchips" id="tagChips"></div>`:''}</div>
     <div class="f"><label>Images</label><div class="imgs">${imgs.map((im,i)=>`<span class="im">${safeUrl(im.url)?`<a href="${esc(im.url)}" target="_blank" rel="noopener">${im.external?'<span class="ext">Drive link</span>':`<img src="${esc(im.url)}" alt="">`}</a>`:''}${canImg?`<button class="imx" title="Remove" onclick="removeImg(${i})">×</button>`:''}</span>`).join('')}
       ${canImg?`<label class="imadd">+ Add<input type="file" accept="image/*" multiple onchange="addImgs(this.files)" hidden></label>`:''}${!imgs.length&&!canImg?'<span class="meta">No images yet.</span>':''}</div></div>
     <div class="f"><label>Video link <span class="hint">reels: paste a link for now</span></label><input id="f-video_url" ${canImg?'':'readonly'} value="${esc(p.video_url||'')}" placeholder="https://"></div>
     ${p.post_url?`<p style="margin-bottom:12px"><a href="${esc(safeUrl(p.post_url))}" target="_blank" rel="noopener" style="font-weight:600">View the live post</a></p>`:''}
+    <button class="link-btn" style="margin:2px 0 10px" onclick="togglePreview()">${SHOW_PREVIEW?'Hide':'Preview as'} Facebook post</button>
+    <div id="fbPreview">${SHOW_PREVIEW?fbPreviewHtml(p):''}</div>
+    ${adminLine}
     <div class="actions">${(canEn||canTh||canTags||canImg)?`<button class="btn-outline" onclick="saveFields()">Save</button>`:''}${waiting}<span style="flex:1"></span>${actions}</div>
+    ${nextHint?`<p class="nexthint">${nextHint}</p>`:''}
   </div>
   <div class="hist"><b>History</b><br>${hist||'…'}${(VERSIONS[id]||[]).length?`<br><a href="javascript:void 0" onclick="SHOW_VERS=!SHOW_VERS;renderPost($('#view'))">${SHOW_VERS?'Hide':'Show'} earlier versions (${VERSIONS[id].length})</a>${SHOW_VERS?versionsHtml(p):''}`:''}</div>
   </div>`;
   if(AI_SUG && AI_SUG.post === id) aiShowPanel();
+  el.querySelectorAll('textarea.tall').forEach(t=>{ growBox(t); t.addEventListener('input', ()=>growBox(t)); });
+  renderTagChips();
 }
+// Boxes grow with the text, so the whole caption is always visible (item 13).
+function growBox(t){ t.style.height = 'auto'; t.style.height = Math.max(220, t.scrollHeight + 2) + 'px'; }
 
 // ---------- AI ----------
 const SRC_LABEL = {human:'typed', ai:'AI', restore:'restored', original:'before tracking'};
@@ -804,8 +843,8 @@ async function restoreVersion(vid){
 async function aiRun(action){
   const p = draft, btn = $('#aiBtn-'+action);
   const field = action==='rewrite' ? 'en' : 'th';
-  const text = action==='rewrite' ? (($('#f-copy_en')||{}).value||'').trim() : '';
-  if(action==='rewrite' && !text){ showToast('Write or paste some English first.'); return; }
+  const text = (($('#f-copy_en')||{}).value||'').trim();
+  if(!text){ showToast('Write or paste some English first.'); return; }
   if(btn){ btn.disabled = true; btn.textContent = 'Working…'; }
   let out = null;
   try{
@@ -822,30 +861,101 @@ async function aiRun(action){
     return;
   }
   if(AISTATUS) AISTATUS.last_ok_at = new Date().toISOString();
-  AI_SUG = { post: p.id, field, text: out.text };
+  AI_SUG = { post: p.id, field, text: out.text, from: text, mine: field==='en' ? text : (($('#f-copy_th')||{}).value||'') };
   aiShowPanel();
 }
 function aiShowPanel(){
   const slot = $('#aiSlot'); if(!slot || !AI_SUG) return;
   const en = AI_SUG.field === 'en';
+  const d = en ? wordDiff(AI_SUG.mine, AI_SUG.text) : null;
   slot.innerHTML = `<div class="aipanel">
-    <h4>${en?'AI rewrite':'AI Thai draft'} <span class="meta" style="font-weight:400">${en?'Your text stays as it is until you choose.':'Made from the approved English. The translator still checks it.'}</span></h4>
-    <textarea id="aiText">${esc(AI_SUG.text)}</textarea>
-    <div class="row"><span class="meta" style="margin-right:auto">You can edit it here before using it.</span>
+    <h4>${en?'AI rewrite':'AI Thai draft'} <span class="meta" style="font-weight:400">${en?'Your text stays as it is until you choose.':'Made from the English shown on the left. The translator still checks it.'}</span></h4>
+    <div class="aicmp">
+      <div><div class="lbl2">${en?'Yours':'English'}</div><div class="txt">${en?d.left:esc(AI_SUG.from)}</div></div>
+      <div><div class="lbl2">${en?'AI rewrite':'Thai draft'}</div><div class="txt">${en?d.right:esc(AI_SUG.text)}</div></div>
+    </div>
+    <div class="row"><span class="meta" style="margin-right:auto">${en?'<ins style="background:#E1F5EE;color:#085041;text-decoration:none;padding:0 4px;border-radius:3px">Green</ins> added or changed by the AI, <del style="background:#FCEBEB;color:#791F1F;padding:0 4px;border-radius:3px">red</del> removed. Check dates, names and numbers.':'You can still edit the Thai in its box after using it.'}</span>
       <button class="btn-outline sm" onclick="aiDismiss()">${en?'Keep mine':'Not now'}</button>
       <button class="btn-primary sm" onclick="aiUse()">Use this</button></div></div>`;
 }
 function aiDismiss(){ AI_SUG = null; const s = $('#aiSlot'); if(s) s.innerHTML = ''; }
 async function aiUse(){
   if(!AI_SUG) return;
-  const p = draft, f = AI_SUG.field, text = ($('#aiText')||{}).value || AI_SUG.text;
+  const p = draft, f = AI_SUG.field, text = AI_SUG.text;
   // Save whatever is in the boxes first, so the person's own text is kept as a version.
   if(!(await saveFields(true))) return;
   const col = f==='en'?'copy_en':'copy_th';
-  const r = await act('save', p.id, { [col]: text, source: 'ai' }); if(!r) return;
+  const r = await act('save', p.id, f==='en' ? { copy_en: text, source: 'ai' } : { copy_th: text, source: 'ai', th_from_en: AI_SUG.from }); if(!r) return;
   p[col] = text; const box = $('#f-'+col); if(box) box.value = text;
   AI_SUG = null; showToast(f==='en' ? 'AI rewrite in use. "Back to my version" restores yours.' : 'AI Thai in use. Check it before marking Thai done.');
   delete EVENTS[p.id]; delete VERSIONS[p.id]; await reloadPosts();
+}
+// Word-level difference between two texts, kept simple (longest common subsequence on words).
+function wordDiff(a, b){
+  const A = String(a||'').split(/(\s+)/), B = String(b||'').split(/(\s+)/);
+  const n = A.length, m = B.length;
+  if(n*m > 400000) return { left: esc(a), right: esc(b) };
+  const L = Array.from({length:n+1}, ()=>new Uint16Array(m+1));
+  for(let i=n-1;i>=0;i--) for(let j=m-1;j>=0;j--) L[i][j] = A[i]===B[j] ? L[i+1][j+1]+1 : Math.max(L[i+1][j], L[i][j+1]);
+  let i=0, j=0, left='', right='';
+  while(i<n && j<m){
+    if(A[i]===B[j]){ left += esc(A[i]); right += esc(B[j]); i++; j++; }
+    else if(L[i+1][j] >= L[i][j+1]){ left += /^\s+$/.test(A[i]) ? esc(A[i]) : `<del>${esc(A[i])}</del>`; i++; }
+    else { right += /^\s+$/.test(B[j]) ? esc(B[j]) : `<ins>${esc(B[j])}</ins>`; j++; }
+  }
+  while(i<n){ left += /^\s+$/.test(A[i]) ? esc(A[i]) : `<del>${esc(A[i])}</del>`; i++; }
+  while(j<m){ right += /^\s+$/.test(B[j]) ? esc(B[j]) : `<ins>${esc(B[j])}</ins>`; j++; }
+  return { left, right };
+}
+// Hashtag chips (item 14): suggestions and the tags already in the box, click to add or remove.
+let TAG_SUG = [];
+const tagList = () => (((($('#f-hashtags')||{}).value)||'').match(/#[^\s#]+/g) || []);
+function renderTagChips(){
+  const box = $('#tagChips'); if(!box) return;
+  const cur = tagList(), curL = cur.map(t=>t.toLowerCase());
+  const all = [...TAG_SUG, ...cur.filter(t=>!TAG_SUG.some(x=>x.toLowerCase()===t.toLowerCase()))];
+  box.innerHTML = all.map(t=>`<button type="button" class="tagchip ${curL.includes(t.toLowerCase())?'on':''}" onclick="toggleTag('${esc(t).replace(/'/g,'')}')">${esc(t)}</button>`).join('');
+}
+function toggleTag(t){
+  const inp = $('#f-hashtags'); if(!inp) return;
+  const cur = tagList(), has = cur.some(x=>x.toLowerCase()===t.toLowerCase());
+  inp.value = (has ? cur.filter(x=>x.toLowerCase()!==t.toLowerCase()) : [...cur, t]).join(' ');
+  renderTagChips();
+}
+async function suggestTags(){
+  const p = draft, btn = $('#aiBtn-hashtags');
+  const text = (($('#f-copy_en')||{}).value||'').trim();
+  if(btn){ btn.disabled = true; btn.textContent = 'Working…'; }
+  let out = null;
+  try{
+    const r = await sb.functions.invoke('mkt-ai', { body: { action:'hashtags', post_id: p.id, text } });
+    out = r.data; if(r.error && r.error.context){ try{ out = await r.error.context.json(); }catch(e){} }
+  }catch(e){ out = { ok:false, reason:'network' }; }
+  if(btn){ btn.disabled = false; btn.textContent = 'Suggest hashtags'; }
+  if(!out || !out.ok){ showToast(AI_MSG[(out&&out.reason)||'api_error'] || AI_MSG.api_error); return; }
+  TAG_SUG = out.tags || [];
+  const inp = $('#f-hashtags'); if(inp && !inp.value.trim()) inp.value = TAG_SUG.join(' ');
+  renderTagChips();
+}
+// Facebook preview (item 13): English, Thai, hashtags, first image. The "See more" line is approximate.
+let SHOW_PREVIEW = false;
+function togglePreview(){ SHOW_PREVIEW = !SHOW_PREVIEW; const b = $('#fbPreview'); if(b) b.innerHTML = SHOW_PREVIEW ? fbPreviewHtml(draft) : ''; const l = b && b.previousElementSibling; if(l) l.textContent = (SHOW_PREVIEW?'Hide':'Preview as') + ' Facebook post'; }
+function fbPreviewHtml(p){
+  const v = id => (($('#'+id)||{}).value ?? '');
+  const en = ($('#f-copy_en') ? v('f-copy_en') : p.copy_en||'').trim();
+  const th = p.needs_thai ? ($('#f-copy_th') ? v('f-copy_th') : p.copy_th||'').trim() : '';
+  const tags = ($('#f-hashtags') ? v('f-hashtags') : p.hashtags||'').trim();
+  const full = [en, th, tags].filter(Boolean).join('\n\n');
+  const lines = full.split('\n'); let cutAt = full.length, seen = 0, pos = 0;
+  for(const ln of lines){ seen += Math.max(1, Math.ceil(ln.length / 60)); pos += ln.length + 1; if(seen >= 5){ cutAt = Math.min(full.length, pos); break; } }
+  const img = (p.images||[]).find(im=>!im.external && safeUrl(im.url));
+  const when = p.post_date ? fmtShort(p.post_date) + (p.post_time ? ' at ' + esc(p.post_time) : '') : 'Date not set';
+  return `<div class="fbwrap"><div class="fbcard">
+    <div class="fbhead"><div class="fbav">B</div><div><div class="fbname">Bloom Chiangmai</div><div class="fbtime">${when}</div></div></div>
+    <div class="fbtext">${esc(full.slice(0, cutAt)) || '<span class="meta">Nothing written yet.</span>'}</div>
+    ${cutAt < full.length ? `<div class="fbmore">Facebook shows "See more" about here (it varies by phone)</div><div class="fbtext fbrest">${esc(full.slice(cutAt))}</div>` : ''}
+    ${img ? `<img class="fbimg" src="${esc(img.url)}" alt="">` : ''}
+  </div></div>`;
 }
 function aiBannerHtml(){
   if(!isAdmin() || !AISTATUS || !AISTATUS.last_error || !['no_credit','spend_limit','bad_key'].includes(AISTATUS.last_error)) return '';

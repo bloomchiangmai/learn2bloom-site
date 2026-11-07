@@ -184,6 +184,22 @@ a.btn-primary{text-decoration:none;color:#fff;display:inline-block;} a.btn-outli
 .cap.ro{background:#F3EFE7;border:0;border-left:3px solid #DCD5C6;border-radius:4px;}
 .donebox{background:#E1F5EE;color:#085041;border-radius:10px;padding:14px 16px;margin-top:18px;font-size:13px;font-weight:600;}
 .donebox .f label{color:#888780;}
+.plist{font-size:13.5px;}
+.pl{display:grid;grid-template-columns:118px minmax(0,1fr) 92px 110px 112px 112px;align-items:center;gap:10px;padding:9px 2px;border-top:1px solid #F0ECE3;}
+.pl.head{border-top:0;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#A8A39A;font-weight:700;padding-top:4px;}
+.pl.opened{background:#EEF4FC;border-radius:8px 8px 0 0;border-top-color:transparent;}
+.pl.hl{background:#FFF6D6;transition:background .6s;}
+.pt{display:flex;align-items:center;min-width:0;}
+.ptt{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.late-d{color:#A23F1C;font-weight:600;}
+.mks{display:inline-flex;gap:4px;}
+.mk{font-size:10.5px;font-weight:700;border-radius:4px;padding:1px 5px;color:#B5B0A8;border:1px solid #E8E3D8;}
+.mk.ok{background:#E3F1EC;border-color:#E3F1EC;color:#0F6E56;}
+.mk.no{background:#FCEBEB;border-color:#F7C1C1;color:#A32D2D;}
+.sm{padding:5px 11px;font-size:12.5px;border-radius:7px;white-space:nowrap;}
+.ppanel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#EEF4FC;border-radius:0 0 8px 8px;padding:4px 2px 14px 130px;margin-bottom:4px;}
+.ppanel input{flex:1;min-width:170px;border:1px solid #DCD5C6;border-radius:7px;padding:5px 10px;font-size:13px;background:#fff;}
+.box .plist{margin-bottom:6px;}
 .warn-t{color:#9A5D0C;font-weight:600;}
 .warnbox{background:#FAEEDA;color:#633806;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;font-weight:600;}
 .sync{display:flex;align-items:center;gap:10px;color:#888780;font-size:12.5px;margin-top:6px;padding:8px 2px;transition:color .3s;}
@@ -199,7 +215,16 @@ button.tile{font:inherit;color:inherit;width:100%;}
   .goal{grid-template-columns:1fr 1fr;} .goal>div:first-child{grid-column:span 2;}
   .ov{grid-template-columns:1fr;}
   .step{flex-wrap:wrap;} .step-btn{margin-left:50px;}
-  .prow{flex-wrap:wrap;} .prow .step-btn{margin-left:22px;}
+  .pl{grid-template-columns:auto auto minmax(0,1fr) auto;row-gap:4px;column-gap:8px;}
+  .pl.head{display:none;}
+  .pl>:nth-child(1){grid-row:2;grid-column:1;font-size:12px;}
+  .pl>:nth-child(2){grid-row:1;grid-column:1/4;}
+  .pl>:nth-child(3){grid-row:2;grid-column:2;}
+  .pl>:nth-child(4){display:none;}
+  .pl>:nth-child(5){display:block;grid-row:2;grid-column:3;}
+  .pl>:nth-child(6){grid-row:1/3;grid-column:4;}
+  .ptt{white-space:normal;}
+  .ppanel{padding-left:10px;}
   .tiles{gap:8px;} .tile{padding:10px 12px;} .tile .n{font-size:22px;} .tile .l{font-size:12px;line-height:1.3;}
   .cal .day{min-height:40px;} .cal .pp{font-size:0;height:8px;padding:0;}
   .goal-line{flex-wrap:wrap;}
@@ -434,8 +459,8 @@ function problems(x){
 function overview(){
   const P = PLAN || {}, c = DATA.content || [], today = todayISO();
   const late = c.filter(x=>x.date && x.date < today && open(x)).sort((a,b)=>a.date.localeCompare(b.date));
-  const fix = c.filter(x=>x.date && open(x) && x.date >= today && x.date <= addDays(today,14)).map(x=>({x, p:problems(x)})).filter(o=>o.p.length)
-    .sort((a,b)=>a.x.date.localeCompare(b.x.date));
+  const fix = c.filter(x=>x.date && open(x) && x.date >= today && x.date <= addDays(today,14) && problems(x).length)
+    .sort((a,b)=>a.date.localeCompare(b.date));
   const ws = weekStart(today), we = addDays(ws, 6);
   const week = c.filter(x=>x.date >= ws && x.date <= we && stageOf(x)!=='Skipped' && !(x.date < today && open(x)))
     .sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
@@ -450,33 +475,64 @@ function overview(){
     <button class="tile" onclick="jump('fix')"><div class="n ${fix.length?'warn':'good'}">${fix.length}</div><div class="l">To fix before posting</div></button>
     <button class="tile" onclick="jump('week')"><div class="n">${week.length}</div><div class="l">Posts this week</div></button>
   </div>
-  ${late.length ? `<div class="box" id="late"><h3 class="bh bad">Late</h3>${late.slice(0,8).map(x=>postRow(x, `Was due ${fmtDay(x.date)}` + (problems(x).length ? ` · <span class="warn-t">${esc(problems(x).join(' · '))}</span>` : ''))).join('')}
-    ${late.length>8?`<p class="meta" style="padding-top:8px">${late.length-8} more in All posts.</p>`:''}</div>` : ''}
-  ${fix.length ? `<div class="box" id="fix"><h3 class="bh warn">Fix before posting</h3>${fix.map(o=>postRow(o.x, `${fmtDay(o.x.date)} · <span class="warn-t">${esc(o.p.join(' · '))}</span>`)).join('')}</div>` : ''}
+  ${late.length ? `<div class="box" id="late"><h3 class="bh bad">Late</h3>${rows(late.slice(0,8))}
+    ${late.length>8?`<p class="meta" style="padding:8px 0">${late.length-8} more in All posts.</p>`:''}</div>` : ''}
+  ${fix.length ? `<div class="box" id="fix"><h3 class="bh warn">Fix before posting</h3>${rows(fix)}</div>` : ''}
   <div class="box" id="week"><h3 class="bh">This week <span class="muted" style="font-weight:400">${fmtDay(ws)} to ${fmtDay(we)}</span></h3>
-    ${week.length ? week.map(x=>postRow(x, fmtDay(x.date) + (x.time?' · '+esc(x.time):''))).join('')
-      : `<p class="meta" style="padding:10px 0">Nothing else this week.${next?` Next post: <a href="javascript:void 0" onclick="viewPost('${next.id}')">${esc(next.title)}</a>, ${fmtDay(next.date)}.`:''}</p>`}
+    ${week.length ? rows(week)
+      : `<p class="meta" style="padding:10px 0">Nothing else this week.${next?` Next post: ${esc(next.title)}, ${fmtDay(next.date)}.`:''}</p>`}
   </div>
   ${calendar()}
   ${syncLine()}`;
 }
-// One post line: stage chip, who has it, and a single action.
+
+// ---------- One line per post ----------
+// Everything about a post fits on one line. Only a Ready post opens up, for posting.
+let openId = null;
 const jump = k => { const e = document.getElementById(k); if(e) e.scrollIntoView({behavior:'smooth', block:'start'}); };
-function postRow(x, sub){
+function marks(x){
+  const today = todayISO(), urgent = open(x) && x.date && x.date <= addDays(today, 7);
+  const m = (have, l) => `<span class="mk ${have?'ok':urgent?'no':''}" title="${l}: ${have?'done':'missing'}">${l}</span>`;
+  return `<span class="mks">${m(!blank(x.copy),'EN')}${m(!blank(x.th),'TH')}${m(!!x.image,'Img')}</span>`;
+}
+function rows(list){
+  return `<div class="plist"><div class="pl head"><span>Date</span><span>Post</span><span>Stage</span><span class="hide-m">With</span><span class="hide-m">Done</span><span></span></div>${list.map(row).join('')}</div>`;
+}
+function row(x){
   const st = stageOf(x), today = todayISO();
   const isLate = x.date && x.date < today && open(x);
-  const due = st==='Ready' && x.date && x.date <= addDays(today,1);
-  const who = open(x) ? (STAGE_OWNER[st]||'') : '';
+  const ready = st==='Ready' && canEdit && !PENDING[x.id];
+  const ph = ((x.copy||'')+' '+(x.th||'')).match(PLACEHOLDER);
   const link = sheetLink(x.gid, x.row);
-  const act = due ? `<button class="btn-primary step-btn" onclick="event.stopPropagation();viewPost('${x.id}')">Copy caption</button>`
-    : st==='Posted' && safeUrl(x.post_url) ? `<a class="btn-outline step-btn" href="${esc(x.post_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">View post</a>`
-    : link ? `<a class="btn-outline step-btn" href="${esc(link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Open in sheet</a>` : '';
-  return `<div class="prow" onclick="viewPost('${x.id}')">
-    <span class="dot" style="background:${isLate?'#E24B4A':STAGE_COLOR[st]}"></span>
-    <div class="step-tx"><div class="t">${esc(x.title)}</div><div class="s">${sub}</div></div>
-    <span class="hide-m" style="min-width:150px;text-align:right">${PENDING[x.id]?'<span class="chip leaf">Posting…</span> ':''}${isLate&&!PENDING[x.id]?'<span class="chip rust">Late</span> ':''}${chip(st)}${who?`<span class="muted" style="font-size:12px;margin-left:6px">${esc(who)}</span>`:''}</span>
-    ${act}</div>`;
+  const isOpen = openId === x.id && ready;
+  const act = PENDING[x.id] ? `<span class="chip leaf">Posting…</span>`
+    : ready ? `<button class="btn-primary sm" onclick="togglePost('${x.id}')">${isOpen?'Close':'Post it'}</button>`
+    : st==='Posted' && safeUrl(x.post_url) ? `<a class="btn-outline sm" href="${esc(x.post_url)}" target="_blank" rel="noopener">View post</a>`
+    : link ? `<a class="btn-outline sm" href="${esc(link)}" target="_blank" rel="noopener">Open sheet</a>` : '';
+  return `<div class="pl ${isOpen?'opened':''}" id="row-${x.id}">
+    <span class="${isLate?'late-d':'muted'}">${x.date?fmtShort(x.date):'No date'}</span>
+    <span class="pt"><span class="ptt">${esc(x.title)}</span>${x.format&&x.format!=='Post'?`<span class="fmt">${esc(x.format)}</span>`:''}${ph&&open(x)?` <span class="chip amber" style="margin-left:4px">${esc(ph[0])}</span>`:''}</span>
+    <span>${chip(st)}</span>
+    <span class="hide-m muted">${open(x)?esc(STAGE_OWNER[st]||''):''}</span>
+    <span class="hide-m">${marks(x)}</span>
+    <span style="text-align:right">${act}</span>
+  </div>${isOpen?postPanel(x):''}`;
 }
+function postPanel(x){
+  const link = sheetLink(x.gid, x.row);
+  return `<div class="ppanel">
+    <button class="btn-outline sm" onclick="copyPost('${x.id}','copy')">Copy English</button>
+    ${x.th?`<button class="btn-outline sm" onclick="copyPost('${x.id}','th')">Copy Thai</button>`:''}
+    ${safeUrl(x.image)?`<a class="btn-outline sm" href="${esc(x.image)}" target="_blank" rel="noopener">Image</a>`:''}
+    <span class="muted" style="font-size:12px">then post on Facebook</span>
+    <input id="pu-${x.id}" type="url" placeholder="Facebook link (optional)">
+    <button class="btn-primary sm" id="mp-${x.id}" onclick="markPosted('${x.id}')">Mark as posted</button>
+    <span id="mpmsg-${x.id}" class="muted" style="font-size:12px;flex-basis:100%"></span>
+    ${link?`<a href="${esc(link)}" target="_blank" rel="noopener" style="font-size:12px;flex-basis:100%">Open in sheet</a>`:''}
+  </div>`;
+}
+function togglePost(id){ openId = openId === id ? null : id; render(); const e = document.getElementById('row-'+id); if(e) e.scrollIntoView({block:'nearest'}); }
+const fmtShort = v => { const d = new Date(v+'T00:00:00'); return isNaN(d) ? esc(v) : d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); };
 
 function calendar(){
   const c = DATA.content||[]; const today = todayISO();
@@ -491,7 +547,7 @@ function calendar(){
     const cls = iso===today ? 'today' : iso<today ? 'past' : '';
     const posts = (byDay[d]||[]).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
     cells += `<div class="day ${cls}">${d}${posts.map(x=>{const st=stageOf(x); const late = iso<today && open(x);
-      return `<span class="pp" title="${esc(x.title)} · ${late?'Late':esc(st)}" style="background:${late?LATE_BG:STAGE_BG[st]};color:${late?LATE_TEXT:STAGE_TEXT[st]}" onclick="viewPost('${x.id}')">${esc(x.title)}</span>`;}).join('')}</div>`;
+      return `<span class="pp" title="${esc(x.title)} · ${late?'Late':esc(st)}" style="background:${late?LATE_BG:STAGE_BG[st]};color:${late?LATE_TEXT:STAGE_TEXT[st]}" onclick="fromCal('${x.id}')">${esc(x.title)}</span>`;}).join('')}</div>`;
   }
   const shift = k => { const d = new Date(y, m-1+k, 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; };
   return `<div class="cal-wrap">
@@ -503,9 +559,16 @@ function calendar(){
     <div class="legend"><span><i style="background:#1D9E75"></i>Posted</span><span><i style="background:#378ADD"></i>Ready</span><span><i style="background:#EF9F27"></i>Thai or review</span><span><i style="background:#B4B2A9"></i>Writing</span><span><i style="background:#E24B4A"></i>Late</span></div>
   </div>`;
 }
+// Calendar click: show that post's line in its month.
+function fromCal(id){
+  const x = (DATA.content||[]).find(p=>p.id===id); if(!x) return;
+  month = monthKey(x.date); stageFilter = ''; showUndated = false;
+  openId = stageOf(x)==='Ready' ? id : null;
+  if(view()!=='content') go('content'); else render();
+  setTimeout(()=>{ const e = document.getElementById('row-'+id); if(e){ e.scrollIntoView({block:'center'}); e.classList.add('hl'); setTimeout(()=>e.classList.remove('hl'),1500); } }, 60);
+}
 
-// ---------- All posts (read-only list, by month) ----------
-// The sheet tab that holds most of a month's posts, so "Open sheet" lands in the right place.
+// ---------- All posts (by month) ----------
 function tabFor(mk){
   const n = {}; (DATA.content||[]).filter(x=>monthKey(x.date)===mk).forEach(x=>{ n[x.gid] = (n[x.gid]||0)+1; });
   const best = Object.entries(n).sort((a,b)=>b[1]-a[1])[0];
@@ -518,10 +581,9 @@ function renderContent(el){
   const shift = k => { const d = new Date(y, m-1+k, 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; };
   const undated = all.filter(x=>!x.date);
   const base = showUndated ? undated : all.filter(x=>monthKey(x.date)===month);
-  let rows = base;
-  if(stageFilter) rows = rows.filter(x=>stageOf(x)===stageFilter);
-  rows.sort((a,b)=>(String(a.date||'')+(a.time||'')).localeCompare(String(b.date||'')+(b.time||'')) || a.row-b.row);
-  const today = todayISO();
+  let list = base;
+  if(stageFilter) list = list.filter(x=>stageOf(x)===stageFilter);
+  list = list.slice().sort((a,b)=>(String(a.date||'')+(a.time||'')).localeCompare(String(b.date||'')+(b.time||'')) || a.row-b.row);
   const counts = STAGES.map(st=>[st, base.filter(x=>stageOf(x)===st).length]).filter(x=>x[1] || stageFilter===x[0]);
   const tabGid = showUndated ? (undated[0]||{}).gid : tabFor(month);
   const sheetHere = sheetLink(tabGid ?? undefined);
@@ -536,63 +598,27 @@ function renderContent(el){
       ${showUndated || !undated.length ? '' : `<button class="link-btn" onclick="showUndated=true;stageFilter='';render()">No date yet (${undated.length})</button>`}
       ${sheetHere?`<a class="btn-outline" href="${esc(sheetHere)}" target="_blank" rel="noopener">Open in sheet</a>`:''}
     </div>
-    ${counts.length ? `<div class="chips">${counts.map(([st,n])=>`<button class="chip ${tone(st)} ${stageFilter===st?'on':''}" title="${esc(STAGE_HINT[st])}" onclick="stageFilter=stageFilter==='${st}'?'':'${st}';render()">${n} ${st.toLowerCase()}</button>`).join('')}</div>` : ''}
-    ${!rows.length ? `<div class="empty-state">${base.length?'Nothing matches.':'No posts this month in the sheet.'}</div>` : `
-    <div class="tbl"><table><thead><tr><th>Date</th><th>Post</th><th>Stage</th><th class="hide-m">With</th><th></th></tr></thead><tbody>
-    ${rows.map(x=>{ const st=stageOf(x); const late = x.date && x.date<today && open(x); const pr = open(x) ? problems(x) : [];
-      return `<tr onclick="viewPost('${x.id}')">
-      <td class="nowrap">${x.date?fmtDay(x.date):'<span class="muted">No date</span>'}</td>
-      <td class="main">${esc(x.title)}${x.format&&x.format!=='Post'?`<span class="fmt">${esc(x.format)}</span>`:''}${pr.length?` <span class="chip amber" style="margin-left:6px" title="${esc(pr.join(', '))}">to fix</span>`:''}</td>
-      <td>${late?'<span class="chip rust">Late</span> ':''}${chip(st)}</td>
-      <td class="hide-m muted">${open(x)?esc(STAGE_OWNER[st]||''):''}</td>
-      <td>${safeUrl(x.post_url)?`<a href="${esc(x.post_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:12px;font-weight:600">View</a>`:''}</td>
-    </tr>`;}).join('')}</tbody></table></div>`}
+    ${counts.length ? `<div class="chips">${counts.map(([st,n])=>`<button class="chip ${tone(st)} ${stageFilter===st?'on':''}" title="${esc(STAGE_HINT[st]||'')}" onclick="stageFilter=stageFilter==='${st}'?'':'${st}';render()">${n} ${st.toLowerCase()}</button>`).join('')}</div>` : ''}
+    ${!list.length ? `<div class="empty-state">${base.length?'Nothing matches.':'No posts this month in the sheet.'}</div>` : `<div class="box">${rows(list)}</div>`}
     ${syncLine()}`;
 }
 
-// ---------- One post (view only; changes happen in the sheet) ----------
-function viewPost(id){
-  const r = (DATA.content||[]).find(x=>x.id===id); if(!r) return;
-  const st = stageOf(r), link = sheetLink(r.gid, r.row);
-  const late = r.date && r.date < todayISO() && open(r);
-  const missing = open(r) ? [!r.copy&&'English caption', !r.th&&'Thai caption', !r.image&&'image'].filter(Boolean) : [];
-  const ph = ((r.copy||'')+' '+(r.th||'')).match(PLACEHOLDER);
-  const capBlock = (k, lbl, txt) => txt
-    ? `<div class="f"><label>${lbl}<button type="button" class="copybtn" onclick="copyText('${k}')">Copy</button></label><div class="cap ro" id="cap-${k}">${esc(txt)}${r.hashtags?'\n\n'+esc(r.hashtags):''}</div></div>` : '';
-  cur = {post:id};
-  $('#drawer').className = 'drawer';
-  $('#drawer').innerHTML = `<header><div><h3>${esc(r.title)}</h3><div class="meta" style="margin-top:2px">View only · edit in the sheet</div></div><button class="x" onclick="closeD()">×</button></header>
-    <div class="body">
-      <p style="margin-bottom:14px">${late?'<span class="chip rust">Late</span> ':''}${chip(st)}
-        <span class="meta" style="font-size:13px;margin-left:6px">${r.date?fmtDay(r.date):'No date'}${r.time?' · '+esc(r.time):''}${open(r)&&STAGE_OWNER[st]?' · with '+esc(STAGE_OWNER[st]):''}</span></p>
-      ${missing.length||ph?`<div class="warnbox">${missing.length?'Missing in the sheet: '+missing.join(', '):''}${missing.length&&ph?'<br>':''}${ph?'Caption still says '+esc(ph[0]):''}</div>`:''}
-      ${capBlock('copy','English',r.copy)}
-      ${capBlock('th','Thai',r.th)}
-      ${safeUrl(r.image)?`<p style="margin-bottom:6px"><a href="${esc(r.image)}" target="_blank" rel="noopener" style="font-weight:600">Open the image or video</a></p>`:r.image?`<p class="meta">Image: ${esc(r.image)}</p>`:''}
-      ${safeUrl(r.post_url)?`<p><a href="${esc(r.post_url)}" target="_blank" rel="noopener" style="font-weight:600">View the live post</a></p>`:''}
-      ${PENDING[r.id] ? `<div class="donebox">Marked as posted. The sheet updates within a minute.</div>`
-        : canEdit && open(r) && r.copy ? `<div class="donebox" style="background:#F7F3EC;color:#2C2C2A"><div style="font-weight:700;margin-bottom:8px">Posted it on Facebook?</div>
-        <div class="f" style="margin-bottom:10px"><label>Facebook post link <span class="hint">optional</span></label><input id="pu" type="url" placeholder="https://www.facebook.com/..."></div>
-        <button class="btn-primary" id="mp" onclick="markPosted('${r.id}')">Mark as posted</button><span id="mpmsg" class="meta" style="margin-left:10px"></span>
-        <div class="meta" style="margin-top:8px">Writes Posted and the link into the sheet. Nothing else changes.</div></div>` : ''}
-    </div>
-    <footer><span class="meta">Sheet: ${esc(r.tab)}, row ${esc(r.row)}</span>
-      <div style="display:flex;gap:8px">${link?`<a class="btn-primary" href="${esc(link)}" target="_blank" rel="noopener">Edit in sheet</a>`:''}<button class="btn-outline" onclick="closeD()">Close</button></div></footer>`;
-  $('#dw').classList.add('dw-open');
-}
 async function markPosted(id){
   const r = (DATA.content||[]).find(x=>x.id===id); if(!r) return;
-  const u = String(($('#pu')||{}).value||'').trim();
-  if(u && !/^https:\/\//i.test(u)){ $('#mpmsg').textContent = 'The link should start with https://'; return; }
-  $('#mp').disabled = true; $('#mpmsg').textContent = 'Sending…';
+  const msg = $('#mpmsg-'+id), btn = $('#mp-'+id);
+  const u = String(($('#pu-'+id)||{}).value||'').trim();
+  if(u && !/^https:\/\//i.test(u)){ msg.textContent = 'The link should start with https://'; return; }
+  btn.disabled = true; msg.textContent = 'Sending…';
   const { error } = await sb.from('marketing_sheet_actions').insert({ sheet_post_id: r.sid, action:'posted', post_url: u || null });
-  if(error){ $('#mp').disabled = false; $('#mpmsg').textContent = 'Could not send: ' + error.message; return; }
-  PENDING[id] = true; viewPost(id); render(); showToast('Sent. The sheet updates within a minute.');
+  if(error){ btn.disabled = false; msg.textContent = 'Could not send: ' + error.message; return; }
+  PENDING[id] = true; openId = null; render(); showToast('Sent. The sheet updates within a minute.');
 }
-async function copyText(k){
-  const el = $('#cap-'+k); if(!el) return;
-  try { await navigator.clipboard.writeText(el.textContent); showToast('Copied. Ready to paste.'); }
-  catch(e){ const rg=document.createRange(); rg.selectNodeContents(el); const sel=getSelection(); sel.removeAllRanges(); sel.addRange(rg); document.execCommand('copy'); sel.removeAllRanges(); showToast('Copied. Ready to paste.'); }
+async function copyPost(id, k){
+  const r = (DATA.content||[]).find(x=>x.id===id); if(!r) return;
+  const text = [r[k], r.hashtags].filter(Boolean).join('\n\n');
+  try { await navigator.clipboard.writeText(text); }
+  catch(e){ const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+  showToast((k==='th'?'Thai':'English') + ' caption copied with hashtags.');
 }
 
 // ---------- Generic list (tasks + reference) ----------

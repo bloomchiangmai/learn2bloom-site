@@ -420,7 +420,7 @@ const STEP_FG = {english:'#3C3489', thai:'#633806', review:'#0C447C', post:'#085
 let LABELS = [];
 const IMG_BUCKET = 'marketing-media';
 
-let POSTS = [], STAFF = {}, TEAM = {}, EVENTS = {}, PLAN = null, DATA = {}, loaded = false;
+let POSTS = [], STAFF = {}, TEAM = {}, NO_ACCESS = new Set(), EVENTS = {}, PLAN = null, DATA = {}, loaded = false;
 let canEdit = false, canDelete = false, ME = null;
 let refKey = 'about', calMonth = null, calMode = 'month', postTimer = null;
 const filt = {q:'', s:''};
@@ -499,7 +499,7 @@ const actionWord = p => ({english: p.sent_back ? 'Fix' : 'Write', thai:'Translat
 
 // ---------- Data ----------
 async function loadAll(){
-  const [posts, staff, team, labels, ent, sch, spec, hid, ais] = await Promise.all([
+  const [posts, staff, team, labels, ent, sch, spec, hid, ais, acc] = await Promise.all([
     sb.from('marketing_posts').select('*').order('post_date', {ascending:true, nullsFirst:false}),
     sb.from('staff').select('id,name,status'),
     sb.from('marketing_team').select('staff_id,duty'),
@@ -508,12 +508,15 @@ async function loadAll(){
     sb.rpc('mkt_school_dates'),
     sb.from('marketing_special_dates').select('*').order('date'),
     sb.from('marketing_hidden_suggestions').select('key'),
-    sb.from('marketing_ai_status').select('*').maybeSingle()
+    sb.from('marketing_ai_status').select('*').maybeSingle(),
+    sb.rpc('mkt_team_access')
   ]);
   if(posts.error){ showToast('Could not load posts: ' + posts.error.message); return; }
   POSTS = posts.data || [];
   STAFF = Object.fromEntries((staff.data||[]).map(s=>[s.id, s]));
   TEAM = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, t.duty]));
+  // Team members who cannot open the HQ (no Marketing edit). Unknown if the check failed.
+  NO_ACCESS = new Set(((acc && acc.data) || []).filter(x=>!x.can_edit).map(x=>x.staff_id));
   LABELS = labels.data || [];
   SPECIAL = spec.data || [];
   AISTATUS = (ais && ais.data) || null;
@@ -529,9 +532,10 @@ async function loadAll(){
   loaded = true;
   render();
 }
-async function reloadPosts(){
+// force: after the person's own action. Otherwise (someone else saved) do not redraw while they are typing.
+async function reloadPosts(force){
   const { data } = await sb.from('marketing_posts').select('*').order('post_date', {ascending:true, nullsFirst:false});
-  if(data){ POSTS = data; const id = postId(); if(id){ delete EVENTS[id]; delete VERSIONS[id]; } if(!dirty()) render(); }
+  if(data){ POSTS = data; const id = postId(); if(id){ delete EVENTS[id]; delete VERSIONS[id]; } if(force === true || !dirty()) render(); }
 }
 function listen(){
   if(!sb.channel) return;
@@ -612,6 +616,8 @@ function myTurn(){
     <h3 class="bh">${mine.length ? `Your turn: ${mine.length}` : 'All clear'}</h3>
     <p class="meta" style="font-size:13px;margin-bottom:6px">${sub}</p>
     ${mine.length ? mine.map(p=>line(p)).join('') : '<p class="meta" style="padding:10px 0">Nothing is waiting on you right now.</p>'}
+    ${(()=>{ const n = POSTS.filter(p=>isMine(p) && !p.post_date && !p.sent_back).length;
+      return n ? `<p class="meta" style="padding:10px 0 0"><a href="javascript:void 0" onclick="calMode='ideas';go('calendar')">${n} idea${n>1?'s':''} with no date</a>. To use one, open it and set a date and person in charge with Edit topic.</p>` : ''; })()}
   </div>
   ${(()=>{ const bk = POSTS.filter(p=>backupFor(p) && p.post_date).sort((a,b)=>String(dueOf(a)).localeCompare(String(dueOf(b))));
     return ['writer_backup','translator_backup'].includes(d) ? `<div class="box"><h3 class="bh">As backup</h3><p class="meta" style="font-size:13px;margin-bottom:6px">You cover these if the ${d==='writer_backup'?'writer':'translator'} is away. Step in when one is late.</p>${bk.length ? bk.map(p=>line(p)).join('') : '<p class="meta" style="padding:8px 0">Nothing at this step right now.</p>'}</div>` : ''; })()}
@@ -717,11 +723,23 @@ function calendarView(){
 
 // ---------- Post page ----------
 let draft = null;
-const dirty = () => !!draft && !!$('#pg') && ['copy_en','copy_th','hashtags','video_url'].some(k => (($('#f-'+k)||{}).value ?? null) !== null && $('#f-'+k).value !== (draft[k]||''));
+const BOX_KEYS = ['copy_en','copy_th','hashtags','video_url'], EXTRA_KEYS = ['note','url'];
+// Unsaved text on the open post: caption boxes that differ from the saved post, or a send-back note / Facebook link being typed.
+const dirty = () => !!draft && !!$('#pg') && (BOX_KEYS.some(k => { const e = $('#f-'+k); return !!e && !e.readOnly && e.value !== (draft[k]||''); })
+  || EXTRA_KEYS.some(k => (($('#f-'+k)||{}).value||'').trim() !== ''));
+// When the open post is drawn again, put back anything typed but not saved (items 21 and 22).
+function unsavedVals(){
+  if(!draft || !$('#pg')) return null;
+  const o = {};
+  BOX_KEYS.forEach(k => { const e = $('#f-'+k); if(e && !e.readOnly && e.value !== (draft[k]||'')) o[k] = e.value; });
+  EXTRA_KEYS.forEach(k => { const e = $('#f-'+k); if(e && e.value) o[k] = e.value; });
+  return Object.keys(o).length ? { id: draft.id, o } : null;
+}
 async function renderPost(el){
   const id = postId(), p = POSTS.find(x=>x.id===id);
   if(AI_SUG && AI_SUG.post !== id) AI_SUG = null;
   if(!p){ el.innerHTML = '<div class="empty-state">This post was not found.</div>'; return; }
+  const keep = unsavedVals();
   draft = p;
   if(!EVENTS[id]){
     EVENTS[id] = [];
@@ -737,11 +755,11 @@ async function renderPost(el){
   const canTh = p.needs_thai && ((T && p.step==='thai') || adm);
   const canTags = (W && ['english','post'].includes(p.step)) || (pic && p.step==='review') || adm;
   const canImg = (W && openStep(p)) || (pic && p.step==='review') || adm;
-  const canTopic = (p.created_by===ME || canDelete) && openStep(p);
+  const canTopic = (p.created_by===ME || canDelete || (!p.created_by && isWriterish())) && openStep(p);
   const canBrief = (p.created_by===ME || pic || isAdmin()) && p.step==='english';
   // Thai AI draft is available as soon as there is English (item 12): translator at Thai, writer at English, PIC at Review, admin.
   const canAiTh = p.needs_thai && openStep(p) && (canTh || (W && p.step==='english') || (pic && p.step==='review'));
-  window._canEdit = { en: canEn, th: canTh };
+  window._canEdit = { en: canEn, th: canTh || canAiTh };
   const steps = ['english', 'review', ...(p.needs_thai?['thai']:[]), 'post'];
   const cur = p.step==='posted' ? steps.length : steps.indexOf(p.step);
   const bar = steps.map((s,i)=>`<span class="sb ${i<cur?'done':i===cur?'now':''}"><span class="sd">${i<cur?'&#10003;':i+1}</span>${STEP_LABEL[s]}${s==='review'?` · ${esc(nameOf(p.pic)||'PIC not set')}`:''}</span>`).join('<span class="sl"></span>');
@@ -755,7 +773,9 @@ async function renderPost(el){
       <button class="btn-outline" onclick="doAct('send_back')">Send back</button>
       <button class="btn-primary" onclick="doAct('approve')">${p.en_written_by===ME&&isAdmin()?'Approve my own post':'Approve'}${p.needs_thai?', send to the translator':', ready to post'}</button>`;
     if(p.step==='thai') actions = `<button class="btn-primary" onclick="doAct('thai_checked')">Thai done, ready to post</button>`;
-    if(p.step==='post') actions = `<button class="btn-outline" onclick="copyCaption()">Copy caption</button>
+    if(p.step==='post') actions = p.needs_thai && p.th_stale && !isAdmin()
+      ? `<span class="muted">The English changed after the Thai was checked. Ask the admin to update the Thai before this goes out.</span>`
+      : `<button class="btn-outline" onclick="copyCaption()">Copy caption</button>
       <input id="f-url" placeholder="Facebook link (optional)" class="note-in">
       <button class="btn-primary" onclick="doAct('mark_posted')">Mark as posted</button>`;
   }
@@ -806,6 +826,7 @@ async function renderPost(el){
   </div>
   <div class="hist"><b>History</b><br>${hist||'…'}${(VERSIONS[id]||[]).length?`<br><a href="javascript:void 0" onclick="SHOW_VERS=!SHOW_VERS;renderPost($('#view'))">${SHOW_VERS?'Hide':'Show'} earlier versions (${VERSIONS[id].length})</a>${SHOW_VERS?versionsHtml(p):''}`:''}</div>
   </div>`;
+  if(keep && keep.id === id) Object.entries(keep.o).forEach(([k,v]) => { const e = $('#f-'+k); if(e && !e.readOnly) e.value = v; });
   if(AI_SUG && AI_SUG.post === id) aiShowPanel();
   el.querySelectorAll('textarea.tall').forEach(t=>{ growBox(t); t.addEventListener('input', ()=>growBox(t)); });
   renderTagChips();
@@ -836,9 +857,9 @@ async function restoreVersion(vid){
   const p = draft, v = (VERSIONS[p.id]||[]).find(x=>x.id===vid); if(!v) return;
   if(!(await saveFields(true))) return;
   const col = v.field==='en'?'copy_en':'copy_th';
-  const r = await act('save', p.id, { [col]: v.body, source: 'restore' }); if(!r) return;
+  const r = await act('save', p.id, { source: 'restore', version_id: v.id }); if(!r) return;
   p[col] = v.body; const box = $('#f-'+col); if(box) box.value = v.body;
-  showToast('Earlier version restored.'); delete EVENTS[p.id]; delete VERSIONS[p.id]; AI_SUG = null; await reloadPosts();
+  showToast('Earlier version restored.'); delete EVENTS[p.id]; delete VERSIONS[p.id]; AI_SUG = null; await reloadPosts(true);
 }
 async function aiRun(action){
   const p = draft, btn = $('#aiBtn-'+action);
@@ -888,7 +909,7 @@ async function aiUse(){
   const r = await act('save', p.id, f==='en' ? { copy_en: text, source: 'ai' } : { copy_th: text, source: 'ai', th_from_en: AI_SUG.from }); if(!r) return;
   p[col] = text; const box = $('#f-'+col); if(box) box.value = text;
   AI_SUG = null; showToast(f==='en' ? 'AI rewrite in use. "Back to my version" restores yours.' : 'AI Thai in use. Check it before marking Thai done.');
-  delete EVENTS[p.id]; delete VERSIONS[p.id]; await reloadPosts();
+  delete EVENTS[p.id]; delete VERSIONS[p.id]; await reloadPosts(true);
 }
 // Word-level difference between two texts, kept simple (longest common subsequence on words).
 function wordDiff(a, b){
@@ -914,7 +935,7 @@ function renderTagChips(){
   const box = $('#tagChips'); if(!box) return;
   const cur = tagList(), curL = cur.map(t=>t.toLowerCase());
   const all = [...TAG_SUG, ...cur.filter(t=>!TAG_SUG.some(x=>x.toLowerCase()===t.toLowerCase()))];
-  box.innerHTML = all.map(t=>`<button type="button" class="tagchip ${curL.includes(t.toLowerCase())?'on':''}" onclick="toggleTag('${esc(t).replace(/'/g,'')}')">${esc(t)}</button>`).join('');
+  box.innerHTML = all.map(t=>`<button type="button" class="tagchip ${curL.includes(t.toLowerCase())?'on':''}" data-tag="${esc(t)}" onclick="toggleTag(this.dataset.tag)">${esc(t)}</button>`).join('');
 }
 function toggleTag(t){
   const inp = $('#f-hashtags'); if(!inp) return;
@@ -976,18 +997,25 @@ async function saveFields(quiet){
   if(!Object.keys(ch).length){ if(!quiet) showToast('Nothing to save.'); return true; }
   const r = await act('save', p.id, ch); if(!r) return false;
   Object.assign(p, ch); delete EVENTS[p.id];
-  if(!quiet){ showToast('Saved.'); await reloadPosts(); }
+  if(!quiet){ showToast('Saved.'); await reloadPosts(true); }
   return true;
 }
 async function doAct(a){
   const p = draft;
-  if(!(await saveFields(true))) return;
+  const thEdited = !!$('#f-copy_th') && !$('#f-copy_th').readOnly && $('#f-copy_th').value !== (p.copy_th||'');
   const pay = {};
+  // Item 27: Thai made from older English needs updating, or a clear yes that it still matches.
+  if(p.needs_thai && p.th_stale && !thEdited && (a==='thai_checked' || a==='mark_posted')){
+    if(!confirm('The English changed after this Thai was made.\n\nIs the Thai still correct for the new English?\n\nOK: yes, it still matches. Cancel: go back and update it.')) return;
+    pay.confirm_current = true;
+  }
+  if(!(await saveFields(true))) return;
   if(a==='send_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the writer knows what to change.'); $('#f-note').focus(); return; } }
   if(a==='mark_posted') pay.post_url = (($('#f-url')||{}).value||'').trim();
   const r = await act(a, p.id, pay); if(!r) return;
+  EXTRA_KEYS.forEach(k => { const e = $('#f-'+k); if(e) e.value = ''; });
   showToast({send_on:'Sent for review.', thai_checked:'Thai done. Ready to post.', send_back:'Sent back with your note.', approve: p.needs_thai ? 'Approved. Sent to the translator.' : 'Approved. Ready to post.', mark_posted:'Marked as posted.'}[a] || 'Done.');
-  delete EVENTS[p.id]; await reloadPosts();
+  delete EVENTS[p.id]; await reloadPosts(true);
 }
 async function copyCaption(){
   const p = draft;
@@ -1005,19 +1033,19 @@ async function addImgs(files){
     if(error){ showToast('Upload failed: ' + error.message); continue; }
     list.push({ path, url: sb.storage.from(IMG_BUCKET).getPublicUrl(path).data.publicUrl });
   }
-  const r = await act('save', p.id, { images: list }); if(r){ showToast('Images updated.'); await reloadPosts(); }
+  const r = await act('save', p.id, { images: list }); if(r){ showToast('Images updated.'); await reloadPosts(true); }
 }
 async function removeImg(i){
   const p = draft, list = [...(p.images||[])], [gone] = list.splice(i,1);
   const r = await act('save', p.id, { images: list }); if(!r) return;
   if(gone && gone.path) await sb.storage.from(IMG_BUCKET).remove([gone.path]);
-  await reloadPosts();
+  await reloadPosts(true);
 }
 
 // ---------- New topic / edit topic ----------
 function picOptions(sel){
   const ok = Object.keys(TEAM).filter(id=>TEAM[id]==='pic' && STAFF[id] && STAFF[id].status==='active').map(id=>STAFF[id]).sort((a,b)=>a.name.localeCompare(b.name));
-  return `<option value="">Choose a person</option>` + ok.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''}>${esc(s.name)}</option>`).join('')
+  return `<option value="">Choose a person</option>` + ok.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''} ${NO_ACCESS.has(s.id)&&s.id!==sel?'disabled':''}>${esc(s.name)}${NO_ACCESS.has(s.id)?' (no HQ access yet)':''}</option>`).join('')
     + (sel && !ok.some(s=>s.id===sel) && STAFF[sel] ? `<option value="${sel}" selected>${esc(STAFF[sel].name)} (no longer a PIC)</option>` : '');
 }
 function briefFields(p){
@@ -1046,7 +1074,7 @@ function editBrief(id){
     const o = briefPayload(), miss = briefMissing(o);
     if(miss){ $('#msg').textContent = miss; return; }
     const r = await act('brief', id, o); if(!r) return;
-    closeD(); showToast('Brief updated.'); delete EVENTS[id]; await reloadPosts();
+    closeD(); showToast('Brief updated.'); delete EVENTS[id]; await reloadPosts(true);
   };
 }
 function topicForm(p, withBrief){
@@ -1092,7 +1120,7 @@ function newTopic(date, pre, suggKey){
     if(miss){ $('#msg').textContent = miss; return; }
     const r = await act('create', null, o); if(!r) return;
     if(suggKey){ await sb.from('marketing_hidden_suggestions').insert({ key: suggKey }); HIDDEN.add(suggKey); }
-    closeD(); showToast('Created. It is now with the writer.'); await reloadPosts(); go('post/'+r.id);
+    closeD(); showToast('Created. It is now with the writer.'); await reloadPosts(true); go('post/'+r.id);
   };
   setTimeout(()=>{ const f = $('#fm [name="title"]'); if(f) f.focus(); }, 50);
 }
@@ -1104,13 +1132,13 @@ function editTopic(id){
     const o = topicPayload(), miss = topicMissing(o);
     if(miss){ $('#msg').textContent = miss; return; }
     const r = await act('edit_topic', id, o); if(!r) return;
-    closeD(); showToast('Topic updated.'); delete EVENTS[id]; await reloadPosts();
+    closeD(); showToast('Topic updated.'); delete EVENTS[id]; await reloadPosts(true);
   };
 }
 async function cancelPost(id){
   if(!confirm('Cancel this post? It will not go out.')) return;
   const r = await act('cancel', id, {}); if(!r) return;
-  closeD(); showToast('Cancelled.'); await reloadPosts();
+  closeD(); showToast('Cancelled.'); await reloadPosts(true);
 }
 
 // ---------- Team (marketing full only) ----------
@@ -1125,7 +1153,7 @@ function teamView(){
     <p class="meta" style="font-size:13px;margin-bottom:6px">Only people listed here take part. People also need Marketing access in Permissions to open the HQ.</p>
     ${members.length ? members.map(id=>`<div class="tm"><span style="font-weight:600">${esc(STAFF[id].name)}</span>
       <select onchange="setDuty('${id}', this.value)" ${sel}>${DUTIES.map(([v,l])=>`<option value="${v}" ${TEAM[id]===v?'selected':''}>${l}</option>`).join('')}</select>
-      <span class="muted">${DUTY_NOTE[TEAM[id]]||''}</span>
+      <span class="muted">${NO_ACCESS.has(id)?'<span style="color:#A23F1C;font-weight:600">Cannot open the HQ yet: give Marketing edit in Permissions</span>':(DUTY_NOTE[TEAM[id]]||'')}</span>
       <button class="link-btn" style="color:#A23F1C" onclick="removeMember('${id}')">Remove</button></div>`).join('') : '<p class="meta" style="padding:8px 0">No one yet.</p>'}
     ${others.length ? `<div class="tm add"><select id="addWho" ${sel}><option value="">Add a person</option>${others.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>
       <select id="addRole" ${sel}>${DUTIES.map(([v,l])=>`<option value="${v}" ${v==='pic'?'selected':''}>${l}</option>`).join('')}</select>
@@ -1134,9 +1162,9 @@ function teamView(){
   <div class="box"><h3 class="bh">Labels</h3>
     <p class="meta" style="font-size:13px;margin-bottom:6px">Every topic needs a label. Picking a label suggests who usually approves it. The person can still be changed on each post.</p>
     ${LABELS.map(l=>`<div class="tm"><span style="font-weight:600">${esc(l.name)}</span>
-      <select onchange="setLabelPic('${esc(l.name)}', this.value)" ${sel}><option value="">No usual person</option>${pics.map(id=>`<option value="${id}" ${l.default_pic===id?'selected':''}>${esc(STAFF[id].name)}</option>`).join('')}</select>
+      <select data-name="${esc(l.name)}" onchange="setLabelPic(this.dataset.name, this.value)" ${sel}><option value="">No usual person</option>${pics.map(id=>`<option value="${id}" ${l.default_pic===id?'selected':''}>${esc(STAFF[id].name)}</option>`).join('')}</select>
       <span class="muted">${(n=>n+' post'+(n===1?'':'s'))(POSTS.filter(p=>p.label===l.name).length)}</span>
-      <button class="link-btn" style="color:#A23F1C" onclick="removeLabel('${esc(l.name)}')">Remove</button></div>`).join('')}
+      <button class="link-btn" style="color:#A23F1C" data-name="${esc(l.name)}" onclick="removeLabel(this.dataset.name)">Remove</button></div>`).join('')}
     <div class="tm add"><input id="newLabel" placeholder="New label" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
       <span></span><span></span><button class="btn-primary sm" onclick="addLabel()">Add</button></div>
   </div>
@@ -1248,7 +1276,7 @@ function field(f, v, cls='', extra=''){ const [k,l,t,o,hint] = f; v = v ?? '';
   return `<div class="f"><label>${l}${hint?` <span class="hint">${hint}</span>`:''}${extra}</label>${inp}${open}</div>`; }
 function metaLine(r){
   if(!r || !r._updated) return '';
-  const who = r._by && STAFF_NAMES[r._by] ? ' by ' + esc(STAFF_NAMES[r._by]) : '';
+  const who = r._by && nameOf(r._by) ? ' by ' + esc(nameOf(r._by)) : '';
   return `<div class="meta">Last updated ${new Date(r._updated).toLocaleString('en-GB')}${who}${r.source?' · '+esc(r.source):''}</div>`;
 }
 function drawerShell(title, body, id, wide){
@@ -1312,7 +1340,12 @@ async function onStaffReady(){
   await loadAll();
   listen();
 }
-window.addEventListener('hashchange', () => { filt.q=''; filt.s=''; closeD(); render(); window.scrollTo(0,0); });
+let curHash = location.hash, skipHash = false;
+window.addEventListener('hashchange', () => {
+  if(skipHash){ skipHash = false; curHash = location.hash; return; }
+  if(curHash.startsWith('#post/') && dirty() && !confirm('You have unsaved changes on this post. Leave without saving?')){ skipHash = true; location.hash = curHash; return; }
+  curHash = location.hash; filt.q=''; filt.s=''; closeD(); render(); window.scrollTo(0,0);
+});
 window.addEventListener('beforeunload', e => { if(dirty()){ e.preventDefault(); e.returnValue = ''; } });
 
 window.STAFF_PAGE_KEY = 'marketing';

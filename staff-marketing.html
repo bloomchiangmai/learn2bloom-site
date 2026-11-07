@@ -159,6 +159,17 @@ details.orig summary{cursor:pointer;font-size:13px;font-weight:600;color:#534AB7
 .bar-lbl{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;font-size:12px;color:#5F5E5A;}
 .queue-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
 .copybtn{margin-left:8px;font-size:11px;font-weight:600;text-transform:none;letter-spacing:0;color:#534AB7;background:#EEEDFE;border:0;border-radius:4px;padding:2px 8px;cursor:pointer;}
+.step{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid #F0ECE3;}
+.step:first-of-type{border-top:0;}
+.step-ic{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none;}
+.step-tx{flex:1;min-width:0;} .step-tx .t{font-weight:600;font-size:15px;} .step-tx .s{font-size:12.5px;color:#888780;}
+.step-btn{padding:8px 14px;font-size:13px;flex:none;}
+.mnav{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.mnav h2{font-family:Georgia,serif;font-size:20px;font-weight:700;min-width:170px;text-align:center;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.chips button{border:0;cursor:pointer;}
+.chips button.on{box-shadow:0 0 0 2px #534AB7;}
+.cap{background:#fff;border:1px solid #E8E3D8;border-radius:10px;padding:12px 14px;white-space:pre-wrap;font-size:14px;max-height:240px;overflow:auto;margin-bottom:6px;}
 .ref-sec{margin-bottom:34px;}
 .ref-sec .top-bar{margin-bottom:12px;}
 .ref-sec h2{font-family:Georgia,serif;font-size:21px;font-weight:700;}
@@ -168,6 +179,7 @@ details.orig summary{cursor:pointer;font-size:13px;font-weight:600;color:#534AB7
   main{padding:28px 16px 80px;}
   .goal{grid-template-columns:1fr 1fr;} .goal>div:first-child{grid-column:span 2;}
   .ov{grid-template-columns:1fr;}
+  .step{flex-wrap:wrap;} .step-btn{margin-left:50px;}
   .tiles{gap:8px;} .tile{padding:10px 12px;} .tile .n{font-size:22px;} .tile .l{font-size:12px;line-height:1.3;}
   .cal .day{min-height:40px;} .cal .pp{font-size:0;height:8px;padding:0;}
   .goal-line{flex-wrap:wrap;}
@@ -206,11 +218,13 @@ details.orig summary{cursor:pointer;font-size:13px;font-weight:600;color:#534AB7
 
 <script>
 // ---------- Content plan definitions ----------
-const STAGES = ['Draft','In review','Revised','Thai done','Scheduled','Posted','Skipped'];
+const STAGES = ['Topic','Draft','Thai','Review','Ready','Posted','Skipped'];
 const STAGE_HINT = {
-  'Draft':'Written, not reviewed yet','In review':'With Michel','Revised':'Review done, needs Thai',
-  'Thai done':'Ready to schedule','Scheduled':'Queued to post','Posted':'Live','Skipped':'Not going out'
+  'Topic':'Michel picks the topic','Draft':'Amber writes it','Thai':'Thai translation','Review':'Michel reviews and fine-tunes',
+  'Ready':'Amber posts it on the day','Posted':'Live on Facebook','Skipped':'Not going out'
 };
+const STAGE_OWNER = {'Topic':'Michel','Draft':'Amber','Thai':'Thai translation','Review':'Michel','Ready':'Amber'};
+const PEOPLE = ['Michel','Amber','Thai translation','Casy','Ronnie'];
 const FORMATS = ['Post','Reel','Story','Video'];
 const CHANNELS = ['Facebook Page','Instagram','Facebook + Instagram','Redbook','LINE','WeChat','Facebook groups'];
 const CONTENT_FIELDS = ['title','date','time','format','channel','status','original','copy','review_note','th','hashtags','image','post_url','notes','source'];
@@ -239,36 +253,33 @@ const PLAN_FIELDS = [['goal','Goal','long'],['deadline','Deadline','date'],['bud
 let DATA = {}, PLAN = null, STAFF_NAMES = {}, loaded = false;
 let canEdit = false, canDelete = false;
 const filt = {q:'', s:''};
-let month = null, stageFilter = '', refKey = 'about', calMonth = null, openTile = '', queueWho = null;
+let month = null, stageFilter = '', refKey = 'about', calMonth = null, who = null, showUndated = false;
 const REF_GROUPS = [
   {k:'about', t:'About Bloom', d:'The facts every post should match.', secs:['facts']},
   {k:'who', t:'Who and where', d:'Who we talk to, the accounts we own, and the groups where families gather.', secs:['audiences','channels','groups']},
   {k:'market', t:'Market', d:'Who families compare us with, and what we have learned.', secs:['competitors','insights']},
 ];
-const STAGE_COLOR = {'Draft':'#B4B2A9','In review':'#EF9F27','Revised':'#EF9F27','Thai done':'#EF9F27','Scheduled':'#378ADD','Posted':'#1D9E75','Skipped':'#D85A30'};
-const STAGE_TEXT = {'Draft':'#444441','In review':'#633806','Revised':'#633806','Thai done':'#633806','Scheduled':'#0C447C','Posted':'#085041','Skipped':'#712B13'};
-const STAGE_BG = {'Draft':'#F1EFE8','In review':'#FAEEDA','Revised':'#FAEEDA','Thai done':'#FAEEDA','Scheduled':'#E6F1FB','Posted':'#E1F5EE','Skipped':'#FAECE7'};
-const QUEUES = {
-  'Michel': {d:'Posts waiting for review', test:x=>x.status==='In review'},
-  'Amber':  {d:'Drafts to finish, Thai to add, posts to schedule or mark as posted', test:(x,today)=>['Draft','Revised','Thai done'].includes(x.status||'Draft') && !!x.date || (x.status==='Scheduled' && x.date && x.date<today)},
-  'Casy':   {d:'Anything past its date and not posted yet', test:(x,today)=>x.date && x.date<today && !['Posted','Skipped'].includes(x.status||'Draft')},
-};
+const STAGE_COLOR = {'Topic':'#B4B2A9','Draft':'#B4B2A9','Thai':'#EF9F27','Review':'#EF9F27','Ready':'#378ADD','Posted':'#1D9E75','Skipped':'#D85A30'};
+const STAGE_TEXT = {'Topic':'#444441','Draft':'#444441','Thai':'#633806','Review':'#633806','Ready':'#0C447C','Posted':'#085041','Skipped':'#712B13'};
+const STAGE_BG = {'Topic':'#F1EFE8','Draft':'#F1EFE8','Thai':'#FAEEDA','Review':'#FAEEDA','Ready':'#E6F1FB','Posted':'#E1F5EE','Skipped':'#FAECE7'};
+const LATE_BG = '#FCEBEB', LATE_TEXT = '#791F1F';
 const $ = (s,el=document)=>el.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeUrl = v => /^https?:\/\//i.test(String(v||'')) ? v : '';
 const tone = v => { v=String(v||'');
   if(/^(Confirmed|Active|Posted|Done|Yes|Primary|Buffer)/.test(v)) return 'leaf';
-  if(/^(Scheduled|Thai done)/.test(v)) return 'blue';
-  if(/^(To confirm|To verify|Pending|Waiting|In review|Revised|Specific|Admin|Secondary|Doing|Joined)/.test(v)) return 'amber';
+  if(/^(Ready)/.test(v)) return 'blue';
+  if(/^(To confirm|To verify|Pending|Waiting|Thai|Review|Specific|Admin|Secondary|Doing|Joined)/.test(v)) return 'amber';
   if(/^(Outdated|Avoid|No$|To create|Not set|Skipped)/.test(v)) return 'rust';
-  if(/^(Draft|To do|Unknown|Watch)/.test(v)) return '';
+  if(/^(Topic|Draft|To do|Unknown|Watch)/.test(v)) return '';
   return 'plum'; };
 const chip = v => v ? `<span class="chip ${tone(v)}">${esc(v)}</span>` : '';
 const fmtDate = v => { if(!v) return ''; const d=new Date(v+'T00:00:00'); return isNaN(d)?esc(v):d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); };
 const fmtDay = v => { if(!v) return ''; const d=new Date(v+'T00:00:00'); return isNaN(d)?esc(v):d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); };
 const monthKey = v => v ? String(v).slice(0,7) : 'undated';
 const monthLabel = k => k==='undated' ? 'No date yet' : new Date(k+'-01T00:00:00').toLocaleDateString('en-GB',{month:'short',year:'numeric'});
-const thisMonth = () => new Date().toISOString().slice(0,7);
+const localISO = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const thisMonth = () => localISO(new Date()).slice(0,7);
 const view = () => { const h=location.hash.slice(1); return ['overview','content','tasks','ref'].includes(h) ? h : 'overview'; };
 const go = k => { location.hash = k; };
 
@@ -295,7 +306,7 @@ function tabs(){
   const cur = view();
   const n = k => (DATA[k]||[]).length;
   $('#tabs').innerHTML = `
-    <button class="tab ${cur==='overview'?'on':''}" onclick="go('overview')">Summary</button>
+    <button class="tab ${cur==='overview'?'on':''}" onclick="go('overview')">Next steps</button>
     <button class="tab ${cur==='content'?'on':''}" onclick="go('content')">Content plan<span class="n">${n('content')}</span></button>
     <button class="tab ${cur==='tasks'?'on':''}" onclick="go('tasks')">Tasks<span class="n">${(DATA.tasks||[]).filter(t=>t.status!=='Done').length}</span></button>
     <span class="tab-sep"></span>
@@ -314,57 +325,91 @@ function render(){
   else renderGroup(el, REF_GROUPS.find(g=>g.k===refKey) || REF_GROUPS[0]);
 }
 
-// ---------- Summary ----------
-const todayISO = () => new Date().toISOString().slice(0,10);
+// ---------- Next steps ----------
+const todayISO = () => localISO(new Date());
+const addDays = (iso, n) => { const d = new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return localISO(d); };
+const PLACEHOLDER = /\[[A-Z][A-Z \-]{2,}\]/;
+const stageOf = x => x.status || 'Draft';
+function nextSteps(){
+  const c = DATA.content||[], today = todayISO(), soon = addDays(today, 14), items = [];
+  const push = (o) => items.push(o);
+  c.forEach(x=>{
+    const st = stageOf(x); if(!x.date || st==='Posted' || st==='Skipped') return;
+    const late = x.date < today;
+    if(PLACEHOLDER.test((x.copy||'')+' '+(x.th||'')) && x.date <= soon)
+      push({who:'Amber', icon:'link', tone:'warn', rank: late?0:1, date:x.date, id:x.id,
+            t:`Replace the placeholder in "${x.title}"`, s:`${fmtDay(x.date)} · caption still says ${esc(((x.copy||'')+' '+(x.th||'')).match(PLACEHOLDER)[0])}`, btn:'Open'});
+    if(st==='Ready'){
+      if(x.date <= addDays(today,1)) push({who:'Amber', icon:'send', tone: late?'bad':'go', rank: late?0:1, date:x.date, id:x.id, post:true,
+        t:`Post "${x.title}"`, s: late ? `Was due ${fmtDay(x.date)}` : (x.date===today ? 'Due today' : 'Due tomorrow'), btn:'Copy and post'});
+      return;
+    }
+    if(x.date > soon && !late) return;
+    const verb = {Topic:'Write the brief for', Draft:'Write', Thai:'Translate', Review:'Review and fine-tune'}[st] || 'Finish';
+    push({who:STAGE_OWNER[st]||'Amber', icon:{Topic:'bulb',Draft:'pencil',Thai:'language',Review:'eye'}[st]||'pencil', tone: late?'bad':(x.date<=addDays(today,3)?'warn':''),
+      rank: late?0:(x.date<=addDays(today,3)?1:2), date:x.date, id:x.id, t:`${verb} "${x.title}"`, s:`${late?'Late, was due ':''}${fmtDay(x.date)} · ${STAGE_HINT[st]}`, btn:'Open'});
+  });
+  // empty weeks in the next 3 weeks (Mon to Sun)
+  const d0 = new Date(today+'T00:00:00'); const mon = new Date(d0); mon.setDate(d0.getDate() - ((d0.getDay()+6)%7));
+  for(let w=0; w<3; w++){
+    const a = new Date(mon); a.setDate(mon.getDate()+7*w); const b = new Date(a); b.setDate(a.getDate()+6);
+    const A = localISO(a), B = localISO(b);
+    if(!c.some(x=>x.date && x.date>=A && x.date<=B && stageOf(x)!=='Skipped'))
+      push({who:'Michel', icon:'calendar-plus', tone: w===0?'bad':'', rank: w===0?0:2, date:A, newDate: A < today ? today : A,
+        t:`Plan posts for the week of ${fmtDay(A)}`, s:'Nothing planned that week yet. Decide topics with Amber.', btn:'Add a post'});
+  }
+  // decisions for Ronnie
+  (DATA.facts||[]).filter(x=>x.status==='To confirm').forEach(x=>push({who:'Ronnie', icon:'help-circle', tone:'', rank:2, date:'9999', ref:['facts',x.id], t:`Answer: ${x.label}`, s:'Needed before posts can mention it', btn:'Answer'}));
+  if(!(PLAN && PLAN.goal)) push({who:'Ronnie', icon:'target', tone:'warn', rank:1, date:'9999', plan:true, t:'Set the marketing goal', s:'Everything else is planned around it', btn:'Set goal'});
+  // Casy sees everything late
+  items.filter(i=>i.rank===0 && i.who!=='Casy').forEach(i=>push({...i, who:'Casy', t:`${i.who}: ${i.t}`}));
+  return items.sort((a,b)=>a.rank-b.rank || String(a.date).localeCompare(String(b.date)));
+}
+function stepRow(i){
+  const bg = {bad:LATE_BG, warn:'#FAEEDA', go:'#E6F1FB'}[i.tone] || '#F1EFE8';
+  const fg = {bad:LATE_TEXT, warn:'#633806', go:'#0C447C'}[i.tone] || '#5F5E5A';
+  const act = i.post ? `postIt('${i.id}')` : i.id ? `editContent('${i.id}')` : i.ref ? `editRef('${i.ref[0]}','${i.ref[1]}')` : i.plan ? 'editPlan()' : `editContent(null,'${i.newDate}')`;
+  return `<div class="step"><div class="step-ic" style="background:${bg};color:${fg}">${ICONS[i.icon]||''}</div>
+    <div class="step-tx"><div class="t">${esc(i.t)}</div><div class="s">${i.s}</div></div>
+    <button class="${i.post?'btn-primary':'btn-outline'} step-btn" onclick="${act}">${i.btn}</button></div>`;
+}
 function overview(){
-  const P = PLAN || {}; const c = DATA.content||[], t = DATA.tasks||[], f = DATA.facts||[], ch = DATA.channels||[];
-  const today = todayISO();
-  const decisions = [...f.filter(x=>x.status==='To confirm').map(x=>({t:x.label,k:'facts',id:x.id})),
-                     ...ch.filter(x=>x.status==='To confirm'||x.status==='To create').map(x=>({t:x.name+': '+String(x.status).toLowerCase(),k:'channels',id:x.id}))];
-  const open = t.filter(x=>x.status!=='Done').sort((a,b)=>String(a.due||'9').localeCompare(String(b.due||'9')));
-  const ahead = c.filter(x=>x.date && x.date>=today && !['Posted','Skipped'].includes(x.status||'Draft'));
-  if(!queueWho){ const me = (window.currentStaff && window.currentStaff.name || '').split(' ')[0]; queueWho = QUEUES[me] ? me : 'Michel'; }
-  const qDef = QUEUES[queueWho]; const queue = c.filter(x=>qDef.test(x,today)).sort((a,b)=>String(a.date||'9').localeCompare(String(b.date||'9')));
-  const li = (onclick, t, s) => `<li onclick="${onclick}"><span class="t">${t}</span><span class="s">${s||''}</span></li>`;
-  const list = (items, empty) => items.length ? `<ul class="list">${items.join('')}</ul>` : `<div class="empty-state" style="margin:10px 0">${empty}</div>`;
-  let drop = '';
-  if(openTile==='decisions') drop = list(decisions.map(x=>li(`editRef('${x.k}','${x.id}')`, esc(x.t), 'Answer')), 'Nothing waiting.');
-  if(openTile==='tasks') drop = list(open.map(x=>li(`editRef('tasks','${x.id}')`, esc(x.title), `${esc(x.owner||'')}${x.due?' · '+fmtDate(x.due):''}${x.due&&x.due<today?' · <b style="color:#A23F1C">overdue</b>':''}`)), 'No open tasks.');
-  if(openTile==='ahead') drop = list(ahead.sort((a,b)=>a.date.localeCompare(b.date)).map(x=>li(`editContent('${x.id}')`, esc(x.title), `${fmtDay(x.date)} · ${esc(x.status||'Draft')}`)), 'Nothing planned after today. Open the Content plan and give some drafts a date.');
-  const total = c.length || 1;
-  const segs = STAGES.map(st=>[st, c.filter(x=>(x.status||'Draft')===st).length]).filter(x=>x[1]);
+  const P = PLAN || {}, all = nextSteps(), c = DATA.content||[];
+  if(!who){ const me = (window.currentStaff && window.currentStaff.name || '').split(' ')[0]; who = PEOPLE.includes(me) && me!=='Ronnie' ? me : 'Everyone'; }
+  const mine = who==='Everyone' ? all.filter(i=>i.who!=='Casy') : all.filter(i=>i.who===who);
+  const count = p => all.filter(i=>i.who===p).length;
+  const segs = STAGES.map(st=>[st, c.filter(x=>stageOf(x)===st).length]).filter(x=>x[1]);
   return `
   <div class="goal-line" onclick="${canEdit?'editPlan()':''}">
-    <span class="lbl">Goal</span>
-    <span class="val">${esc(P.goal||'Not set yet')}</span>
+    <span class="lbl">Goal</span><span class="val">${esc(P.goal||'Not set yet')}</span>
     ${P.deadline?`<span class="meta2">by ${fmtDate(P.deadline)}</span>`:''}
-    ${P.budget?`<span class="meta2">· ${esc(P.budget)} / month</span>`:''}
-    ${canEdit?`<span class="act">${P.goal?'Edit':'Set goal'}</span>`:''}
   </div>
-
-  <div class="tiles">
-    <button class="tile ${openTile==='decisions'?'on':''}" onclick="openTile=openTile==='decisions'?'':'decisions';render()"><div class="n ${decisions.length?'warn':'good'}">${decisions.length}</div><div class="l">Decisions waiting</div></button>
-    <button class="tile ${openTile==='tasks'?'on':''}" onclick="openTile=openTile==='tasks'?'':'tasks';render()"><div class="n">${open.length}</div><div class="l">Open tasks</div></button>
-    <button class="tile ${openTile==='ahead'?'on':''}" onclick="openTile=openTile==='ahead'?'':'ahead';render()"><div class="n ${ahead.length?'good':'bad'}">${ahead.length}</div><div class="l">Posts planned after today</div></button>
-  </div>
-  ${drop?`<div class="drop">${drop}</div>`:''}
-
-  ${calendar()}
-
+  <div class="queue-pills" style="margin-bottom:14px">${['Everyone',...PEOPLE].map(p=>`<button class="pill ${p===who?'on':''}" onclick="who='${p}';render()">${p}${p==='Everyone'?'':`<span class="n">${count(p)}</span>`}</button>`).join('')}</div>
   <div class="cal-wrap">
-    <div class="cal-head"><h2>Waiting on</h2></div>
-    <div class="queue-pills">${Object.keys(QUEUES).map(k=>`<button class="pill ${k===queueWho?'on':''}" onclick="queueWho='${k}';render()">${k}<span class="n">${c.filter(x=>QUEUES[k].test(x,today)).length}</span></button>`).join('')}</div>
-    <p class="why" style="color:#888780;font-size:13px;margin-bottom:6px">${esc(qDef.d)}.</p>
-    ${list(queue.slice(0,8).map(x=>li(`editContent('${x.id}')`, esc(x.title), `${x.date?fmtDay(x.date)+' · ':''}${esc(x.status||'Draft')}`)), 'Nothing waiting. All clear.')}
-    ${queue.length>8?`<p class="meta" style="margin-top:6px">${queue.length-8} more in the Content plan.</p>`:''}
+    <h2 style="font-family:Georgia,serif;font-size:20px;font-weight:700;margin-bottom:2px">${who==='Everyone' ? `${mine.length} things to do across the team` : `${mine.length} ${mine.length===1?'thing':'things'} for ${esc(who)}`}</h2>
+    <p class="meta" style="font-size:13px;margin-bottom:8px">${mine.length ? 'Most urgent first. Each line has one next step.' : 'All clear for now.'}</p>
+    ${mine.length ? mine.slice(0,12).map(i=> who==='Everyone' ? stepRow({...i, s:`<b style="font-weight:600">${esc(i.who)}</b> · ${i.s}`}) : stepRow(i)).join('') : ''}
+    ${mine.length>12?`<p class="meta" style="margin-top:8px">${mine.length-12} more.</p>`:''}
   </div>
-
+  ${calendar()}
   <div class="cal-wrap">
     <div class="cal-head"><h2>All ${c.length} posts</h2></div>
-    <div class="bar">${segs.map(([st,n])=>`<button title="${st}: ${n}" style="width:${n/total*100}%;background:${STAGE_COLOR[st]}" onclick="month=null;stageFilter='';filt.q='';go('content')"></button>`).join('')}</div>
+    <div class="bar">${segs.map(([st,n])=>`<button title="${st}: ${n}" style="width:${n/(c.length||1)*100}%;background:${STAGE_COLOR[st]}" onclick="month=null;stageFilter='${st}';go('content')"></button>`).join('')}</div>
     <div class="bar-lbl">${segs.map(([st,n])=>`<span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${STAGE_COLOR[st]};margin-right:5px;vertical-align:-1px"></i>${n} ${st.toLowerCase()}</span>`).join('')}</div>
   </div>`;
 }
+const ICONS = {
+  send:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>',
+  link:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>',
+  pencil:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/></svg>',
+  language:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h8M8 3v2M6 5c0 4 3 7 6 8M10 5c0 4-3 7-6 8M13 20l4-9 4 9M14.5 17h5"/></svg>',
+  eye:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  bulb:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/></svg>',
+  'calendar-plus':'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/></svg>',
+  'help-circle':'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/></svg>',
+  target:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>',
+};
+
 function calendar(){
   const c = DATA.content||[]; const today = todayISO();
   if(!calMonth) calMonth = today.slice(0,7);
@@ -377,7 +422,8 @@ function calendar(){
     const iso = `${calMonth}-${String(d).padStart(2,'0')}`;
     const cls = iso===today ? 'today' : iso<today ? 'past' : '';
     const posts = (byDay[d]||[]).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
-    cells += `<div class="day ${cls}">${d}${posts.map(x=>{const st=x.status||'Draft';return `<span class="pp" title="${esc(x.title)} · ${esc(st)}" style="background:${STAGE_BG[st]};color:${STAGE_TEXT[st]}" onclick="editContent('${x.id}')">${esc(x.title)}</span>`;}).join('')}</div>`;
+    cells += `<div class="day ${cls}">${d}${posts.map(x=>{const st=stageOf(x); const late = iso<today && !['Posted','Skipped'].includes(st);
+      return `<span class="pp" title="${esc(x.title)} · ${late?'Late':esc(st)}" style="background:${late?LATE_BG:STAGE_BG[st]};color:${late?LATE_TEXT:STAGE_TEXT[st]}" onclick="${st==='Ready'?`postIt('${x.id}')`:`editContent('${x.id}')`}">${esc(x.title)}</span>`;}).join('')}</div>`;
   }
   const shift = k => { const d = new Date(y, m-1+k, 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; };
   return `<div class="cal-wrap">
@@ -386,51 +432,70 @@ function calendar(){
       <button class="cal-nav" aria-label="Next month" onclick="calMonth='${shift(1)}';render()">&#8250;</button>
       <button class="link-btn" style="margin-left:auto" onclick="month='${calMonth}';stageFilter='';go('content')">Open in Content plan</button></div>
     <div class="cal">${cells}</div>
-    <div class="legend"><span><i style="background:#1D9E75"></i>Posted</span><span><i style="background:#378ADD"></i>Scheduled</span><span><i style="background:#EF9F27"></i>In progress</span><span><i style="background:#B4B2A9"></i>Draft</span></div>
+    <div class="legend"><span><i style="background:#1D9E75"></i>Posted</span><span><i style="background:#378ADD"></i>Ready</span><span><i style="background:#EF9F27"></i>Thai or review</span><span><i style="background:#B4B2A9"></i>Topic or draft</span><span><i style="background:#E24B4A"></i>Late</span></div>
   </div>`;
 }
 
 // ---------- Content plan ----------
 function renderContent(el){
   const all = DATA.content || [];
-  const keys = [...new Set(all.map(x=>monthKey(x.date)))].filter(k=>k!=='undated').sort();
-  const cur = thisMonth();
-  if(!keys.includes(cur)) keys.push(cur), keys.sort();
-  if(!month) month = cur;
-  const undated = all.filter(x=>!x.date).length;
-  let rows = all.filter(x=>monthKey(x.date)===month);
-  const monthRows = rows;
-  if(stageFilter) rows = rows.filter(x=>(x.status||'Draft')===stageFilter);
+  if(!month) month = thisMonth();
+  const [y,m] = month.split('-').map(Number);
+  const shift = k => { const d = new Date(y, m-1+k, 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; };
+  const undated = all.filter(x=>!x.date);
+  const base = showUndated ? undated : all.filter(x=>monthKey(x.date)===month);
+  let rows = base;
+  if(stageFilter) rows = rows.filter(x=>stageOf(x)===stageFilter);
   if(filt.q){ const q=filt.q.toLowerCase(); rows = rows.filter(x=>['title','copy','th','notes','review_note'].some(k=>String(x[k]||'').toLowerCase().includes(q))); }
   rows.sort((a,b)=>(String(a.date||'')+(a.time||'')).localeCompare(String(b.date||'')+(b.time||'')));
-  const counts = Object.fromEntries(STAGES.map(s=>[s, monthRows.filter(x=>(x.status||'Draft')===s).length]));
+  const today = todayISO();
+  const counts = STAGES.map(st=>[st, base.filter(x=>stageOf(x)===st).length]).filter(x=>x[1] || stageFilter===x[0]);
   el.innerHTML = `
-    <div class="top-bar" style="margin-bottom:14px;">
-      <p class="sub">Every post from idea to published: English, Thai, image and the live link, month by month.</p>
+    <div class="mnav">
+      ${showUndated ? `<button class="btn-outline" onclick="showUndated=false;stageFilter='';render()">&#8249; Back to calendar months</button><h2 style="text-align:left">Ideas with no date</h2>`
+      : `<button class="cal-nav" aria-label="Previous month" onclick="month='${shift(-1)}';stageFilter='';render()">&#8249;</button>
+         <h2>${new Date(y,m-1,1).toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</h2>
+         <button class="cal-nav" aria-label="Next month" onclick="month='${shift(1)}';stageFilter='';render()">&#8250;</button>
+         ${month!==thisMonth()?`<button class="link-btn" onclick="month=null;render()">This month</button>`:''}`}
+      <span style="flex:1"></span>
+      ${showUndated ? '' : `<button class="link-btn" onclick="showUndated=true;stageFilter='';render()">Ideas with no date (${undated.length})</button>`}
       ${canEdit?`<button class="btn-primary" onclick="editContent()">Add post</button>`:''}
     </div>
-    <div class="subtabs" style="margin:0 0 16px;">
-      ${keys.map(k=>`<button class="pill ${k===month?'on':''}" onclick="month='${k}';stageFilter='';render()">${monthLabel(k)}<span class="n">${all.filter(x=>monthKey(x.date)===k).length}</span></button>`).join('')}
-      <button class="pill ${month==='undated'?'on':''}" onclick="month='undated';stageFilter='';render()">No date yet<span class="n">${undated}</span></button>
-    </div>
-    <div class="pipe">${STAGES.filter(s=>counts[s]||stageFilter===s).map(s=>`<button class="${stageFilter===s?'on':''}" onclick="stageFilter=stageFilter==='${s}'?'':'${s}';render()" title="${esc(STAGE_HINT[s])}"><div class="num">${counts[s]}</div><div class="lbl">${s}</div></button>`).join('')}</div>
-    <div class="tools">
-      <input id="q" placeholder="Search posts" value="${esc(filt.q)}">
-      ${stageFilter?`<button class="link-btn" onclick="stageFilter='';render()">Show all stages</button>`:''}
-      <span class="count">${rows.length} of ${monthRows.length}</span>
-    </div>
-    ${!rows.length ? `<div class="empty-state">${monthRows.length?'Nothing matches.':'No posts in '+esc(monthLabel(month))+' yet.'}</div>` : `
-    <div class="tbl"><table><thead><tr><th>Date</th><th class="hide-m">Time</th><th>Post</th><th class="hide-m">Channel</th><th>Stage</th><th>Ready</th><th></th></tr></thead><tbody>
-    ${rows.map(x=>`<tr onclick="editContent('${x.id}')">
+    ${counts.length ? `<div class="chips">${counts.map(([st,n])=>`<button class="chip ${tone(st)} ${stageFilter===st?'on':''}" title="${esc(STAGE_HINT[st])}" onclick="stageFilter=stageFilter==='${st}'?'':'${st}';render()">${n} ${st.toLowerCase()}</button>`).join('')}</div>` : ''}
+    ${!rows.length ? `<div class="empty-state">${base.length?'Nothing matches.':'No posts this month yet.'}</div>` : `
+    <div class="tbl"><table><thead><tr><th>Date</th><th>Post</th><th>Stage</th><th class="hide-m">With</th><th></th></tr></thead><tbody>
+    ${rows.map(x=>{ const st=stageOf(x); const late = x.date && x.date<today && !['Posted','Skipped'].includes(st);
+      return `<tr onclick="${st==='Ready'?`postIt('${x.id}')`:`editContent('${x.id}')`}">
       <td class="nowrap">${x.date?fmtDay(x.date):'<span class="muted">No date</span>'}</td>
-      <td class="nowrap hide-m muted">${esc(x.time||'')}</td>
-      <td class="main">${esc(x.title)}${x.format&&x.format!=='Post'?`<span class="fmt">${esc(x.format)}</span>`:''}</td>
-      <td class="nowrap hide-m muted">${esc(x.channel||'')}</td>
-      <td>${chip(x.status||'Draft')}</td>
-      <td><span class="ready"><span class="${x.copy?'ok':''}">EN</span><span class="${x.th?'ok':''}">TH</span><span class="${x.image?'ok':''}">IMG</span></span></td>
+      <td class="main">${esc(x.title)}${x.format&&x.format!=='Post'?`<span class="fmt">${esc(x.format)}</span>`:''}${PLACEHOLDER.test((x.copy||'')+(x.th||''))&&st!=='Posted'?' <span class="chip rust" style="margin-left:6px">placeholder</span>':''}</td>
+      <td>${late?'<span class="chip rust">Late</span> ':''}${chip(st)}</td>
+      <td class="hide-m muted">${esc(STAGE_OWNER[st]||'')}</td>
       <td>${safeUrl(x.post_url)?`<a href="${esc(x.post_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:12px;font-weight:600">View</a>`:''}</td>
-    </tr>`).join('')}</tbody></table></div>`}`;
-  const q = $('#q'); if(q) q.oninput = e => { filt.q = e.target.value; const p = e.target.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(p,p); };
+    </tr>`;}).join('')}</tbody></table></div>`}`;
+}
+
+// Post-it drawer: everything Amber needs at the moment of posting
+function postIt(id){
+  const r = (DATA.content||[]).find(x=>x.id===id); if(!r) return;
+  const body = `
+    <p class="meta" style="font-size:13px;margin-bottom:14px">${fmtDay(r.date)}${r.time?' · '+esc(r.time):''} · ${esc(r.channel||'Facebook Page')}</p>
+    ${PLACEHOLDER.test((r.copy||'')+' '+(r.th||''))?`<div class="empty-state" style="color:#791F1F;background:#FCEBEB;border-color:#F7C1C1;margin-bottom:14px">This caption still has a placeholder. Fix it before posting.</div>`:''}
+    <div class="f"><label>English<button type="button" class="copybtn" onclick="copyText('copy')">Copy</button></label><div class="cap" id="cap-copy">${esc(r.copy||'No English caption yet.')}${r.hashtags?'\n\n'+esc(r.hashtags):''}</div></div>
+    <div class="f"><label>Thai<button type="button" class="copybtn" onclick="copyText('th')">Copy</button></label><div class="cap" id="cap-th">${esc(r.th||'No Thai caption yet.')}${r.th&&r.hashtags?'\n\n'+esc(r.hashtags):''}</div></div>
+    ${safeUrl(r.image)?`<p style="margin-bottom:16px"><a href="${esc(r.image)}" target="_blank" rel="noopener" style="font-weight:600">Open the image or video</a></p>`:'<p class="meta" style="margin-bottom:16px">No image linked yet.</p>'}
+    <div class="sec-label">After posting</div>
+    <div class="f"><label>Paste the Facebook post link</label><input name="post_url" type="url" value="${esc(r.post_url||'')}" placeholder="https://www.facebook.com/..."></div>`;
+  cur = {content:true, id};
+  drawerShell(esc(r.title), body, null, false);
+  if($('#sv')){ $('#sv').textContent = 'Mark as posted';
+    $('#sv').onclick = () => { const u = String(new FormData($('#fm')).get('post_url')||'').trim();
+      persist('content', id, {...strip(r), status:'Posted', ...(u?{post_url:u}:{})}); }; }
+}
+function strip(r){ const o={}; CONTENT_FIELDS.forEach(k=>{ if(r[k]) o[k]=r[k]; }); return o; }
+async function copyText(k){
+  const el = $('#cap-'+k); if(!el) return;
+  try { await navigator.clipboard.writeText(el.textContent); showToast('Copied. Ready to paste.'); }
+  catch(e){ const rg=document.createRange(); rg.selectNodeContents(el); const sel=getSelection(); sel.removeAllRanges(); sel.addRange(rg); document.execCommand('copy'); sel.removeAllRanges(); showToast('Copied. Ready to paste.'); }
 }
 
 // ---------- Generic list (tasks + reference) ----------
@@ -534,8 +599,8 @@ async function persist(collection, id, body){
 }
 
 // Content post editor (wide, mirrors the team's spreadsheet + review doc)
-function editContent(id){
-  const r = id ? (DATA.content||[]).find(x=>x.id===id) : { status:'Draft', format:'Post', channel:'Facebook Page', date: month && month!=='undated' ? '' : '' };
+function editContent(id, newDate){
+  const r = id ? (DATA.content||[]).find(x=>x.id===id) : { status:'Topic', format:'Post', channel:'Facebook Page', date: newDate || '' };
   if(id && !r) return;
   const body = `
     <div class="grid-meta">

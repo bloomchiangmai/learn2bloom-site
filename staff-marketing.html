@@ -200,6 +200,8 @@ a.btn-primary{text-decoration:none;color:#fff;display:inline-block;} a.btn-outli
 .ppanel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#EEF4FC;border-radius:0 0 8px 8px;padding:4px 2px 14px 130px;margin-bottom:4px;}
 .ppanel input{flex:1;min-width:170px;border:1px solid #DCD5C6;border-radius:7px;padding:5px 10px;font-size:13px;background:#fff;}
 .box .plist{margin-bottom:6px;}
+.mkey{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:#888780;padding:4px 2px 10px;}
+.mkey .mk{margin-left:8px;} .mkey .mk:first-child{margin-left:0;}
 .warn-t{color:#9A5D0C;font-weight:600;}
 .warnbox{background:#FAEEDA;color:#633806;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;font-weight:600;}
 .sync{display:flex;align-items:center;gap:10px;color:#888780;font-size:12.5px;margin-top:6px;padding:8px 2px;transition:color .3s;}
@@ -496,8 +498,9 @@ function marks(x){
   return `<span class="mks">${m(!blank(x.copy),'EN')}${m(!blank(x.th),'TH')}${m(!!x.image,'Img')}</span>`;
 }
 function rows(list){
-  return `<div class="plist"><div class="pl head"><span>Date</span><span>Post</span><span>Stage</span><span class="hide-m">With</span><span class="hide-m">Done</span><span></span></div>${list.map(row).join('')}</div>`;
+  return `<div class="plist"><div class="pl head"><span>Date</span><span>Post</span><span>Stage</span><span class="hide-m">With</span><span class="hide-m">Done</span><span></span></div>${list.map(row).join('')}</div>${KEY}`;
 }
+const KEY = `<div class="mkey"><span class="mk ok">EN</span> done <span class="mk no">TH</span> missing, due within 7 days <span class="mk">Img</span> not needed yet</div>`;
 function row(x){
   const st = stageOf(x), today = todayISO();
   const isLate = x.date && x.date < today && open(x);

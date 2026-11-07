@@ -71,7 +71,8 @@ td.nowrap{white-space:nowrap;}
 .ready span.ok{background:#E3F1EC;border-color:#E3F1EC;color:#0F6E56;}
 
 /* pipeline strip */
-.pipe{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:18px;}
+.pipe{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
+.pipe button{min-width:110px;flex:0 0 auto;}
 .pipe button{background:#fff;border:1px solid #E8E3D8;border-radius:10px;padding:10px 12px;text-align:left;cursor:pointer;}
 .pipe button:hover{border-color:#DCD5C6;}
 .pipe button.on{border-color:#534AB7;box-shadow:0 0 0 1px #534AB7;}
@@ -128,13 +129,48 @@ details.orig summary{cursor:pointer;font-size:13px;font-weight:600;color:#534AB7
 .x{background:none;border:0;font-size:24px;line-height:1;cursor:pointer;color:#888780;}
 .confirm{display:none;gap:8px;align-items:center;font-size:13px;color:#A23F1C;}
 .meta{color:#888780;font-size:12px;}
+.goal-line{display:flex;align-items:center;gap:12px;padding:12px 18px;border:1px solid #E8E3D8;border-radius:12px;background:#fff;margin-bottom:14px;cursor:pointer;}
+.goal-line .lbl{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#888780;font-weight:700;}
+.goal-line .val{font-family:Georgia,serif;font-size:17px;font-weight:700;}
+.goal-line .meta2{color:#888780;font-size:13px;}
+.goal-line .act{margin-left:auto;color:#534AB7;font-weight:600;font-size:13px;white-space:nowrap;}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px;}
+.tile{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:16px 18px;cursor:pointer;text-align:left;}
+.tile:hover{border-color:#DCD5C6;} .tile.on{border-color:#534AB7;box-shadow:0 0 0 1px #534AB7;}
+.tile .n{font-family:Georgia,serif;font-size:30px;font-weight:700;line-height:1.1;}
+.tile .l{font-size:13px;color:#5F5E5A;margin-top:2px;}
+.tile .n.warn{color:#9A5D0C;} .tile .n.bad{color:#A23F1C;} .tile .n.good{color:#0F6E56;}
+.drop{background:#fff;border:1px solid #E8E3D8;border-radius:12px;padding:6px 18px;margin:-4px 0 14px;}
+.cal-wrap{background:#fff;border:1px solid #E8E3D8;border-radius:12px;padding:16px 18px;margin-bottom:14px;}
+.cal-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.cal-head h2{font-family:Georgia,serif;font-size:18px;font-weight:700;}
+.cal-nav{background:none;border:1px solid #DCD5C6;border-radius:6px;width:28px;height:28px;cursor:pointer;color:#5F5E5A;}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;}
+.cal .dow{font-size:11px;color:#A8A39A;text-transform:uppercase;letter-spacing:.5px;padding:0 4px;}
+.cal .day{min-height:58px;border-radius:8px;background:#FCFBF8;border:1px solid #F0ECE3;padding:4px 6px;font-size:12px;color:#888780;}
+.cal .day.out{background:transparent;border-color:transparent;}
+.cal .day.today{border-color:#534AB7;color:#534AB7;font-weight:700;}
+.cal .day.past{color:#C9C4BA;}
+.cal .pp{display:block;margin-top:3px;font-size:11px;font-weight:600;line-height:1.25;border-radius:4px;padding:2px 5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12px;color:#5F5E5A;}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.bar{display:flex;height:16px;border-radius:8px;overflow:hidden;background:#F1EFE8;}
+.bar button{border:0;height:100%;cursor:pointer;}
+.bar-lbl{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;font-size:12px;color:#5F5E5A;}
+.queue-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.copybtn{margin-left:8px;font-size:11px;font-weight:600;text-transform:none;letter-spacing:0;color:#534AB7;background:#EEEDFE;border:0;border-radius:4px;padding:2px 8px;cursor:pointer;}
+.ref-sec{margin-bottom:34px;}
+.ref-sec .top-bar{margin-bottom:12px;}
+.ref-sec h2{font-family:Georgia,serif;font-size:21px;font-weight:700;}
 .toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
 
 @media (max-width: 860px){
   main{padding:28px 16px 80px;}
   .goal{grid-template-columns:1fr 1fr;} .goal>div:first-child{grid-column:span 2;}
   .ov{grid-template-columns:1fr;}
-  .pipe{grid-template-columns:repeat(4,1fr);}
+  .tiles{gap:8px;} .tile{padding:10px 12px;} .tile .n{font-size:22px;} .tile .l{font-size:12px;line-height:1.3;}
+  .cal .day{min-height:40px;} .cal .pp{font-size:0;height:8px;padding:0;}
+  .goal-line{flex-wrap:wrap;}
   .grid-meta{grid-template-columns:1fr 1fr;} .grid-meta .f:first-child{grid-column:span 2;}
   .grid-2{grid-template-columns:1fr;}
   .tools input{min-width:0;flex:1;}
@@ -203,7 +239,20 @@ const PLAN_FIELDS = [['goal','Goal','long'],['deadline','Deadline','date'],['bud
 let DATA = {}, PLAN = null, STAFF_NAMES = {}, loaded = false;
 let canEdit = false, canDelete = false;
 const filt = {q:'', s:''};
-let month = null, stageFilter = '', refKey = 'facts';
+let month = null, stageFilter = '', refKey = 'about', calMonth = null, openTile = '', queueWho = null;
+const REF_GROUPS = [
+  {k:'about', t:'About Bloom', d:'The facts every post should match.', secs:['facts']},
+  {k:'who', t:'Who and where', d:'Who we talk to, the accounts we own, and the groups where families gather.', secs:['audiences','channels','groups']},
+  {k:'market', t:'Market', d:'Who families compare us with, and what we have learned.', secs:['competitors','insights']},
+];
+const STAGE_COLOR = {'Draft':'#B4B2A9','In review':'#EF9F27','Revised':'#EF9F27','Thai done':'#EF9F27','Scheduled':'#378ADD','Posted':'#1D9E75','Skipped':'#D85A30'};
+const STAGE_TEXT = {'Draft':'#444441','In review':'#633806','Revised':'#633806','Thai done':'#633806','Scheduled':'#0C447C','Posted':'#085041','Skipped':'#712B13'};
+const STAGE_BG = {'Draft':'#F1EFE8','In review':'#FAEEDA','Revised':'#FAEEDA','Thai done':'#FAEEDA','Scheduled':'#E6F1FB','Posted':'#E1F5EE','Skipped':'#FAECE7'};
+const QUEUES = {
+  'Michel': {d:'Posts waiting for review', test:x=>x.status==='In review'},
+  'Amber':  {d:'Drafts to finish, Thai to add, posts to schedule or mark as posted', test:(x,today)=>['Draft','Revised','Thai done'].includes(x.status||'Draft') && !!x.date || (x.status==='Scheduled' && x.date && x.date<today)},
+  'Casy':   {d:'Anything past its date and not posted yet', test:(x,today)=>x.date && x.date<today && !['Posted','Skipped'].includes(x.status||'Draft')},
+};
 const $ = (s,el=document)=>el.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeUrl = v => /^https?:\/\//i.test(String(v||'')) ? v : '';
@@ -252,7 +301,7 @@ function tabs(){
     <span class="tab-sep"></span>
     <button class="tab ${cur==='ref'?'on':''}" onclick="go('ref')">Reference</button>`;
   $('#subtabs').innerHTML = cur==='ref'
-    ? `<div class="subtabs">${REF.map(s=>`<button class="pill ${s.k===refKey?'on':''}" onclick="refKey='${s.k}';filt.q='';filt.s='';render()">${s.t}<span class="n">${n(s.k)}</span></button>`).join('')}</div>` : '';
+    ? `<div class="subtabs">${REF_GROUPS.map(g=>`<button class="pill ${g.k===refKey?'on':''}" onclick="refKey='${g.k}';render()">${g.t}<span class="n">${g.secs.reduce((a,k)=>a+n(k),0)}</span></button>`).join('')}</div>` : '';
 }
 
 function render(){
@@ -262,47 +311,82 @@ function render(){
   if(v==='overview') el.innerHTML = overview();
   else if(v==='content') renderContent(el);
   else if(v==='tasks') renderList(el, TASKS);
-  else renderList(el, SEC[refKey]);
+  else renderGroup(el, REF_GROUPS.find(g=>g.k===refKey) || REF_GROUPS[0]);
 }
 
 // ---------- Summary ----------
+const todayISO = () => new Date().toISOString().slice(0,10);
 function overview(){
   const P = PLAN || {}; const c = DATA.content||[], t = DATA.tasks||[], f = DATA.facts||[], ch = DATA.channels||[];
-  const m = thisMonth(), today = new Date().toISOString().slice(0,10);
-  const inMonth = c.filter(x=>monthKey(x.date)===m);
-  const upcoming = c.filter(x=>x.date && x.date>=today && x.status!=='Posted' && x.status!=='Skipped').sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||''))).slice(0,6);
-  const stuck = c.filter(x=>['In review','Revised','Thai done'].includes(x.status));
+  const today = todayISO();
   const decisions = [...f.filter(x=>x.status==='To confirm').map(x=>({t:x.label,k:'facts',id:x.id})),
                      ...ch.filter(x=>x.status==='To confirm'||x.status==='To create').map(x=>({t:x.name+': '+String(x.status).toLowerCase(),k:'channels',id:x.id}))];
-  const open = t.filter(x=>x.status!=='Done').sort((a,b)=>String(a.due||'9').localeCompare(String(b.due||'9'))).slice(0,6);
-  const list = (items, empty) => items.length ? `<ul class="list">${items.join('')}</ul>` : `<div class="empty-state">${empty}</div>`;
-  const counts = STAGES.filter(s=>s!=='Skipped').map(s=>[s, inMonth.filter(x=>(x.status||'Draft')===s).length]).filter(x=>x[1]);
-  return `<div class="ov">
-   <div class="goal wide">
-     <div><div class="lbl">Goal</div><div class="big">${esc(P.goal||'Not set yet')}</div>
-       ${canEdit?`<button class="edit" onclick="editPlan()">Edit goal, deadline and budget</button>`:''}</div>
-     <div><div class="lbl">Deadline</div><div class="val">${P.deadline?fmtDate(P.deadline):'Not set'}</div></div>
-     <div><div class="lbl">Ad budget / month</div><div class="val">${esc(P.budget||'Not set')}</div></div>
-     <div><div class="lbl">Success measure</div><div class="val">${esc(P.measure||'Not set')}</div></div>
-   </div>
+  const open = t.filter(x=>x.status!=='Done').sort((a,b)=>String(a.due||'9').localeCompare(String(b.due||'9')));
+  const ahead = c.filter(x=>x.date && x.date>=today && !['Posted','Skipped'].includes(x.status||'Draft'));
+  if(!queueWho){ const me = (window.currentStaff && window.currentStaff.name || '').split(' ')[0]; queueWho = QUEUES[me] ? me : 'Michel'; }
+  const qDef = QUEUES[queueWho]; const queue = c.filter(x=>qDef.test(x,today)).sort((a,b)=>String(a.date||'9').localeCompare(String(b.date||'9')));
+  const li = (onclick, t, s) => `<li onclick="${onclick}"><span class="t">${t}</span><span class="s">${s||''}</span></li>`;
+  const list = (items, empty) => items.length ? `<ul class="list">${items.join('')}</ul>` : `<div class="empty-state" style="margin:10px 0">${empty}</div>`;
+  let drop = '';
+  if(openTile==='decisions') drop = list(decisions.map(x=>li(`editRef('${x.k}','${x.id}')`, esc(x.t), 'Answer')), 'Nothing waiting.');
+  if(openTile==='tasks') drop = list(open.map(x=>li(`editRef('tasks','${x.id}')`, esc(x.title), `${esc(x.owner||'')}${x.due?' · '+fmtDate(x.due):''}${x.due&&x.due<today?' · <b style="color:#A23F1C">overdue</b>':''}`)), 'No open tasks.');
+  if(openTile==='ahead') drop = list(ahead.sort((a,b)=>a.date.localeCompare(b.date)).map(x=>li(`editContent('${x.id}')`, esc(x.title), `${fmtDay(x.date)} · ${esc(x.status||'Draft')}`)), 'Nothing planned after today. Open the Content plan and give some drafts a date.');
+  const total = c.length || 1;
+  const segs = STAGES.map(st=>[st, c.filter(x=>(x.status||'Draft')===st).length]).filter(x=>x[1]);
+  return `
+  <div class="goal-line" onclick="${canEdit?'editPlan()':''}">
+    <span class="lbl">Goal</span>
+    <span class="val">${esc(P.goal||'Not set yet')}</span>
+    ${P.deadline?`<span class="meta2">by ${fmtDate(P.deadline)}</span>`:''}
+    ${P.budget?`<span class="meta2">· ${esc(P.budget)} / month</span>`:''}
+    ${canEdit?`<span class="act">${P.goal?'Edit':'Set goal'}</span>`:''}
+  </div>
 
-   <div class="card wide">
-     <h2>Posts this month <button class="link-btn" onclick="month='${m}';stageFilter='';go('content')">Open ${monthLabel(m)}</button></h2>
-     <p class="why">${inMonth.length} ${inMonth.length===1?'post':'posts'} planned for ${monthLabel(m)}${stuck.length?`, ${stuck.length} in progress across all months`:''}.</p>
-     ${counts.length?`<div class="month-line">${counts.map(([s,n])=>`<span class="chip ${tone(s)}">${n} ${esc(s.toLowerCase())}</span>`).join('')}</div>`:''}
-     ${list(upcoming.map(x=>`<li onclick="editContent('${x.id}')"><span class="t">${esc(x.title)}${x.format&&x.format!=='Post'?`<span class="fmt">${esc(x.format)}</span>`:''}</span><span class="s">${fmtDay(x.date)}${x.time?' · '+esc(x.time):''} · ${esc(x.status||'Draft')}</span></li>`), 'Nothing dated from today onward. Pick drafts from "No date yet" in the Content plan and give them a date.')}
-   </div>
+  <div class="tiles">
+    <button class="tile ${openTile==='decisions'?'on':''}" onclick="openTile=openTile==='decisions'?'':'decisions';render()"><div class="n ${decisions.length?'warn':'good'}">${decisions.length}</div><div class="l">Decisions waiting</div></button>
+    <button class="tile ${openTile==='tasks'?'on':''}" onclick="openTile=openTile==='tasks'?'':'tasks';render()"><div class="n">${open.length}</div><div class="l">Open tasks</div></button>
+    <button class="tile ${openTile==='ahead'?'on':''}" onclick="openTile=openTile==='ahead'?'':'ahead';render()"><div class="n ${ahead.length?'good':'bad'}">${ahead.length}</div><div class="l">Posts planned after today</div></button>
+  </div>
+  ${drop?`<div class="drop">${drop}</div>`:''}
 
-   <div class="card">
-     <h2>Waiting on a decision <button class="link-btn" onclick="refKey='facts';go('ref')">Info bank</button></h2>
-     <p class="why">Facts we cannot post about until someone confirms them.</p>
-     ${list(decisions.slice(0,8).map(x=>`<li onclick="editRef('${x.k}','${x.id}')"><span class="t">${esc(x.t)}</span></li>`), 'Nothing waiting.')}
-   </div>
-   <div class="card">
-     <h2>Open tasks <button class="link-btn" onclick="go('tasks')">All tasks</button></h2>
-     <p class="why">Who needs to do what next.</p>
-     ${list(open.map(x=>`<li onclick="editRef('tasks','${x.id}')"><span class="t">${esc(x.title)}</span><span class="s">${esc(x.owner||'')}${x.due?' · '+fmtDate(x.due):''}${x.due&&x.due<today?' · <b style="color:#A23F1C">overdue</b>':''}</span></li>`), 'No open tasks.')}
-   </div>
+  ${calendar()}
+
+  <div class="cal-wrap">
+    <div class="cal-head"><h2>Waiting on</h2></div>
+    <div class="queue-pills">${Object.keys(QUEUES).map(k=>`<button class="pill ${k===queueWho?'on':''}" onclick="queueWho='${k}';render()">${k}<span class="n">${c.filter(x=>QUEUES[k].test(x,today)).length}</span></button>`).join('')}</div>
+    <p class="why" style="color:#888780;font-size:13px;margin-bottom:6px">${esc(qDef.d)}.</p>
+    ${list(queue.slice(0,8).map(x=>li(`editContent('${x.id}')`, esc(x.title), `${x.date?fmtDay(x.date)+' · ':''}${esc(x.status||'Draft')}`)), 'Nothing waiting. All clear.')}
+    ${queue.length>8?`<p class="meta" style="margin-top:6px">${queue.length-8} more in the Content plan.</p>`:''}
+  </div>
+
+  <div class="cal-wrap">
+    <div class="cal-head"><h2>All ${c.length} posts</h2></div>
+    <div class="bar">${segs.map(([st,n])=>`<button title="${st}: ${n}" style="width:${n/total*100}%;background:${STAGE_COLOR[st]}" onclick="month=null;stageFilter='';filt.q='';go('content')"></button>`).join('')}</div>
+    <div class="bar-lbl">${segs.map(([st,n])=>`<span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${STAGE_COLOR[st]};margin-right:5px;vertical-align:-1px"></i>${n} ${st.toLowerCase()}</span>`).join('')}</div>
+  </div>`;
+}
+function calendar(){
+  const c = DATA.content||[]; const today = todayISO();
+  if(!calMonth) calMonth = today.slice(0,7);
+  const [y,m] = calMonth.split('-').map(Number);
+  const first = new Date(y, m-1, 1), days = new Date(y, m, 0).getDate(), lead = first.getDay();
+  const byDay = {}; c.filter(x=>monthKey(x.date)===calMonth).forEach(x=>{ (byDay[+x.date.slice(8,10)] = byDay[+x.date.slice(8,10)] || []).push(x); });
+  let cells = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="dow">${d}</div>`).join('');
+  for(let i=0;i<lead;i++) cells += '<div class="day out"></div>';
+  for(let d=1; d<=days; d++){
+    const iso = `${calMonth}-${String(d).padStart(2,'0')}`;
+    const cls = iso===today ? 'today' : iso<today ? 'past' : '';
+    const posts = (byDay[d]||[]).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
+    cells += `<div class="day ${cls}">${d}${posts.map(x=>{const st=x.status||'Draft';return `<span class="pp" title="${esc(x.title)} · ${esc(st)}" style="background:${STAGE_BG[st]};color:${STAGE_TEXT[st]}" onclick="editContent('${x.id}')">${esc(x.title)}</span>`;}).join('')}</div>`;
+  }
+  const shift = k => { const d = new Date(y, m-1+k, 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; };
+  return `<div class="cal-wrap">
+    <div class="cal-head"><button class="cal-nav" aria-label="Previous month" onclick="calMonth='${shift(-1)}';render()">&#8249;</button>
+      <h2>${new Date(y,m-1,1).toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</h2>
+      <button class="cal-nav" aria-label="Next month" onclick="calMonth='${shift(1)}';render()">&#8250;</button>
+      <button class="link-btn" style="margin-left:auto" onclick="month='${calMonth}';stageFilter='';go('content')">Open in Content plan</button></div>
+    <div class="cal">${cells}</div>
+    <div class="legend"><span><i style="background:#1D9E75"></i>Posted</span><span><i style="background:#378ADD"></i>Scheduled</span><span><i style="background:#EF9F27"></i>In progress</span><span><i style="background:#B4B2A9"></i>Draft</span></div>
   </div>`;
 }
 
@@ -329,7 +413,7 @@ function renderContent(el){
       ${keys.map(k=>`<button class="pill ${k===month?'on':''}" onclick="month='${k}';stageFilter='';render()">${monthLabel(k)}<span class="n">${all.filter(x=>monthKey(x.date)===k).length}</span></button>`).join('')}
       <button class="pill ${month==='undated'?'on':''}" onclick="month='undated';stageFilter='';render()">No date yet<span class="n">${undated}</span></button>
     </div>
-    <div class="pipe">${STAGES.map(s=>`<button class="${stageFilter===s?'on':''}" onclick="stageFilter=stageFilter==='${s}'?'':'${s}';render()" title="${esc(STAGE_HINT[s])}"><div class="num">${counts[s]}</div><div class="lbl">${s}</div></button>`).join('')}</div>
+    <div class="pipe">${STAGES.filter(s=>counts[s]||stageFilter===s).map(s=>`<button class="${stageFilter===s?'on':''}" onclick="stageFilter=stageFilter==='${s}'?'':'${s}';render()" title="${esc(STAGE_HINT[s])}"><div class="num">${counts[s]}</div><div class="lbl">${s}</div></button>`).join('')}</div>
     <div class="tools">
       <input id="q" placeholder="Search posts" value="${esc(filt.q)}">
       ${stageFilter?`<button class="link-btn" onclick="stageFilter='';render()">Show all stages</button>`:''}
@@ -374,6 +458,15 @@ function renderList(el, s){
   const q = $('#q'); if(q) q.oninput = e => { filt.q = e.target.value; const p = e.target.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(p,p); };
   const sf = $('#sf'); if(sf) sf.onchange = e => { filt.s = e.target.value; render(); };
 }
+function renderGroup(el, g){
+  el.innerHTML = `<p class="sub" style="margin-bottom:22px">${esc(g.d)}</p>` + g.secs.map(k=>{
+    const s = SEC[k]; const rows = (DATA[k]||[]).slice();
+    if(s.sort) rows.sort((a,b)=>String(a[s.sort]||'9999').localeCompare(String(b[s.sort]||'9999')));
+    return `<section class="ref-sec"><div class="top-bar"><div><h2>${esc(s.t)} <span class="muted" style="font-family:inherit;font-size:14px;font-weight:400">${rows.length}</span></h2><p class="meta" style="font-size:13px">${esc(s.d)}</p></div>
+      ${canEdit?`<button class="btn-outline" onclick="editRef('${k}')">Add</button>`:''}</div>
+      ${rows.length ? (s.view==='table' ? table(s, rows) : cards(s, rows)) : '<div class="empty-state">Nothing here yet.</div>'}</section>`;
+  }).join('');
+}
 function label(s,key){ return (s.f.find(x=>x[0]===key)||[0,key])[1]; }
 function cell(s,key,v){ const f = s.f.find(x=>x[0]===key); if(!f) return esc(v);
   if(f[2]==='date') return fmtDate(v); if(f[2]==='select') return chip(v); if(f[2]==='long') return `<span class="clip">${esc(v)}</span>`; return esc(v); }
@@ -396,12 +489,12 @@ let cur = null, saving = false;
 function closeD(){ $('#dw').classList.remove('dw-open'); cur = null; }
 $('#scrim').onclick = closeD;
 document.addEventListener('keydown', e => { if(e.key === 'Escape') closeD(); });
-function field(f, v, cls=''){ const [k,l,t,o,hint] = f; v = v ?? '';
+function field(f, v, cls='', extra=''){ const [k,l,t,o,hint] = f; v = v ?? '';
   const inp = t==='long' ? `<textarea name="${k}" class="${cls}">${esc(v)}</textarea>`
     : t==='select' ? `<select name="${k}"><option value=""></option>${o.map(x=>`<option ${x===v?'selected':''}>${esc(x)}</option>`).join('')}${v&&!o.includes(v)?`<option selected>${esc(v)}</option>`:''}</select>`
     : `<input name="${k}" type="${t==='date'?'date':t==='url'?'url':t==='time'?'time':'text'}" value="${esc(v)}">`;
   const open = t==='url' && safeUrl(v) ? `<a class="openl" href="${esc(v)}" target="_blank" rel="noopener">Open</a>` : '';
-  return `<div class="f"><label>${l}${hint?` <span class="hint">${hint}</span>`:''}</label>${inp}${open}</div>`; }
+  return `<div class="f"><label>${l}${hint?` <span class="hint">${hint}</span>`:''}${extra}</label>${inp}${open}</div>`; }
 function metaLine(r){
   if(!r || !r._updated) return '';
   const who = r._by && STAFF_NAMES[r._by] ? ' by ' + esc(STAFF_NAMES[r._by]) : '';
@@ -457,8 +550,8 @@ function editContent(id){
       ${field(['original','Original draft','long',null,'before review'], r.original)}
     </details>
     <div class="grid-2">
-      ${field(['copy','English caption','long'], r.copy, 'tall')}
-      ${field(['th','Thai caption','long'], r.th, 'tall')}
+      ${field(['copy','English caption','long'], r.copy, 'tall', `<button type="button" class="copybtn" onclick="copyField('copy')">Copy</button>`)}
+      ${field(['th','Thai caption','long'], r.th, 'tall', `<button type="button" class="copybtn" onclick="copyField('th')">Copy</button>`)}
     </div>
     ${field(['review_note','Review note','long',null,'what Michel changed and why'], r.review_note)}
     <div class="sec-label">Assets and links</div>
@@ -477,6 +570,14 @@ function editContent(id){
     if(!data.title){ $('#msg').textContent = 'Topic is required.'; return; }
     persist('content', id, data);
   };
+}
+
+async function copyField(name){
+  const el = $(`#fm [name="${name}"]`); if(!el) return;
+  const text = [el.value, name==='copy'||name==='th' ? ($('#fm [name="hashtags"]')||{}).value || '' : ''].filter(Boolean).join('\n\n');
+  try { await navigator.clipboard.writeText(text); }
+  catch(e){ el.removeAttribute('disabled'); el.select(); document.execCommand('copy'); el.setSelectionRange(0,0); }
+  showToast('Copied with hashtags. Ready to paste.');
 }
 
 // Reference / tasks editor

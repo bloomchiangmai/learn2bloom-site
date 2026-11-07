@@ -58,14 +58,14 @@ function nextStudentIdCode(existingCodes){
 
 const NAV_ITEMS = [
   { key: 'dashboard', label: 'Dashboard', href: 'staff-dashboard.html', group: 'Home' },
-  { key: 'admissions', label: 'Admissions', href: 'staff-admissions.html', group: 'Students' },
-  { key: 'learners', label: 'Learners', href: 'learners.html', group: 'Students' },
-  { key: 'calendar', label: 'Calendar', href: 'staff-calendar.html', group: 'Tools' },
-  { key: 'library', label: 'Bloombrary', href: 'https://bloombrary.learn2bloom.org/admin', group: 'Tools' },
+  { key: 'admissions', label: 'Admissions', href: 'staff-admissions.html', group: 'Students', module: 'students' },
+  { key: 'learners', label: 'Learners', href: 'learners.html', group: 'Students', module: 'students' },
+  { key: 'calendar', label: 'Calendar', href: 'staff-calendar.html', group: 'Tools', module: 'calendar' },
+  { key: 'library', label: 'Bloombrary', href: 'https://bloombrary.learn2bloom.org/admin', group: 'Tools', module: 'library' },
   { key: 'marketing', label: 'Marketing HQ', href: 'staff-marketing.html', group: 'Tools', module: 'marketing' },
   { key: 'team', label: 'Team', href: 'staff-team.html', group: 'Staff' },
   { key: 'permissions', label: 'Permissions', href: 'staff-permissions.html', group: 'Staff', adminOnly: true },
-  { key: 'archive', label: 'Archived Learners', href: 'archive.html', group: 'History' },
+  { key: 'archive', label: 'Archived Learners', href: 'archive.html', group: 'History', module: 'students' },
   { key: 'staff-archive', label: 'Archived Staff', href: 'staff-archive.html', group: 'History', adminOnly: true }
 ];
 
@@ -142,7 +142,7 @@ function renderSidebar(activeKey){
 function roleLabelShared(role){
   return {
     admin:'Admin', admissions:'Admissions', education_lead:'Education Lead',
-    learning_coach:'Learning Coach', it:'IT', enrollment:'Enrollment'
+    learning_coach:'Learning Coach', it:'IT', enrollment:'Enrollment', marketing:'Marketing'
   }[role] || role;
 }
 

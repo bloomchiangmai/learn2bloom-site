@@ -100,12 +100,12 @@ input#toggleCalendar:checked + span::before, input#toggleBloombrary:checked + sp
 window.STAFF_PAGE_KEY = 'dashboard';
 
 const SHORTCUTS = [
-  { key:'admissions', href:'staff-admissions.html', title:'Admissions', desc:'Review and manage new applications.' },
-  { key:'learners', href:'learners.html', title:'Learners', desc:'View and edit enrolled students.' },
-  { key:'calendar', href:'staff-calendar.html', title:'Calendar', desc:'Manage the school calendar and term dates.' },
-  { key:'library', href:'https://bloombrary.learn2bloom.org/admin', title:'Bloombrary', desc:'Manage the book catalog, checkouts, and holds.' },
+  { key:'admissions', href:'staff-admissions.html', title:'Admissions', desc:'Review and manage new applications.', module:'students' },
+  { key:'learners', href:'learners.html', title:'Learners', desc:'View and edit enrolled students.', module:'students' },
+  { key:'calendar', href:'staff-calendar.html', title:'Calendar', desc:'Manage the school calendar and term dates.', module:'calendar' },
+  { key:'library', href:'https://bloombrary.learn2bloom.org/admin', title:'Bloombrary', desc:'Manage the book catalog, checkouts, and holds.', module:'library' },
   { key:'marketing', href:'staff-marketing.html', title:'Marketing HQ', desc:'Info bank, audiences, groups, content plan and tasks.', module:'marketing' },
-  { key:'archive', href:'archive.html', title:'Archive', desc:'Restore or review archived records.' },
+  { key:'archive', href:'archive.html', title:'Archive', desc:'Restore or review archived records.', module:'students' },
   { key:'team', href:'staff-team.html', title:'Team', desc:'See the staff directory, update your contact info.' },
   { key:'permissions', href:'staff-permissions.html', title:'Permissions', desc:'Manage roles, access, and approvals.', adminOnly:true }
 ];

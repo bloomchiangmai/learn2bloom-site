@@ -106,7 +106,7 @@ SOURCES.push(async () => {
   const { count } = await sb.from('approval_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending');
   const c = count || 0;
   return { stats: [{ num: c, label: 'Approvals waiting', href: 'staff-permissions.html#approvals' }],
-    lines: c ? [{ tag:'Permissions', html:`${c} approval${c === 1 ? '' : 's'} waiting for you`, href:'staff-permissions.html#approvals', btn:'Review' }] : [] };
+    lines: c ? [{ tag:'Admin', html:`${c} approval${c === 1 ? '' : 's'} waiting for you`, href:'staff-permissions.html#approvals', btn:'Review' }] : [] };
 });
 
 // Calendar: changes this person asked for that are still waiting

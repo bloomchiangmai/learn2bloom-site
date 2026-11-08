@@ -36,9 +36,9 @@ h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin
 .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
 .signout-link{font-size:13px;color:#888780;cursor:pointer;text-decoration:underline;}
 
-.directory-grid{display:flex;flex-wrap:wrap;gap:16px;}
-.person-card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:20px;cursor:pointer;transition:border-color .15s;flex:1 1 240px;max-width:340px;}
-.role-group-header{flex-basis:100%;width:100%;}
+.directory-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+.person-card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:20px;cursor:pointer;transition:border-color .15s;min-width:0;overflow-wrap:anywhere;}
+.role-group-header{grid-column:1/-1;}
 .person-card:hover{border-color:#534AB7;}
 .person-name{font-weight:700;font-size:16px;margin-bottom:2px;}
 .person-role{font-size:12px;color:#534AB7;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;}
@@ -217,6 +217,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
 </main>
 
 <script>
+const escHtml = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let directoryCache = [];
 
 async function onStaffReady(staffRow){
@@ -304,12 +305,12 @@ function renderDirectory(){
 
 function personCardHtml(s){
   return `
-    <div class="person-card" onclick="openStaffProfile('${s.id}')">
-      <div class="person-name">${s.name}${s.id === window.currentStaff.id ? '<span class="you-badge">You</span>' : ''}</div>
-      <div class="person-role">${roleLabel(s.role)}</div>
-      <div class="person-detail">${s.staff_id_code || '—'}</div>
-      <div class="person-detail">${s.email}</div>
-      ${s.contact_phone ? `<div class="person-detail">${s.contact_phone}</div>` : ''}
+    <div class="person-card" onclick="openStaffProfile('${escHtml(s.id)}')">
+      <div class="person-name">${escHtml(s.name)}${s.id === window.currentStaff.id ? '<span class="you-badge">You</span>' : ''}</div>
+      <div class="person-role">${escHtml(roleLabel(s.role))}</div>
+      <div class="person-detail">${escHtml(s.staff_id_code || '—')}</div>
+      <div class="person-detail">${escHtml(s.email)}</div>
+      ${s.contact_phone ? `<div class="person-detail">${escHtml(s.contact_phone)}</div>` : ''}
     </div>
   `;
 }
@@ -335,33 +336,33 @@ async function openStaffProfile(staffId){
       <div class="detail-section">
         <h3>Basic Info</h3>
         <div class="detail-row"><div class="detail-label">Role</div>
-          <div class="detail-static">${roleLabel(s.role)}</div>
+          <div class="detail-static">${escHtml(roleLabel(s.role))}</div>
         </div>
         ${canEditAdminFields ? '<div class="field-note" style="margin-left:196px;">To change role or access, use the Permissions page.</div>' : ''}
         ${canEditAdminFields ? `
         <div class="detail-row"><div class="detail-label">Account email</div>
-          <input class="detail-input" id="p-email" type="email" value="${s.email || ''}" data-original="${s.email || ''}">
+          <input class="detail-input" id="p-email" type="email" value="${escHtml(s.email || '')}" data-original="${escHtml(s.email || '')}">
         </div>` : ''}
-        <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-phone" value="${s.contact_phone || ''}"></div>
-        <div class="detail-row"><div class="detail-label">Start date</div><input type="date" class="detail-input" id="p-start-date" value="${intake.start_date || ''}"></div>
-        <div class="detail-row"><div class="detail-label">Date of birth</div><input type="date" class="detail-input" id="p-dob" value="${intake.date_of_birth || ''}"></div>
+        <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-phone" value="${escHtml(s.contact_phone || '')}"></div>
+        <div class="detail-row"><div class="detail-label">Start date</div><input type="date" class="detail-input" id="p-start-date" value="${escHtml(intake.start_date || '')}"></div>
+        <div class="detail-row"><div class="detail-label">Date of birth</div><input type="date" class="detail-input" id="p-dob" value="${escHtml(intake.date_of_birth || '')}"></div>
       </div>
       <div class="detail-section">
         <h3>Address & ID</h3>
-        <div class="detail-row"><div class="detail-label">Home address</div><input class="detail-input" id="p-address" value="${intake.address || ''}"></div>
-        <div class="detail-row"><div class="detail-label">National ID / Passport no.</div><input class="detail-input" id="p-national-id" value="${intake.national_id || ''}"></div>
-        <div class="detail-row"><div class="detail-label">Nationality</div><input class="detail-input" id="p-nationality" value="${intake.nationality || ''}"></div>
+        <div class="detail-row"><div class="detail-label">Home address</div><input class="detail-input" id="p-address" value="${escHtml(intake.address || '')}"></div>
+        <div class="detail-row"><div class="detail-label">National ID / Passport no.</div><input class="detail-input" id="p-national-id" value="${escHtml(intake.national_id || '')}"></div>
+        <div class="detail-row"><div class="detail-label">Nationality</div><input class="detail-input" id="p-nationality" value="${escHtml(intake.nationality || '')}"></div>
       </div>
       <div class="detail-section">
         <h3>Emergency Contact</h3>
-        <div class="detail-row"><div class="detail-label">Name</div><input class="detail-input" id="p-emergency-name" value="${intake.emergency_name || ''}"></div>
-        <div class="detail-row"><div class="detail-label">Relationship</div><input class="detail-input" id="p-emergency-relationship" value="${intake.emergency_relationship || ''}"></div>
-        <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-emergency-phone" value="${intake.emergency_phone || ''}"></div>
+        <div class="detail-row"><div class="detail-label">Name</div><input class="detail-input" id="p-emergency-name" value="${escHtml(intake.emergency_name || '')}"></div>
+        <div class="detail-row"><div class="detail-label">Relationship</div><input class="detail-input" id="p-emergency-relationship" value="${escHtml(intake.emergency_relationship || '')}"></div>
+        <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-emergency-phone" value="${escHtml(intake.emergency_phone || '')}"></div>
       </div>
       ${canEditAdminFields ? `
       <div class="detail-section">
         <h3>Notes (Admin only)</h3>
-        <div class="detail-row"><textarea class="detail-input" id="p-notes" rows="3" style="width:100%;">${s.notes || ''}</textarea></div>
+        <div class="detail-row"><textarea class="detail-input" id="p-notes" rows="3" style="width:100%;">${escHtml(s.notes || '')}</textarea></div>
       </div>` : ''}
 
       <div class="detail-section">
@@ -403,7 +404,7 @@ async function openStaffProfile(staffId){
       <div class="modal-save-bar">
         <button class="btn-small-outline" onclick="closeStaffProfile()">Cancel</button>
         <button class="btn-primary" onclick="saveStaffProfile('${staffId}')">Save changes</button>
-        ${(canEditAdminFields && !isSelf) ? `<button class="btn-small-danger" onclick="openDeleteStaffModal('${staffId}', '${(s.name||'').replace(/'/g,"\\'")}')">Archive staff member</button>` : ''}
+        ${(canEditAdminFields && !isSelf) ? `<button class="btn-small-danger" data-name="${escHtml(s.name||'')}" onclick="openDeleteStaffModal('${staffId}', this.dataset.name)">Archive staff member</button>` : ''}
       </div>
     `;
   } else {
@@ -412,10 +413,10 @@ async function openStaffProfile(staffId){
     document.getElementById('profileLimitedView').innerHTML = `
       <div class="detail-section">
         <h3>Contact</h3>
-        <div class="detail-row"><div class="detail-label">Role</div><div class="detail-static">${roleLabel(dirEntry?.role)}</div></div>
-        <div class="detail-row"><div class="detail-label">Job title</div><div class="detail-static">${dirEntry?.job_title || '—'}</div></div>
-        <div class="detail-row"><div class="detail-label">Email</div><div class="detail-static">${dirEntry?.email || '—'}</div></div>
-        <div class="detail-row"><div class="detail-label">Phone</div><div class="detail-static">${dirEntry?.contact_phone || '—'}</div></div>
+        <div class="detail-row"><div class="detail-label">Role</div><div class="detail-static">${escHtml(roleLabel(dirEntry?.role))}</div></div>
+        <div class="detail-row"><div class="detail-label">Job title</div><div class="detail-static">${escHtml(dirEntry?.job_title || '—')}</div></div>
+        <div class="detail-row"><div class="detail-label">Email</div><div class="detail-static">${escHtml(dirEntry?.email || '—')}</div></div>
+        <div class="detail-row"><div class="detail-label">Phone</div><div class="detail-static">${escHtml(dirEntry?.contact_phone || '—')}</div></div>
       </div>
       <div class="modal-save-bar">
         <button class="btn-small-outline" onclick="closeStaffProfile()">Close</button>
@@ -437,10 +438,10 @@ async function loadStaffDocuments(staffId, isAdmin){
   }
   el.innerHTML = data.map(d => `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #E8E3D8;font-size:13px;">
-      <span>${d.file_name}</span>
+      <span>${escHtml(d.file_name)}</span>
       <span>
-        <button class="btn-small-outline" onclick="downloadStaffDocument('${d.file_path}')">Download</button>
-        ${isAdmin ? `<button class="btn-small-danger" onclick="deleteStaffDocument('${d.id}','${d.file_path}','${staffId}')">Delete</button>` : ''}
+        <button class="btn-small-outline" data-path="${escHtml(d.file_path)}" onclick="downloadStaffDocument(this.dataset.path)">Download</button>
+        ${isAdmin ? `<button class="btn-small-danger" data-path="${escHtml(d.file_path)}" onclick="deleteStaffDocument('${escHtml(d.id)}', this.dataset.path, '${escHtml(staffId)}')">Delete</button>` : ''}
       </span>
     </div>
   `).join('');

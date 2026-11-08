@@ -312,9 +312,13 @@ button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-vi
 .ovhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:14px 0 2px;}
 .ovhead h4{font-size:14px;font-weight:700;margin:0;}
 .ovhead button{background:none;border:0;color:#534AB7;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;padding:0;}
+.who-h{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#534AB7;font-weight:700;margin:16px 0 8px;padding-top:12px;border-top:1px solid #EFEAE0;}
+.pl{display:grid;grid-template-columns:110px minmax(0,1.6fr) 110px 90px 90px 100px;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #F0ECE3;font-size:13.5px;cursor:pointer;}
+.pl:hover{background:#FAF8F3;} .pl-h{font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;color:#6B6A64;cursor:default;border-top:none;} .pl-h:hover{background:none;}
+@media (max-width: 760px){ .pl{grid-template-columns:90px minmax(0,1fr) 90px;} .pl>:nth-child(n+4){display:none;} }
 .refpager{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:10px;font-size:13px;}
 .refpager button[disabled]{opacity:.4;cursor:default;}
-.rv{margin-bottom:14px;} .rv-k{font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;color:#6B6A64;} .rv-v{font-size:14px;line-height:1.5;margin-top:3px;overflow-wrap:anywhere;}
+.rv{margin-bottom:14px;} .rv-link{font-size:14px;font-weight:600;margin:-4px 0 18px;} .rv-link a{color:#534AB7;text-decoration:none;} .rv-k{font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;color:#6B6A64;} .rv-v{font-size:14px;line-height:1.5;margin-top:3px;overflow-wrap:anywhere;}
 .refback{display:block;font-size:14px;font-weight:600;color:#534AB7;text-decoration:none;margin:0 0 12px;background:none;border:0;padding:0;cursor:pointer;font-family:inherit;}
 .ovlist{background:#fff;border:1px solid #CECBF6;border-radius:14px;padding:4px 18px;margin:-4px 0 14px;}
 .ovlist .wl:last-child{border-bottom:none;}
@@ -419,7 +423,7 @@ const REF = [
  {k:'audiences',t:'Audiences',view:'cards',d:'Who we talk to, what they worry about, and what we say to them.',title:'name',chip:'priority',cols:['priority','language','channels'],
   f:[['name','Segment','text'],['priority','Priority','select',['Primary','Secondary','Watch']],['who','Who they are','long'],['worries','What they worry about','long'],['message','Our message to them','long'],['channels','Where they are','text'],['language','Language','text']]},
  {k:'channels',t:'Channels',view:'cards',d:'Every account Bloom owns, and how each one gets fed.',title:'name',chip:'status',cols:['type','automation','status'],
-  f:[['name','Channel','text'],['type','Type','select',['Social','Messaging','Website','Email']],['handle','Handle or link','text'],['automation','How it is fed','select',['Buffer (automated)','Manual','Own app','Not set up']],['status','Status','select',['Active','To confirm','To create','Paused']],['audience','Main audience','text'],['notes','Notes','long']]},
+  f:[['name','Channel','text'],['type','Type','select',['Social','Messaging','Website','Email']],['handle','Link','url'],['automation','How it is fed','select',['Buffer (automated)','Manual','Own app','Not set up']],['status','Status','select',['Active','To confirm','To create','Paused']],['audience','Main audience','text'],['notes','Notes','long']]},
  {k:'groups',t:'Groups',view:'table',d:'Places where families already gather. Check the rules before posting.',title:'name',chip:'status',cols:['platform','audience','members','promo','status','last_posted'],
   f:[['name','Group','text'],['platform','Platform','select',['Facebook group','Redbook','WeChat group','LINE group','Forum','Other']],['url','Link','url'],['audience','Audience','select',AUD.slice(0,5)],['members','Members','text'],['promo','Promotion allowed','select',['Unknown','Yes','Specific days only','Admin approval','No']],['status','Status','select',['To verify','Joined','Pending approval','Active','Avoid']],['last_posted','Last posted','date'],['angle','Best angle','long'],['rules','Rules','long'],['notes','Notes','long']]},
  {k:'competitors',t:'Competitors',view:'table',d:'Who families compare us with, and where we differ.',title:'name',chip:'type',cols:['type','curriculum','fees','area'],
@@ -437,6 +441,10 @@ const LATE_BG = '#FCEBEB', LATE_TEXT = '#791F1F';
 const $ = (s,el=document)=>el.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeUrl = v => /^https?:\/\//i.test(String(v||'')) ? v : '';
+// Item 59: a link typed without https (facebook.com/BLOOM.chiangmai) still opens; a bare handle (@name) stays text.
+const linkify = v => { v = String(v||'').trim(); if(/^https?:\/\//i.test(v)) return v; if(/^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i.test(v)) return 'https://' + v; return ''; };
+const LINK_KEY = {groups:'url', channels:'handle', competitors:'url'};
+const linkOf = (k, r) => LINK_KEY[k] ? linkify(r[LINK_KEY[k]]) : '';
 const tone = v => { v=String(v||'');
   if(/^(Confirmed|Active|Posted|Done|Yes|Primary|Buffer)/.test(v)) return 'leaf';
   if(/^(Ready)/.test(v)) return 'blue';
@@ -455,7 +463,7 @@ const thisMonth = () => localISO(new Date()).slice(0,7);
 // ---------- Workflow ----------
 // Posts live in marketing_posts. Every change goes through the mkt_post() database function,
 // which checks who you are and which step the post is at.
-const STEP_LABEL = {english:'English', review:'Review', thai:'Thai', post:'Post', posted:'Posted', cancelled:'Cancelled'};
+const STEP_LABEL = {english:'English', review:'Review', thai:'Translate', post:'Post', posted:'Posted', cancelled:'Cancelled'};
 const STEP_ORDER = ['english','review','thai','post'];
 const STEP_BG = {english:'#EEEDFE', thai:'#FAEEDA', review:'#E6F1FB', post:'#E1F5EE', posted:'#F1EFE8', cancelled:'#FAECE7', back:'#FCEBEB'};
 const STEP_FG = {english:'#3C3489', thai:'#633806', review:'#0C447C', post:'#085041', posted:'#444441', cancelled:'#712B13', back:'#791F1F'};
@@ -463,7 +471,7 @@ let LABELS = [];
 const IMG_BUCKET = 'marketing-media';
 
 let POSTS = [], STAFF = {}, TEAM = {}, NO_ACCESS = new Set(), EVENTS = {}, PLAN = null, DATA = {}, loaded = false;
-let canEdit = false, canDelete = false, ME = null;
+let canEdit = false, canDelete = false, ME = null, LANGS = {};
 let refKey = 'facts', calMonth = null, calMode = 'month', postTimer = null;
 const filt = {q:'', s:''};
 
@@ -474,24 +482,18 @@ const myDuty = () => TEAM[ME] || null;
 const isOverseer = () => myDuty() === 'overseer';
 const isAdmin = () => canDelete;
 // The goal, deadline, budget and success measure: PICs, overseers and marketing full only.
-const canEditPlan = () => canEdit && (canDelete || ['pic','overseer'].includes(myDuty()));
-const writers = () => Object.keys(TEAM).filter(id => TEAM[id] === 'writer');
-const translators = () => Object.keys(TEAM).filter(id => TEAM[id] === 'translator');
-const isWriterish = () => ['writer','writer_backup'].includes(myDuty());
-const isTranslatorish = () => ['translator','translator_backup'].includes(myDuty());
+const canEditPlan = () => canEdit && canDelete;
+// Item 58: each post names its own writer, reviewer (pic) and translator.
+const members = () => Object.keys(TEAM).filter(id => STAFF[id] && STAFF[id].status === 'active').sort((a,b)=>STAFF[a].name.localeCompare(STAFF[b].name));
+const isWriterOf = p => !!p && p.writer === ME;
+const isTranslatorOf = p => !!p && p.translator === ME;
 const GOALS = [['inform','Inform'],['invite','Invite to an event'],['enrol','Get enrolments'],['celebrate','Celebrate or thank']];
 const FORMATS = [['post','Post'],['reel','Reel script'],['announcement','Short announcement']];
 const goalName = k => (GOALS.find(g=>g[0]===k)||[0,''])[1];
 const formatName = k => (FORMATS.find(g=>g[0]===k)||[0,''])[1];
 const audienceList = () => { const a = (DATA.audiences||[]).map(r=>r.name).filter(Boolean); return a.length ? a : ['Parents','Prospective families','Students','Community']; };
 // Backups see posts at their step in their own box, without them counting as their turn
-function backupFor(p){
-  const d = myDuty();
-  if(!openStep(p)) return false;
-  if(d === 'writer_backup') return ['english','post'].includes(p.step);
-  if(d === 'translator_backup') return p.step === 'thai';
-  return false;
-}
+function backupFor(p){ return false; }
 let SUGG = [], SPECIAL = [], HIDDEN = new Set();
 let VERSIONS = {}, AISTATUS = null, AI_SUG = null, SHOW_VERS = false;
 const AI_MSG = {
@@ -507,8 +509,8 @@ const openStep = p => !['posted','cancelled'].includes(p.step);
 
 // Who has the post now
 function ownerIds(p){
-  if(p.step === 'english' || p.step === 'post') return writers();
-  if(p.step === 'thai') return translators();
+  if(p.step === 'english' || p.step === 'post') return p.writer ? [p.writer] : [];
+  if(p.step === 'thai') return p.translator ? [p.translator] : [];
   if(p.step === 'review') return p.pic ? [p.pic] : [];
   return [];
 }
@@ -516,7 +518,7 @@ function ownerName(p){
   if(!openStep(p)) return '';
   const ids = ownerIds(p);
   if(ids.length) return ids.map(nameOf).join(', ');
-  return {english:'Writer (not set)', post:'Writer (not set)', thai:'Translator (not set)', review:'PIC (not set)'}[p.step] || '';
+  return {english:'Writer (not set)', post:'Writer (not set)', thai:'Translator (not set)', review:'Reviewer (not set)'}[p.step] || '';
 }
 const isMine = p => openStep(p) && ownerIds(p).includes(ME);
 // Due date for the step the post is at
@@ -546,7 +548,7 @@ async function loadAll(){
   const [posts, staff, team, labels, ent, sch, spec, hid, ais, acc] = await Promise.all([
     sb.from('marketing_posts').select('*').order('post_date', {ascending:true, nullsFirst:false}),
     sb.from('staff').select('id,name,status'),
-    sb.from('marketing_team').select('staff_id,duty'),
+    sb.from('marketing_team').select('staff_id,duty,langs'),
     sb.from('marketing_labels').select('name,default_pic,sort').order('sort'),
     sb.from('marketing_entries').select('id,collection,data,updated_at,updated_by').neq('collection','content').order('created_at'),
     sb.rpc('mkt_school_dates'),
@@ -558,7 +560,8 @@ async function loadAll(){
   if(posts.error){ showToast('Could not load posts: ' + posts.error.message); return; }
   POSTS = posts.data || [];
   STAFF = Object.fromEntries((staff.data||[]).map(s=>[s.id, s]));
-  TEAM = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, t.duty]));
+  TEAM = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, t.duty || 'member']));
+  LANGS = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, t.langs || '']));
   // Team members who cannot open the HQ (no Marketing edit). Unknown if the check failed.
   NO_ACCESS = new Set(((acc && acc.data) || []).filter(x=>!x.can_edit).map(x=>x.staff_id));
   LABELS = labels.data || [];
@@ -607,7 +610,7 @@ function tabsFor(){
   const d = myDuty(), t = [];
   // Item 46: everyone opens on Overview; your own work is behind the My turn badge.
   t.push(['overview','Overview']);
-  if(d !== 'overseer') t.push(['turn','My turn']);
+  t.push(['turn','My turn']);
   t.push(['calendar','Content']);
   t.push(['ref','Reference']);
   if(canDelete) t.push(['settings','Settings']);
@@ -675,35 +678,36 @@ function line(p, showWho){
 }
 const fmtShort = v => { const d = new Date(v+'T00:00:00'); return isNaN(d) ? esc(v) : d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); };
 
+function peopleLine(p){
+  const late = isLate(p), nm = id => id ? esc(nameOf(id)) : '<span class="muted">—</span>';
+  return `<div class="pl" onclick="go('post/${p.id}')"><span class="${late?'late-d':'muted'}">${p.post_date?fmtShort(p.post_date):'No date'}</span><span class="pt"><span class="ptt">${esc(p.title)}</span></span><span>${stepChip(p)}</span><span>${nm(p.writer)}</span><span>${nm(p.pic)}</span><span>${p.needs_thai?nm(p.translator):'<span class="muted">English only</span>'}</span></div>`;
+}
 // ---------- My turn ----------
 function myTurn(){
   const d = myDuty();
   const mine = POSTS.filter(p=>isMine(p) && (p.post_date || p.sent_back))
     .sort((a,b)=>(Number(isLate(b))-Number(isLate(a))) || String(dueOf(a)||'9').localeCompare(String(dueOf(b)||'9')));
-  const sub = {writer:'Write English, fix what comes back, post when it is ready', translator:'Translate approved English into Thai', writer_backup:'Backup writer', translator_backup:'Backup translator'}[d]
-    || 'Review and approve the posts you are in charge of';
+  const sub = 'The posts where you are named for the step they are at.';
   return `
-  ${['writer','writer_backup'].includes(d) ? notMarkedBox() : ''}
+  ${notMarked().some(p=>p.writer===ME) ? notMarkedBox() : ''}
   <div class="box">
     <h3 class="bh">${mine.length ? `Your turn: ${mine.length}` : 'All clear'}</h3>
     <p class="meta" style="font-size:13px;margin-bottom:6px">${sub}</p>
     ${mine.length ? mine.map(p=>line(p)).join('') : '<p class="meta" style="padding:10px 0">Nothing is waiting on you right now.</p>'}
     ${(()=>{ const n = POSTS.filter(p=>isMine(p) && !p.post_date && !p.sent_back).length;
-      return n ? `<p class="meta" style="padding:10px 0 0"><a href="javascript:void 0" onclick="calMode='ideas';go('calendar')">${n} idea${n>1?'s':''} with no date</a>. To use one, open it and set a date and person in charge with Edit topic.</p>` : ''; })()}
+      return n ? `<p class="meta" style="padding:10px 0 0"><a href="javascript:void 0" onclick="calMode='ideas';go('calendar')">${n} idea${n>1?'s':''} with no date</a>. To use one, open it and set a date and the people with Edit topic.</p>` : ''; })()}
   </div>
-  ${(()=>{ const bk = POSTS.filter(p=>backupFor(p) && p.post_date).sort((a,b)=>String(dueOf(a)).localeCompare(String(dueOf(b))));
-    return ['writer_backup','translator_backup'].includes(d) ? `<div class="box"><h3 class="bh">As backup</h3><p class="meta" style="font-size:13px;margin-bottom:6px">You cover these if the ${d==='writer_backup'?'writer':'translator'} is away. Step in when one is late.</p>${bk.length ? bk.map(p=>line(p)).join('') : '<p class="meta" style="padding:8px 0">Nothing at this step right now.</p>'}</div>` : ''; })()}
-  ${!writers().length || !translators().length ? `<p class="meta" style="margin-top:14px">${!writers().length?'No writer is set yet. ':''}${!translators().length?'No translator is set yet. ':''}${canDelete?'Set them in Settings.':''}</p>` : ''}`;
+  `;
 }
 
 // ---------- Item 41: posted on Facebook but not marked ----------
 const notMarked = () => POSTS.filter(p=>p.step==='post' && p.post_date && p.post_date < todayISO()).sort((a,b)=>a.post_date.localeCompare(b.post_date));
 function notMarkedBox(){
   const a = notMarked(); if(!a.length) return '';
-  const canMark = isAdmin() || ['writer','writer_backup'].includes(myDuty());
+  const canMarkP = p => isAdmin() || p.writer === ME;
   return `<div class="box" style="border-color:#EF9F27"><h3 class="bh">Posted? Not marked yet: ${a.length}</h3>
     <p class="meta" style="font-size:13px;margin-bottom:6px">These were due to go out and are still waiting at the Post step. If they are on Facebook, mark them so the numbers stay true.</p>
-    ${a.map(p=>`<div class="wl" style="cursor:default"><span class="late-d">${fmtShort(p.post_date)}</span><span class="pt"><a href="javascript:void 0" onclick="go('post/${p.id}')" class="ptt">${esc(p.title)}</a></span><span></span><span></span><span class="wl-act">${canMark?`<button class="btn-outline sm" onclick="quickMark('${p.id}')">Mark as posted</button>`:''}</span></div>`).join('')}
+    ${a.map(p=>`<div class="wl" style="cursor:default"><span class="late-d">${fmtShort(p.post_date)}</span><span class="pt"><a href="javascript:void 0" onclick="go('post/${p.id}')" class="ptt">${esc(p.title)}</a></span><span></span><span></span><span class="wl-act">${canMarkP(p)?`<button class="btn-outline sm" onclick="quickMark('${p.id}')">Mark as posted</button>`:''}</span></div>`).join('')}
   </div>`;
 }
 async function quickMark(id){
@@ -846,7 +850,7 @@ function calendarView(){
   if(calMode==='sugg'){ const a = openSugg();
     return head + `<div class="box"><p class="meta" style="font-size:13px;margin-bottom:6px">From the school calendar and the special dates list. Nothing is created until someone plans it.</p>${a.length ? a.map(sgLine).join('') : '<p class="meta" style="padding:8px 0">No suggestions left.</p>'}</div>`; }
   if(calMode==='ideas') return head + `<div class="box">${ideas.length ? ideas.map(p=>line(p,true)).join('') : '<p class="meta" style="padding:8px 0">No ideas waiting.</p>'}</div>`;
-  if(calMode==='list') return head + `<div class="box">${inMonth.length ? inMonth.map(p=>line(p,true)).join('') : '<p class="meta" style="padding:8px 0">Nothing planned this month.</p>'}</div>`;
+  if(calMode==='list') return head + `<div class="box">${inMonth.length ? `<div class="pl pl-h"><span>Date</span><span>Topic</span><span>Step</span><span>Writer</span><span>Reviewer</span><span>Translator</span></div>` + inMonth.map(peopleLine).join('') : '<p class="meta" style="padding:8px 0">Nothing planned this month.</p>'}</div>`;
   const first = new Date(y, m-1, 1), days = new Date(y, m, 0).getDate(), lead = first.getDay();
   let cells = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="dow">${d}</div>`).join('');
   for(let i=0;i<lead;i++) cells += '<div class="day out"></div>';
@@ -875,11 +879,11 @@ function syncNeedText(){
 function nextLine(p){
   const who = ids => ids.map(nameOf).filter(Boolean).join(' or ');
   const due = back => p.post_date ? fmtShort(addDays(p.post_date, -back)) : '';
-  const pic = nameOf(p.pic), tr = who(translators()), wr = who(writers());
+  const pic = nameOf(p.pic), tr = nameOf(p.translator), wr = nameOf(p.writer);
   const thaiPart = p.needs_thai ? (tr ? `${tr} does the Thai${due(1)?', due '+due(1):''}` : 'No translator set yet') : '';
   const postPart = wr ? `${wr} posts it${p.post_date?' on '+fmtShort(p.post_date):''}` : 'No writer set yet';
   const parts = {
-    english: [pic ? `${pic} reviews it${due(2)?', due '+due(2):''}` : 'No PIC set yet'],
+    english: [pic ? `${pic} reviews it${due(2)?', due '+due(2):''}` : 'No reviewer set yet'],
     review: [thaiPart || postPart],
     thai: [postPart],
     post: ['Post it on Facebook, then mark it as posted.']
@@ -915,19 +919,19 @@ async function renderPost(el){
     sb.from('marketing_post_versions').select('id,field,body,source,actor,created_at').eq('post_id', id).order('created_at', {ascending:false}).then(({data})=>{ VERSIONS[id] = data || []; if(postId()===id && !dirty() && !AI_SUG) renderPost($('#view')); });
   }
   const mine = isMine(p), pic = p.pic === ME, adm = isAdmin() && openStep(p), bk = backupFor(p);
-  const W = isWriterish(), T = isTranslatorish();
+  const W = isWriterOf(p), T = isTranslatorOf(p);
   const canEn = (W && ['english','post'].includes(p.step)) || (pic && p.step==='review') || adm;
   const canTh = p.needs_thai && ((T && p.step==='thai') || adm);
   const canTags = (W && ['english','post'].includes(p.step)) || (pic && p.step==='review') || adm;
   const canImg = (W && openStep(p)) || (pic && p.step==='review') || adm;
-  const canTopic = (p.created_by===ME || canDelete || (!p.created_by && isWriterish())) && openStep(p);
+  const canTopic = (p.created_by===ME || canDelete || (!p.created_by && isWriterOf(p))) && openStep(p);
   const canBrief = (p.created_by===ME || pic || isAdmin()) && p.step==='english';
   // Thai AI draft is available as soon as there is English (item 12): translator at Thai, writer at English, PIC at Review, admin.
   const canAiTh = p.needs_thai && openStep(p) && (canTh || (W && p.step==='english') || (pic && p.step==='review'));
   window._canEdit = { en: canEn, th: canTh || canAiTh };
   const steps = ['english', 'review', ...(p.needs_thai?['thai']:[]), 'post'];
   const cur = p.step==='posted' ? steps.length : steps.indexOf(p.step);
-  const bar = steps.map((s,i)=>`<span class="sb ${i<cur?'done':i===cur?'now':''}"><span class="sd">${i<cur?'&#10003;':i+1}</span>${STEP_LABEL[s]}${s==='review'?` · ${esc(nameOf(p.pic)||'PIC not set')}`:''}</span>`).join('<span class="sl"></span>');
+  const bar = steps.map((s,i)=>`<span class="sb ${i<cur?'done':i===cur?'now':''}"><span class="sd">${i<cur?'&#10003;':i+1}</span>${STEP_LABEL[s]}${{english:p.writer,review:p.pic,thai:p.translator,post:p.writer}[s]!==undefined?` · ${esc(nameOf({english:p.writer,review:p.pic,thai:p.translator,post:p.writer}[s])||'not set')}`:''}</span>`).join('<span class="sl"></span>');
   const imgs = (p.images||[]);
   const canAct = mine || bk || adm;
   const asAdmin = !mine && !bk && adm ? ' <span class="adm">(as admin)</span>' : '';
@@ -936,7 +940,7 @@ async function renderPost(el){
     if(p.step==='english') actions = `<span class="needtext" data-for="copy_en" data-msg="Write the English first, then send it to Review."><button class="btn-primary" onclick="doAct('send_on')">Send to Review</button></span>`;
     if(p.step==='review' && (pic || adm)) actions = `<input id="f-note" placeholder="Note to the writer (needed to send back)" class="note-in">
       <button class="btn-outline" onclick="doAct('send_back')">Send back to English</button>
-      <button class="btn-primary" onclick="doAct('approve')">${p.en_written_by===ME&&isAdmin()?'Approve my own post':'Approve'}${p.needs_thai?', send to Thai':', send to Post'}</button>`;
+      <button class="btn-primary" onclick="doAct('approve')">${p.en_written_by===ME&&isAdmin()?'Approve my own post':'Approve'}${p.needs_thai?', send to Translate':', send to Post'}</button>`;
     if(p.step==='thai') actions = `<input id="f-note" placeholder="Note if the English is wrong" class="note-in">
       <button class="btn-outline" onclick="doAct('translator_back')">Send back to Review</button>
       <span class="needtext" data-for="copy_th" data-msg="Write the Thai or use Draft Thai with AI first."><button class="btn-primary" onclick="doAct('thai_checked')">Thai done, send to Post</button></span>`;
@@ -946,7 +950,7 @@ async function renderPost(el){
       <input id="f-url" placeholder="Facebook link (optional)" class="note-in">
       <button class="btn-primary" onclick="doAct('mark_posted')">Mark as posted</button>`;
   }
-  const stepWho = {english:'the writer', review:(nameOf(p.pic)||'the PIC')+' (PIC)', thai:'the translator', post:'the writer'}[p.step] || '';
+  const stepWho = {english:nameOf(p.writer)||'the writer', review:nameOf(p.pic)||'the reviewer', thai:nameOf(p.translator)||'the translator', post:nameOf(p.writer)||'the writer'}[p.step] || '';
   const adminLine = actions && asAdmin ? `<p class="adminline">You're doing ${esc(stepWho)}'s step as admin. This is logged.</p>` : '';
   const nextHint = !openStep(p) ? '' : nextLine(p);
   const briefHtml = (p.brief_goal || p.brief_format || (p.brief_audience||[]).length || p.brief)
@@ -1212,11 +1216,13 @@ async function removeImg(i){
 }
 
 // ---------- New topic / edit topic ----------
-function picOptions(sel){
-  const ok = Object.keys(TEAM).filter(id=>TEAM[id]==='pic' && STAFF[id] && STAFF[id].status==='active').map(id=>STAFF[id]).sort((a,b)=>a.name.localeCompare(b.name));
-  return `<option value="">Choose a person</option>` + ok.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''} ${NO_ACCESS.has(s.id)&&s.id!==sel?'disabled':''}>${esc(s.name)}${NO_ACCESS.has(s.id)?' (no HQ access yet)':''}</option>`).join('')
-    + (sel && !ok.some(s=>s.id===sel) && STAFF[sel] ? `<option value="${sel}" selected>${esc(STAFF[sel].name)} (no longer a PIC)</option>` : '');
+// Anyone on the HQ team can be picked for any role on a post. Languages show next to the name.
+function personOptions(sel, empty){
+  const ok = members().map(id=>STAFF[id]);
+  return `<option value="">${empty||'Choose a person'}</option>` + ok.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''} ${NO_ACCESS.has(s.id)&&s.id!==sel?'disabled':''}>${esc(s.name)}${LANGS[s.id]?' · '+esc(LANGS[s.id]):''}${NO_ACCESS.has(s.id)?' (no HQ access yet)':''}</option>`).join('')
+    + (sel && !ok.some(s=>s.id===sel) && STAFF[sel] ? `<option value="${sel}" selected>${esc(STAFF[sel].name)} (not on the team)</option>` : '');
 }
+const picOptions = sel => personOptions(sel);
 function briefFields(p){
   const aud = p.brief_audience || [], list = [...audienceList(), ...aud.filter(a=>!audienceList().includes(a))];
   return `
@@ -1253,8 +1259,11 @@ function topicForm(p, withBrief){
     <div class="grid-2"><div class="f"><label>Posting date</label><input name="post_date" type="date" value="${esc(p.post_date||'')}"></div>
       <div class="f"><label>Time <span class="hint">optional</span></label><input name="post_time" type="time" value="${esc(p.post_time||'')}"></div></div>
     <div class="f"><label>Label <span class="hint">optional</span></label><select name="label" onchange="labelPicked(this.value)"><option value="">Choose a label</option>${LABELS.map(l=>`<option ${l.name===p.label?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div>
-    <div class="f"><label>Person in charge <span class="hint">needed before Send to Review</span></label><select name="pic" onchange="this.dataset.touched='1'">${picOptions(p.pic)}</select></div>
-    <div class="f"><label>Thai version</label><select name="needs_thai"><option value="true" ${thai==='true'?'selected':''}>Needed</option><option value="false" ${thai==='false'?'selected':''}>English only</option></select></div>
+    <h4 class="who-h">Who does this post</h4>
+    <div class="f"><label>Writer</label><select name="writer">${personOptions(p.writer === undefined ? (TEAM[ME] ? ME : '') : p.writer)}</select></div>
+    <div class="f"><label>Reviewer <span class="hint">needed before Send to Review</span></label><select name="pic" onchange="this.dataset.touched='1'">${personOptions(p.pic)}</select></div>
+    <div class="f"><label>Translation</label><select name="needs_thai" onchange="$('#trWrap').style.display=this.value==='true'?'':'none'"><option value="true" ${thai==='true'?'selected':''}>Thai needed</option><option value="false" ${thai==='false'?'selected':''}>English only</option></select></div>
+    <div class="f" id="trWrap" style="${thai==='true'?'':'display:none'}"><label>Translator <span class="hint">needed before Send to Review</span></label><select name="translator">${personOptions(p.translator, 'Choose later')}</select></div>
     ${withBrief ? `<p style="margin:10px 0"><a href="javascript:void 0" onclick="$('#briefWrap').style.display='';this.parentElement.remove()">+ Add a brief (the AI writes better with it)</a></p><div id="briefWrap" style="display:none"><h4 style="font-size:13px;margin:16px 0 8px;color:#5F5E5A">Brief for the writer</h4>${briefFields(p)}</div>` : ''}`;
 }
 // A label suggests who usually approves it, unless a person was already picked by hand.
@@ -1265,9 +1274,9 @@ function labelPicked(name){
 }
 function topicPayload(){
   const fd = new FormData($('#fm')), o = {};
-  ['title','post_date','post_time','pic','label'].forEach(k=>o[k] = String(fd.get(k)||'').trim());
-  // Leave out an empty label or PIC: not set yet is fine, and an edit never clears one by accident.
-  ['pic','label'].forEach(k=>{ if(!o[k]) delete o[k]; });
+  ['title','post_date','post_time','pic','label','writer','translator'].forEach(k=>o[k] = String(fd.get(k)||'').trim());
+  // Leave out an empty label, reviewer, writer or translator: not set yet is fine, and an edit never clears one by accident.
+  ['pic','label','writer','translator'].forEach(k=>{ if(!o[k]) delete o[k]; });
   const t = String(fd.get('needs_thai')||'');
   if(t) o.needs_thai = t === 'true';
   return o;
@@ -1288,7 +1297,7 @@ function newTopic(date, pre, suggKey){
     if(miss){ $('#msg').textContent = miss; return; }
     const r = await act('create', null, o); if(!r) return;
     if(suggKey){ await sb.from('marketing_hidden_suggestions').insert({ key: suggKey }); HIDDEN.add(suggKey); }
-    closeD(); showToast(o.pic ? 'Created. It is now with the writer.' : 'Created. Set the person in charge before it goes to Review.'); await reloadPosts(true); go('post/'+r.id);
+    closeD(); showToast(o.pic ? 'Created. It is now with the writer.' : 'Created. Set the reviewer before it goes to Review.'); await reloadPosts(true); go('post/'+r.id);
   };
   setTimeout(()=>{ const f = $('#fm [name="title"]'); if(f) f.focus(); }, 50);
 }
@@ -1310,28 +1319,26 @@ async function cancelPost(id){
 }
 
 // ---------- Team (marketing full only) ----------
-const DUTIES_ALL = [['writer','Writer'],['writer_backup','Backup writer'],['translator','Translator'],['translator_backup','Backup translator'],['pic','Person in charge'],['overseer','Overseer']];
-const DUTIES = DUTIES_ALL.filter(d=>['writer','translator','pic'].includes(d[0]));
-const DUTY_NOTE = {writer:'Writes English and posts', writer_backup:'Covers the writer when away', translator:'Translates approved English', translator_backup:'Covers the translator when away', pic:'Reviews and approves posts', overseer:'Sees everything. As admin, can step in at any step'};
+// Item 58: the team is just who takes part. Roles are picked on each post.
 function teamView(){
-  const members = Object.keys(TEAM).filter(id=>STAFF[id]).sort((a,b)=>DUTIES.findIndex(d=>d[0]===TEAM[a]) - DUTIES.findIndex(d=>d[0]===TEAM[b]) || STAFF[a].name.localeCompare(STAFF[b].name));
+  const ms = members();
   const others = Object.values(STAFF).filter(s=>s.status==='active' && !TEAM[s.id]).sort((a,b)=>a.name.localeCompare(b.name));
-  const pics = Object.keys(TEAM).filter(id=>TEAM[id]==='pic' && STAFF[id]);
+  const pics = ms;
   const sel = 'style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px;background:#fff"';
   return `<div class="box"><h3 class="bh">Marketing team</h3>
-    <p class="meta" style="font-size:13px;margin-bottom:6px">Only people listed here take part. People also need Marketing access in Permissions to open the HQ.</p>
-    ${members.length ? members.map(id=>`<div class="tm"><span style="font-weight:600">${esc(STAFF[id].name)}</span>
-      <select onchange="setDuty('${id}', this.value)" ${sel}>${DUTIES_ALL.filter(d=>DUTIES.includes(d)||TEAM[id]===d[0]).map(([v,l])=>`<option value="${v}" ${TEAM[id]===v?'selected':''}>${l}</option>`).join('')}</select>
-      <span class="muted">${NO_ACCESS.has(id)?'<span style="color:#A23F1C;font-weight:600">Cannot open the HQ yet: give Marketing edit in Permissions</span>':(DUTY_NOTE[TEAM[id]]||'')}</span>
-      <button class="link-btn" style="color:#A23F1C" onclick="removeMember('${id}')">Remove</button></div>`).join('') : '<p class="meta" style="padding:8px 0">No one yet.</p>'}
-    ${others.length ? `<div class="tm add"><select id="addWho" ${sel}><option value="">Add a person</option>${others.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>
-      <select id="addRole" ${sel}>${DUTIES.map(([v,l])=>`<option value="${v}" ${v==='pic'?'selected':''}>${l}</option>`).join('')}</select>
+    <p class="meta" style="font-size:13px;margin-bottom:6px">Anyone here can be picked as writer, reviewer or translator on a post. People also need Marketing access in Permissions to open the HQ.</p>
+    ${ms.length ? ms.map(id=>`<div class="tm"><span style="font-weight:600">${esc(STAFF[id].name)}</span>
+      <input data-id="${id}" value="${esc(LANGS[id]||'')}" placeholder="Languages, e.g. English, Thai" onchange="setLangs(this.dataset.id, this.value)" ${canDelete?'':'disabled'} style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
+      <span class="muted">${NO_ACCESS.has(id)?'<span style="color:#A23F1C;font-weight:600">Cannot open the HQ yet: give Marketing edit in Permissions</span>':''}</span>
+      ${canDelete?`<button class="link-btn" style="color:#A23F1C" onclick="removeMember('${id}')">Remove</button>`:'<span></span>'}</div>`).join('') : '<p class="meta" style="padding:8px 0">No one yet.</p>'}
+    ${others.length && canDelete ? `<div class="tm add"><select id="addWho" ${sel}><option value="">Add a person</option>${others.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>
+      <input id="addLangs" placeholder="Languages" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
       <span></span><button class="btn-primary sm" onclick="addMember()">Add</button></div>` : ''}
   </div>
   <div class="box"><h3 class="bh">Labels</h3>
-    <p class="meta" style="font-size:13px;margin-bottom:6px">Every topic needs a label. Picking a label suggests who usually approves it. The person can still be changed on each post.</p>
+    <p class="meta" style="font-size:13px;margin-bottom:6px">Picking a label on a topic suggests its usual reviewer. The reviewer can still be changed on each post.</p>
     ${LABELS.map(l=>`<div class="tm"><span style="font-weight:600">${esc(l.name)}</span>
-      <select data-name="${esc(l.name)}" onchange="setLabelPic(this.dataset.name, this.value)" ${sel}><option value="">No usual person</option>${pics.map(id=>`<option value="${id}" ${l.default_pic===id?'selected':''}>${esc(STAFF[id].name)}</option>`).join('')}</select>
+      <select data-name="${esc(l.name)}" onchange="setLabelPic(this.dataset.name, this.value)" ${sel}><option value="">No usual reviewer</option>${pics.map(id=>`<option value="${id}" ${l.default_pic===id?'selected':''}>${esc(STAFF[id].name)}</option>`).join('')}</select>
       <span class="muted">${(n=>n+' post'+(n===1?'':'s'))(POSTS.filter(p=>p.label===l.name).length)}</span>
       <button class="link-btn" style="color:#A23F1C" data-name="${esc(l.name)}" onclick="removeLabel(this.dataset.name)">Remove</button></div>`).join('')}
     <div class="tm add"><input id="newLabel" placeholder="New label" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
@@ -1366,19 +1373,21 @@ async function removeSpecial(id){
   if(error){ showToast('Could not remove: ' + error.message); return; }
   showToast('Removed.'); loadAll();
 }
-async function setDuty(id, duty){
-  const { error } = await sb.from('marketing_team').upsert({ staff_id:id, duty }, { onConflict:'staff_id' });
-  if(error){ showToast('Could not save: ' + error.message); render(); return; }
-  TEAM[id] = duty; showToast('Saved.'); render();
-}
 async function addMember(){
-  const id = $('#addWho').value, duty = $('#addRole').value;
+  const id = $('#addWho').value, langs = ($('#addLangs').value||'').trim();
   if(!id){ showToast('Pick a person to add.'); return; }
-  await setDuty(id, duty);
+  const { error } = await sb.from('marketing_team').upsert({ staff_id:id, langs: langs || null }, { onConflict:'staff_id' });
+  if(error){ showToast('Could not add: ' + error.message); return; }
+  TEAM[id] = 'member'; LANGS[id] = langs; showToast('Added.'); await loadAll();
+}
+async function setLangs(id, langs){
+  const { error } = await sb.from('marketing_team').update({ langs: langs.trim() || null }).eq('staff_id', id);
+  if(error){ showToast('Could not save: ' + error.message); return; }
+  LANGS[id] = langs.trim(); showToast('Saved.');
 }
 async function removeMember(id){
-  const open = POSTS.filter(p=>openStep(p) && p.pic===id).length;
-  if(!confirm(`Remove ${STAFF[id].name} from the marketing team?` + (open ? ` They are person in charge on ${open} post${open>1?'s':''} in progress, which will need a new person.` : ''))) return;
+  const open = POSTS.filter(p=>openStep(p) && [p.pic, p.writer, p.translator].includes(id)).length;
+  if(!confirm(`Remove ${STAFF[id].name} from the marketing team?` + (open ? ` They are named on ${open} post${open>1?'s':''} in progress, which will need someone else.` : ''))) return;
   const { error } = await sb.from('marketing_team').delete().eq('staff_id', id);
   if(error){ showToast('Could not remove: ' + error.message); return; }
   delete TEAM[id]; showToast('Removed.'); render();
@@ -1423,13 +1432,14 @@ function refPage(k, d){ REF_PAGE[k] = (REF_PAGE[k] || 0) + d; render(); window.s
 function viewRef(k, id){
   const s = SEC[k], r = (DATA[k]||[]).find(x=>x.id===id); if(!r) return;
   cur = {k, id, view:true};
-  const kv = s.f.filter(f=>f[0]!==s.title && r[f[0]]).map(f => {
+  const lk = LINK_KEY[k], link = linkOf(k, r);
+  const kv = s.f.filter(f=>f[0]!==s.title && f[0]!==lk && r[f[0]]).map(f => {
     const v = r[f[0]];
     const val = f[2]==='url' && safeUrl(v) ? `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(String(v).replace(/^https?:\/\/(www\.)?/,'').slice(0,60))}</a>` : f[2]==='date' ? fmtDate(v) : f[2]==='select' ? chip(v) : esc(v).replace(/\n/g,'<br>');
     return `<div class="rv"><div class="rv-k">${esc(f[1])}</div><div class="rv-v">${val}</div></div>`; }).join('');
   $('#drawer').className = 'drawer';
   $('#drawer').innerHTML = `<header><h3>${esc(r[s.title]||'Entry')}</h3><button class="x" onclick="closeD()" aria-label="Close">×</button></header>
-    <div class="body">${kv || '<p class="meta">No details yet.</p>'}${metaLine(r)}</div>
+    <div class="body">${lk ? `<p class="rv-link">${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(String(r[lk]).replace(/^https?:\/\/(www\.)?/,'').slice(0,60))} &#8599;</a>` : r[lk] ? `<span class="muted">${esc(r[lk])}</span>` : `<span class="muted">No link yet</span>${canEdit?` · <a href="javascript:void 0" onclick="editRef('${k}','${id}')">Add link</a>`:''}`}</p>` : ''}${kv || '<p class="meta">No details yet.</p>'}${metaLine(r)}</div>
     <footer><div></div><div style="display:flex;gap:8px"><button class="btn-outline" onclick="closeD()">Close</button>${canEdit?`<button class="btn-primary" onclick="editRef('${k}','${id}')">Edit</button>`:''}</div></footer>`;
   $('#dw').classList.add('dw-open');
 }
@@ -1438,7 +1448,7 @@ function cell(s,key,v){ const f = s.f.find(x=>x[0]===key); if(!f) return esc(v);
   if(f[2]==='date') return fmtDate(v); if(f[2]==='select') return chip(v); if(f[2]==='long') return `<span class="clip">${esc(v)}</span>`; return esc(v); }
 function table(s,rows){
   return `<div class="tbl"><table><thead><tr><th>${label(s,s.title)}</th>${s.cols.map(c=>`<th>${label(s,c)}</th>`).join('')}</tr></thead><tbody>
-  ${rows.map(r=>`<tr onclick="viewRef('${s.k}','${r.id}')"><td class="main">${esc(r[s.title])}${safeUrl(r.url)?` <a href="${esc(r.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:400;font-size:12px">link</a>`:''}</td>
+  ${rows.map(r=>`<tr onclick="viewRef('${s.k}','${r.id}')"><td class="main">${esc(r[s.title])}${linkOf(s.k, r)?` <a href="${esc(linkOf(s.k, r))}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:400;font-size:12px">link</a>`:''}</td>
   ${s.cols.map(c=>`<td>${cell(s,c,r[c])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
 function cards(s,rows){

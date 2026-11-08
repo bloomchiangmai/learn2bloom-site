@@ -81,14 +81,18 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
   <div id="authLoading" style="text-align:center;padding:80px 20px;color:#888780;font-size:14px;">Loading…</div>
 
   <div id="pageContent" style="display:none;">
-    <div class="top-bar">
+    <div class="top-bar" style="align-items:flex-end;gap:16px;flex-wrap:wrap;">
       <div>
-        <div class="eyebrow">Staff Admin</div>
+        <div class="eyebrow">Students</div>
         <h1>Admissions</h1>
+        <p style="font-size:15px;color:#5F5E5A;margin-top:6px;">Every enquiry and application, from first message to enrolled.</p>
       </div>
+      <button class="btn-primary" id="addAppBtn" onclick="toggleAddCard()" style="display:none;">+ Add application</button>
     </div>
 
-    <div class="card" id="addApplicationCard">
+    <div id="admTabs" style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px;"></div>
+
+    <div class="card" id="addApplicationCard" style="display:none;">
       <h2>Add a new application</h2>
       <div class="form-grid">
         <div>
@@ -214,7 +218,6 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
     </div>
 
     <div class="card">
-      <h2>Pipeline</h2>
 
       <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
         <input type="text" id="searchInput" placeholder="Search by name or family…" oninput="applyFiltersAndRender()" style="flex:1;min-width:220px;padding:10px 12px;border:1px solid #E8E3D8;border-radius:8px;font-size:14px;background:#fff;">
@@ -279,6 +282,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
 </div>
 
 <script>
+const escHtml = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let allData = [];
 let currentPage = 1;
 const pageSize = 15;
@@ -314,7 +318,8 @@ function applyFiltersAndRender(){
   const sortMode = document.getElementById('sortMode').value;
   const statuses = ['enquiry','application','interview','approved','offer_sent','payment_received','withdrawn'];
 
-  let filtered = allData.filter(s => {
+  renderAdmTabs();
+  let filtered = allData.filter(s => tabOf(s) === ADM_TAB).filter(s => {
     if(!query) return true;
     const haystack = [
       s.first_name, s.last_name,
@@ -329,7 +334,7 @@ function applyFiltersAndRender(){
   // 'recent' keeps the original created_at desc order from the query
 
   if(!filtered.length){
-    tbody.innerHTML = `<tr><td colspan="5" style="color:#888780;">${query ? 'No matching applications.' : 'No applications in the pipeline.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="color:#888780;">${query ? 'No matching applications.' : ({new:'No new enquiries.', progress:'No applications in progress.', withdrawn:'No withdrawn applications.'}[ADM_TAB])}</td></tr>`;
     document.getElementById('pageInfo').textContent = '';
     document.getElementById('prevPageBtn').disabled = true;
     document.getElementById('nextPageBtn').disabled = true;
@@ -344,11 +349,11 @@ function applyFiltersAndRender(){
   tbody.innerHTML = pageData.map((s, i) => `
     <tr>
       <td>${start + i + 1}</td>
-      <td><a href="javascript:void(0)" onclick="openModal('${s.id}')" style="color:#534AB7;font-weight:600;text-decoration:none;">${s.first_name} ${s.last_name}</a></td>
-      <td>${s.families ? s.families.family_name : '—'}</td>
-      <td>${s.class_group || '—'}</td>
+      <td><a href="javascript:void(0)" onclick="openModal('${escHtml(s.id)}')" style="color:#534AB7;font-weight:600;text-decoration:none;">${escHtml(s.first_name)} ${escHtml(s.last_name)}</a></td>
+      <td>${escHtml(s.families ? s.families.family_name : '—')}</td>
+      <td>${escHtml(s.class_group || '—')}</td>
       <td>
-        <select class="status-select" onchange="updateStatus('${s.id}', this.value)">
+        <select class="status-select" onchange="updateStatus('${escHtml(s.id)}', this.value)">
           ${statuses.map(st => `<option value="${st}" ${st===s.status?'selected':''}>${st.replace('_',' ')}</option>`).join('')}
         </select>
       </td>
@@ -358,6 +363,24 @@ function applyFiltersAndRender(){
   document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages} · ${filtered.length} application${filtered.length === 1 ? '' : 's'}`;
   document.getElementById('prevPageBtn').disabled = currentPage <= 1;
   document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+}
+
+// Tabs: New (enquiries), In progress, Withdrawn here; Enrolled and Archived open their own pages.
+let ADM_TAB = ['new','progress','withdrawn'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'new';
+const tabOf = s => s.status === 'enquiry' ? 'new' : s.status === 'withdrawn' ? 'withdrawn' : 'progress';
+function renderAdmTabs(){
+  const n = k => allData.filter(s => tabOf(s) === k).length;
+  const pill = (on, label, attrs) => `<a ${attrs} style="font-size:14px;font-weight:600;padding:8px 16px;border-radius:999px;text-decoration:none;cursor:pointer;${on ? 'background:#534AB7;color:#fff;border:1px solid #534AB7;' : 'background:#fff;color:#2C2C2A;border:1px solid #E8E3D8;'}">${label}</a>`;
+  document.getElementById('admTabs').innerHTML =
+    [['new','New'],['progress','In progress'],['withdrawn','Withdrawn']].map(([k,l]) => pill(ADM_TAB === k, `${l} <span style="opacity:.75;font-size:12px;">${n(k)}</span>`, `href="#${k}" onclick="setAdmTab('${k}');return false;"`)).join('')
+    + pill(false, 'Enrolled', 'href="learners.html"') + pill(false, 'Archived', 'href="archive.html"');
+}
+function setAdmTab(k){ ADM_TAB = k; currentPage = 1; history.replaceState(null, '', '#' + k); applyFiltersAndRender(); }
+function toggleAddCard(){
+  const c = document.getElementById('addApplicationCard'), open = c.style.display === 'none';
+  c.style.display = open ? 'block' : 'none';
+  document.getElementById('addAppBtn').textContent = open ? 'Close' : '+ Add application';
+  if(open) document.getElementById('firstName').focus();
 }
 
 function changePage(delta){
@@ -402,23 +425,23 @@ function renderModal(studentId, editMode){
   const field = (label, value, inputHtml) => `
     <div class="detail-row">
       <div class="detail-label">${label}</div>
-      ${editMode ? inputHtml : `<div class="detail-value">${value || '—'}</div>`}
+      ${editMode ? inputHtml : `<div class="detail-value">${escHtml(value || '—')}</div>`}
     </div>`;
 
   document.getElementById('modalContent').innerHTML = `
-    <h2>${s.first_name} ${s.last_name}</h2>
-    <p class="modal-sub">${fam.family_name || 'No family on file'} · Status: ${s.status.replace('_',' ')}</p>
+    <h2>${escHtml(s.first_name)} ${escHtml(s.last_name)}</h2>
+    <p class="modal-sub">${escHtml(fam.family_name || 'No family on file')} · Status: ${s.status.replace('_',' ')}</p>
 
     <div class="detail-section">
       <h3>Internal notes (staff only)</h3>
-      ${field('Notes', s.staff_notes, `<textarea class="detail-input" id="f-staff-notes" rows="3" style="resize:vertical;">${s.staff_notes || ''}</textarea>`)}
+      ${field('Notes', s.staff_notes, `<textarea class="detail-input" id="f-staff-notes" rows="3" style="resize:vertical;">${escHtml(s.staff_notes || '')}</textarea>`)}
     </div>
 
     <div class="detail-section">
       <h3>Learner details</h3>
-      ${field('First name', s.first_name, `<input class="detail-input" id="f-first-name" value="${s.first_name || ''}">`)}
-      ${field('Last name', s.last_name, `<input class="detail-input" id="f-last-name" value="${s.last_name || ''}">`)}
-      ${field('Date of birth', s.date_of_birth, `<input class="detail-input" type="date" id="f-dob" value="${s.date_of_birth || ''}">`)}
+      ${field('First name', s.first_name, `<input class="detail-input" id="f-first-name" value="${escHtml(s.first_name || '')}">`)}
+      ${field('Last name', s.last_name, `<input class="detail-input" id="f-last-name" value="${escHtml(s.last_name || '')}">`)}
+      ${field('Date of birth', s.date_of_birth, `<input class="detail-input" type="date" id="f-dob" value="${escHtml(s.date_of_birth || '')}">`)}
       ${field('Class group', s.class_group, `
         <select class="detail-input" id="f-class-group">
           <option value="" ${!s.class_group?'selected':''}>— Select —</option>
@@ -433,19 +456,19 @@ function renderModal(studentId, editMode){
           <option ${studIntake.gender==='Male'?'selected':''}>Male</option>
           <option ${studIntake.gender==='Female'?'selected':''}>Female</option>
         </select>`)}
-      ${field('Nationality', studIntake.nationality, `<input class="detail-input" id="f-nationality" value="${studIntake.nationality || ''}">`)}
-      ${field('First language', studIntake.first_language, `<input class="detail-input" id="f-first-language" value="${studIntake.first_language || ''}">`)}
-      ${field('Other languages', studIntake.other_languages, `<input class="detail-input" id="f-other-languages" value="${studIntake.other_languages || ''}">`)}
-      ${field('Current school', studIntake.current_school, `<input class="detail-input" id="f-current-school" value="${studIntake.current_school || ''}">`)}
-      ${field('Previous school', studIntake.previous_school, `<input class="detail-input" id="f-previous-school" value="${studIntake.previous_school || ''}">`)}
-      ${field('Allergies / Medical Conditions', studIntake.health_learning_notes, `<input class="detail-input" id="f-health-notes" value="${studIntake.health_learning_notes || ''}">`)}
+      ${field('Nationality', studIntake.nationality, `<input class="detail-input" id="f-nationality" value="${escHtml(studIntake.nationality || '')}">`)}
+      ${field('First language', studIntake.first_language, `<input class="detail-input" id="f-first-language" value="${escHtml(studIntake.first_language || '')}">`)}
+      ${field('Other languages', studIntake.other_languages, `<input class="detail-input" id="f-other-languages" value="${escHtml(studIntake.other_languages || '')}">`)}
+      ${field('Current school', studIntake.current_school, `<input class="detail-input" id="f-current-school" value="${escHtml(studIntake.current_school || '')}">`)}
+      ${field('Previous school', studIntake.previous_school, `<input class="detail-input" id="f-previous-school" value="${escHtml(studIntake.previous_school || '')}">`)}
+      ${field('Allergies / Medical Conditions', studIntake.health_learning_notes, `<input class="detail-input" id="f-health-notes" value="${escHtml(studIntake.health_learning_notes || '')}">`)}
     </div>
 
     <div class="detail-section">
       <h3>Parent / family contact</h3>
-      ${field('Family name', fam.family_name, `<input class="detail-input" id="f-family-name" value="${fam.family_name || ''}">`)}
-      ${field('Email', fam.contact_email, `<input class="detail-input" id="f-email" value="${fam.contact_email || ''}">`)}
-      ${field('Phone', fam.contact_phone, `<input class="detail-input" id="f-phone" value="${fam.contact_phone || ''}">`)}
+      ${field('Family name', fam.family_name, `<input class="detail-input" id="f-family-name" value="${escHtml(fam.family_name || '')}">`)}
+      ${field('Email', fam.contact_email, `<input class="detail-input" id="f-email" value="${escHtml(fam.contact_email || '')}">`)}
+      ${field('Phone', fam.contact_phone, `<input class="detail-input" id="f-phone" value="${escHtml(fam.contact_phone || '')}">`)}
       ${field('Preferred contact', famIntake.preferred_contact, `
         <select class="detail-input" id="f-preferred-contact">
           <option value="" ${!famIntake.preferred_contact?'selected':''}>— Select —</option>
@@ -454,38 +477,38 @@ function renderModal(studentId, editMode){
           <option ${famIntake.preferred_contact==='WeChat'?'selected':''}>WeChat</option>
           <option ${famIntake.preferred_contact==='Email'?'selected':''}>Email</option>
         </select>`)}
-      ${field('Line / WeChat ID', famIntake.line_wechat_id, `<input class="detail-input" id="f-line-wechat" value="${famIntake.line_wechat_id || ''}">`)}
+      ${field('Line / WeChat ID', famIntake.line_wechat_id, `<input class="detail-input" id="f-line-wechat" value="${escHtml(famIntake.line_wechat_id || '')}">`)}
     </div>
 
     <div class="detail-section">
       <h3>Emergency contact</h3>
-      ${field('Name', famIntake.emergency_name, `<input class="detail-input" id="f-emergency-name" value="${famIntake.emergency_name || ''}">`)}
-      ${field('Relationship', famIntake.emergency_relationship, `<input class="detail-input" id="f-emergency-relationship" value="${famIntake.emergency_relationship || ''}">`)}
+      ${field('Name', famIntake.emergency_name, `<input class="detail-input" id="f-emergency-name" value="${escHtml(famIntake.emergency_name || '')}">`)}
+      ${field('Relationship', famIntake.emergency_relationship, `<input class="detail-input" id="f-emergency-relationship" value="${escHtml(famIntake.emergency_relationship || '')}">`)}
       ${field('Number', ((famIntake.emergency_country_code || '') + ' ' + (famIntake.emergency_number || '')).trim(), `<input class="detail-input" id="f-emergency-number" value="${(famIntake.emergency_country_code || '') + ' ' + (famIntake.emergency_number || '')}">`)}
     </div>
 
     <div class="detail-section">
       <h3>Interest &amp; learning hopes</h3>
-      ${field('What interests them', famIntake.bcm_interest, `<input class="detail-input" id="f-bcm-interest" value="${famIntake.bcm_interest || ''}">`)}
-      ${field('More on interest', famIntake.bcm_interest_more, `<input class="detail-input" id="f-bcm-interest-more" value="${famIntake.bcm_interest_more || ''}">`)}
-      ${field('Learning hopes', famIntake.learning_hopes, `<input class="detail-input" id="f-learning-hopes" value="${famIntake.learning_hopes || ''}">`)}
-      ${field('More on learning hopes', famIntake.learning_hopes_more, `<input class="detail-input" id="f-learning-hopes-more" value="${famIntake.learning_hopes_more || ''}">`)}
+      ${field('What interests them', famIntake.bcm_interest, `<input class="detail-input" id="f-bcm-interest" value="${escHtml(famIntake.bcm_interest || '')}">`)}
+      ${field('More on interest', famIntake.bcm_interest_more, `<input class="detail-input" id="f-bcm-interest-more" value="${escHtml(famIntake.bcm_interest_more || '')}">`)}
+      ${field('Learning hopes', famIntake.learning_hopes, `<input class="detail-input" id="f-learning-hopes" value="${escHtml(famIntake.learning_hopes || '')}">`)}
+      ${field('More on learning hopes', famIntake.learning_hopes_more, `<input class="detail-input" id="f-learning-hopes-more" value="${escHtml(famIntake.learning_hopes_more || '')}">`)}
       ${field('Photo permission', famIntake.photo_permission, `
         <select class="detail-input" id="f-photo-permission">
           <option value="" ${!famIntake.photo_permission?'selected':''}>— Select —</option>
           <option ${famIntake.photo_permission==='Yes'?'selected':''}>Yes</option>
           <option ${famIntake.photo_permission==='No'?'selected':''}>No</option>
         </select>`)}
-      ${field('Additional notes', famIntake.additional_notes, `<input class="detail-input" id="f-additional-notes" value="${famIntake.additional_notes || ''}">`)}
+      ${field('Additional notes', famIntake.additional_notes, `<input class="detail-input" id="f-additional-notes" value="${escHtml(famIntake.additional_notes || '')}">`)}
     </div>
 
     <div class="modal-save-bar">
       ${editMode
-        ? `<button class="btn-small-outline" onclick="renderModal('${s.id}', false)">Cancel</button>
-           <button class="btn-primary" onclick="saveModal('${s.id}')">Save changes</button>`
+        ? `<button class="btn-small-outline" onclick="renderModal('${escHtml(s.id)}', false)">Cancel</button>
+           <button class="btn-primary" onclick="saveModal('${escHtml(s.id)}')">Save changes</button>`
         : `<button class="btn-small-outline" onclick="closeModal()">Close</button>
-           <button class="btn-small-outline" style="border-color:#B23A3A;color:#B23A3A;" onclick="closeModal(); archiveStudent('${s.id}', '${s.first_name} ${s.last_name}')">Delete</button>
-           <button class="btn-primary" onclick="renderModal('${s.id}', true)">Edit</button>`
+           <button class="btn-small-outline" style="border-color:#B23A3A;color:#B23A3A;" data-name="${escHtml((s.first_name || '') + ' ' + (s.last_name || ''))}" onclick="closeModal(); archiveStudent('${escHtml(s.id)}', this.dataset.name)">Delete</button>
+           <button class="btn-primary" onclick="renderModal('${escHtml(s.id)}', true)">Edit</button>`
       }
     </div>
   `;
@@ -676,10 +699,7 @@ async function createStudent(){
 }
 
 function onStaffReady(){
-  const card = document.getElementById('addApplicationCard');
-  if(card && !(canAccess('students','edit') && canAccess('families','edit'))){
-    card.style.display = 'none';
-  }
+  if(canAccess('students','edit') && canAccess('families','edit')) document.getElementById('addAppBtn').style.display = '';
 }
 
 window.STAFF_PAGE_KEY = 'admissions';

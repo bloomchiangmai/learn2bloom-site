@@ -208,7 +208,8 @@ details.orig summary{cursor:pointer;font-size:13px;font-weight:600;color:#534AB7
 .daymenu button{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;font:inherit;font-size:13px;background:none;border:0;border-radius:6px;padding:7px 9px;cursor:pointer;color:#2C2C2A;}
 .daymenu button:hover{background:#F6F3EC;} .daymenu .dm-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;} .daymenu .dm-s{font-size:11.5px;color:#8A877F;white-space:nowrap;}
 .daymenu .dm-new{color:#534AB7;font-weight:700;border-top:1px solid #F0ECE3;border-radius:0 0 6px 6px;margin-top:2px;}
-.cal .day.past{color:#C9C4BA;}
+.cal .day.past{color:#B4B2A9;background:#F1EFE8;border-color:transparent;}
+.cal .day.past .pp.k-posted{background:#fff !important;color:#8A877F !important;}
 .cal .pp{display:block;margin-top:3px;font-size:11px;font-weight:600;line-height:1.25;border-radius:4px;padding:2px 5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12px;color:#5F5E5A;}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
@@ -414,6 +415,8 @@ th.sortable{cursor:pointer;user-select:none;white-space:nowrap;} th.sortable .ar
 .aibanner{border-radius:12px;padding:10px 16px;font-size:13.5px;margin:0 0 14px;background:#FCEBEB;color:#791F1F;font-weight:600;}
 .vers{margin-top:8px;} .vers .v{display:grid;grid-template-columns:150px 110px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0;border-top:1px solid #F0ECE3;}
 .vers .v .pv{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#5F5E5A;}
+.pv-box{margin-top:16px;border:1px solid #EFEAE0;border-radius:12px;background:#FCFBF8;padding:18px 22px;font-size:14.5px;line-height:1.6;}
+.pv-t{white-space:pre-wrap;} .pv-sep{border-top:1px solid #EFEAE0;margin:14px 0;} .pv-tags{margin-top:14px;color:#534AB7;}
 .hist{font-size:12px;color:#888780;line-height:1.8;padding:12px 4px;}
 .toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
 
@@ -1041,7 +1044,7 @@ function calendarView(){
     const ps = inMonth.filter(p=>p.post_date===iso), sg = iso >= t ? openSugg().filter(x=>x.date===iso) : [];
     const add = canEdit && iso >= t;
     cells += `<div class="day ${iso===t?'today':iso<t?'past':''}${add?' can-add':''}" ${add?`onclick="dayClick(event,'${iso}')"`:''}>${d}${iso===t?'<i class="tdot"></i>':''}${ps.map(p=>{ const late = isLate(p), k = late ? 'late' : p.step==='posted' ? 'posted' : 'open';
-      return `<span class="pp" title="${esc(p.title)} · ${late?'Late, at '+STEP_LABEL[p.step]:STEP_LABEL[p.step]}" style="background:${CAL_STATE[k].bg};color:${CAL_STATE[k].fg}" onclick="event.stopPropagation();go('post/${p.id}')">${esc(p.title)}</span>`; }).join('')}${sg.map(x=>`<span class="sg" title="Suggested: ${esc(x.name)}${x.confirmed?'':' (date to confirm)'}" onclick="event.stopPropagation();openSg(${SUGG.indexOf(x)})">${esc(x.name)}</span>`).join('')}</div>`;
+      return `<span class="pp k-${k}" title="${esc(p.title)} · ${late?'Late, at '+STEP_LABEL[p.step]:STEP_LABEL[p.step]}" style="background:${CAL_STATE[k].bg};color:${CAL_STATE[k].fg}" ${add?'':`onclick="event.stopPropagation();go('post/${p.id}')"`}>${esc(p.title)}</span>`; }).join('')}${sg.map(x=>`<span class="sg" title="Suggested: ${esc(x.name)}${x.confirmed?'':' (date to confirm)'}" onclick="event.stopPropagation();openSg(${SUGG.indexOf(x)})">${esc(x.name)}</span>`).join('')}</div>`;
   }
   return head + `<div class="cal-wrap"><div class="cal">${cells}</div>
     <div class="legend">${['open','late','posted'].map(k=>`<span><i style="background:${CAL_STATE[k].dot}"></i>${CAL_STATE[k].label}</span>`).join('')}<span><i style="background:transparent;border:1px dashed #A8A39A"></i>Suggested</span></div></div>`;
@@ -1055,7 +1058,7 @@ function dayClick(e, iso){
   const ps = POSTS.filter(p=>p.step!=='cancelled' && p.post_date===iso).sort((a,b)=>(a.post_time||'').localeCompare(b.post_time||''));
   if(!ps.length){ newTopic(iso); return; }
   const m = document.createElement('div'); m.id = 'dayMenu'; m.className = 'daymenu';
-  m.innerHTML = ps.map(p=>`<button onclick="closeDayMenu();go('post/${p.id}')"><span class="dm-t">${esc(p.title)}</span><span class="dm-s">${isLate(p)?'Late · ':''}${esc(STEP_LABEL[p.step]||'')}</span></button>`).join('')
+  m.innerHTML = ps.map(p=>`<button onclick="closeDayMenu();go('post/${p.id}')"><span class="dm-t">${esc(p.title)}</span></button>`).join('')
     + `<button class="dm-new" onclick="closeDayMenu();newTopic('${iso}')">+ New topic on ${fmtShort(iso)}</button>`;
   document.body.appendChild(m);
   const r = e.currentTarget.getBoundingClientRect(), w = m.offsetWidth;
@@ -1159,6 +1162,7 @@ async function renderPost(el){
     : (canBrief ? `<div class="briefbox"><span class="meta">No brief yet.</span><button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Add brief</button></div>` : '');
   const waiting = !canAct && openStep(p) ? `<span class="muted">Waiting on ${esc(ownerName(p))}${isLate(p)?' · <span class="late-d">late</span>':''}</span>` : '';
   const hist = (EVENTS[id]||[]).map(e=>`${esc(nameOf(e.actor)||'System')} ${esc(e.kind)}${e.note?` ("${esc(e.note)}")`:''} · ${new Date(e.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`).join('<br>');
+  if(p.step==='posted'){ el.innerHTML = postedView(p, imgs, hist); return; }
   el.innerHTML = `<div id="pg">
   <button class="link-btn" style="margin-bottom:14px" onclick="history.length>1?history.back():go('${lastTab||'turn'}')">&#8249; Back</button>
   <div class="box" style="padding:20px 22px">
@@ -1203,6 +1207,31 @@ async function renderPost(el){
   if(AI_SUG && AI_SUG.post === id) aiShowPanel();
   el.querySelectorAll('textarea.tall').forEach(t=>{ growBox(t); t.addEventListener('input', ()=>growBox(t)); });
   renderTagChips();
+}
+// Item 96: a posted post shows what went out, read only. Nothing that is missing is shown.
+function postedView(p, imgs, hist){
+  const ev = (EVENTS[p.id]||[]).filter(e=>e.kind==='posted').pop(), by = nameOf(ev ? ev.actor : posterOf(p));
+  const when = p.post_date ? fmtShort(p.post_date) + (p.post_time ? ', ' + esc(p.post_time) : '') : '';
+  const fb = safeUrl(p.post_url) ? `<a href="${esc(p.post_url)}" target="_blank" rel="noopener">Open on Facebook</a>` : '';
+  const meta = [when ? 'Posted ' + when : 'Posted', by ? 'by ' + esc(by) : '', fb].filter(Boolean).join(' · ');
+  const who = [['Written by', p.writer], ['Reviewed by', p.pic], ['Translated by', p.needs_thai ? p.translator : null]].filter(([,id])=>id && nameOf(id)).map(([l,id])=>l + ' ' + esc(nameOf(id))).join(' · ');
+  const parts = [p.copy_en, p.needs_thai ? p.copy_th : null].map(t=>String(t||'').trim()).filter(Boolean).map(t=>`<div class="pv-t">${esc(t)}</div>`);
+  const tags = String(p.hashtags||'').trim();
+  const body = parts.join('<div class="pv-sep"></div>') + (tags ? `<div class="pv-tags">${esc(tags)}</div>` : '');
+  const media = imgs.filter(im=>safeUrl(im.url)).map(im=>`<a class="im" href="${esc(im.url)}" target="_blank" rel="noopener">${im.external?'<span class="ext">Drive link</span>':`<img src="${esc(im.url)}" alt="">`}</a>`).join('');
+  const video = safeUrl(p.video_url) ? `<p style="margin-top:10px"><a href="${esc(p.video_url)}" target="_blank" rel="noopener">Video</a></p>` : '';
+  return `<div id="pg">
+  <button class="link-btn" style="margin-bottom:14px" onclick="history.length>1?history.back():go('${lastTab||'calendar'}')">&#8249; Back</button>
+  <div class="box" style="padding:22px 26px">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="font-family:Georgia,serif;font-size:22px;font-weight:700">${esc(p.title)}</h2>${stepChip(p)}</div>
+    <p class="meta" style="font-size:13.5px;margin-top:4px">${meta}</p>
+    ${who ? `<p class="meta" style="font-size:12.5px;margin-top:2px">${who}</p>` : ''}
+    ${body ? `<div class="pv-box">${body}</div>` : ''}
+    ${media ? `<div class="imgs" style="margin-top:14px">${media}</div>` : ''}${video}
+    <div style="margin-top:16px">${shareBox(p)}</div>
+  </div>
+  <div class="hist"><b>History</b><br>${hist||'…'}</div>
+  </div>`;
 }
 // Boxes grow with the text, so the whole caption is always visible (item 13).
 function growBox(t){ t.style.height = 'auto'; t.style.height = Math.max(220, t.scrollHeight + 2) + 'px'; }

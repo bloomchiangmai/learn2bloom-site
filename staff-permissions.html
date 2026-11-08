@@ -90,6 +90,17 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
   .detail-label{width:120px;}
   .modal-box{padding:20px;}
 }
+.ptabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px;}
+.ptab{font-size:14px;font-weight:600;padding:8px 16px;border-radius:999px;border:1px solid #E8E3D8;background:#fff;color:#2C2C2A;cursor:pointer;font-family:inherit;}
+.ptab.on{background:#534AB7;border-color:#534AB7;color:#fff;}
+.feat{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #E8E3D8;}
+.switch{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:600;color:#5F5E5A;cursor:pointer;position:relative;}
+.switch input{position:absolute;opacity:0;width:44px;height:24px;right:0;margin:0;cursor:pointer;}
+.switch .track{position:relative;display:inline-block;width:44px;height:24px;background:#ccc;border-radius:24px;transition:.2s;}
+.switch .track::before{content:"";position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;}
+.switch input:checked + .track{background:#534AB7;}
+.switch input:checked + .track::before{transform:translateX(20px);}
+.switch input:focus-visible + .track{outline:2px solid #534AB7;outline-offset:2px;}
 </style>
 </head>
 <body>
@@ -113,7 +124,13 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
       </div>
     </div>
 
-    <div class="card">
+    <div class="ptabs" role="tablist">
+      <button class="ptab on" data-tab="roles" onclick="showTab('roles')">Roles and access</button>
+      <button class="ptab" data-tab="approvals" onclick="showTab('approvals')">Approvals <span id="approvalsCount"></span></button>
+      <button class="ptab" data-tab="features" onclick="showTab('features')">Site features</button>
+    </div>
+
+    <div class="card" data-panel="roles">
       <h2>Roles & Access</h2>
       <p style="font-size:13px;color:#888780;margin-top:-12px;margin-bottom:16px;">Click a name to change their role or override specific module access. For password or to remove someone, use the <a href="staff-team.html" style="color:#534AB7;">Team</a> page.</p>
       <table>
@@ -124,7 +141,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
       </table>
     </div>
 
-    <div class="card">
+    <div class="card" data-panel="approvals" style="display:none;">
       <h2>Pending approvals</h2>
       <table>
         <thead>
@@ -133,6 +150,19 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
         <tbody id="approvalsTable"></tbody>
       </table>
       <div id="approvalsEmpty" class="empty-state" style="display:none;">No pending approvals.</div>
+    </div>
+
+    <div class="card" data-panel="features" style="display:none;">
+      <h2>Site features</h2>
+      <p style="font-size:13px;color:#888780;margin-top:-12px;margin-bottom:8px;">Turn a tool off for maintenance. Parents and staff see a "temporarily unavailable" message instead.</p>
+      <div class="feat">
+        <div><div style="font-weight:600;">Calendar</div><div style="font-size:12px;color:#888780;">bloomcalendar.learn2bloom.org and the Calendar tool</div></div>
+        <label class="switch"><span id="toggleCalendarStatus">On</span><input type="checkbox" id="toggleCalendar" onchange="toggleFeature('calendar_enabled', this.checked)"><span class="track" aria-hidden="true"></span></label>
+      </div>
+      <div class="feat" style="border-bottom:0;">
+        <div><div style="font-weight:600;">Bloombrary</div><div style="font-size:12px;color:#888780;">bloombrary.learn2bloom.org, public catalog and admin</div></div>
+        <label class="switch"><span id="toggleBloombraryStatus">On</span><input type="checkbox" id="toggleBloombrary" onchange="toggleFeature('bloombrary_enabled', this.checked)"><span class="track" aria-hidden="true"></span></label>
+      </div>
     </div>
 
   </div>
@@ -193,6 +223,35 @@ async function onStaffReady(staffRow){
   }
   loadTeamData();
   loadApprovals();
+  loadFeatures();
+  showTab((location.hash || '#roles').slice(1));
+}
+
+// Tabs: Roles and access, Approvals, Site features. #approvals and #features open a tab directly.
+function showTab(t){
+  if(!['roles','approvals','features'].includes(t)) t = 'roles';
+  document.querySelectorAll('.ptab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  document.querySelectorAll('[data-panel]').forEach(p => p.style.display = p.dataset.panel === t ? '' : 'none');
+  if(location.hash.slice(1) !== t) history.replaceState(null, '', '#' + t);
+}
+
+// Site features (moved here from the dashboard)
+async function loadFeatures(){
+  const { data: settings } = await sb.from('bloom_settings').select('calendar_enabled, bloombrary_enabled').maybeSingle();
+  setToggleState('toggleCalendar', settings?.calendar_enabled !== false);
+  setToggleState('toggleBloombrary', settings?.bloombrary_enabled !== false);
+}
+function setToggleState(id, isOn){
+  document.getElementById(id).checked = isOn;
+  document.getElementById(id + 'Status').textContent = isOn ? 'On' : 'Off';
+}
+async function toggleFeature(column, enabled){
+  const toggleId = column === 'calendar_enabled' ? 'toggleCalendar' : 'toggleBloombrary';
+  const loc = (await sb.from('bloom_locations').select('id').limit(1).single()).data;
+  const { error } = await sb.from('bloom_settings').update({ [column]: enabled }).eq('location_id', loc.id);
+  if(error){ showToast('Error: ' + error.message); setToggleState(toggleId, !enabled); return; }
+  setToggleState(toggleId, enabled);
+  showToast(enabled ? 'Turned back on.' : 'Turned off. Visitors will see a maintenance message.');
 }
 
 async function loadTeamData(){
@@ -370,6 +429,7 @@ async function loadApprovals(){
     .order('created_at', { ascending: false });
 
   approvalsCache = data || [];
+  const ac = document.getElementById('approvalsCount'); if(ac) ac.textContent = approvalsCache.length ? approvalsCache.length : '';
   const tbody = document.getElementById('approvalsTable');
   const emptyEl = document.getElementById('approvalsEmpty');
   if(error || !data || data.length === 0){
@@ -382,11 +442,11 @@ async function loadApprovals(){
     const d = describeApprovalPayload(r);
     return `
     <tr>
-      <td>${r.staff ? r.staff.name : '—'}</td>
-      <td>${r.module}</td>
-      <td>${r.action_type}</td>
+      <td>${r.staff ? escapeHtml(r.staff.name || '') : '—'}</td>
+      <td>${escapeHtml(String(r.module || ''))}</td>
+      <td>${escapeHtml(String(r.action_type || ''))}</td>
       <td>
-        <div>${d.title}</div>
+        <div>${escapeHtml(String(d.title || ''))}</div>
         ${d.reason ? `<div style="font-size:12px;color:#888780;margin-top:2px;">"${escapeHtml(d.reason)}"</div>` : ''}
       </td>
       <td>${new Date(r.created_at).toLocaleString()}</td>

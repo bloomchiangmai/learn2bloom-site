@@ -61,13 +61,28 @@ const NAV_ITEMS = [
   { key: 'admissions', label: 'Admissions', href: 'staff-admissions.html', group: 'Students', module: 'students' },
   { key: 'learners', label: 'Learners', href: 'learners.html', group: 'Students', module: 'students' },
   { key: 'calendar', label: 'Calendar', href: 'staff-calendar.html', group: 'Tools', module: 'calendar' },
-  { key: 'library', label: 'Bloombrary', href: 'https://bloombrary.learn2bloom.org/admin', group: 'Tools', module: 'library' },
+  { key: 'library', label: 'Bloombrary', href: 'https://bloombrary.learn2bloom.org/admin', group: 'Tools', module: 'library', external: true },
   { key: 'marketing', label: 'Marketing HQ', href: 'staff-marketing.html', group: 'Tools', module: 'marketing' },
   { key: 'team', label: 'Team', href: 'staff-team.html', group: 'Staff' },
-  { key: 'permissions', label: 'Permissions', href: 'staff-permissions.html', group: 'Staff', adminOnly: true },
-  { key: 'archive', label: 'Archived Learners', href: 'archive.html', group: 'History', module: 'students' },
-  { key: 'staff-archive', label: 'Archived Staff', href: 'staff-archive.html', group: 'History', adminOnly: true }
+  { key: 'permissions', label: 'Permissions', href: 'staff-permissions.html', group: 'Staff', adminOnly: true }
 ];
+// Archives are tabs inside their tool now: archive.html lights up Learners, staff-archive.html lights up Team.
+const NAV_ALIASES = { 'archive': 'learners', 'staff-archive': 'team' };
+const EXT_MARK = '<svg aria-hidden="true" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="margin-left:6px;vertical-align:-1px"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+
+// Tabs inside a tool page: <div data-page-tabs='[{"label":"Enrolled","href":"learners.html","on":true},{"label":"Archived","href":"archive.html"}]'></div>
+// A tab with "adminOnly": true shows only to admin, director and IT.
+function renderPageTabs(){
+  const isAdminOrIt = window.currentStaffRole === 'admin' || window.currentStaffRole === 'director' || window.currentStaffRole === 'it';
+  document.querySelectorAll('[data-page-tabs]').forEach(el => {
+    let tabs = [];
+    try { tabs = JSON.parse(el.getAttribute('data-page-tabs')); } catch(e){ return; }
+    tabs = tabs.filter(t => !t.adminOnly || isAdminOrIt);
+    if(tabs.length < 2){ el.style.display = 'none'; return; }
+    el.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px;';
+    el.innerHTML = tabs.map(t => `<a href="${t.href}" style="font-size:14px;font-weight:600;padding:8px 16px;border-radius:999px;text-decoration:none;${t.on ? 'background:#534AB7;color:#fff;border:1px solid #534AB7;' : 'background:#fff;color:#2C2C2A;border:1px solid #E8E3D8;'}">${t.label}</a>`).join('');
+  });
+}
 
 function injectSidebarStyles(){
   if(document.getElementById('sidebar-shell-styles')) return;
@@ -121,7 +136,7 @@ function renderSidebar(activeKey){
   const navHtml = groups.map(g => `
     <div class="sidebar-group">${g.name}</div>
     ${g.items.map(item => `
-      <a href="${item.href}" class="sidebar-link ${item.key === activeKey ? 'active' : ''}">${item.label}</a>
+      <a href="${item.href}" class="sidebar-link ${item.key === (NAV_ALIASES[activeKey] || activeKey) ? 'active' : ''}"${item.external ? ' target="_blank" rel="noopener"' : ''}>${item.label}${item.external ? EXT_MARK : ''}</a>
     `).join('')}
   `).join('');
 
@@ -171,6 +186,7 @@ async function checkStaffAndInit(){
   if(content) content.style.display = 'block';
 
   renderSidebar(window.STAFF_PAGE_KEY || '');
+  renderPageTabs();
 
   if(typeof loadStudents === 'function') loadStudents();
   if(typeof onStaffReady === 'function') onStaffReady(staffRow);

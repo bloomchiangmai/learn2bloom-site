@@ -64,7 +64,8 @@ const NAV_ITEMS = [
   { key: 'calendar', label: 'Calendar', href: 'staff-calendar.html', module: 'calendar' },
   { key: 'library', label: 'Bloombrary', href: 'https://bloombrary.learn2bloom.org/admin', module: 'library', external: true },
   { key: 'marketing', label: 'Marketing HQ', href: 'staff-marketing.html', module: 'marketing' },
-  { key: 'staff', label: 'Staff', href: 'staff-team.html' }
+  { key: 'staff', label: 'Staff', href: 'staff-team.html' },
+  { key: 'admin', label: 'Admin', href: 'staff-permissions.html#roles', adminOnly: true }
 ];
 const SYSTEMS = {
   students: { label: 'Students', pages: ['admissions','learners','archive'], groups: [
@@ -75,11 +76,13 @@ const SYSTEMS = {
     { name: 'Learners', items: [
       { key: 'enrolled', label: 'Enrolled', href: 'learners.html', page: 'learners' },
       { key: 'archived', label: 'Archived', href: 'archive.html', page: 'archive' } ] } ] },
-  staff: { label: 'Staff', pages: ['team','staff-archive','permissions'], groups: [
+  staff: { label: 'Staff', pages: ['team','staff-archive'], groups: [
     { name: 'Team', items: [
       { key: 'directory', label: 'Directory', href: 'staff-team.html', page: 'team' },
-      { key: 'archived-staff', label: 'Archived staff', href: 'staff-archive.html', page: 'staff-archive', adminOnly: true } ] },
-    { name: 'Access', adminOnly: true, items: [
+      { key: 'archived-staff', label: 'Archived staff', href: 'staff-archive.html', page: 'staff-archive', adminOnly: true } ] } ] },
+  // S16: admin tools have their own place, for admin, director and IT.
+  admin: { label: 'Admin', pages: ['permissions'], groups: [
+    { name: '', adminOnly: true, items: [
       { key: 'roles', label: 'Roles and access', href: 'staff-permissions.html#roles', page: 'permissions', hash: 'roles', def: true },
       { key: 'approvals', label: 'Approvals', href: 'staff-permissions.html#approvals', page: 'permissions', hash: 'approvals' },
       { key: 'features', label: 'Site features', href: 'staff-permissions.html#features', page: 'permissions', hash: 'features' } ] } ] }
@@ -183,11 +186,11 @@ function renderSidebar(activeKey){
     navHtml = sys.groups.filter(g => !g.adminOnly || isAdminOrIt).map(g => {
       const items = g.items.filter(i => !i.adminOnly || isAdminOrIt);
       if(!items.length) return '';
-      return `<div class="sidebar-group">${g.name}</div>` + items.map(i =>
+      return (g.name ? `<div class="sidebar-group">${g.name}</div>` : '') + items.map(i =>
         `<a href="${i.page === activeKey && i.hash ? '#' + i.hash : i.href}" data-k="${i.key}" class="sidebar-link sys-link ${sysItemOn(i, activeKey) ? 'active' : ''}">${i.label}<span class="sys-n" style="display:none"></span></a>`).join('');
     }).join('');
   } else {
-    navHtml = NAV_ITEMS.filter(item => !(item.module && !canAccess(item.module, 'view'))).map(item =>
+    navHtml = NAV_ITEMS.filter(item => !(item.module && !canAccess(item.module, 'view')) && (!item.adminOnly || isAdminOrIt)).map(item =>
       `<a href="${item.href}" class="sidebar-link ${item.key === activeKey ? 'active' : ''}"${item.external ? ' target="_blank" rel="noopener"' : ''}>${item.label}${item.external ? EXT_MARK : ''}</a>`).join('');
   }
 

@@ -199,7 +199,15 @@ details.orig summary{cursor:pointer;font-size:13px;font-weight:600;color:#534AB7
 .cal .dow{font-size:11px;color:#A8A39A;text-transform:uppercase;letter-spacing:.5px;padding:0 4px;}
 .cal .day{min-height:58px;border-radius:8px;background:#FCFBF8;border:1px solid #F0ECE3;padding:4px 6px;font-size:12px;color:#888780;}
 .cal .day.out{background:transparent;border-color:transparent;}
-.cal .day.today{border-color:#534AB7;color:#534AB7;font-weight:700;}
+.cal .day{position:relative;}
+.cal .day.today{color:#534AB7;font-weight:700;}
+.cal .tdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#534AB7;margin-left:4px;vertical-align:2px;}
+.cal .day.can-add{cursor:pointer;} .cal .day.can-add:hover{border-color:#DCD5C6;}
+.cal .day.can-add:hover::after{content:'+';position:absolute;top:2px;right:7px;font-size:15px;font-weight:600;color:#8A877F;}
+.daymenu{position:absolute;z-index:60;background:#fff;border:1px solid #DCD5C6;border-radius:10px;box-shadow:0 8px 24px rgba(44,44,42,.14);padding:6px;min-width:220px;max-width:300px;}
+.daymenu button{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;font:inherit;font-size:13px;background:none;border:0;border-radius:6px;padding:7px 9px;cursor:pointer;color:#2C2C2A;}
+.daymenu button:hover{background:#F6F3EC;} .daymenu .dm-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;} .daymenu .dm-s{font-size:11.5px;color:#8A877F;white-space:nowrap;}
+.daymenu .dm-new{color:#534AB7;font-weight:700;border-top:1px solid #F0ECE3;border-radius:0 0 6px 6px;margin-top:2px;}
 .cal .day.past{color:#C9C4BA;}
 .cal .pp{display:block;margin-top:3px;font-size:11px;font-weight:600;line-height:1.25;border-radius:4px;padding:2px 5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12px;color:#5F5E5A;}
@@ -317,6 +325,7 @@ button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-vi
 .ovhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:14px 0 2px;}
 .ovhead h4{font-size:14px;font-weight:700;margin:0;}
 .ovhead button{background:none;border:0;color:#534AB7;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;padding:0;}
+.who-opt{color:#8A877F;font-weight:500;letter-spacing:0;text-transform:none;font-size:12px;}
 .who-h{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#534AB7;font-weight:700;margin:16px 0 8px;padding-top:12px;border-top:1px solid #EFEAE0;}
 .pl{display:grid;grid-template-columns:110px minmax(0,1.6fr) 110px 90px 90px 100px;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #F0ECE3;font-size:13.5px;cursor:pointer;}
 .pl:hover{background:#FAF8F3;} .pl-h{font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;color:#6B6A64;cursor:default;border-top:none;} .pl-h:hover{background:none;}
@@ -767,7 +776,7 @@ function tabs(){
   $('#subtabs').innerHTML = v==='ref'
     ? (REF_BACK ? '<button class="refback" onclick="refBackToOverview()">&#8249; Back to Overview</button>' : '') + `<div class="subtabs rows">${REF_ROWS.map(([lbl, ks])=>`<div class="subrow"><span class="sublbl">${lbl}</span>${ks.map(k=>REF_GROUPS.find(g=>g.k===k)).map(g=>`<button class="pill ${g.k===refKey?'on':''}" onclick="refKey='${g.k}';render()">${g.t}<span class="n">${g.secs.reduce((a,k)=>a+(DATA[k]||[]).length,0)}</span></button>`).join('')}</div>`).join('')}</div>` : '';
 }
-function render(){
+function render(){ closeDayMenu();
   tabs();
   const nb = $('#newTopicBtn'); if(nb) nb.style.display = loaded && canEdit && view() === 'calendar' ? '' : 'none';
   const pb = $('#planBtn'); if(pb) pb.style.display = loaded && canEdit && view() === 'calendar' ? '' : 'none';
@@ -1030,12 +1039,31 @@ function calendarView(){
   for(let d=1; d<=days; d++){
     const iso = `${calMonth}-${String(d).padStart(2,'0')}`;
     const ps = inMonth.filter(p=>p.post_date===iso), sg = iso >= t ? openSugg().filter(x=>x.date===iso) : [];
-    cells += `<div class="day ${iso===t?'today':iso<t?'past':''}">${d}${ps.map(p=>{ const late = isLate(p), k = late ? 'late' : p.step==='posted' ? 'posted' : 'open';
-      return `<span class="pp" title="${esc(p.title)} · ${late?'Late, at '+STEP_LABEL[p.step]:STEP_LABEL[p.step]}" style="background:${CAL_STATE[k].bg};color:${CAL_STATE[k].fg}" onclick="go('post/${p.id}')">${esc(p.title)}</span>`; }).join('')}${sg.map(x=>`<span class="sg" title="Suggested: ${esc(x.name)}${x.confirmed?'':' (date to confirm)'}" onclick="openSg(${SUGG.indexOf(x)})">${esc(x.name)}</span>`).join('')}</div>`;
+    const add = canEdit && iso >= t;
+    cells += `<div class="day ${iso===t?'today':iso<t?'past':''}${add?' can-add':''}" ${add?`onclick="dayClick(event,'${iso}')"`:''}>${d}${iso===t?'<i class="tdot"></i>':''}${ps.map(p=>{ const late = isLate(p), k = late ? 'late' : p.step==='posted' ? 'posted' : 'open';
+      return `<span class="pp" title="${esc(p.title)} · ${late?'Late, at '+STEP_LABEL[p.step]:STEP_LABEL[p.step]}" style="background:${CAL_STATE[k].bg};color:${CAL_STATE[k].fg}" onclick="event.stopPropagation();go('post/${p.id}')">${esc(p.title)}</span>`; }).join('')}${sg.map(x=>`<span class="sg" title="Suggested: ${esc(x.name)}${x.confirmed?'':' (date to confirm)'}" onclick="event.stopPropagation();openSg(${SUGG.indexOf(x)})">${esc(x.name)}</span>`).join('')}</div>`;
   }
   return head + `<div class="cal-wrap"><div class="cal">${cells}</div>
     <div class="legend">${['open','late','posted'].map(k=>`<span><i style="background:${CAL_STATE[k].dot}"></i>${CAL_STATE[k].label}</span>`).join('')}<span><i style="background:transparent;border:1px dashed #A8A39A"></i>Suggested</span></div></div>`;
 }
+
+// Item 94: click a day to add a topic. A day with posts first shows them, plus a new topic.
+function closeDayMenu(){ const m = $('#dayMenu'); if(m) m.remove(); document.removeEventListener('mousedown', dayMenuOut, true); }
+function dayMenuOut(e){ if(!e.target.closest('#dayMenu')) closeDayMenu(); }
+function dayClick(e, iso){
+  closeDayMenu();
+  const ps = POSTS.filter(p=>p.step!=='cancelled' && p.post_date===iso).sort((a,b)=>(a.post_time||'').localeCompare(b.post_time||''));
+  if(!ps.length){ newTopic(iso); return; }
+  const m = document.createElement('div'); m.id = 'dayMenu'; m.className = 'daymenu';
+  m.innerHTML = ps.map(p=>`<button onclick="closeDayMenu();go('post/${p.id}')"><span class="dm-t">${esc(p.title)}</span><span class="dm-s">${isLate(p)?'Late · ':''}${esc(STEP_LABEL[p.step]||'')}</span></button>`).join('')
+    + `<button class="dm-new" onclick="closeDayMenu();newTopic('${iso}')">+ New topic on ${fmtShort(iso)}</button>`;
+  document.body.appendChild(m);
+  const r = e.currentTarget.getBoundingClientRect(), w = m.offsetWidth;
+  m.style.left = Math.max(8, Math.min(r.left + window.scrollX, window.scrollX + document.documentElement.clientWidth - w - 8)) + 'px';
+  m.style.top = (r.bottom + window.scrollY + 4) + 'px';
+  setTimeout(()=>document.addEventListener('mousedown', dayMenuOut, true), 0);
+}
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape') closeDayMenu(); });
 
 // ---------- Post page ----------
 // Item 39: a step button shows only when its box has text; otherwise a short line says what to do first.
@@ -1452,14 +1480,17 @@ const picOptions = sel => personOptions(sel);
 function briefFields(p){
   const aud = p.brief_audience || [], list = [...audienceList(), ...aud.filter(a=>!audienceList().includes(a))];
   return `
-    <div class="f"><label>Who is it for? <span class="hint">pick one or more</span></label><div class="checks">${list.map(a=>`<label><input type="checkbox" name="brief_audience" value="${esc(a)}" ${aud.includes(a)?'checked':''}>${esc(a)}</label>`).join('')}</div></div>
-    <div class="grid-2"><div class="f"><label>Goal</label><select name="brief_goal"><option value="">Choose</option>${GOALS.map(([v,l])=>`<option value="${v}" ${p.brief_goal===v?'selected':''}>${l}</option>`).join('')}</select></div>
-      <div class="f"><label>Format</label><select name="brief_format"><option value="">Choose</option>${FORMATS.map(([v,l])=>`<option value="${v}" ${p.brief_format===v?'selected':''}>${l}</option>`).join('')}</select></div></div>
-    <div class="f"><label>Key points <span class="hint">optional</span></label><textarea name="brief" placeholder="What must the post say? Dates, times, names, links.">${esc(p.brief||'')}</textarea></div>`;
+    <div class="f"><label>Who is it for?</label><div class="nchips">${list.map(a=>`<button type="button" class="nchip ${aud.includes(a)?'on':''}" data-aud="${esc(a)}" onclick="this.classList.toggle('on')">${esc(a)}</button>`).join('')}</div></div>
+    ${optChips('brief_goal', 'Goal', GOALS, p.brief_goal||'')}
+    ${optChips('brief_format', 'Format', FORMATS, p.brief_format||'')}
+    <div class="f"><label>Key points</label><textarea name="brief" placeholder="What must the post say? Dates, times, names, links.">${esc(p.brief||'')}</textarea></div>`;
+}
+function optChips(name, label, items, sel){
+  return `<div class="f"><label>${label}</label><input type="hidden" name="${name}" value="${esc(sel)}"><div class="nchips">${items.map(([v,l])=>`<button type="button" class="nchip ${sel===v?'on':''}" data-f="${name}" data-v="${esc(v)}" onclick="pickChip(this)">${esc(l)}</button>`).join('')}</div></div>`;
 }
 function briefPayload(){
   const fd = new FormData($('#fm'));
-  return { brief_audience: fd.getAll('brief_audience').map(String), brief_goal: String(fd.get('brief_goal')||''), brief_format: String(fd.get('brief_format')||''), brief: String(fd.get('brief')||'').trim() };
+  return { brief_audience: [...document.querySelectorAll('#fm .nchip.on[data-aud]')].map(b=>b.dataset.aud), brief_goal: String(fd.get('brief_goal')||''), brief_format: String(fd.get('brief_format')||''), brief: String(fd.get('brief')||'').trim() };
 }
 function briefMissing(o){
   if(!o.brief_audience.length) return 'Pick who the post is for.';
@@ -1486,36 +1517,48 @@ function topicForm(p, withBrief){
       <div class="f"><label>Time <span class="hint">optional</span></label><input name="post_time" type="time" value="${esc(p.post_time||'')}"></div>
       <div class="f"><label>Label</label><select name="label"><option value="">Choose</option>${LABELS.map(l=>`<option ${l.name===p.label?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div></div>
     <h4 class="who-h">Who does this post</h4>
-    ${chipField('writer', 'Writer', p.writer === undefined ? (TEAM[ME] ? ME : '') : (p.writer||''))}
+    ${chipField('writer', 'Writer', p.writer||'')}
     ${chipField('pic', 'Reviewer', p.pic||'')}
     <input type="hidden" name="needs_thai" value="${thai}">
-    ${chipField('translator', 'Translator', thai==='false' ? '__none' : (p.translator||''), ['__none','No Thai'])}
-    ${chipField('poster', 'Poster', p.poster||'', ['','Writer'])}
-    ${withBrief ? `<p style="margin:10px 0"><a href="javascript:void 0" onclick="$('#briefWrap').style.display='';this.parentElement.remove()">+ Add a brief</a></p><div id="briefWrap" style="display:none"><h4 style="font-size:13px;margin:16px 0 8px;color:#5F5E5A">Brief for the writer</h4>${briefFields(p)}</div>` : ''}`;
+    ${chipField('translator', 'Translator', thai==='false' ? '__none' : (p.translator||''), null, ['__none','No Thai'])}
+    ${chipField('poster', 'Poster', p.poster || p.writer || '').replace('type="hidden" name="poster"', `type="hidden" name="poster" data-own="${p.poster && p.poster !== p.writer ? 1 : ''}"`)}
+    ${withBrief ? `<h4 class="who-h">Brief <span class="who-opt">optional</span></h4>${briefFields(p)}` : ''}`;
 }
 // Item 91: people are name chips. First names; a small grey number shows posts in progress. Click again to clear.
-function chipField(name, label, sel, first){
+function chipField(name, label, sel, first, last){
   const ids = members(), fn = id => { const f = firstName(STAFF[id].name); return ids.filter(x=>firstName(STAFF[x].name)===f).length > 1 ? STAFF[id].name : f; };
   const chip = (v, text, extra, dis) => `<button type="button" class="nchip ${String(sel)===String(v)?'on':''}" data-f="${name}" data-v="${esc(v)}" ${dis?'disabled title="No HQ access yet"':''} onclick="pickChip(this)">${text}${extra||''}</button>`;
   let out = first ? chip(first[0], first[1]) + '<span class="nchip-sep"></span>' : '';
   out += ids.map(id => { const n = openLoad(id); return chip(id, esc(fn(id)), n ? `<span class="nchip-n">${n}</span>` : '', NO_ACCESS.has(id) && String(sel)!==id); }).join('');
   if(sel && sel !== '__none' && !ids.includes(sel) && STAFF[sel]) out += chip(sel, esc(STAFF[sel].name) + ' (not on the team)');
+  if(last) out += '<span class="nchip-sep"></span>' + chip(last[0], last[1]);
   const val = sel === '__none' ? '' : sel;
   return `<div class="f"><label>${label}</label><input type="hidden" name="${name}" value="${esc(val)}"><div class="nchips">${out}</div></div>`;
 }
+function lightChip(f, v){ document.querySelectorAll(`#fm .nchip[data-f="${f}"]`).forEach(c=>c.classList.toggle('on', v !== '' && c.dataset.v === v)); }
+// Item 92: Poster follows the Writer unless another name was picked on purpose. Click the lit Poster name to go back to the Writer.
 function pickChip(b){
-  const f = b.dataset.f, wrap = b.parentElement, inp = $(`#fm input[name="${f}"]`);
+  const f = b.dataset.f, inp = $(`#fm input[name="${f}"]`);
+  const mm = $('#msg'); if(mm) mm.textContent = '';
   let v = b.dataset.v;
-  if(b.classList.contains('on') && v !== '' && v !== '__none'){ v = ''; wrap.querySelectorAll('.nchip').forEach(c=>c.classList.toggle('on', f === 'poster' && c.dataset.v === '')); }
-  else wrap.querySelectorAll('.nchip').forEach(c=>c.classList.toggle('on', c === b));
+  if(f === 'poster'){
+    const w = $('#fm input[name="writer"]').value;
+    if(b.classList.contains('on')) v = w;
+    inp.dataset.own = v && v !== w ? '1' : '';
+    inp.value = v; lightChip(f, v); return;
+  }
+  if(b.classList.contains('on') && v !== '__none') v = '';
+  lightChip(f, v === '' ? '' : v);
   if(f === 'translator'){ $('#fm input[name="needs_thai"]').value = v === '__none' ? 'false' : 'true'; inp.value = v === '__none' ? '' : v; }
   else inp.value = v;
+  if(f === 'writer'){ const po = $('#fm input[name="poster"]'); if(po && (!po.dataset.own || po.value === v)){ po.dataset.own = ''; po.value = v; lightChip('poster', v); } }
 }
 function topicPayload(){
   const fd = new FormData($('#fm')), o = {};
   ['title','post_date','post_time','pic','label','writer','translator','poster'].forEach(k=>o[k] = String(fd.get(k)||'').trim());
   // Leave out an empty label, reviewer, writer or translator: not set yet is fine, and an edit never clears one by accident.
   ['pic','label','writer','translator'].forEach(k=>{ if(!o[k]) delete o[k]; });
+  if(o.poster === o.writer) o.poster = '';
   const t = String(fd.get('needs_thai')||'');
   if(t) o.needs_thai = t === 'true';
   return o;
@@ -1524,12 +1567,13 @@ function topicMissing(o){
   if(!o.title) return 'Add a topic.';
   if(!o.post_date) return 'Pick a posting date.';
   if(!o.label) return 'Pick a label.';
+  if(!o.writer) return 'Pick a writer.';
   return '';
 }
 function newTopic(date, pre, suggKey){
   cur = {topic:true};
   pre = pre || {};
-  drawerShell('New topic', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || '', writer: TEAM[ME] ? ME : '', pic: '', translator: '', poster: ''}, true), null, false);
+  drawerShell('New topic', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || '', writer: '', pic: '', translator: '', poster: ''}, true), null, false);
   $('#drawer').classList.add('mid');
   $('#sv').textContent = 'Create';
   $('#sv').onclick = async () => {

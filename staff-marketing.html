@@ -318,6 +318,11 @@ button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-vi
 @media (max-width: 760px){ .pl{grid-template-columns:90px minmax(0,1fr) 90px;} .pl>:nth-child(n+4){display:none;} }
 .reffilter{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 12px;} .reffilter button{font:inherit;font-size:13px;font-weight:600;border:0;background:none;color:#5F5E5A;padding:5px 12px;border-radius:8px;cursor:pointer;} .reffilter button:hover{background:#F3F1FD;} .reffilter button.on{background:#EEEDFE;color:#3C3489;} .reffilter .n{font-weight:400;opacity:.7;}
 .quiet{color:#8A877F;font-size:13px;}
+.us-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;} .us-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;} @media (max-width:700px){ .us-grid{grid-template-columns:1fr;} }
+.sharebox{border:1px solid #E8E3D8;border-radius:12px;padding:14px 16px;margin:4px 0 14px;background:#FFFFFF;} .sharebox h4{font-size:13px;margin:0 0 8px;color:#2C2C2A;}
+.sh{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) 110px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #EFEAE0;font-size:13px;} .sh:first-of-type{border-top:0;}
+.sh-n{font-weight:600;min-width:0;} .sh-n a{color:#2C2C2A;text-decoration:none;} .sh-n a:hover{color:#534AB7;} .sh-r{color:#5F5E5A;} .sh-l{color:#8A877F;} .sh-d{color:#0F6E56;font-weight:600;text-align:right;} .sh button{justify-self:end;}
+@media (max-width:700px){ .sh{grid-template-columns:1fr auto;} .sh-r,.sh-l{grid-column:1;} }
 th.sortable{cursor:pointer;user-select:none;white-space:nowrap;} th.sortable .arr{margin-left:4px;opacity:0;font-size:10px;} th.sortable:hover .arr{opacity:.45;} th.sorted{color:#3C3489;} th.sorted .arr{opacity:1;color:#534AB7;}
 .subtabs.rows{flex-direction:column;align-items:flex-start;gap:8px;} .subrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;} .sublbl{font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;color:#6B6A64;width:132px;flex:0 0 132px;} @media (max-width:700px){ .sublbl{flex:0 0 100%;width:auto;} } .plain{color:#5F5E5A;font-size:13px;} .rowtag{font-size:12px;font-weight:600;color:#6B6A64;margin-left:6px;}
 .refpager{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:10px;font-size:13px;}
@@ -504,6 +509,35 @@ const isOverseer = () => myDuty() === 'overseer';
 const isAdmin = () => canDelete;
 // The goal, deadline, budget and success measure: PICs, overseers and marketing full only.
 const canEditPlan = () => canEdit && canDelete;
+// Item VI: the usual writer, reviewer and translator fill every new topic. Stored with the goal (plan).
+const usual = () => ({ writer: (PLAN||{}).usual_writer || '', pic: (PLAN||{}).usual_reviewer || '', translator: (PLAN||{}).usual_translator || '' });
+const planData = () => Object.fromEntries(Object.entries(PLAN||{}).filter(([k])=>k!=='id' && !k.startsWith('_')));
+async function savePlan(extra){
+  const body = { ...planData(), ...extra };
+  const { error } = PLAN && PLAN.id ? await sb.from('marketing_entries').update({ data: body }).eq('id', PLAN.id) : await sb.from('marketing_entries').insert({ collection:'plan', data: body });
+  if(error){ showToast('Could not save: ' + error.message); return false; }
+  return true;
+}
+async function saveUsual(){
+  const v = k => ($('#us-'+k)||{}).value || '';
+  if(!(await savePlan({ usual_writer: v('writer'), usual_reviewer: v('pic'), usual_translator: v('translator') }))) return;
+  showToast('Saved. New topics start with these people.'); await loadAll();
+}
+// Open posts with nobody set get the usual people. A person already picked is never changed.
+function usualGaps(){
+  const U = usual();
+  return POSTS.filter(p=>openStep(p)).map(p=>{ const o = {};
+    if(!p.writer && U.writer) o.writer = U.writer;
+    if(!p.pic && U.pic) o.pic = U.pic;
+    if(p.needs_thai && !p.translator && U.translator) o.translator = U.translator;
+    return Object.keys(o).length ? [p, o] : null; }).filter(Boolean);
+}
+async function applyUsual(){
+  const list = usualGaps(); if(!list.length) return;
+  const b = $('#usApply'); if(b){ b.disabled = true; b.textContent = 'Working…'; }
+  let n = 0; for(const [p, o] of list){ if(await act('edit_topic', p.id, o)) n++; }
+  showToast(n + ' post' + (n===1?'':'s') + ' updated.'); await reloadPosts(true); render();
+}
 // Item 58: each post names its own writer, reviewer (pic) and translator.
 const members = () => Object.keys(TEAM).filter(id => STAFF[id] && STAFF[id].status === 'active').sort((a,b)=>STAFF[a].name.localeCompare(STAFF[b].name));
 const isWriterOf = p => !!p && p.writer === ME;
@@ -769,13 +803,13 @@ function refBackToOverview(){ if(REF_BACK) REF_BACK.back = true; go('overview');
 function groundwork(){
   const g = DATA.groups||[], c = DATA.channels||[], f = DATA.facts||[];
   if(!g.length && !c.length && !f.length) return '';
-  const ga = g.filter(x=>x.status==='Active').length, ca = c.filter(x=>x.status==='Active').length;
+  const ga = g.filter(x=>x.status==='Active'||x.status==='Joined').length, ca = c.filter(x=>x.status==='Active').length;
   const ft = f.filter(x=>x.status==='To confirm').length, fc = f.filter(x=>x.status==='Confirmed').length;
   const pct = (a,b) => b ? Math.round(a/b*100) : 0;
   const t = (key, sec, n, l, sub, bar) => `<button class="gtile" onclick="refFromOverview('${key}','${sec}')"><div class="gt"><span class="gn">${n}</span><span class="gl">${l}</span></div><div class="gs">${sub}</div><div class="gbar">${bar}</div></button>`;
   const seg = (w,c) => `<span style="width:${w}%;background:${c}"></span>`;
   return `<div class="ground-h">GROUNDWORK</div><div class="tiles ground">
-    ${t('who', 'groups', `${ga} / ${g.length}`, 'Communities active', 'Where we post', seg(pct(ga,g.length),'#2F6B55'))}
+    ${t('who', 'groups', `${ga} / ${g.length}`, 'Communities joined', 'Joined or active', seg(pct(ga,g.length),'#2F6B55'))}
     ${t('who', 'channels', `${ca} / ${c.length}`, 'Channels active', 'Pages and apps we use', seg(pct(ca,c.length),'#2F6B55'))}
     ${t('about', 'facts', ft, 'Facts to confirm', 'In the Info bank', seg(pct(fc,f.length),'#2F6B55')+seg(pct(ft,f.length),'#D9963A'))}
   </div>`;
@@ -984,16 +1018,16 @@ async function renderPost(el){
   <div class="box" style="padding:20px 22px">
     <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px">
       <div><h2 style="font-family:Georgia,serif;font-size:22px;font-weight:700">${esc(p.title)}</h2>
-        <p class="meta" style="font-size:13px;margin-top:2px">${p.post_date?'Posts '+fmtShort(p.post_date):'No date yet'}${p.post_time?', '+esc(p.post_time):''} · PIC ${esc(nameOf(p.pic)||'not set')}${p.label?' · '+esc(p.label):''}${p.needs_thai?'':' · English only'}</p></div>
+        <p class="meta" style="font-size:13px;margin-top:2px">${p.post_date?'Posts '+fmtShort(p.post_date):'No date yet'}${p.post_time?', '+esc(p.post_time):''} · Reviewer ${esc(nameOf(p.pic)||'not set')}${p.label?' · '+esc(p.label):''}${p.needs_thai?'':' · English only'}</p></div>
       <div style="display:flex;gap:8px;align-items:center">${openStep(p)&&dueOf(p)?`<span class="chip ${isLate(p)?'rust':''}">${esc(dueText(p))}</span>`:''}${stepChip(p)}${canTopic?`<button class="btn-outline sm" onclick="editTopic('${p.id}')">Edit topic</button>`:''}</div>
     </div>
     <div class="stepbar">${bar}</div>
-    ${p.step==='english'&&p.sent_back&&p.back_note?`<div class="banner bad">${esc(nameOf(p.pic)||'PIC')}: ${esc(p.back_note)}</div>`:''}
+    ${p.step==='english'&&p.sent_back&&p.back_note?`<div class="banner bad">${esc(nameOf(p.pic)||'Reviewer')}: ${esc(p.back_note)}</div>`:''}
     ${p.step==='review'&&p.sent_back&&p.back_note?`<div class="banner bad">${esc(p.back_note)}</div>`:''}
     ${briefHtml}
     <div id="aiSlot"></div>
     <div class="grid-2" style="margin-bottom:12px">
-      <div class="f"><label>English${canEn?(p.step==='post'?` <span class="hint" style="color:#854F0B">already approved: saving a change sends it back to Review</span>`:''):' <span class="hint">view only</span>'}</label><textarea id="f-copy_en" class="tall" ${canEn?'':'readonly'} placeholder="${canEn?'Write or paste the English caption':''}">${esc(p.copy_en||'')}</textarea>${canEn?`<div class="aibar"><button class="btn-outline sm" id="aiBtn-rewrite" onclick="aiRun('rewrite')">Rewrite with AI</button>${backBtn(p,'en')}</div>`:''}</div>
+      <div class="f"><label>English${canEn?(p.step==='post'?` <span class="hint" style="color:#854F0B">already approved: saving a change sends it back to Review</span>`:''):' <span class="hint">view only</span>'}</label><textarea id="f-copy_en" class="tall" ${canEn?'':'readonly'} placeholder="${canEn?'Write or paste the English caption':''}">${esc(p.copy_en||'')}</textarea>${canEn?`<div class="aibar"><button class="btn-outline sm" id="aiBtn-rewrite" onclick="aiRun('rewrite')">${(p.copy_en||'').trim()?'Rewrite with AI':'Draft with AI'}</button>${backBtn(p,'en')}</div>`:''}</div>
       ${p.needs_thai ? `<div class="f"><label>Thai${p.th_machine?' <span class="hint" style="color:#854F0B">machine draft, not checked</span>':''}${canTh?'':' <span class="hint">'+(canAiTh?'AI draft only until the Thai step':'view only')+'</span>'}</label>
         ${p.th_stale?`<div class="thnote">The English changed after this Thai was made.${canAiTh?`<button class="btn-outline sm" onclick="aiRun('thai')">Redo Thai with AI</button>`:''}</div>`:''}
         <textarea id="f-copy_th" class="tall" ${canTh?'':'readonly'} placeholder="${canTh?'Write or fix the Thai caption':(canAiTh?'Use Draft Thai with AI below, or leave it for the translator':'The translator writes the Thai after the English is approved')}">${esc(p.copy_th||'')}</textarea>
@@ -1005,6 +1039,7 @@ async function renderPost(el){
     <div class="f"><label>Images</label><div class="imgs">${imgs.map((im,i)=>`<span class="im">${safeUrl(im.url)?`<a href="${esc(im.url)}" target="_blank" rel="noopener">${im.external?'<span class="ext">Drive link</span>':`<img src="${esc(im.url)}" alt="">`}</a>`:''}${canImg?`<button class="imx" title="Remove" onclick="removeImg(${i})">×</button>`:''}</span>`).join('')}
       ${canImg?`<label class="imadd">+ Add<input type="file" accept="image/*" multiple onchange="addImgs(this.files)" hidden></label>`:''}${!imgs.length&&!canImg?'<span class="meta">No images yet.</span>':''}</div></div>
     <div class="f"><label>Video link <span class="hint">reels: paste a link for now</span></label><input id="f-video_url" ${canImg?'':'readonly'} value="${esc(p.video_url||'')}" placeholder="https://"></div>
+    ${['post','posted'].includes(p.step) ? shareBox(p) : ''}
     ${p.post_url?`<p style="margin-bottom:12px"><a href="${esc(safeUrl(p.post_url))}" target="_blank" rel="noopener" style="font-weight:600">View the live post</a></p>`:''}
     <button class="link-btn" style="margin:2px 0 10px" onclick="togglePreview()">${SHOW_PREVIEW?'Hide':'Preview as'} Facebook post</button>
     <div id="fbPreview">${SHOW_PREVIEW?fbPreviewHtml(p):''}</div>
@@ -1016,6 +1051,7 @@ async function renderPost(el){
   </div>`;
   syncNeedText();
   ['copy_en','copy_th'].forEach(k=>{ const e = $('#f-'+k); if(e) e.addEventListener('input', syncNeedText); });
+  { const e = $('#f-copy_en'), b = $('#aiBtn-rewrite'); if(e && b) e.addEventListener('input', ()=>{ if(!b.disabled) b.textContent = enAiLabel(); }); }
   if(keep && keep.id === id) Object.entries(keep.o).forEach(([k,v]) => { const e = $('#f-'+k); if(e && !e.readOnly) e.value = v; });
   syncNeedText();
   if(AI_SUG && AI_SUG.post === id) aiShowPanel();
@@ -1052,20 +1088,26 @@ async function restoreVersion(vid){
   p[col] = v.body; const box = $('#f-'+col); if(box) box.value = v.body;
   showToast('Earlier version restored.'); delete EVENTS[p.id]; delete VERSIONS[p.id]; AI_SUG = null; await reloadPosts(true);
 }
-async function aiRun(action){
-  const p = draft, btn = $('#aiBtn-'+action);
-  const field = action==='rewrite' ? 'en' : 'th';
-  const text = (($('#f-copy_en')||{}).value||'').trim();
-  if(!text){ showToast('Write or paste some English first.'); return; }
-  if(btn){ btn.disabled = true; btn.textContent = 'Working…'; }
+async function aiCall(action, postId, text){
   let out = null;
   try{
-    const r = await sb.functions.invoke('mkt-ai', { body: { action, post_id: p.id, text } });
+    const r = await sb.functions.invoke('mkt-ai', { body: { action, post_id: postId, text } });
     out = r.data;
     if(r.error && r.error.context){ try{ out = await r.error.context.json(); }catch(e){} }
     if(!out && r.error) out = { ok:false, reason:'network' };
   }catch(e){ out = { ok:false, reason:'network' }; }
-  if(btn){ btn.disabled = false; btn.textContent = action==='rewrite' ? 'Rewrite with AI' : ((p.copy_th||'').trim()?'Redo Thai with AI':'Draft Thai with AI'); }
+  return out;
+}
+async function aiRun(action){
+  const p = draft, text = (($('#f-copy_en')||{}).value||'').trim();
+  // Item X: with an empty English box the button drafts from the brief; once there is text it rewrites.
+  if(action==='rewrite' && !text) action = 'draft';
+  const btn = $('#aiBtn-'+(action==='draft'?'rewrite':action));
+  const field = action==='thai' ? 'th' : 'en';
+  if(!text && action!=='draft'){ showToast('Write or paste some English first.'); return; }
+  if(btn){ btn.disabled = true; btn.textContent = 'Working…'; }
+  const out = await aiCall(action, p.id, text);
+  if(btn){ btn.disabled = false; btn.textContent = action==='thai' ? ((p.copy_th||'').trim()?'Redo Thai with AI':'Draft Thai with AI') : enAiLabel(); }
   if(!out || !out.ok){
     const reason = (out && out.reason) || 'api_error';
     if(['no_credit','spend_limit','bad_key'].includes(reason)){ AISTATUS = Object.assign({}, AISTATUS||{}, { last_error: reason, last_error_at: new Date().toISOString() }); const ab = $('#aiBanner'); if(ab) ab.innerHTML = aiBannerHtml(); }
@@ -1076,17 +1118,48 @@ async function aiRun(action){
   AI_SUG = { post: p.id, field, text: out.text, from: text, mine: field==='en' ? text : (($('#f-copy_th')||{}).value||'') };
   aiShowPanel();
 }
+// Item VIII: where this post can be shared, from Communities. Only groups that allow it, matched to the post's audience.
+const SHARE_RANK = {'Yes':0, 'Specific days only':1, 'Admin approval':2};
+const SHARE_RULE = {'Yes':'Allowed', 'Specific days only':'Limited, check the rule', 'Admin approval':'Ask the admin first'};
+function audTags(list){
+  const map = [[/expat|english/i,'Expat English'],[/thai/i,'Thai'],[/chinese/i,'Chinese'],[/alternative/i,'Alternative education'],[/homeschool/i,'Homeschool'],[/worldschool/i,'Worldschool']];
+  const out = new Set(); (list||[]).forEach(a=>map.forEach(([re,t])=>{ if(re.test(a)) out.add(t); })); return out;
+}
+function shareList(p){
+  const want = audTags(p.brief_audience);
+  return (DATA.groups||[]).filter(g=>g.status!=='Avoid' && SHARE_RANK[g.promo] !== undefined && (!want.size || g.audience==='Mixed' || want.has(g.audience)))
+    .sort((a,b)=>SHARE_RANK[a.promo]-SHARE_RANK[b.promo] || memberCount(b.members)-memberCount(a.members));
+}
+function daysAgo(d){ const n = Math.round((new Date(new Date().toDateString()) - new Date(d+'T00:00:00')) / 86400000); return n<=0 ? 'today' : n===1 ? 'yesterday' : n + ' days ago'; }
+function shareBox(p){
+  const list = shareList(p), today = new Date().toLocaleDateString('en-CA');
+  if(!list.length) return '';
+  return `<div class="sharebox"><h4>Where to share</h4>${list.map(g=>{ const link = linkOf('groups', g), done = g.last_posted === today;
+    return `<div class="sh"><span class="sh-n">${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(g.name)} &#8599;</a>`:esc(g.name)}${g.status!=='Joined'&&g.status!=='Active'?' <span class="rowtag">not joined yet</span>':''}</span>
+      <span class="sh-r" title="${esc(g.rules||'')}">${esc(SHARE_RULE[g.promo])}</span>
+      <span class="sh-l">${g.last_posted ? 'Last shared ' + daysAgo(g.last_posted) : 'Never shared'}</span>
+      ${canEdit ? (done ? '<span class="sh-d">Shared today</span>' : `<button class="btn-outline sm" onclick="markShared('${g.id}')">Shared</button>`) : '<span></span>'}</div>`; }).join('')}</div>`;
+}
+async function markShared(gid){
+  const g = (DATA.groups||[]).find(x=>x.id===gid); if(!g) return;
+  const body = Object.fromEntries(Object.entries(g).filter(([k])=>k!=='id' && !k.startsWith('_')));
+  body.last_posted = new Date().toLocaleDateString('en-CA');
+  const { error } = await sb.from('marketing_entries').update({ data: body }).eq('id', gid);
+  if(error){ showToast('Could not save: ' + error.message); return; }
+  g.last_posted = body.last_posted; showToast('Noted: shared in ' + g.name + ' today.'); renderPost($('#view'));
+}
+function enAiLabel(){ return ((($('#f-copy_en')||{}).value||'').trim()) ? 'Rewrite with AI' : 'Draft with AI'; }
 function aiShowPanel(){
   const slot = $('#aiSlot'); if(!slot || !AI_SUG) return;
   const en = AI_SUG.field === 'en';
   const d = en ? wordDiff(AI_SUG.mine, AI_SUG.text) : null;
   slot.innerHTML = `<div class="aipanel">
-    <h4>${en?'AI rewrite':'AI Thai draft'} <span class="meta" style="font-weight:400">${en?'Your text stays as it is until you choose.':'Made from the English shown on the left. The translator still checks it.'}</span></h4>
+    <h4>${en?(AI_SUG.mine?'AI rewrite':'AI first draft'):'AI Thai draft'} <span class="meta" style="font-weight:400">${en?'Your text stays as it is until you choose.':'Made from the English shown on the left. The translator still checks it.'}</span></h4>
     <div class="aicmp">
       <div><div class="lbl2">${en?'Yours':'English'}</div><div class="txt">${en?d.left:esc(AI_SUG.from)}</div></div>
-      <div><div class="lbl2">${en?'AI rewrite':'Thai draft'}</div><div class="txt">${en?d.right:esc(AI_SUG.text)}</div></div>
+      <div><div class="lbl2">${en?(AI_SUG.mine?'AI rewrite':'AI first draft'):'Thai draft'}</div><div class="txt">${en?d.right:esc(AI_SUG.text)}</div></div>
     </div>
-    <div class="row"><span class="meta" style="margin-right:auto">${en?'<ins style="background:#E1F5EE;color:#085041;text-decoration:none;padding:0 4px;border-radius:3px">Green</ins> added or changed by the AI, <del style="background:#FCEBEB;color:#791F1F;padding:0 4px;border-radius:3px">red</del> removed. Check dates, names and numbers.':'You can still edit the Thai in its box after using it.'}</span>
+    <div class="row"><span class="meta" style="margin-right:auto">${en?'<ins style="background:#E1F5EE;color:#085041;text-decoration:none;padding:0 4px;border-radius:3px">Green</ins> added or changed by the AI, <del style="background:#FCEBEB;color:#791F1F;padding:0 4px;border-radius:3px">red</del> removed. Check dates, names and numbers.'+(AI_SUG.mine?'':' Fill every [ADD ...] gap before sending it on.'):'You can still edit the Thai in its box after using it.'}</span>
       <button class="btn-outline sm" onclick="aiDismiss()">${en?'Keep mine':'Not now'}</button>
       <button class="btn-primary sm" onclick="aiUse()">Use this</button></div></div>`;
 }
@@ -1202,13 +1275,24 @@ async function doAct(a){
     pay.confirm_current = true;
   }
   if(!(await saveFields(true))) return;
-  if(a==='send_on' && !p.pic){ showToast('Pick the person in charge first.'); editTopic(p.id); return; }
-  if(a==='translator_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the person in charge knows what to check.'); $('#f-note').focus(); return; } }
+  // A draft gap like [ADD TIME] must be filled before the post moves on.
+  if(['send_on','approve','mark_posted'].includes(a) && /\[ADD[^\]]*\]/i.test(p.copy_en||'')){ showToast('Fill the [ADD ...] gaps in the English first.'); return; }
+  if(a==='send_on' && !p.pic){ showToast('Pick the reviewer first.'); editTopic(p.id); return; }
+  if(a==='translator_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the reviewer knows what to check.'); $('#f-note').focus(); return; } }
   if(a==='send_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the writer knows what to change.'); $('#f-note').focus(); return; } }
   if(a==='mark_posted') pay.post_url = (($('#f-url')||{}).value||'').trim();
+  // Item IX: approving a Thai post with no Thai yet makes an AI Thai draft first, so the translator starts from it.
+  let aiTh = '';
+  if(a==='approve' && p.needs_thai && !(p.copy_th||'').trim() && (p.copy_en||'').trim()){
+    showToast('Approving. Making a Thai draft for the translator…');
+    const out = await aiCall('thai', p.id, p.copy_en);
+    if(out && out.ok && out.text){ const s2 = await act('save', p.id, { copy_th: out.text, source: 'ai', th_from_en: p.copy_en }); aiTh = s2 ? 'ok' : 'fail'; }
+    else aiTh = 'fail';
+  }
   const r = await act(a, p.id, pay); if(!r) return;
   EXTRA_KEYS.forEach(k => { const e = $('#f-'+k); if(e) e.value = ''; });
-  showToast({send_on:'Sent to Review.', thai_checked:'Thai done. Sent to Post.', send_back:'Sent back to English with your note.', translator_back:'Sent back to Review with your note.', approve: p.needs_thai ? 'Approved. Sent to Thai.' : 'Approved. Sent to Post.', mark_posted:'Marked as posted.'}[a] || 'Done.');
+  if(aiTh) showToast(aiTh==='ok' ? 'Approved. The translator starts from an AI Thai draft.' : 'Approved. The AI Thai draft did not work, so the translator writes the Thai.');
+  else showToast({send_on:'Sent to Review.', thai_checked:'Thai done. Sent to Post.', send_back:'Sent back to English with your note.', translator_back:'Sent back to Review with your note.', approve: p.needs_thai ? 'Approved. Sent to Translate.' : 'Approved. Sent to Post.', mark_posted:'Marked as posted.'}[a] || 'Done.');
   delete EVENTS[p.id]; await reloadPosts(true);
 }
 async function copyCaption(){
@@ -1310,7 +1394,8 @@ function topicMissing(o){
 function newTopic(date, pre, suggKey){
   cur = {topic:true};
   pre = pre || {};
-  drawerShell('New topic', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || ''}, true), null, false);
+  const U = usual();
+  drawerShell('New topic', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || '', ...(U.writer ? {writer: U.writer} : {}), pic: U.pic, translator: U.translator}, true), null, false);
   if(pre.label) setTimeout(()=>labelPicked(pre.label), 0);
   $('#sv').textContent = 'Create';
   $('#sv').onclick = async () => {
@@ -1346,7 +1431,16 @@ function teamView(){
   const others = Object.values(STAFF).filter(s=>s.status==='active' && !TEAM[s.id]).sort((a,b)=>a.name.localeCompare(b.name));
   const pics = ms;
   const sel = 'style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px;background:#fff"';
-  return `<div class="box"><h3 class="bh">Marketing team</h3>
+  const U = usual(), gaps = canDelete ? usualGaps().length : 0;
+  const usualBox = `<div class="box"><h3 class="bh">Usual team</h3>
+    <div class="us-grid">
+      <div class="f"><label>Writer</label><select id="us-writer" ${canDelete?'':'disabled'}>${personOptions(U.writer, 'The person creating the topic')}</select></div>
+      <div class="f"><label>Reviewer</label><select id="us-pic" ${canDelete?'':'disabled'}>${personOptions(U.pic, 'Not set')}</select></div>
+      <div class="f"><label>Thai translator</label><select id="us-translator" ${canDelete?'':'disabled'}>${personOptions(U.translator, 'Not set')}</select></div>
+    </div>
+    ${canDelete?`<div class="us-act"><button class="btn-primary sm" onclick="saveUsual()">Save</button>${gaps?`<button class="btn-outline sm" id="usApply" onclick="applyUsual()">Fill ${gaps} open post${gaps===1?'':'s'} that have nobody set</button>`:''}</div>`:''}
+  </div>`;
+  return usualBox + `<div class="box"><h3 class="bh">Marketing team</h3>
     <p class="meta" style="font-size:13px;margin-bottom:6px">Anyone here can be picked as writer, reviewer or translator on a post. People also need Marketing access in Permissions to open the HQ.</p>
     ${ms.length ? ms.map(id=>`<div class="tm"><span style="font-weight:600">${esc(STAFF[id].name)}</span>
       <input data-id="${id}" value="${esc(LANGS[id]||'')}" placeholder="Languages, e.g. English, Thai" onchange="setLangs(this.dataset.id, this.value)" ${canDelete?'':'disabled'} style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
@@ -1586,7 +1680,7 @@ function editPlan(){
   if(!canEditPlan()) return;
   const P = PLAN || {}; cur = {plan:true};
   drawerShell('Goal and targets', PLAN_FIELDS.map(f=>field(f, P[f[0]])).join('') + metaLine(PLAN), null, false);
-  if($('#sv')) $('#sv').onclick = () => persist('plan', PLAN && PLAN.id, readForm(PLAN_FIELDS.map(f=>f[0])));
+  if($('#sv')) $('#sv').onclick = () => persist('plan', PLAN && PLAN.id, { ...planData(), ...readForm(PLAN_FIELDS.map(f=>f[0])) });
 }
 
 // ---------- Boot ----------

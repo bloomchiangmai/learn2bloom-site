@@ -121,6 +121,9 @@ SOURCES.push(async () => {
 // Marketing HQ: posts at this person's step, late ones, and posts not marked as posted
 SOURCES.push(async () => {
   if(!canAccess('marketing', 'view')) return null;
+  // Site features: no HQ lines while the HQ is switched off, except for admin, director and IT
+  const { data: st } = await sb.from('bloom_settings').select('marketing_enabled').limit(1).maybeSingle();
+  if(st && st.marketing_enabled === false && !['admin','director','it'].includes(window.currentStaff.role)) return null;
   const me = window.currentStaff.id;
   // Item 58: each post names its own writer, reviewer and translator.
   const { data: posts } = await sb.from('marketing_posts').select('id, title, step, pic, writer, translator, poster, post_date, sent_back').not('step', 'in', '("posted","cancelled")');

@@ -318,6 +318,19 @@ button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-vi
 @media (max-width: 760px){ .pl{grid-template-columns:90px minmax(0,1fr) 90px;} .pl>:nth-child(n+4){display:none;} }
 .reffilter{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 12px;} .reffilter button{font:inherit;font-size:13px;font-weight:600;border:0;background:none;color:#5F5E5A;padding:5px 12px;border-radius:8px;cursor:pointer;} .reffilter button:hover{background:#F3F1FD;} .reffilter button.on{background:#EEEDFE;color:#3C3489;} .reffilter .n{font-weight:400;opacity:.7;}
 .quiet{color:#8A877F;font-size:13px;}
+.tt-wrap{overflow-x:auto;} .tt{min-width:860px;}
+.tt-r{display:grid;grid-template-columns:minmax(150px,1.6fr) 96px 72px 72px 72px 100px 100px 116px 72px;gap:6px;align-items:center;padding:12px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
+.tt-head{align-items:start;padding:0 0 10px;border-bottom:1px solid #E8E3D8;font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;}
+.tt-h{text-align:center;} .tt-h small{display:block;font-size:10px;letter-spacing:0;font-weight:500;color:#8A877F;margin-top:2px;line-height:1.25;}
+.tt-c{display:flex;justify-content:center;align-items:center;}
+.tt-add{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0 0;}
+.tick,.rad{width:18px;height:18px;accent-color:#534AB7;cursor:pointer;margin:0;} .tick:disabled,.rad:disabled{cursor:not-allowed;opacity:.45;}
+.lvl{display:inline-block;min-width:44px;text-align:center;font-size:12px;font-weight:700;padding:4px 8px;border-radius:999px;}
+.lvl-none{background:#EFECE6;color:#8A877F;} .lvl-view{background:#E6EEFB;color:#2F5DA8;} .lvl-edit{background:#FDF0DC;color:#8A5A12;} .lvl-full{background:#E3F2E8;color:#2E7D4F;}
+.lb-r{display:grid;grid-template-columns:150px minmax(0,1fr) 80px 72px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
+.lb-r:last-child{border-bottom:0;} .lb-head{font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;padding:0 0 8px;border-bottom:1px solid #E8E3D8;} .lb-head small{font-size:10px;letter-spacing:0;font-weight:500;color:#8A877F;margin-left:6px;}
+.pchips{display:flex;gap:6px;flex-wrap:wrap;} .pchip{font:inherit;font-size:13px;padding:5px 12px;border-radius:999px;border:1px solid #DCD5C6;background:#fff;color:#2C2C2A;cursor:pointer;} .pchip:hover{border-color:#534AB7;} .pchip.on{border-color:#534AB7;background:#EEEDFE;color:#3C3489;font-weight:700;} .pchip:disabled{cursor:default;}
+@media (max-width:700px){ .lb-r{grid-template-columns:1fr auto;} .lb-r .pchips{grid-column:1 / -1;} }
 .us-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;} .us-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;} @media (max-width:700px){ .us-grid{grid-template-columns:1fr;} }
 .sharebox{border:1px solid #E8E3D8;border-radius:12px;padding:14px 16px;margin:4px 0 14px;background:#FFFFFF;} .sharebox h4{font-size:13px;margin:0 0 8px;color:#2C2C2A;}
 .sh{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) 110px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #EFEAE0;font-size:13px;} .sh:first-of-type{border-top:0;}
@@ -496,7 +509,7 @@ const STEP_FG = {english:'#3C3489', thai:'#633806', review:'#0C447C', post:'#085
 let LABELS = [];
 const IMG_BUCKET = 'marketing-media';
 
-let POSTS = [], STAFF = {}, TEAM = {}, NO_ACCESS = new Set(), EVENTS = {}, PLAN = null, DATA = {}, loaded = false;
+let POSTS = [], STAFF = {}, TEAM = {}, NO_ACCESS = new Set(), LEVEL = {}, EVENTS = {}, PLAN = null, DATA = {}, loaded = false;
 let canEdit = false, canDelete = false, ME = null, LANGS = {};
 let refKey = 'facts', calMonth = null, calMode = 'month', postTimer = null;
 const filt = {q:'', s:''};
@@ -517,11 +530,6 @@ async function savePlan(extra){
   const { error } = PLAN && PLAN.id ? await sb.from('marketing_entries').update({ data: body }).eq('id', PLAN.id) : await sb.from('marketing_entries').insert({ collection:'plan', data: body });
   if(error){ showToast('Could not save: ' + error.message); return false; }
   return true;
-}
-async function saveUsual(){
-  const v = k => ($('#us-'+k)||{}).value || '';
-  if(!(await savePlan({ usual_writer: v('writer'), usual_reviewer: v('pic'), usual_translator: v('translator') }))) return;
-  showToast('Saved. New topics start with these people.'); await loadAll();
 }
 // Open posts with nobody set get the usual people. A person already picked is never changed.
 function usualGaps(){
@@ -619,6 +627,7 @@ async function loadAll(){
   LANGS = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, t.langs || '']));
   // Team members who cannot open the HQ (no Marketing edit). Unknown if the check failed.
   NO_ACCESS = new Set(((acc && acc.data) || []).filter(x=>!x.can_edit).map(x=>x.staff_id));
+  LEVEL = Object.fromEntries(((acc && acc.data) || []).map(x=>[x.staff_id, x.level || (x.can_edit ? 'edit' : 'none')]));
   LABELS = labels.data || [];
   SPECIAL = spec.data || [];
   AISTATUS = (ais && ais.data) || null;
@@ -1429,36 +1438,39 @@ async function cancelPost(id){
 function teamView(){
   const ms = members();
   const others = Object.values(STAFF).filter(s=>s.status==='active' && !TEAM[s.id]).sort((a,b)=>a.name.localeCompare(b.name));
-  const pics = ms;
   const sel = 'style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px;background:#fff"';
-  const U = usual(), gaps = canDelete ? usualGaps().length : 0;
-  const usualBox = `<div class="box"><h3 class="bh">Usual team</h3>
-    <div class="us-grid">
-      <div class="f"><label>Writer</label><select id="us-writer" ${canDelete?'':'disabled'}>${personOptions(U.writer, 'The person creating the topic')}</select></div>
-      <div class="f"><label>Reviewer</label><select id="us-pic" ${canDelete?'':'disabled'}>${personOptions(U.pic, 'Not set')}</select></div>
-      <div class="f"><label>Thai translator</label><select id="us-translator" ${canDelete?'':'disabled'}>${personOptions(U.translator, 'Not set')}</select></div>
-    </div>
-    ${canDelete?`<div class="us-act"><button class="btn-primary sm" onclick="saveUsual()">Save</button>${gaps?`<button class="btn-outline sm" id="usApply" onclick="applyUsual()">Fill ${gaps} open post${gaps===1?'':'s'} that have nobody set</button>`:''}</div>`:''}
+  const U = usual(), gaps = canDelete ? usualGaps().length : 0, dis = canDelete ? '' : 'disabled';
+  const th = (t, d) => `<span class="tt-h">${t}<small>${d}</small></span>`;
+  // Item 81: one table for the team: access, languages as ticks, and the usual people for new topics.
+  const row = id => {
+    const lv = LEVEL[id] || (NO_ACCESS.has(id) ? 'none' : 'edit'), ok = !NO_ACCESS.has(id);
+    const tick = l => `<span class="tt-c"><input type="checkbox" class="tick" aria-label="${l}" ${hasLang(id,l)?'checked':''} ${dis} onchange="toggleLang('${id}','${l}')"></span>`;
+    const radio = (k, enabled) => `<span class="tt-c"><input type="radio" class="rad" name="us-${k}" aria-label="Usual ${k}" ${U[k]===id?'checked':''} ${canDelete && enabled ? '' : 'disabled'} onclick="setUsual('${k}','${id}')"></span>`;
+    return `<div class="tt-r"><b>${esc(STAFF[id].name)}</b>
+      <span class="tt-c"><span class="lvl lvl-${lv}">${lv.charAt(0).toUpperCase()+lv.slice(1)}</span></span>
+      ${tick('English')}${tick('Thai')}${tick('Chinese')}
+      ${radio('writer', ok)}${radio('pic', ok)}${radio('translator', ok && hasLang(id,'Thai'))}
+      <span class="tt-c" style="justify-content:flex-end">${canDelete?`<button class="link-btn" style="color:#A23F1C" onclick="removeMember('${id}')">Remove</button>`:''}</span></div>`;
+  };
+  const team = `<div class="box"><h3 class="bh">Marketing team</h3>
+    <div class="tt-wrap"><div class="tt">
+      <div class="tt-r tt-head"><span class="tt-h" style="text-align:left">PERSON</span>${th('HQ ACCESS','from Roles and access')}${th('ENGLISH','reads, writes')}${th('THAI','reads, writes')}${th('CHINESE','reads, writes')}${th('USUAL WRITER','new topics')}${th('USUAL REVIEWER','new topics')}${th('USUAL THAI TRANSLATOR','Thai readers only')}<span></span></div>
+      ${ms.length ? ms.map(row).join('') : '<p class="meta" style="padding:8px 0">No one yet.</p>'}
+      ${others.length && canDelete ? `<div class="tt-add"><select id="addWho" ${sel}><option value="">Add a person</option>${others.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select><button class="btn-primary sm" onclick="addMember()">Add</button></div>` : ''}
+    </div></div>
+    ${gaps ? `<div class="us-act"><button class="btn-outline sm" id="usApply" onclick="applyUsual()">Fill ${gaps} open post${gaps===1?'':'s'} that have nobody set</button></div>` : ''}
   </div>`;
-  return usualBox + `<div class="box"><h3 class="bh">Marketing team</h3>
-    <p class="meta" style="font-size:13px;margin-bottom:6px">Anyone here can be picked as writer, reviewer or translator on a post. People also need Marketing access in Permissions to open the HQ.</p>
-    ${ms.length ? ms.map(id=>`<div class="tm"><span style="font-weight:600">${esc(STAFF[id].name)}</span>
-      <input data-id="${id}" value="${esc(LANGS[id]||'')}" placeholder="Languages, e.g. English, Thai" onchange="setLangs(this.dataset.id, this.value)" ${canDelete?'':'disabled'} style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
-      <span class="muted">${NO_ACCESS.has(id)?'<span style="color:#A23F1C;font-weight:600">Cannot open the HQ yet: give Marketing edit in Permissions</span>':''}</span>
-      ${canDelete?`<button class="link-btn" style="color:#A23F1C" onclick="removeMember('${id}')">Remove</button>`:'<span></span>'}</div>`).join('') : '<p class="meta" style="padding:8px 0">No one yet.</p>'}
-    ${others.length && canDelete ? `<div class="tm add"><select id="addWho" ${sel}><option value="">Add a person</option>${others.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>
-      <input id="addLangs" placeholder="Languages" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
-      <span></span><button class="btn-primary sm" onclick="addMember()">Add</button></div>` : ''}
-  </div>
-  <div class="box"><h3 class="bh">Labels</h3>
-    <p class="meta" style="font-size:13px;margin-bottom:6px">Picking a label on a topic suggests its usual reviewer. The reviewer can still be changed on each post.</p>
-    ${LABELS.map(l=>`<div class="tm"><span style="font-weight:600">${esc(l.name)}</span>
-      <select data-name="${esc(l.name)}" onchange="setLabelPic(this.dataset.name, this.value)" ${sel}><option value="">No usual reviewer</option>${pics.map(id=>`<option value="${id}" ${l.default_pic===id?'selected':''}>${esc(STAFF[id].name)}</option>`).join('')}</select>
+  const pics = ms.filter(id=>!NO_ACCESS.has(id));
+  const chip = (l, id) => `<button class="pchip ${l.default_pic===id?'on':''}" ${dis} data-name="${esc(l.name)}" onclick="setLabelPic(this.dataset.name, '${l.default_pic===id?'':id}')">${esc(firstName(STAFF[id].name))}</button>`;
+  const labels = `<div class="box"><h3 class="bh">Labels</h3>
+    <div class="lb-r lb-head"><span>LABEL</span><span>USUAL REVIEWER <small>click a name, click again to clear</small></span><span>USED</span><span></span></div>
+    ${LABELS.map(l=>`<div class="lb-r"><b>${esc(l.name)}</b>
+      <span class="pchips">${pics.map(id=>chip(l,id)).join('')}</span>
       <span class="muted">${(n=>n+' post'+(n===1?'':'s'))(POSTS.filter(p=>p.label===l.name).length)}</span>
-      <button class="link-btn" style="color:#A23F1C" data-name="${esc(l.name)}" onclick="removeLabel(this.dataset.name)">Remove</button></div>`).join('')}
-    <div class="tm add"><input id="newLabel" placeholder="New label" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
-      <span></span><span></span><button class="btn-primary sm" onclick="addLabel()">Add</button></div>
-  </div>
+      ${canDelete?`<button class="link-btn" style="color:#A23F1C" data-name="${esc(l.name)}" onclick="removeLabel(this.dataset.name)">Remove</button>`:'<span></span>'}</div>`).join('')}
+    ${canDelete?`<div class="lb-r"><input id="newLabel" placeholder="New label" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px"><span></span><span></span><button class="btn-primary sm" onclick="addLabel()">Add</button></div>`:''}
+  </div>`;
+  return team + labels + `
   <div class="box"><h3 class="bh">Special dates</h3>
     <p class="meta" style="font-size:13px;margin-bottom:6px">These show as suggested posts in the Calendar, next to the school calendar dates. Dates that move each year (Loy Krathong, Makha Bucha) stay marked "to confirm" until checked.</p>
     ${SPECIAL.map(x=>`<div class="tm"><span style="font-weight:600">${esc(x.name)}</span><span>${fmtDate(x.date)}</span>
@@ -1488,8 +1500,27 @@ async function removeSpecial(id){
   if(error){ showToast('Could not remove: ' + error.message); return; }
   showToast('Removed.'); loadAll();
 }
+const firstName = n => String(n||'').split(' ')[0];
+const LANG_RE = { English:/english/i, Thai:/thai|ไทย/i, Chinese:/chinese|mandarin|中文/i };
+const hasLang = (id, l) => LANG_RE[l].test(LANGS[id]||'');
+// Ticks keep any other language someone typed before (e.g. French) and rewrite the three known ones.
+async function toggleLang(id, l){
+  const parts = String(LANGS[id]||'').split(/[,·\/]+/).map(x=>x.trim()).filter(x=>x && !Object.values(LANG_RE).some(re=>re.test(x)));
+  const known = ['English','Thai','Chinese'].filter(k => k===l ? !hasLang(id,k) : hasLang(id,k));
+  await setLangs(id, [...known, ...parts].join(', '));
+  if(l==='Thai' && !known.includes('Thai') && usual().translator===id) await setUsual('translator', id);
+  render();
+}
+async function setUsual(k, id){
+  const key = {writer:'usual_writer', pic:'usual_reviewer', translator:'usual_translator'}[k];
+  const val = usual()[k] === id ? '' : id;
+  if(!(await savePlan({ [key]: val }))) { render(); return; }
+  PLAN = Object.assign(PLAN || {}, { [key]: val });
+  if(!PLAN.id) await loadAll(); else render();
+  showToast(val ? 'Saved. New topics start with ' + firstName(STAFF[id].name) + '.' : 'Cleared.');
+}
 async function addMember(){
-  const id = $('#addWho').value, langs = ($('#addLangs').value||'').trim();
+  const id = $('#addWho').value, langs = '';
   if(!id){ showToast('Pick a person to add.'); return; }
   const { error } = await sb.from('marketing_team').upsert({ staff_id:id, langs: langs || null }, { onConflict:'staff_id' });
   if(error){ showToast('Could not add: ' + error.message); return; }
@@ -1498,7 +1529,7 @@ async function addMember(){
 async function setLangs(id, langs){
   const { error } = await sb.from('marketing_team').update({ langs: langs.trim() || null }).eq('staff_id', id);
   if(error){ showToast('Could not save: ' + error.message); return; }
-  LANGS[id] = langs.trim(); showToast('Saved.');
+  LANGS[id] = langs.trim();
 }
 async function removeMember(id){
   const open = POSTS.filter(p=>openStep(p) && [p.pic, p.writer, p.translator].includes(id)).length;
@@ -1510,7 +1541,7 @@ async function removeMember(id){
 async function setLabelPic(name, pic){
   const { error } = await sb.from('marketing_labels').update({ default_pic: pic || null }).eq('name', name);
   if(error){ showToast('Could not save: ' + error.message); return; }
-  const l = LABELS.find(x=>x.name===name); if(l) l.default_pic = pic || null; showToast('Saved.');
+  const l = LABELS.find(x=>x.name===name); if(l) l.default_pic = pic || null; showToast(pic ? 'Saved.' : 'Cleared.'); if(view()==='settings') render();
 }
 async function addLabel(){
   const name = ($('#newLabel').value||'').trim();

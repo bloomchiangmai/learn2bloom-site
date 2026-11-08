@@ -20,14 +20,27 @@ h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin
 .sub{font-size:15px;color:#5F5E5A;max-width:680px;}
 .top-bar{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
 
-/* section tabs */
-.tabs{display:flex;flex-wrap:wrap;gap:4px 18px;border-bottom:1px solid #E8E3D8;margin-bottom:28px;}
-.tab-group{display:flex;align-items:center;gap:2px;}
-.tab-group-label{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#A8A39A;margin-right:6px;}
-.tab{background:none;border:0;padding:10px 10px;font-size:14px;font-weight:600;color:#5F5E5A;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;}
+/* main tabs */
+.tabs{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;border-bottom:1px solid #E8E3D8;margin-bottom:28px;}
+.sidebar-logo{border-bottom:none !important;padding-bottom:4px !important;}
+.hq-head{padding:0 20px 14px;border-bottom:1px solid #E8E3D8;}
+.hq-app{font-size:13px;font-weight:600;color:#534AB7;margin-bottom:8px;}
+.hq-back{font-size:13px;font-weight:600;color:#534AB7;text-decoration:none;}
+.hq-back:hover{text-decoration:underline;}
+.hq-link{display:flex !important;align-items:center;justify-content:space-between;}
+.hq-n{font-size:11px;font-weight:700;color:#fff;background:#534AB7;border-radius:999px;padding:1px 8px;margin-left:8px;}
+.sidebar-link.active .hq-n{background:#fff;color:#534AB7;}
+.hq-n.late,.sidebar-link.active .hq-n.late{background:#C0392B;color:#fff;}
+.tab{background:none;border:0;padding:10px 12px;font-size:15px;font-weight:600;color:#5F5E5A;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;}
 .tab:hover{color:#2C2C2A;}
 .tab.on{color:#534AB7;border-bottom-color:#534AB7;}
 .tab .n{font-weight:400;color:#A8A39A;font-size:12px;margin-left:4px;}
+.tab-sep{width:1px;height:20px;background:#E8E3D8;margin:0 8px;}
+.subtabs{display:flex;flex-wrap:wrap;gap:6px;margin:-12px 0 24px;}
+.pill{background:#fff;border:1px solid #DCD5C6;border-radius:99px;padding:5px 13px;font-size:13px;font-weight:600;color:#5F5E5A;cursor:pointer;white-space:nowrap;}
+.pill:hover{border-color:#888780;}
+.pill.on{background:#534AB7;border-color:#534AB7;color:#fff;}
+.pill .n{font-weight:400;opacity:.7;margin-left:3px;}
 
 .btn-primary{padding:10px 20px;border:none;border-radius:8px;background:#534AB7;color:#fff;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;}
 .btn-primary:hover{background:#443c99;}
@@ -35,15 +48,16 @@ h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin
 .btn-outline{padding:9px 16px;border:1px solid #DCD5C6;border-radius:8px;background:#fff;font-size:14px;font-weight:600;cursor:pointer;}
 .btn-outline:hover{border-color:#888780;}
 .btn-danger{padding:9px 16px;border:1px solid #EBC3B4;border-radius:8px;background:#fff;color:#A23F1C;font-size:14px;font-weight:600;cursor:pointer;}
+.link-btn{background:none;border:0;color:#534AB7;font-weight:600;font-size:13px;cursor:pointer;padding:0;}
 
 .tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;}
 .tools input,.tools select{border:1px solid #DCD5C6;background:#fff;border-radius:8px;padding:8px 12px;font-size:14px;}
 .tools input{min-width:240px;}
 .tools .count{color:#888780;font-size:12px;}
 
-.card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:24px;}
-.card h2{font-family:Georgia,serif;font-size:19px;font-weight:700;margin-bottom:14px;color:#2C2C2A;display:flex;justify-content:space-between;align-items:center;gap:10px;}
-.card h2 a{font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;}
+.card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:22px 24px;}
+.card h2{font-family:Georgia,serif;font-size:19px;font-weight:700;color:#2C2C2A;display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+.card .why{color:#888780;font-size:13px;margin:2px 0 14px;}
 
 /* table */
 .tbl{background:#fff;border:1px solid #E8E3D8;border-radius:12px;overflow:auto;}
@@ -52,15 +66,31 @@ th{text-align:left;padding:10px 12px;border-bottom:2px solid #E8E3D8;color:#5F5E
 td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
 tr:last-child td{border-bottom:0;}
 tbody tr{cursor:pointer;} tbody tr:hover td{background:#FBF9F4;}
-td.main{font-weight:600;min-width:180px;}
+td.main{font-weight:600;min-width:200px;}
+td.nowrap{white-space:nowrap;}
 .clip{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:#5F5E5A;max-width:340px;}
+.muted{color:#888780;}
 
 /* chips */
 .chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:#F1EFE8;color:#5F5E5A;white-space:nowrap;}
 .chip.plum{background:#EEEDFE;color:#534AB7;} .chip.amber{background:#FDF1DF;color:#9A5D0C;}
 .chip.rust{background:#FBE9E2;color:#A23F1C;} .chip.leaf{background:#E3F1EC;color:#0F6E56;}
+.chip.blue{background:#E6F0FA;color:#1F5E99;}
+.fmt{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#888780;border:1px solid #DCD5C6;border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:2px;}
+.ready{display:inline-flex;gap:4px;}
+.ready span{font-size:10.5px;font-weight:700;letter-spacing:.3px;border-radius:4px;padding:1px 5px;border:1px solid #DCD5C6;color:#B5B0A8;}
+.ready span.ok{background:#E3F1EC;border-color:#E3F1EC;color:#0F6E56;}
 
-/* cards grid */
+/* pipeline strip */
+.pipe{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
+.pipe button{min-width:110px;flex:0 0 auto;}
+.pipe button{background:#fff;border:1px solid #E8E3D8;border-radius:10px;padding:10px 12px;text-align:left;cursor:pointer;}
+.pipe button:hover{border-color:#DCD5C6;}
+.pipe button.on{border-color:#534AB7;box-shadow:0 0 0 1px #534AB7;}
+.pipe .num{font-family:Georgia,serif;font-size:22px;font-weight:700;line-height:1.1;}
+.pipe .lbl{font-size:12px;color:#5F5E5A;}
+
+/* reference cards */
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
 .entry{background:#fff;border:1px solid #E8E3D8;border-radius:12px;padding:18px 20px;cursor:pointer;}
 .entry:hover{border-color:#DCD5C6;}
@@ -70,50 +100,336 @@ td.main{font-weight:600;min-width:180px;}
 .kv span{white-space:pre-wrap;}
 
 /* overview */
-.ov{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;}
-.goal{grid-column:span 12;background:#2C2C2A;color:#F7F3EC;border-radius:12px;padding:24px 26px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:20px;}
+.ov{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.ov .wide{grid-column:1/-1;}
+.goal{background:#2C2C2A;color:#F7F3EC;border-radius:12px;padding:20px 24px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:20px;align-items:start;}
 .goal .lbl{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#B5B0A8;margin-bottom:4px;font-weight:700;}
-.goal .big{font-family:Georgia,serif;font-size:21px;line-height:1.3;}
+.goal .big{font-family:Georgia,serif;font-size:20px;line-height:1.3;}
 .goal .val{font-size:15px;font-weight:600;}
 .goal .edit{color:#F5C842;font-size:12px;cursor:pointer;background:none;border:0;padding:0;margin-top:8px;text-decoration:underline;}
-.stat{grid-column:span 3;}
-.stat .num{font-family:Georgia,serif;font-size:32px;font-weight:700;line-height:1.1;}
-.stat .cap{color:#5F5E5A;font-size:13px;}
-.bar{display:flex;height:6px;border-radius:4px;overflow:hidden;background:#E8E3D8;margin-top:12px;}
-.bar i{display:block;height:100%;}
-.half{grid-column:span 6;}
+.month-line{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
 .list{list-style:none;}
-.list li{padding:9px 0;border-bottom:1px solid #E8E3D8;display:flex;justify-content:space-between;gap:12px;cursor:pointer;}
+.list li{padding:9px 0;border-bottom:1px solid #E8E3D8;display:flex;justify-content:space-between;gap:12px;cursor:pointer;align-items:baseline;}
 .list li:last-child{border-bottom:0;}
 .list .t{font-weight:600;}
-.list .s{color:#888780;font-size:12px;text-align:right;}
-.empty-state{color:#888780;font-size:14px;padding:24px;text-align:center;border:1px dashed #DCD5C6;border-radius:12px;background:#FCFBF8;}
+.list .s{color:#888780;font-size:12px;text-align:right;white-space:nowrap;}
+.empty-state{color:#888780;font-size:14px;padding:22px;text-align:center;border:1px dashed #DCD5C6;border-radius:12px;background:#FCFBF8;}
 
 /* drawer */
 .scrim{position:fixed;inset:0;background:rgba(44,44,42,.28);display:none;z-index:80;}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100%);background:#FDFAF5;border-left:1px solid #E8E3D8;z-index:81;transform:translateX(100%);transition:transform .2s ease;display:flex;flex-direction:column;}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:#FDFAF5;border-left:1px solid #E8E3D8;z-index:81;transform:translateX(100%);transition:transform .2s ease;display:flex;flex-direction:column;}
+.drawer.wide{width:min(980px,100%);}
 .dw-open .scrim{display:block;} .dw-open .drawer{transform:none;}
-.drawer header{padding:18px 22px;border-bottom:1px solid #E8E3D8;display:flex;justify-content:space-between;align-items:center;}
+.drawer header{padding:18px 22px;border-bottom:1px solid #E8E3D8;display:flex;justify-content:space-between;align-items:center;gap:12px;}
 .drawer header h3{font-family:Georgia,serif;font-size:19px;font-weight:700;}
 .drawer .body{padding:18px 22px;overflow:auto;flex:1;}
 .drawer footer{padding:14px 22px;border-top:1px solid #E8E3D8;display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;}
 .f{margin-bottom:14px;}
 .f label{display:block;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:#888780;font-weight:700;margin-bottom:5px;}
+.f label .hint{text-transform:none;letter-spacing:0;font-weight:400;color:#A8A39A;}
 .f input,.f select,.f textarea{width:100%;border:1px solid #DCD5C6;background:#fff;border-radius:8px;padding:9px 11px;font-size:14px;}
 .f textarea{min-height:90px;resize:vertical;line-height:1.5;}
+.f textarea.tall{min-height:220px;overflow:hidden;resize:none;line-height:1.55;}
+.thnote{background:#FAEEDA;color:#633806;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;margin-bottom:6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.aicmp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;}
+.aicmp .lbl2{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#3C3489;margin-bottom:4px;}
+.aicmp .txt{background:#fff;border:1px solid #DCD5C6;border-radius:8px;padding:10px 12px;font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
+.aicmp ins{background:#E1F5EE;color:#085041;text-decoration:none;border-radius:3px;}
+.aicmp del{background:#FCEBEB;color:#791F1F;border-radius:3px;}
+.tagchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.tagchip{border:1px solid #DCD5C6;border-radius:999px;padding:4px 10px;font-size:12.5px;background:#fff;cursor:pointer;color:#5F5E5A;}
+.tagchip.on{background:#EEEDFE;border-color:#AFA9EC;color:#3C3489;font-weight:600;}
+.adminline{font-size:12.5px;color:#854F0B;margin:10px 0 0;}
+.nexthint{font-size:12px;color:#888780;text-align:right;margin-top:6px;}
+.fbwrap{background:#F1EFE8;border-radius:12px;padding:16px;margin:4px 0 14px;}
+.fbcard{max-width:500px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #E5E1D8;padding:14px 16px;font-family:Helvetica,Arial,sans-serif;}
+.fbhead{display:flex;gap:10px;align-items:center;margin-bottom:10px;} .fbav{width:40px;height:40px;border-radius:50%;background:#EEEDFE;color:#3C3489;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.fbname{font-weight:700;font-size:14px;} .fbtime{font-size:12px;color:#65676B;}
+.fbtext{font-size:14.5px;line-height:1.45;white-space:pre-wrap;word-break:break-word;color:#050505;}
+.fbmore{border-top:1px dashed #C9C3B6;margin:8px 0;padding-top:4px;font-size:11.5px;color:#888780;}
+.fbrest{color:#9A968C;} .fbimg{margin-top:10px;border-radius:6px;max-width:100%;display:block;}
 .f input:focus,.f select:focus,.f textarea:focus{outline:2px solid #EEEDFE;border-color:#534AB7;}
+.grid-meta{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1.3fr;gap:10px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.sec-label{font-family:Georgia,serif;font-size:15px;font-weight:700;margin:6px 0 10px;padding-top:12px;border-top:1px solid #E8E3D8;}
+details.orig{margin-bottom:14px;}
+details.orig summary{cursor:pointer;font-size:13px;font-weight:600;color:#534AB7;margin-bottom:8px;}
+.f .openl{font-size:12px;margin-top:4px;display:inline-block;}
 .x{background:none;border:0;font-size:24px;line-height:1;cursor:pointer;color:#888780;}
 .confirm{display:none;gap:8px;align-items:center;font-size:13px;color:#A23F1C;}
 .meta{color:#888780;font-size:12px;}
+.goalbox{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;grid-template-rows:auto auto auto;column-gap:20px;row-gap:4px;background:#534AB7;border:1px solid #534AB7;border-radius:16px;padding:20px 26px;margin-bottom:14px;}
+.goalbox .gcol{display:grid;grid-row:span 3;grid-template-rows:subgrid;min-width:0;}
+.goalbox .glbl{align-self:end;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#CECBF6;font-weight:700;}
+.goalbox .gval{align-self:baseline;font-size:17px;font-weight:700;color:#FFFFFF;margin-top:4px;overflow-wrap:anywhere;}
+.goalbox .gval.gbig{font-family:Georgia,serif;font-size:23px;}
+.goalbox .gval.none{color:#CECBF6;font-weight:600;}
+.goalbox .gedit{justify-self:start;align-self:start;margin-top:8px;font-size:13px;font-weight:600;color:#FFFFFF;background:none;border:none;padding:0;cursor:pointer;text-decoration:underline;font-family:inherit;}
+.ground-h{font-size:11px;letter-spacing:1.2px;color:#6B6A64;font-weight:700;margin:4px 0 8px;}
+.gtile{display:block;text-align:left;font:inherit;color:#2C2C2A;background:#fff;border:1px solid #E8E3D8;border-radius:12px;padding:12px 16px;cursor:pointer;width:100%;}
+.gtile:hover{border-color:#CECBF6;}
+.gtile .gt{display:flex;align-items:baseline;gap:8px;white-space:nowrap;}
+.gtile .gn{font-family:Georgia,serif;font-size:22px;font-weight:700;}
+.gtile .gl{font-size:14px;font-weight:600;}
+.gtile .gs{font-size:12px;color:#6B6A64;margin-top:2px;}
+.gbar{height:6px;border-radius:3px;background:#E8E3D8;margin-top:10px;overflow:hidden;display:flex;}
+.gbar span{display:block;height:100%;}
+.goal-line{display:flex;align-items:center;gap:12px;padding:12px 18px;border:1px solid #E8E3D8;border-radius:12px;background:#fff;margin-bottom:14px;cursor:pointer;}
+.goal-line .lbl{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#888780;font-weight:700;}
+.goal-line .val{font-family:Georgia,serif;font-size:17px;font-weight:700;}
+.goal-line .meta2{color:#888780;font-size:13px;}
+.goal-line .act{margin-left:auto;color:#534AB7;font-weight:600;font-size:13px;white-space:nowrap;}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px;}
+.tile{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:16px 18px;cursor:pointer;text-align:left;display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;}
+.tile:hover{border-color:#DCD5C6;} .tile.on{border-color:#534AB7;box-shadow:0 0 0 1px #534AB7;}
+.tile .n{font-family:Georgia,serif;font-size:30px;font-weight:700;line-height:1.1;}
+.tile .l{font-size:13px;color:#5F5E5A;margin-top:2px;}
+.tile .n.warn{color:#9A5D0C;} .tile .n.bad{color:#A23F1C;} .tile .n.good{color:#0F6E56;}
+.drop{background:#fff;border:1px solid #E8E3D8;border-radius:12px;padding:6px 18px;margin:-4px 0 14px;}
+.cal-wrap{background:#fff;border:1px solid #E8E3D8;border-radius:12px;padding:16px 18px;margin-bottom:14px;}
+.cal-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.cal-head h2{font-family:Georgia,serif;font-size:18px;font-weight:700;}
+.cal-nav{background:none;border:1px solid #DCD5C6;border-radius:6px;width:28px;height:28px;cursor:pointer;color:#5F5E5A;}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;}
+.cal .dow{font-size:11px;color:#A8A39A;text-transform:uppercase;letter-spacing:.5px;padding:0 4px;}
+.cal .day{min-height:58px;border-radius:8px;background:#FCFBF8;border:1px solid #F0ECE3;padding:4px 6px;font-size:12px;color:#888780;}
+.cal .day.out{background:transparent;border-color:transparent;}
+.cal .day.today{border-color:#534AB7;color:#534AB7;font-weight:700;}
+.cal .day.past{color:#C9C4BA;}
+.cal .pp{display:block;margin-top:3px;font-size:11px;font-weight:600;line-height:1.25;border-radius:4px;padding:2px 5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12px;color:#5F5E5A;}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.bar{display:flex;height:16px;border-radius:8px;overflow:hidden;background:#F1EFE8;}
+.bar button{border:0;height:100%;cursor:pointer;}
+.bar-lbl{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;font-size:12px;color:#5F5E5A;}
+.queue-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.copybtn{margin-left:8px;font-size:11px;font-weight:600;text-transform:none;letter-spacing:0;color:#534AB7;background:#EEEDFE;border:0;border-radius:4px;padding:2px 8px;cursor:pointer;}
+.step{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid #F0ECE3;}
+.step:first-of-type{border-top:0;}
+.step-ic{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none;}
+.step-tx{flex:1;min-width:0;} .step-tx .t{font-weight:600;font-size:15px;} .step-tx .s{font-size:12.5px;color:#888780;}
+.step-btn{padding:8px 14px;font-size:13px;flex:none;}
+.mnav{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.mnav h2{font-family:Georgia,serif;font-size:20px;font-weight:700;min-width:170px;text-align:center;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.chips button{border:0;cursor:pointer;}
+.chips button.on{box-shadow:0 0 0 2px #534AB7;}
+.cap{background:#fff;border:1px solid #E8E3D8;border-radius:10px;padding:12px 14px;white-space:pre-wrap;font-size:14px;max-height:240px;overflow:auto;margin-bottom:6px;}
+.ref-sec{margin-bottom:34px;}
+.ref-sec .top-bar{margin-bottom:12px;}
+.ref-sec h2{font-family:Georgia,serif;font-size:21px;font-weight:700;}
+.box{background:#fff;border:1px solid #E8E3D8;border-radius:12px;padding:14px 18px 6px;margin-bottom:14px;scroll-margin-top:20px;}
+.bh{font-family:Georgia,serif;font-size:17px;font-weight:700;margin-bottom:4px;}
+.bh.bad{color:#A23F1C;} .bh.warn{color:#9A5D0C;}
+.prow{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid #F0ECE3;cursor:pointer;}
+.bh+.prow{border-top:0;}
+.prow:hover .t{color:#534AB7;}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;}
+a.btn-primary{text-decoration:none;color:#fff;display:inline-block;} a.btn-outline{text-decoration:none;color:#2C2C2A;display:inline-block;}
+.cap.ro{background:#F3EFE7;border:0;border-left:3px solid #DCD5C6;border-radius:4px;}
+.donebox{background:#E1F5EE;color:#085041;border-radius:10px;padding:14px 16px;margin-top:18px;font-size:13px;font-weight:600;}
+.donebox .f label{color:#888780;}
+.plist{font-size:13.5px;}
+.pl{display:grid;grid-template-columns:118px minmax(0,1fr) 92px 110px 112px 112px;align-items:center;gap:10px;padding:9px 2px;border-top:1px solid #F0ECE3;}
+.pl.head{border-top:0;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#A8A39A;font-weight:700;padding-top:4px;}
+.pl.opened{background:#EEF4FC;border-radius:8px 8px 0 0;border-top-color:transparent;}
+.pl.hl{background:#FFF6D6;transition:background .6s;}
+.pt{display:flex;align-items:center;min-width:0;}
+.ptt{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.late-d{color:#A23F1C;font-weight:600;}
+.mks{display:inline-flex;gap:4px;}
+.mk{text-decoration:none;cursor:pointer;font-size:10.5px;font-weight:700;border-radius:4px;padding:1px 5px;color:#B5B0A8;border:1px solid #E8E3D8;}
+.mk.ok{background:#E3F1EC;border-color:#E3F1EC;color:#0F6E56;}
+.mk.no{background:#FCEBEB;border-color:#F7C1C1;color:#A32D2D;}
+a.mk:hover{border-color:#534AB7;color:#534AB7;}
+.mkey .mk{cursor:default;}
+.sm{padding:5px 11px;font-size:12.5px;border-radius:7px;white-space:nowrap;}
+.ppanel{background:#EEF4FC;border-radius:0 0 8px 8px;padding:4px 12px 16px 130px;margin-bottom:4px;}
+.pcard{background:#fff;border:1px solid #E8E3D8;border-radius:12px;padding:16px 18px;max-width:440px;}
+.pstep{font-size:13px;color:#5F5E5A;margin:0 0 8px;}
+.pbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.pbig{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border:1px solid #DCD5C6;border-radius:10px;background:#fff;font-size:14px;font-weight:600;color:#2C2C2A;cursor:pointer;text-decoration:none;}
+.pbig:hover{border-color:#888780;background:#FCFBF8;}
+.pbig.off{color:#A32D2D;background:#FCEBEB;border-color:#F7C1C1;cursor:default;font-weight:500;}
+.pic{display:flex;}
+.pcard input{width:100%;border:1px solid #DCD5C6;border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:8px;}
+.pmark{width:100%;padding:12px;font-size:15px;}
+.popen{display:block;text-align:center;font-size:13px;color:#5F5E5A;margin-top:4px;}
+.box .plist{margin-bottom:6px;}
+.mkey{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:#888780;padding:4px 2px 10px;}
+.mkey .mk{margin-left:8px;} .mkey .mk:first-child{margin-left:0;}
+.warn-t{color:#9A5D0C;font-weight:600;}
+.warnbox{background:#FAEEDA;color:#633806;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;font-weight:600;}
+.sync{display:flex;align-items:center;gap:10px;color:#888780;font-size:12.5px;margin-top:6px;padding:8px 2px;transition:color .3s;}
+.sync a{margin-left:auto;font-weight:600;font-size:13px;}
+.sync b{font-weight:600;color:#5F5E5A;}
+.live{width:8px;height:8px;border-radius:50%;background:#1D9E75;box-shadow:0 0 0 3px #E1F5EE;}
+.sync.flash{color:#0F6E56;} .sync.flash b{color:#0F6E56;}
+button.tile{font:inherit;color:inherit;width:100%;}
+.tiles.four{grid-template-columns:repeat(4,minmax(0,1fr));}
+div.tile{cursor:default;}
+.wl{display:grid;grid-template-columns:112px minmax(0,1fr) 92px 130px 92px;gap:10px;align-items:center;padding:10px 2px;border-top:1px solid #F0ECE3;cursor:pointer;font-size:13.5px;}
+.bh+p+.wl,.bh+.wl{border-top:0;}
+.wl:hover .ptt{color:#534AB7;}
+.wl-due{text-align:right;} .wl-act{text-align:right;}
+.stepcols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0 10px;}
+.stepcol{background:#F7F3EC;border:1px solid transparent;border-radius:10px;padding:10px;text-align:center;}
+.stepcol .h{font-size:12px;color:#5F5E5A;} .stepcol .c{font-family:Georgia,serif;font-size:24px;font-weight:700;}
+.dots{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;min-height:8px;margin-top:4px;}
+.dots i{width:8px;height:8px;border-radius:50%;background:#B4B2A9;display:inline-block;} .dots i.r{background:#E24B4A;}
+.wo{display:grid;grid-template-columns:150px minmax(0,1fr) 220px;gap:12px;align-items:center;padding:8px 0;border-top:1px solid #F0ECE3;font-size:13.5px;}
+.wbar{display:flex;height:10px;border-radius:5px;background:#F1EFE8;overflow:hidden;}
+.seg{display:inline-flex;border:1px solid #DCD5C6;border-radius:8px;overflow:hidden;}
+.seg button{background:#fff;border:0;padding:6px 12px;font-size:13px;cursor:pointer;color:#5F5E5A;} .seg button.on{background:#534AB7;color:#fff;}
+.stepbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.sb{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#A8A39A;} .sb.now{color:#2C2C2A;font-weight:600;}
+.sd{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;border:1px solid #DCD5C6;}
+.sb.done .sd{background:#E1F5EE;color:#085041;border-color:#E1F5EE;} .sb.now .sd{background:#534AB7;color:#fff;border-color:#534AB7;}
+.sl{flex:1;height:1px;background:#DCD5C6;min-width:12px;}
+.banner{border-radius:10px;padding:10px 14px;font-size:13.5px;font-weight:600;margin-bottom:14px;}
+.banner.bad{background:#FCEBEB;color:#791F1F;} .banner.warn{background:#FAEEDA;color:#633806;}
+.brief{background:#F7F3EC;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-bottom:14px;} .brief b{margin-right:6px;}
+textarea[readonly],input[readonly]{background:#F7F3EC!important;color:#5F5E5A;}
+.imgs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.im{position:relative;width:84px;height:84px;border-radius:8px;overflow:hidden;background:#EEEDFE;display:flex;align-items:center;justify-content:center;}
+.im img{width:84px;height:84px;object-fit:cover;display:block;} .im .ext{font-size:11px;font-weight:600;color:#534AB7;padding:4px;text-align:center;}
+.imx{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:0;background:rgba(44,44,42,.7);color:#fff;cursor:pointer;line-height:1;}
+.f .imadd{display:flex;margin:0;text-transform:none;letter-spacing:0;font-weight:600;}
+.imadd{width:84px;height:84px;border-radius:8px;border:1px dashed #DCD5C6;display:flex;align-items:center;justify-content:center;color:#888780;font-size:13px;cursor:pointer;}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;padding-top:14px;border-top:1px solid #F0ECE3;}
+.note-in{border:1px solid #DCD5C6;border-radius:8px;padding:9px 11px;font-size:14px;min-width:240px;flex:1;}
+.tm{display:grid;grid-template-columns:180px 220px minmax(0,1fr) 80px;gap:12px;align-items:center;padding:9px 0;border-top:1px solid #F0ECE3;font-size:13.5px;}
+.tm.add{border-top:1px dashed #DCD5C6;margin-top:4px;padding-top:12px;}
+.tm button{justify-self:end;}
+.emptyweeks{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px dashed #DCD5C6;border-radius:12px;padding:12px 16px;margin:-4px 0 14px;font-size:13.5px;color:#5F5E5A;}
+.emptyweeks b{color:#9A5D0C;margin-right:4px;}
+.emptyweeks.flash{box-shadow:0 0 0 3px #CECBF6;transition:box-shadow .3s;}
+button.tile.ovt,.stepcol.ovt,.wo.ovt{cursor:pointer;}
+button.tile.ovt:hover,.stepcol.ovt:hover{border-color:#534AB7;}
+button.tile.ovt.on,.stepcol.ovt.on{background:#fff;border-color:#534AB7;box-shadow:inset 0 0 0 1px #534AB7;}
+button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-visible,.wo.ovt:focus-visible{outline:2px solid #534AB7;outline-offset:2px;}
+.wo.ovt:hover{background:#FAF8F3;} .wo.ovt.on{background:#F3F1FD;}
+.ovhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:14px 0 2px;}
+.ovhead h4{font-size:14px;font-weight:700;margin:0;}
+.ovhead button{background:none;border:0;color:#534AB7;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;padding:0;}
+.who-h{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#534AB7;font-weight:700;margin:16px 0 8px;padding-top:12px;border-top:1px solid #EFEAE0;}
+.pl{display:grid;grid-template-columns:110px minmax(0,1.6fr) 110px 90px 90px 100px;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #F0ECE3;font-size:13.5px;cursor:pointer;}
+.pl:hover{background:#FAF8F3;} .pl-h{font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;color:#6B6A64;cursor:default;border-top:none;} .pl-h:hover{background:none;}
+@media (max-width: 760px){ .pl{grid-template-columns:90px minmax(0,1fr) 90px;} .pl>:nth-child(n+4){display:none;} }
+.reffilter{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 12px;} .reffilter button{font:inherit;font-size:13px;font-weight:600;border:0;background:none;color:#5F5E5A;padding:5px 12px;border-radius:8px;cursor:pointer;} .reffilter button:hover{background:#F3F1FD;} .reffilter button.on{background:#EEEDFE;color:#3C3489;} .reffilter .n{font-weight:400;opacity:.7;}
+.quiet{color:#8A877F;font-size:13px;}
+.tt-wrap{overflow-x:auto;} .tt{min-width:560px;}
+.tt-r{display:grid;grid-template-columns:200px 110px 110px minmax(0,1fr) 80px;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
+.tt-head{align-items:start;padding:0 0 10px;border-bottom:1px solid #E8E3D8;font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;}
+.tt-h{text-align:center;} .tt-h small{display:block;font-size:10px;letter-spacing:0;font-weight:500;color:#8A877F;margin-top:2px;line-height:1.25;}
+.tt-c{display:flex;justify-content:center;align-items:center;}
+.tt-add{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0 0;}
+.tick,.rad{width:18px;height:18px;accent-color:#534AB7;cursor:pointer;margin:0;} .tick:disabled,.rad:disabled{cursor:not-allowed;opacity:.45;}
+.lvl{display:inline-block;min-width:44px;text-align:center;font-size:12px;font-weight:700;padding:4px 8px;border-radius:999px;}
+.pl-r{display:grid;grid-template-columns:24px minmax(0,1fr) 150px 140px 70px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #EFEAE0;font-size:14px;}
+.pl-head{border-top:0;font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;padding:4px 0 6px;}
+.pl-r.off .pl-t,.pl-r.off .pl-in{opacity:.6;}
+.pl-t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pl-in{border:1px solid #DCD5C6;border-radius:8px;padding:6px 9px;background:#fff;font:inherit;font-size:13px;min-width:0;width:100%;box-sizing:border-box;}
+.pl-in.need{border-color:#D9963A;}
+.pl-th{display:flex;align-items:center;gap:6px;font-size:13px;}
+.pl-flag{grid-column:2 / -1;font-size:12px;color:#854F0B;margin-top:-2px;} .pl-flag.skip{color:#A23F1C;}
+.pl-search{margin:0 0 10px;padding:9px 12px;} .pl-paste{height:110px;font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.6;margin-bottom:12px;}
+.pl-lbl{display:block;font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;text-transform:uppercase;margin:4px 0 6px;}
+.pl-who{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:0 0 14px;margin-bottom:12px;border-bottom:1px solid #E8E3D8;}
+.pl-who label{display:block;font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;margin-bottom:4px;}
+.pl-who select{width:100%;}
+@media (max-width:700px){ .pl-who{grid-template-columns:1fr 1fr;} }
+.lb-top{border-bottom:1px solid #E8E3D8;}
+.fyi-h{display:flex;justify-content:space-between;align-items:baseline;}
+.fyi-n{display:inline-block;font-family:inherit;font-size:12px;font-weight:700;color:#6B6A64;background:#F1EFE8;border-radius:999px;padding:1px 8px;vertical-align:middle;margin-left:4px;}
+@media (max-width:700px){ .pl-r{grid-template-columns:24px 1fr;} .pl-r > :nth-child(n+3){grid-column:2;} .pl-head{display:none;} }
+.lvl-btn{position:relative;border:0;font-family:inherit;cursor:pointer;} .lvl-btn:hover,.lvl-btn:focus-visible{box-shadow:0 0 0 2px #534AB7;outline:none;}
+.acc-dot{position:absolute;top:-4px;right:-4px;width:12px;height:12px;border-radius:50%;background:#534AB7;border:2px solid #fff;box-sizing:border-box;}
+.acc-menu{position:absolute;z-index:200;width:230px;background:#fff;border:1px solid #E8E3D8;border-radius:12px;box-shadow:0 10px 30px rgba(44,44,42,.16);padding:6px;}
+.acc-menu button{display:flex;align-items:center;gap:8px;width:100%;padding:7px 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:12px;color:#5F5E5A;cursor:pointer;text-align:left;}
+.acc-menu button:hover,.acc-menu button.on{background:#F3F1FD;} .acc-menu button:focus-visible{outline:2px solid #534AB7;outline-offset:-2px;} .acc-menu button:focus:not(:focus-visible){outline:none;}
+.acc-menu .acc-def{border-top:1px solid #EFEAE0;margin-top:4px;padding-top:9px;color:#534AB7;font-weight:600;}
+.lvl-none{background:#EFECE6;color:#8A877F;} .lvl-view{background:#E6EEFB;color:#2F5DA8;} .lvl-edit{background:#FDF0DC;color:#8A5A12;} .lvl-full{background:#E3F2E8;color:#2E7D4F;}
+.lb-r{display:grid;grid-template-columns:200px 150px minmax(0,1fr) 80px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
+.lb-r:last-child{border-bottom:0;} .sd-r{display:grid;grid-template-columns:200px 150px minmax(0,1fr) 80px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #EFEAE0;font-size:14px;} .sd-r:last-child{border-bottom:0;} .sd-r > .link-btn, .sd-r > .btn-primary{justify-self:end;} .sd-r input{min-width:0;} @media (max-width:700px){ .sd-r{grid-template-columns:1fr auto;} } .lb-r > .link-btn, .lb-r > .btn-primary{justify-self:end;} .lb-head{font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;padding:0 0 8px;border-bottom:1px solid #E8E3D8;} .lb-head small{font-size:10px;letter-spacing:0;font-weight:500;color:#8A877F;margin-left:6px;}
+.pchips{display:flex;gap:6px;flex-wrap:wrap;} .pchip{font:inherit;font-size:13px;padding:5px 12px;border-radius:999px;border:1px solid #DCD5C6;background:#fff;color:#2C2C2A;cursor:pointer;} .pchip:hover{border-color:#534AB7;} .pchip.on{border-color:#534AB7;background:#EEEDFE;color:#3C3489;font-weight:700;} .pchip:disabled{cursor:default;}
+@media (max-width:700px){ .lb-r{grid-template-columns:1fr auto;} .lb-r .pchips{grid-column:1 / -1;} }
+.us-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;} .us-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;} @media (max-width:700px){ .us-grid{grid-template-columns:1fr;} }
+.sharebox{border:1px solid #E8E3D8;border-radius:12px;padding:14px 16px;margin:4px 0 14px;background:#FFFFFF;} .sharebox h4{font-size:13px;margin:0 0 8px;color:#2C2C2A;}
+.sh{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) 110px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #EFEAE0;font-size:13px;} .sh:first-of-type{border-top:0;}
+.sh-n{font-weight:600;min-width:0;} .sh-n a{color:#2C2C2A;text-decoration:none;} .sh-n a:hover{color:#534AB7;} .sh-r{color:#5F5E5A;} .sh-l{color:#8A877F;} .sh-d{color:#0F6E56;font-weight:600;text-align:right;} .sh button{justify-self:end;}
+@media (max-width:700px){ .sh{grid-template-columns:1fr auto;} .sh-r,.sh-l{grid-column:1;} }
+th.sortable{cursor:pointer;user-select:none;white-space:nowrap;} th.sortable .arr{margin-left:4px;opacity:0;font-size:10px;} th.sortable:hover .arr{opacity:.45;} th.sorted{color:#3C3489;} th.sorted .arr{opacity:1;color:#534AB7;}
+.subtabs.rows{flex-direction:column;align-items:flex-start;gap:8px;} .subrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;} .sublbl{font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;color:#6B6A64;width:132px;flex:0 0 132px;} @media (max-width:700px){ .sublbl{flex:0 0 100%;width:auto;} } .plain{color:#5F5E5A;font-size:13px;} .rowtag{font-size:12px;font-weight:600;color:#6B6A64;margin-left:6px;}
+.refpager{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:10px;font-size:13px;}
+.refpager button[disabled]{opacity:.4;cursor:default;}
+.rv{margin-bottom:14px;} .rv-link{font-size:14px;font-weight:600;margin:-4px 0 18px;} .rv-link a{color:#534AB7;text-decoration:none;} .rv-k{font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;color:#6B6A64;} .rv-v{font-size:14px;line-height:1.5;margin-top:3px;overflow-wrap:anywhere;}
+.refback{display:block;font-size:14px;font-weight:600;color:#534AB7;text-decoration:none;margin:0 0 12px;background:none;border:0;padding:0;cursor:pointer;font-family:inherit;}
+.ovlist{background:#fff;border:1px solid #CECBF6;border-radius:14px;padding:4px 18px;margin:-4px 0 14px;}
+.ovlist .wl:last-child{border-bottom:none;}
+.emptyweeks span{margin-right:auto;}
+#newTopicBtn{align-self:flex-end;} .hdr-btns{align-self:flex-end;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+.urgent{border:1px solid #F0C2C2;background:#FDF5F5;border-radius:14px;padding:12px 16px;margin:-4px 0 14px;}
+.urgent h3{font-size:14px;color:#791F1F;margin-bottom:4px;}
+.cal .sg{display:block;margin-top:3px;font-size:11px;line-height:1.25;border-radius:4px;padding:1px 5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px dashed #C9C3B6;color:#888780;background:transparent;}
+.cal .sg:hover{border-color:#534AB7;color:#534AB7;}
+.sgl{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px 0;border-top:1px solid #F0ECE3;font-size:13.5px;}
+.sgl:first-of-type{border-top:0;} .sgl .acts{display:flex;gap:6px;}
+.checks{display:flex;flex-wrap:wrap;gap:6px;}
+.checks label{display:inline-flex;align-items:center;gap:6px;border:1px solid #DCD5C6;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;margin:0;cursor:pointer;color:#2C2C2A;}
+.checks input{margin:0;width:auto;}
+.briefbox{background:#F7F3EC;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;}
+.briefbox b{font-weight:600;color:#5F5E5A;margin-right:4px;} .briefbox .kp{flex-basis:100%;white-space:pre-wrap;}
+.adm{font-size:12px;color:#854F0B;}
+.aibar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px;}
+.aibar .btn-outline.sm{border-color:#CECBF6;color:#534AB7;}
+.aipanel{border:1px solid #CECBF6;background:#F7F6FE;border-radius:12px;padding:12px 14px;margin:0 0 14px;}
+.aipanel h4{font-size:13px;font-weight:700;color:#3C3489;margin-bottom:6px;display:flex;gap:8px;align-items:center;}
+.aipanel textarea{width:100%;min-height:200px;border:1px solid #DCD5C6;border-radius:8px;padding:10px 12px;background:#fff;font-size:14px;line-height:1.5;}
+.aipanel .row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap;align-items:center;}
+.aimsg{border-radius:10px;padding:10px 14px;font-size:13.5px;margin:0 0 14px;background:#FAEEDA;color:#633806;font-weight:600;}
+.aibanner{border-radius:12px;padding:10px 16px;font-size:13.5px;margin:0 0 14px;background:#FCEBEB;color:#791F1F;font-weight:600;}
+.vers{margin-top:8px;} .vers .v{display:grid;grid-template-columns:150px 110px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0;border-top:1px solid #F0ECE3;}
+.vers .v .pv{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#5F5E5A;}
+.hist{font-size:12px;color:#888780;line-height:1.8;padding:12px 4px;}
 .toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
 
 @media (max-width: 860px){
+  .tiles.four{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .goalbox{grid-template-columns:repeat(3,minmax(0,1fr));padding:16px 18px;column-gap:12px;}
+  .goalbox .gcol.gmain{grid-column:1/-1;margin-bottom:10px;}
+  .wl{grid-template-columns:auto minmax(0,1fr) auto;row-gap:4px;}
+  .wl>:nth-child(1){grid-row:2;grid-column:1;font-size:12px;} .wl>:nth-child(2){grid-row:1;grid-column:1/3;} .wl>:nth-child(3){grid-row:2;grid-column:2;}
+  .wl>:nth-child(4){grid-row:2;grid-column:3;font-size:12px;} .wl>:nth-child(5){grid-row:1;grid-column:3;}
+  .wo{grid-template-columns:110px minmax(0,1fr);} .wo>:nth-child(3){grid-column:1/3;}
+  .stepcols{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .note-in{min-width:0;flex:1 1 100%;order:-1;}
+  .tm{grid-template-columns:1fr 1fr;} .tm>:nth-child(3){display:none;}
+  .emptyweeks span{flex-basis:100%;}
+  .sgl{grid-template-columns:1fr;gap:4px;}
   main{padding:28px 16px 80px;}
-  .goal{grid-template-columns:1fr 1fr;}
-  .goal>div:first-child{grid-column:span 2;}
-  .stat{grid-column:span 6;} .half{grid-column:span 12;}
+  .goal{grid-template-columns:1fr 1fr;} .goal>div:first-child{grid-column:span 2;}
+  .ov{grid-template-columns:1fr;}
+  .step{flex-wrap:wrap;} .step-btn{margin-left:50px;}
+  .pl{grid-template-columns:auto auto minmax(0,1fr) auto;row-gap:4px;column-gap:8px;}
+  .pl.head{display:none;}
+  .pl>:nth-child(1){grid-row:2;grid-column:1;font-size:12px;}
+  .pl>:nth-child(2){grid-row:1;grid-column:1/4;}
+  .pl>:nth-child(3){grid-row:2;grid-column:2;}
+  .pl>:nth-child(4){display:none;}
+  .pl>:nth-child(5){display:block;grid-row:2;grid-column:3;}
+  .pl>:nth-child(6){grid-row:1/3;grid-column:4;}
+  .ptt{white-space:normal;}
+  .ppanel{padding-left:0;padding-right:0;} .pcard{max-width:none;border-radius:10px;}
+  .tiles.ground{grid-template-columns:1fr;} .gtile .gn{font-size:20px;}
+  .tiles{gap:8px;} .tile{padding:10px 12px;} .tile .n{font-size:22px;} .tile .l{font-size:12px;line-height:1.3;}
+  .cal .day{min-height:40px;} .cal .pp{font-size:0;height:8px;padding:0;}
+  .goal-line{flex-wrap:wrap;}
+  .grid-meta{grid-template-columns:1fr 1fr;} .grid-meta .f:first-child{grid-column:span 2;}
+  .grid-2{grid-template-columns:1fr;}
   .tools input{min-width:0;flex:1;}
-  .tab-group-label{display:none;}
+  .hide-m{display:none;}
 }
 </style>
 </head>
@@ -125,12 +441,14 @@ td.main{font-weight:600;min-width:180px;}
   <div id="pageContent" style="display:none;">
     <div class="top-bar">
       <div>
-        <div class="eyebrow">Tools</div>
-        <h1>Marketing HQ</h1>
-        <p class="sub">One place for what we say about Bloom, who we say it to, and what goes out next.</p>
+        <div class="eyebrow">Marketing HQ</div>
+        <h1 id="hqTitle">Marketing HQ</h1>
+        <p class="sub" id="hqSub">Every post, from topic to Facebook, and whose turn it is.</p>
       </div>
+      <div class="hdr-btns"><button class="btn-outline" id="planBtn" style="display:none" onclick="planSeveral()">Plan several</button><button class="btn-primary" id="newTopicBtn" style="display:none" onclick="newTopic()">+ New topic</button></div>
     </div>
-    <nav class="tabs" id="tabs"></nav>
+    <nav class="tabs" id="tabs" style="display:none"></nav>
+    <div id="subtabs"></div>
     <div id="view"></div>
   </div>
 
@@ -143,191 +461,1392 @@ td.main{font-weight:600;min-width:180px;}
 <div class="toast" id="toast"></div>
 
 <script>
-// ---- Section definitions (ported from the claude.ai prototype) ----
-const AUD = ['Expat English','Thai','Chinese','Alt-ed / homeschool','Mixed','All'];
-const S = [
- {k:'overview',t:'Overview',g:'',d:'Where BCM marketing stands right now, and what needs a decision.'},
- {k:'facts',t:'Info bank',g:'Foundation',view:'cards',d:'The single source of truth about BCM. Everything posted anywhere should trace back to a line here.',
-  title:'label',chip:'status',
+// ---------- Reference sections ----------
+const AUD = ['Expat English','Thai','Chinese','Alternative education','Homeschool','Worldschool','Mixed','All'];
+// Item 65: Groups order: working groups first, then Expat English, then the rest; biggest first within each.
+const GROUP_STATUS_RANK = {'Active':0,'Joined':1,'Pending approval':2,'To verify':3,'Avoid':9};
+function memberCount(v){ const m = String(v||'').replace(/,/g,'').match(/([\d.]+)\s*([kK])?/); return m ? parseFloat(m[1]) * (m[2] ? 1000 : 1) : -1; }
+function groupRank(a, b){
+  const st = r => GROUP_STATUS_RANK[r.status] ?? 5, au = r => { const i = AUD.indexOf(r.audience); return i < 0 ? 99 : i; };
+  return st(a) - st(b) || au(a) - au(b) || memberCount(b.members) - memberCount(a.members) || String(a.name||'').localeCompare(String(b.name||''));
+}
+// Values that most entries share are shown as plain grey text, not as a chip.
+const QUIET = new Set(['To verify','Unknown','Not contacted']);
+const REF = [
+ {k:'facts',t:'Info bank',view:'cards',d:'The true facts about Bloom. Every post should match these.',title:'label',chip:'status',cols:['category','status','source'],
   f:[['label','Fact','text'],['category','Category','select',['Identity','Programmes','Fees','Dates','Location','Proof points','Contact','Positioning']],['value','Detail','long'],['status','Status','select',['Confirmed','To confirm','Outdated']],['source','Source','text']]},
- {k:'audiences',t:'Audiences',g:'Foundation',view:'cards',d:'Who we are talking to, what they worry about, and what we say to them.',
-  title:'name',chip:'priority',
+ {k:'audiences',t:'Audiences',view:'cards',d:'Who we talk to, what they worry about, and what we say to them.',title:'name',chip:'priority',cols:['priority','language','channels'],
   f:[['name','Segment','text'],['priority','Priority','select',['Primary','Secondary','Watch']],['who','Who they are','long'],['worries','What they worry about','long'],['message','Our message to them','long'],['channels','Where they are','text'],['language','Language','text']]},
- {k:'channels',t:'Channels',g:'Foundation',view:'cards',d:'Every account BCM owns, and how each one gets fed.',
-  title:'name',chip:'status',
-  f:[['name','Channel','text'],['type','Type','select',['Social','Messaging','Website','Email']],['handle','Handle or link','text'],['automation','How it is fed','select',['Buffer (automated)','Manual','Own app','Not set up']],['status','Status','select',['Active','To confirm','To create','Paused']],['audience','Main audience','text'],['notes','Notes','long']]},
- {k:'groups',t:'Groups',g:'Research',view:'table',d:'Places where BCM families already gather. Check the rules before posting anything.',
-  title:'name',chip:'status',cols:['platform','audience','members','promo','status','last_posted'],
-  f:[['name','Group','text'],['platform','Platform','select',['Facebook group','Redbook','WeChat group','LINE group','Forum','Other']],['url','Link','url'],['audience','Audience','select',AUD.slice(0,5)],['members','Members','text'],['promo','Promotion allowed','select',['Unknown','Yes','Specific days only','Admin approval','No']],['status','Status','select',['To verify','Joined','Pending approval','Active','Avoid']],['last_posted','Last posted','date'],['angle','Best angle','long'],['rules','Rules','long'],['notes','Notes','long']]},
- {k:'competitors',t:'Competitors',g:'Research',view:'table',d:'Who else families are comparing us with, and where we differ.',
-  title:'name',chip:'type',cols:['type','curriculum','fees','area'],
-  f:[['name','School','text'],['type','Type','select',['International school','Alt-ed / hub','Bilingual','Chinese-focused','Homeschool co-op']],['curriculum','Curriculum','text'],['fees','Fees (per year)','text'],['area','Area','text'],['positioning','How they position','long'],['vs_bcm','Where BCM differs','long'],['url','Link','url']]},
- {k:'insights',t:'Research notes',g:'Research',view:'cards',d:'Findings worth acting on, with where they came from.',
-  title:'title',chip:'audience',
-  f:[['title','Finding','text'],['audience','Audience','select',['Expat English','Thai','Chinese','Alt-ed / homeschool','All']],['finding','What we found','long'],['implication','What it means for BCM','long'],['source','Source','url'],['date','Date','date']]},
- {k:'content',t:'Content plan',g:'Execution',view:'table',d:'Every post, in every language, from idea to published.',
-  title:'title',chip:'status',cols:['date','channel','audience','language','status'],sort:'date',
-  f:[['title','Post','text'],['date','Date','date'],['channel','Channel','select',['Facebook Page','Instagram','Redbook','LINE','Facebook groups','WeChat','All Buffer']],['audience','Audience','select',['Expat English','Thai','Chinese','Alt-ed / homeschool','All']],['language','Language','select',['English','Thai','Chinese','EN + TH','EN + TH + ZH']],['status','Status','select',['Idea','Drafting','Ready','Scheduled','Published']],['copy','Copy','long'],['notes','Notes','long']]},
- {k:'tasks',t:'Tasks',g:'Execution',view:'table',d:'What has to happen next, and who owns it.',
-  title:'title',chip:'status',cols:['owner','due','status'],sort:'due',
-  f:[['title','Task','text'],['owner','Owner','text'],['due','Due','date'],['status','Status','select',['To do','Doing','Waiting','Done']],['notes','Notes','long']]},
+ {k:'channels',t:'Channels',view:'cards',d:'Every account Bloom owns, and how each one gets fed.',title:'name',chip:'status',cols:['type','automation','status'],
+  f:[['name','Channel','text'],['type','Type','select',['Social','Messaging','Website','Email']],['handle','Link','url'],['automation','How it is fed','select',['Buffer (automated)','Manual','Own app','Not set up']],['status','Status','select',['Active','To confirm','To create','Paused']],['audience','Main audience','text'],['notes','Notes','long']]},
+ {k:'groups',t:'Communities',view:'table',d:'Groups, pages and chats run by others, where families already gather. Check the rules before posting.',title:'name',chip:'status',cols:['audience','members','status'],filter:'audience',tag:'platform',rank:groupRank,
+  f:[['name','Community','text'],['platform','Platform','select',['Facebook group','Facebook Page','WhatsApp group','LINE group','Redbook','WeChat group','Forum','Other']],['url','Link','url'],['audience','Audience','select',AUD.slice(0,7)],['members','Members','text'],['promo','Promotion allowed','select',['Unknown','Yes','Specific days only','Admin approval','No']],['status','Status','select',['To verify','Joined','Pending approval','Active','Avoid']],['last_posted','Last posted','date'],['angle','Best angle','long'],['rules','Rules','long'],['notes','Notes','long']]},
+ {k:'coaches',t:'Coaches',view:'table',d:'Communities where coaches gather, for hiring and for showing Bloom as a place to work.',title:'name',chip:'status',cols:['use_for','members','status'],tag:'platform',rank:groupRank,
+  f:[['name','Community','text'],['platform','Platform','select',['Facebook group','Facebook Page','WhatsApp group','LINE group','Redbook','WeChat group','Forum','Other']],['url','Link','url'],['use_for','Use for','select',['Hiring','Promotion','Both']],['members','Members','text'],['job_posts','Job posts allowed','select',['Unknown','Yes','Specific days only','Admin approval','No']],['status','Status','select',['To verify','Joined','Pending approval','Active','Avoid']],['last_job_post','Last job post','date'],['rules','Rules','long'],['notes','Notes','long']]},
+ {k:'feeders',t:'Feeders',view:'table',d:'Playgroups and kindergartens that end around age 5. Their families are looking for what comes next.',title:'name',chip:'relationship',cols:['fit','ages','area','relationship'],
+  f:[['name','School','text'],['person','Person in charge','text'],['phone','Contact number','text'],['email','Email','text'],['url','Link','url'],['fit','Fit','select',['Very High','High','Medium-High','Medium','Low']],['type','Type','text'],['ages','Ages','text'],['philosophy','Philosophy','long'],['fee','Annual fee (est.)','text'],['followers','Followers','text'],['area','Area','text'],['relationship','Relationship','select',['Not contacted','Contacted','Meeting held','Partner']],['notes','Notes','long']]},
+ {k:'partners',t:'Partners',view:'table',d:'Companies and platforms that can introduce Bloom to families.',title:'name',chip:'relationship',cols:['type','audience','relationship'],
+  f:[['name','Name','text'],['person','Person in charge','text'],['phone','Contact number','text'],['email','Email','text'],['url','Link','url'],['type','Type','select',['Worldschool platform','Relocation or visa agent','Family business','Media or blog','Other']],['audience','Audience','select',AUD],['offer','What they can do','select',['Listing','Introduction','Referral','Event','Other']],['relationship','Relationship','select',['Not contacted','Contacted','Meeting held','Partner']],['notes','Notes','long']]},
+ {k:'competitors',t:'Competitors',view:'table',d:'Who families compare us with, and where we differ.',title:'name',chip:'type',cols:['type','curriculum','fees','area'],
+  f:[['name','School','text'],['person','Person in charge','text'],['phone','Contact number','text'],['email','Email','text'],['url','Link','url'],['type','Type','select',['International school','Alt-ed / hub','Bilingual','Chinese-focused','Homeschool co-op']],['curriculum','Curriculum','text'],['fees','Fees (per year)','text'],['area','Area','text'],['positioning','How they position','long'],['vs_bcm','Where Bloom differs','long']]},
+ {k:'insights',t:'Research notes',view:'cards',d:'Findings worth acting on, with where they came from.',title:'title',chip:'audience',cols:['audience','date'],
+  f:[['title','Finding','text'],['audience','Audience','select',AUD.filter(a=>a!=='Mixed')],['finding','What we found','long'],['implication','What it means for Bloom','long'],['source','Source','url'],['date','Date','date']]},
 ];
-const SEC = Object.fromEntries(S.map(s=>[s.k,s]));
-const PLAN_FIELDS = [['goal','Goal','long'],['deadline','Deadline','date'],['budget','Ad budget per month','text'],['measure','How we measure success','text']];
-
-let DATA = {}, PLAN = null, STAFF_NAMES = {}, loaded = false;
-let canEdit = false, canDelete = false;
-const filt = {q:'', s:''};
+const TASKS = {k:'tasks',t:'Tasks',view:'table',d:'What has to happen next, and who owns it.',title:'title',chip:'status',cols:['owner','due','status'],sort:'due',
+  f:[['title','Task','text'],['owner','Owner','text'],['due','Due','date'],['status','Status','select',['To do','Doing','Waiting','Done']],['notes','Notes','long']]};
+const SEC = Object.fromEntries([...REF, TASKS].map(s=>[s.k,s]));
+const PLAN_FIELDS = [['goal','Goal','long'],['deadline','Deadline','date'],['budget','Ad budget per month (THB)','text'],['measure','How we measure success','text']];
+// Item 55: Reference shows one list per page.
+const REF_GROUPS = ['facts','audiences','channels','groups','coaches','feeders','partners','competitors','insights'].map(k => ({ k, t: SEC[k].t, d: SEC[k].d, secs: [k] }));
+const LATE_BG = '#FCEBEB', LATE_TEXT = '#791F1F';
 const $ = (s,el=document)=>el.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeUrl = v => /^https?:\/\//i.test(String(v||'')) ? v : '';
+// Item 59: a link typed without https (facebook.com/BLOOM.chiangmai) still opens; a bare handle (@name) stays text.
+const linkify = v => { v = String(v||'').trim(); if(/^https?:\/\//i.test(v)) return v; if(/^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i.test(v)) return 'https://' + v; return ''; };
+// Item 69: Reference tabs in two rows by purpose.
+const REF_ROWS = [['About Bloom', ['facts','audiences','channels','insights']], ['Outside contacts', ['groups','coaches','feeders','partners','competitors']]];
+const LINK_KEY = {groups:'url', channels:'handle', competitors:'url', feeders:'url', partners:'url', coaches:'url'};
+const linkOf = (k, r) => LINK_KEY[k] ? linkify(r[LINK_KEY[k]]) : '';
 const tone = v => { v=String(v||'');
-  if(/^(Confirmed|Active|Published|Done|Yes|Primary|Buffer)/.test(v)) return 'leaf';
-  if(/^(To confirm|To verify|Pending|Waiting|Drafting|Ready|Scheduled|Specific|Admin|Secondary|Doing|Joined)/.test(v)) return 'amber';
-  if(/^(Outdated|Avoid|No$|To create|Not set)/.test(v)) return 'rust';
-  if(/^(Idea|To do|Unknown|Watch)/.test(v)) return '';
+  if(/^(Confirmed|Active|Posted|Done|Yes|Primary|Buffer)/.test(v)) return 'leaf';
+  if(/^(Ready)/.test(v)) return 'blue';
+  if(/^(To confirm|To verify|Pending|Waiting|Thai|Review|Specific|Admin|Secondary|Doing|Joined)/.test(v)) return 'amber';
+  if(/^(Outdated|Avoid|No$|To create|Not set|Skipped)/.test(v)) return 'rust';
+  if(/^(Topic|Draft|Writing|To do|Unknown|Watch)/.test(v)) return '';
   return 'plum'; };
 const chip = v => v ? `<span class="chip ${tone(v)}">${esc(v)}</span>` : '';
 const fmtDate = v => { if(!v) return ''; const d=new Date(v+'T00:00:00'); return isNaN(d)?esc(v):d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); };
-const view = () => { const h=location.hash.slice(1); return SEC[h]?h:'overview'; };
+const fmtDay = v => { if(!v) return ''; const d=new Date(v+'T00:00:00'); return isNaN(d)?esc(v):d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); };
+const monthKey = v => v ? String(v).slice(0,7) : 'undated';
+const monthLabel = k => k==='undated' ? 'No date yet' : new Date(k+'-01T00:00:00').toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+const localISO = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const thisMonth = () => localISO(new Date()).slice(0,7);
 
-// ---- Data ----
+// ---------- Workflow ----------
+// Posts live in marketing_posts. Every change goes through the mkt_post() database function,
+// which checks who you are and which step the post is at.
+const STEP_LABEL = {english:'English', review:'Review', thai:'Translate', post:'Post', posted:'Posted', cancelled:'Cancelled'};
+const STEP_ORDER = ['english','review','thai','post'];
+const STEP_BG = {english:'#EEEDFE', thai:'#FAEEDA', review:'#E6F1FB', post:'#E1F5EE', posted:'#F1EFE8', cancelled:'#FAECE7', back:'#FCEBEB'};
+const STEP_FG = {english:'#3C3489', thai:'#633806', review:'#0C447C', post:'#085041', posted:'#444441', cancelled:'#712B13', back:'#791F1F'};
+let LABELS = [];
+const IMG_BUCKET = 'marketing-media';
+
+let POSTS = [], STAFF = {}, TEAM = {}, NO_ACCESS = new Set(), LEVEL = {}, EVENTS = {}, PLAN = null, DATA = {}, loaded = false;
+let canEdit = false, canDelete = false, ME = null, LANGS = {};
+// Item 86: managers kept informed see approved posts in My turn.
+let INFORMED = {}, FYI = [], FYI_READ = null;
+let refKey = 'facts', calMonth = null, calMode = 'month', postTimer = null;
+const filt = {q:'', s:''};
+
+const todayISO = () => localISO(new Date());
+const addDays = (iso, n) => { const d = new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return localISO(d); };
+const nameOf = id => (STAFF[id]||{}).name ? STAFF[id].name.split(' ')[0] : '';
+const myDuty = () => TEAM[ME] || null;
+const isOverseer = () => myDuty() === 'overseer';
+const isAdmin = () => canDelete;
+// The goal, deadline, budget and success measure: PICs, overseers and marketing full only.
+const canEditPlan = () => canEdit && canDelete;
+const planData = () => Object.fromEntries(Object.entries(PLAN||{}).filter(([k])=>k!=='id' && !k.startsWith('_')));
+async function savePlan(extra){
+  const body = { ...planData(), ...extra };
+  const { error } = PLAN && PLAN.id ? await sb.from('marketing_entries').update({ data: body }).eq('id', PLAN.id) : await sb.from('marketing_entries').insert({ collection:'plan', data: body });
+  if(error){ showToast('Could not save: ' + error.message); return false; }
+  return true;
+}
+// Item 58: each post names its own writer, reviewer (pic) and translator.
+const members = () => Object.keys(TEAM).filter(id => STAFF[id] && STAFF[id].status === 'active').sort((a,b)=>STAFF[a].name.localeCompare(STAFF[b].name));
+const isWriterOf = p => !!p && p.writer === ME;
+// Item 83: posting is its own task. With no poster named, the writer posts.
+const posterOf = p => p ? (p.poster || p.writer) : null;
+const isTranslatorOf = p => !!p && p.translator === ME;
+const GOALS = [['inform','Inform'],['invite','Invite to an event'],['enrol','Get enrolments'],['celebrate','Celebrate or thank']];
+const FORMATS = [['post','Post'],['reel','Reel script'],['announcement','Short announcement']];
+const goalName = k => (GOALS.find(g=>g[0]===k)||[0,''])[1];
+const formatName = k => (FORMATS.find(g=>g[0]===k)||[0,''])[1];
+const audienceList = () => { const a = (DATA.audiences||[]).map(r=>r.name).filter(Boolean); return a.length ? a : ['Parents','Prospective families','Students','Community']; };
+// Backups see posts at their step in their own box, without them counting as their turn
+function backupFor(p){ return false; }
+let SUGG = [], SPECIAL = [], HIDDEN = new Set();
+let VERSIONS = {}, AISTATUS = null, AI_SUG = null, SHOW_VERS = false;
+const AI_MSG = {
+  no_credit: 'AI is paused: the AI credit has run out. Write it yourself for now, nothing is lost. Ronnie has been told.',
+  spend_limit: 'AI is paused: this month\'s AI limit is reached. Write it yourself for now, nothing is lost. Ronnie has been told.',
+  bad_key: 'AI is paused: the AI key has expired or stopped working. Write it yourself for now, nothing is lost. Ronnie has been told.',
+  busy: 'The AI is busy right now. Try again in a minute.',
+  network: 'Could not reach the AI. Check your connection and try again.',
+  api_error: 'The AI could not finish this one. Try again.',
+  auth: 'You cannot use AI on this caption at this step.',
+};
+const openStep = p => !['posted','cancelled'].includes(p.step);
+
+// Who has the post now
+function ownerIds(p){
+  if(p.step === 'english') return p.writer ? [p.writer] : [];
+  if(p.step === 'post') return posterOf(p) ? [posterOf(p)] : [];
+  if(p.step === 'thai') return p.translator ? [p.translator] : [];
+  if(p.step === 'review') return p.pic ? [p.pic] : [];
+  return [];
+}
+function ownerName(p){
+  if(!openStep(p)) return '';
+  const ids = ownerIds(p);
+  if(ids.length) return ids.map(nameOf).join(', ');
+  return {english:'Writer (not set)', post:'Writer (not set)', thai:'Translator (not set)', review:'Reviewer (not set)'}[p.step] || '';
+}
+const isMine = p => openStep(p) && ownerIds(p).includes(ME);
+// Due date for the step the post is at
+function dueOf(p){
+  if(!p.post_date || !openStep(p)) return null;
+  const back = {english: 3, review: 2, thai: 1, post: 0}[p.step];
+  return back === undefined ? null : addDays(p.post_date, -back);
+}
+const isLate = p => { const d = dueOf(p); return !!d && d < todayISO(); };
+function dueText(p){
+  const d = dueOf(p), t = todayISO();
+  if(!d) return p.post_date ? '' : 'No date';
+  if(d < t){ const n = Math.round((new Date(t) - new Date(d))/864e5); return `Late ${n} day${n>1?'s':''}`; }
+  if(d === t) return 'Due today';
+  if(d === addDays(t,1)) return 'Due tomorrow';
+  return 'Due ' + new Date(d+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'});
+}
+function stepChip(p){
+  const k = p.step === 'english' && p.sent_back ? 'back' : p.step;
+  const t = p.step === 'english' && p.sent_back ? 'Sent back' : STEP_LABEL[p.step];
+  return `<span class="chip" style="background:${STEP_BG[k]};color:${STEP_FG[k]}">${t}</span>`;
+}
+const actionWord = p => ({english: p.sent_back ? 'Fix' : 'Write', thai:'Translate', review:'Review', post:'Post it'}[p.step] || 'Open');
+
+// ---------- Item 86: For your info ----------
+// People ticked "Kept informed" see each post approved since they last cleared the list. Their own approvals are left out.
+async function loadFyi(){
+  if(!ME || !INFORMED[ME]){ FYI = []; return; }
+  const since = FYI_READ || new Date(Date.now() - 14*864e5).toISOString();
+  const { data, error } = await sb.from('marketing_post_events').select('post_id,actor,kind,created_at').like('kind','approved%').gt('created_at', since).neq('actor', ME).order('created_at', {ascending:false}).limit(200);
+  if(error){ FYI = []; return; }
+  const seen = new Set(); FYI = (data||[]).filter(e=>!seen.has(e.post_id) && seen.add(e.post_id));
+}
+const fyiList = () => FYI.map(e=>({ e, p: POSTS.find(x=>x.id===e.post_id) })).filter(x=>x.p && !['posted','cancelled'].includes(x.p.step));
+const whenText = t => { const d = new Date(t), now = new Date(), y = new Date(now); y.setDate(now.getDate()-1);
+  const hm = d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  if(d.toDateString()===now.toDateString()) return 'today, ' + hm;
+  if(d.toDateString()===y.toDateString()) return 'yesterday';
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); };
+function fyiBox(){
+  const a = fyiList(); if(!a.length) return '';
+  return `<div class="box"><div class="fyi-h"><h3 class="bh">For your info <span class="fyi-n">${a.length}</span></h3><button class="link-btn" onclick="fyiRead()">Mark all read</button></div>
+    ${a.map(({e,p})=>`<div class="wl" onclick="go('post/${p.id}')"><span class="muted">${p.post_date?fmtShort(p.post_date):'No date'}</span><span class="pt"><span class="ptt">${esc(p.title)}</span>${p.label?`<span class="fmt">${esc(p.label)}</span>`:''}</span><span>${stepChip(p)}</span><span class="wl-due muted fyi-who">${esc(firstName(nameOf(e.actor)||'Someone'))} · ${whenText(e.created_at)}</span><span class="wl-act"></span></div>`).join('')}
+  </div>`;
+}
+async function fyiRead(){
+  const { data, error } = await sb.rpc('mkt_fyi_read');
+  if(error){ showToast('Could not save: ' + error.message); return; }
+  FYI_READ = data; FYI = []; render();
+}
+
+// ---------- Data ----------
 async function loadAll(){
-  const [{ data, error }, { data: staff }] = await Promise.all([
-    sb.from('marketing_entries').select('id,collection,data,updated_at,updated_by').order('created_at'),
-    sb.from('staff').select('id,name')
+  const [posts, staff, team, labels, ent, sch, spec, hid, ais, acc] = await Promise.all([
+    sb.from('marketing_posts').select('*').order('post_date', {ascending:true, nullsFirst:false}),
+    sb.from('staff').select('id,name,status'),
+    sb.from('marketing_team').select('staff_id,duty,langs,informed,fyi_read_at'),
+    sb.from('marketing_labels').select('name,default_pic,sort').order('sort'),
+    sb.from('marketing_entries').select('id,collection,data,updated_at,updated_by').neq('collection','content').order('created_at'),
+    sb.rpc('mkt_school_dates'),
+    sb.from('marketing_special_dates').select('*').order('date'),
+    sb.from('marketing_hidden_suggestions').select('key'),
+    sb.from('marketing_ai_status').select('*').maybeSingle(),
+    sb.rpc('mkt_team_access')
   ]);
-  if(error){ showToast('Could not load marketing data: ' + error.message); return; }
-  STAFF_NAMES = Object.fromEntries((staff||[]).map(s=>[s.id, s.name]));
+  if(posts.error){ showToast('Could not load posts: ' + posts.error.message); return; }
+  POSTS = posts.data || [];
+  STAFF = Object.fromEntries((staff.data||[]).map(s=>[s.id, s]));
+  TEAM = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, t.duty || 'member']));
+  LANGS = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, t.langs || '']));
+  INFORMED = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, !!t.informed]));
+  FYI_READ = ((team.data||[]).find(t=>t.staff_id===ME) || {}).fyi_read_at || null;
+  await loadFyi();
+  // Team members who cannot open the HQ (no Marketing edit). Unknown if the check failed.
+  NO_ACCESS = new Set(((acc && acc.data) || []).filter(x=>!x.can_edit).map(x=>x.staff_id));
+  LEVEL = Object.fromEntries(((acc && acc.data) || []).map(x=>[x.staff_id, x.level || (x.can_edit ? 'edit' : 'none')]));
+  LABELS = labels.data || [];
+  SPECIAL = spec.data || [];
+  AISTATUS = (ais && ais.data) || null;
+  HIDDEN = new Set((hid.data||[]).map(h=>h.key));
+  SUGG = [...(sch.data||[]).map(x=>({date:x.date, name:x.name, kind:x.kind, confirmed:true})),
+          ...SPECIAL.map(x=>({date:x.date, name:x.name, kind:'special', confirmed:x.confirmed, note:x.note}))]
+    .map(x=>({...x, key: x.date+'|'+x.name})).sort((a,b)=>a.date.localeCompare(b.date));
   DATA = {}; PLAN = null;
-  (data||[]).forEach(r => {
+  (ent.data||[]).forEach(r => {
     const row = { id:r.id, ...r.data, _updated:r.updated_at, _by:r.updated_by };
-    if(r.collection === 'plan') PLAN = row;
-    else (DATA[r.collection] = DATA[r.collection] || []).push(row);
+    if(r.collection === 'plan') PLAN = row; else (DATA[r.collection] = DATA[r.collection] || []).push(row);
   });
   loaded = true;
   render();
 }
-
-// ---- Rendering ----
-function tabs(){
-  const cur = view(); let html = '', group = null;
-  S.forEach(s => {
-    if(s.g !== group){ if(group !== null) html += '</div>'; html += `<div class="tab-group">${s.g?`<span class="tab-group-label">${s.g}</span>`:''}`; group = s.g; }
-    const n = s.k==='overview' ? '' : `<span class="n">${(DATA[s.k]||[]).length}</span>`;
-    html += `<button class="tab ${s.k===cur?'on':''}" onclick="go('${s.k}')">${s.t}${n}</button>`;
-  });
-  $('#tabs').innerHTML = html + '</div>';
+// force: after the person's own action. Otherwise (someone else saved) do not redraw while they are typing.
+async function reloadPosts(force){
+  const { data } = await sb.from('marketing_posts').select('*').order('post_date', {ascending:true, nullsFirst:false});
+  await loadFyi();
+  if(data){ POSTS = data; const id = postId(); if(id){ delete EVENTS[id]; delete VERSIONS[id]; } if(force === true || !dirty()) render(); }
 }
-function go(k){ location.hash = k; }
+function listen(){
+  if(!sb.channel) return;
+  sb.channel('marketing-posts').on('postgres_changes', {event:'*', schema:'public', table:'marketing_posts'}, () => {
+    clearTimeout(postTimer); postTimer = setTimeout(reloadPosts, 300);
+  }).subscribe();
+}
+async function act(action, id, payload){
+  const { data, error } = await sb.rpc('mkt_post', { p_action: action, p_id: id || null, p: payload || {} });
+  if(error){ showToast(error.message.replace(/^.*?: /,'')); return null; }
+  return data || {};
+}
 
+// ---------- Routing ----------
+const view = () => {
+  let h = location.hash.slice(1);
+  if(h.startsWith('post/')) return 'post';
+  if(h === 'team') h = 'settings';
+  const allowed = tabsFor().map(t=>t[0]);
+  return allowed.includes(h) ? h : allowed[0];
+};
+const postId = () => { const h = location.hash.slice(1); return h.startsWith('post/') ? h.slice(5) : null; };
+const go = k => { location.hash = k; };
+function tabsFor(){
+  const d = myDuty(), t = [];
+  // Item 46: everyone opens on Overview; your own work is behind the My turn badge.
+  t.push(['overview','Overview']);
+  t.push(['turn','My turn']);
+  t.push(['calendar','Content']);
+  t.push(['ref','Reference']);
+  if(canDelete) t.push(['settings','Settings']);
+  return t;
+}
+let lastTab = null;
+// Marketing HQ has its own menu (item 44): the staff sidebar shows only HQ sections, with a way back to the staff dashboard.
+const HQ_HEAD = {
+  turn:['My turn','Posts waiting on you.'],
+  overview:['Overview','Where every post stands, and what the plan is.'],
+  calendar:['Content','Every post and idea, by date.'],
+  ref:['Reference','The facts, people and places behind every post.'],
+  settings:['Settings','The team, labels and special dates.'],
+};
+function hqSidebar(cur, mine, late){
+  const sb_ = document.querySelector('.sidebar'); if(!sb_) return;
+  if(!sb_.querySelector('.hq-app')){
+    const logo = sb_.querySelector('.sidebar-logo');
+    if(logo) logo.insertAdjacentHTML('afterend', '<div class="hq-head"><div class="hq-app">Marketing HQ</div><a class="hq-back" href="staff-dashboard.html">&#8249; Staff dashboard</a></div>');
+  }
+  const nav = sb_.querySelector('.sidebar-nav'); if(!nav) return;
+  nav.innerHTML = tabsFor().map(([k,l]) => `<a href="#${k}" class="sidebar-link hq-link ${k===cur?'active':''}">${l}${k==='turn'&&mine?`<span class="hq-n${late?' late':''}" title="${late?'Something of yours is late':''}">${mine}</span>`:''}</a>`).join('');
+}
+function tabs(){
+  const v = view();
+  if(v !== 'post') lastTab = v;
+  const mineList = POSTS.filter(p=>isMine(p) && (p.post_date || p.sent_back)), mine = mineList.length + fyiList().length, mineLate = mineList.some(isLate);
+  const cur = v==='post' ? (lastTab || 'turn') : v;
+  hqSidebar(cur, mine, mineLate);
+  const [t, sub] = HQ_HEAD[cur] || HQ_HEAD.overview;
+  $('#hqTitle').textContent = t; $('#hqSub').textContent = sub;
+  $('#subtabs').innerHTML = v==='ref'
+    ? (REF_BACK ? '<button class="refback" onclick="refBackToOverview()">&#8249; Back to Overview</button>' : '') + `<div class="subtabs rows">${REF_ROWS.map(([lbl, ks])=>`<div class="subrow"><span class="sublbl">${lbl}</span>${ks.map(k=>REF_GROUPS.find(g=>g.k===k)).map(g=>`<button class="pill ${g.k===refKey?'on':''}" onclick="refKey='${g.k}';render()">${g.t}<span class="n">${g.secs.reduce((a,k)=>a+(DATA[k]||[]).length,0)}</span></button>`).join('')}</div>`).join('')}</div>` : '';
+}
 function render(){
   tabs();
-  const k = view(), s = SEC[k], el = $('#view');
+  const nb = $('#newTopicBtn'); if(nb) nb.style.display = loaded && canEdit && view() === 'calendar' ? '' : 'none';
+  const pb = $('#planBtn'); if(pb) pb.style.display = loaded && canEdit && view() === 'calendar' ? '' : 'none';
+  const el = $('#view'), v = view();
   if(!loaded){ el.innerHTML = '<div class="empty-state">Loading…</div>'; return; }
-  if(k === 'overview'){ el.innerHTML = overview(); return; }
-  const all = DATA[k] || [];
-  const rows = all.filter(r => {
-    if(filt.s && r[s.chip] !== filt.s) return false;
-    if(filt.q){ const q = filt.q.toLowerCase(); return s.f.some(f => String(r[f[0]]||'').toLowerCase().includes(q)); }
-    return true; });
+  let ab = $('#aiBanner'); if(!ab){ ab = document.createElement('div'); ab.id = 'aiBanner'; el.before(ab); }
+  ab.innerHTML = aiBannerHtml();
+  if(v==='turn') el.innerHTML = myTurn();
+  else if(v==='overview') el.innerHTML = overview();
+  else if(v==='calendar') el.innerHTML = calendarView();
+  else if(v==='settings') el.innerHTML = teamView();
+  else if(v==='post') renderPost(el);
+  else renderGroup(el, REF_GROUPS.find(g=>g.k===refKey) || REF_GROUPS[0]);
+  if(v==='ref' && REF_BACK){
+  } else if(v!=='ref' && REF_BACK){
+    const b = REF_BACK; REF_BACK = null;
+    if(b.back && v==='overview') requestAnimationFrame(()=>window.scrollTo(0, b.scroll));
+  }
+}
+
+// ---------- Lines ----------
+function line(p, showWho){
+  const late = isLate(p);
+  return `<div class="wl" onclick="go('post/${p.id}')">
+    <span class="${late?'late-d':'muted'}">${p.post_date?fmtShort(p.post_date):'No date'}</span>
+    <span class="pt"><span class="ptt">${esc(p.title)}</span>${p.label?`<span class="fmt">${esc(p.label)}</span>`:''}</span>
+    <span>${stepChip(p)}</span>
+    <span class="wl-due ${late?'late-d':'muted'}">${showWho ? esc(ownerName(p)||'Done') : esc(dueText(p))}</span>
+    <span class="wl-act">${showWho ? (late?'<span class="chip rust">Late</span>':'') : `<button class="btn-outline sm">${actionWord(p)}</button>`}</span>
+  </div>`;
+}
+const fmtShort = v => { const d = new Date(v+'T00:00:00'); return isNaN(d) ? esc(v) : d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); };
+
+function peopleLine(p){
+  const late = isLate(p), nm = id => id ? esc(nameOf(id)) : '<span class="muted">—</span>';
+  return `<div class="pl" onclick="go('post/${p.id}')"><span class="${late?'late-d':'muted'}">${p.post_date?fmtShort(p.post_date):'No date'}</span><span class="pt"><span class="ptt">${esc(p.title)}</span></span><span>${stepChip(p)}</span><span>${nm(p.writer)}</span><span>${nm(p.pic)}</span><span>${p.needs_thai?nm(p.translator):'<span class="muted">English only</span>'}</span></div>`;
+}
+// ---------- My turn ----------
+function myTurn(){
+  const d = myDuty();
+  const mine = POSTS.filter(p=>isMine(p) && (p.post_date || p.sent_back))
+    .sort((a,b)=>(Number(isLate(b))-Number(isLate(a))) || String(dueOf(a)||'9').localeCompare(String(dueOf(b)||'9')));
+  const sub = 'The posts where you are named for the step they are at.';
+  return `
+  ${fyiBox()}
+  ${notMarked().some(p=>posterOf(p)===ME) ? notMarkedBox() : ''}
+  <div class="box">
+    <h3 class="bh">${mine.length ? `Your turn: ${mine.length}` : 'All clear'}</h3>
+    <p class="meta" style="font-size:13px;margin-bottom:6px">${sub}</p>
+    ${mine.length ? mine.map(p=>line(p)).join('') : '<p class="meta" style="padding:10px 0">Nothing is waiting on you right now.</p>'}
+    ${(()=>{ const n = POSTS.filter(p=>isMine(p) && !p.post_date && !p.sent_back).length;
+      return n ? `<p class="meta" style="padding:10px 0 0"><a href="javascript:void 0" onclick="calMode='ideas';go('calendar')">${n} idea${n>1?'s':''} with no date</a>. To use one, open it and set a date and the people with Edit topic.</p>` : ''; })()}
+  </div>
+  `;
+}
+
+// ---------- Item 41: posted on Facebook but not marked ----------
+const notMarked = () => POSTS.filter(p=>p.step==='post' && p.post_date && p.post_date < todayISO()).sort((a,b)=>a.post_date.localeCompare(b.post_date));
+function notMarkedBox(){
+  const a = notMarked(); if(!a.length) return '';
+  const canMarkP = p => isAdmin() || posterOf(p) === ME;
+  return `<div class="box" style="border-color:#EF9F27"><h3 class="bh">Posted? Not marked yet: ${a.length}</h3>
+    <p class="meta" style="font-size:13px;margin-bottom:6px">These were due to go out and are still waiting at the Post step. If they are on Facebook, mark them so the numbers stay true.</p>
+    ${a.map(p=>`<div class="wl" style="cursor:default"><span class="late-d">${fmtShort(p.post_date)}</span><span class="pt"><a href="javascript:void 0" onclick="go('post/${p.id}')" class="ptt">${esc(p.title)}</a></span><span></span><span></span><span class="wl-act">${canMarkP(p)?`<button class="btn-outline sm" onclick="quickMark('${p.id}')">Mark as posted</button>`:''}</span></div>`).join('')}
+  </div>`;
+}
+async function quickMark(id){
+  const r = await act('mark_posted', id, {}); if(!r) return;
+  showToast('Marked as posted.'); await reloadPosts(true);
+}
+
+// ---------- Overview ----------
+// Item 49: a posting tile with posts opens its list in place; click again to close. "Weeks with nothing planned" jumps to the empty-weeks box.
+let ovOpen = null, ovFilter = null;
+function ovSetFilter(k, v){
+  ovFilter = !k || (ovFilter && ovFilter.k===k && ovFilter.v===v) ? null : {k, v};
+  const y = window.scrollY; render(); window.scrollTo(0, y);
+}
+function ovTile(k, n, cls, label){
+  if(!n) return `<div class="tile"><div class="n ${cls}">${n}</div><div class="l">${label}</div></div>`;
+  const on = ovOpen === k;
+  return `<button class="tile ovt ${on?'on':''}" onclick="ovToggle('${k}')" aria-expanded="${on}"><div class="n ${cls}">${n}</div><div class="l">${label}</div></button>`;
+}
+function ovToggle(k){
+  if(k === 'empty'){ const e = document.querySelector('.emptyweeks'); if(e){ e.scrollIntoView({behavior:'smooth', block:'nearest'}); e.classList.add('flash'); setTimeout(()=>e.classList.remove('flash'), 1200); } return; }
+  ovOpen = ovOpen === k ? null : k; render();
+}
+const fmtBudget = v => { const t = String(v ?? '').trim(); if(!t) return ''; if(/^[\d,.\s]+$/.test(t)){ const n = Number(t.replace(/[,\s]/g,'')); if(isFinite(n)) return n.toLocaleString('en-US', {maximumFractionDigits:2}) + ' THB'; } return t; };
+function goalBox(P){
+  const col = (cls, l, v, big, extra='') => `<div class="gcol ${cls}"><div class="glbl">${l}</div><div class="gval ${big?'gbig':''} ${v?'':'none'}">${v ? esc(v) : (big ? 'Not set yet' : 'Not set')}</div>${extra}</div>`;
+  return `<div class="goalbox">
+    ${col('gmain','Goal',P.goal,true, canEditPlan() ? '<button class="gedit" onclick="editPlan()">Edit goal, deadline and budget</button>' : '<div></div>')}
+    ${col('','Deadline',P.deadline ? fmtDate(P.deadline) : '',false,'<div></div>')}
+    ${col('','Ad budget / month',fmtBudget(P.budget),false,'<div></div>')}
+    ${col('','Success measure',P.measure,false,'<div></div>')}
+  </div>`;
+}
+// Item 51: a Groundwork tile opens Reference at its own section, with a way back to the same spot on Overview.
+let REF_BACK = null;
+function refFromOverview(key, sec){ REF_BACK = { scroll: window.scrollY }; refKey = sec || key; go('ref'); }
+function refBackToOverview(){ if(REF_BACK) REF_BACK.back = true; go('overview'); }
+function groundwork(){
+  const g = DATA.groups||[], c = DATA.channels||[], f = DATA.facts||[];
+  if(!g.length && !c.length && !f.length) return '';
+  const ga = g.filter(x=>x.status==='Active'||x.status==='Joined').length, ca = c.filter(x=>x.status==='Active').length;
+  const ft = f.filter(x=>x.status==='To confirm').length, fc = f.filter(x=>x.status==='Confirmed').length;
+  const pct = (a,b) => b ? Math.round(a/b*100) : 0;
+  const t = (key, sec, n, l, sub, bar) => `<button class="gtile" onclick="refFromOverview('${key}','${sec}')"><div class="gt"><span class="gn">${n}</span><span class="gl">${l}</span></div><div class="gs">${sub}</div><div class="gbar">${bar}</div></button>`;
+  const seg = (w,c) => `<span style="width:${w}%;background:${c}"></span>`;
+  return `<div class="ground-h">GROUNDWORK</div><div class="tiles ground">
+    ${t('who', 'groups', `${ga} / ${g.length}`, 'Communities joined', 'Joined or active', seg(pct(ga,g.length),'#2F6B55'))}
+    ${t('who', 'channels', `${ca} / ${c.length}`, 'Channels active', 'Pages and apps we use', seg(pct(ca,c.length),'#2F6B55'))}
+    ${t('about', 'facts', ft, 'Facts to confirm', 'In the Info bank', seg(pct(fc,f.length),'#2F6B55')+seg(pct(ft,f.length),'#D9963A'))}
+  </div>`;
+}
+function overview(){
+  const P = PLAN || {}, t = todayISO(), live = POSTS.filter(p=>openStep(p) && p.post_date);
+  const late = live.filter(isLate);
+  const ws = weekStart(t);
+  const week = live.filter(p=>{ const d = dueOf(p); return d && d >= t && d <= addDays(t,6); });
+  const mk = t.slice(0,7), postedList = POSTS.filter(p=>p.step==='posted' && String(p.posted_at||p.post_date||'').slice(0,7)===mk), posted = postedList.length;
+  const emptyWeeks = []; for(let w=0; w<4; w++){ const a = addDays(ws, 7*w), b = addDays(a, 6); if(!POSTS.some(p=>p.step!=='cancelled' && p.post_date>=a && p.post_date<=b)) emptyWeeks.push(a < t ? t : a); }
+  const empty = emptyWeeks.length;
+  const steps = STEP_ORDER;
+  const urgent = live.filter(p=>['english','review','thai'].includes(p.step) && p.post_date <= t).sort((a,b)=>a.post_date.localeCompare(b.post_date));
+  const ppl = {}; live.forEach(p=>{ const k = ownerName(p); (ppl[k] = ppl[k] || []).push(p); });
+  const max = Math.max(1, ...Object.values(ppl).map(a=>a.length));
+  const ideas = POSTS.filter(p=>openStep(p) && !p.post_date).length;
+  return `
+  ${notMarkedBox()}
+  ${goalBox(P)}
+  <div class="tiles four">
+    ${ovTile('late', late.length, late.length?'bad':'good', 'Late')}
+    ${ovTile('week', week.length, '', 'Due in the next 7 days')}
+    ${ovTile('posted', posted, '', 'Posted this month')}
+    ${ovTile('empty', empty, empty?'warn':'good', 'Weeks with nothing planned (next 4)')}
+  </div>
+  ${(() => { const lists = { late: late.slice().sort((a,b)=>String(a.post_date).localeCompare(String(b.post_date))), week: week.slice().sort((a,b)=>String(a.post_date).localeCompare(String(b.post_date))), posted: postedList.slice().sort((a,b)=>String(b.posted_at||b.post_date).localeCompare(String(a.posted_at||a.post_date))) };
+     const a = lists[ovOpen]; return a && a.length ? `<div class="ovlist">${a.map(p=>line(p,true)).join('')}</div>` : ''; })()}
+  ${urgent.length ? `<div class="urgent"><h3>Urgent: ${urgent.length} post${urgent.length>1?'s':''} due to go out but not ready</h3>${urgent.map(p=>line(p,true)).join('')}</div>` : ''}
+  ${empty && canEdit ? `<div class="emptyweeks"><span><b>${empty} empty week${empty>1?'s':''}</b> coming up</span>${emptyWeeks.map(d=>`<button class="btn-outline sm" onclick="newTopic('${d}')">Plan a topic for ${fmtShort(d)}</button>`).join('')}</div>` : ''}
+  ${groundwork()}
+  ${(() => {
+    // Item 53: one box. Step boxes and Waiting on names filter the list underneath; click again for everything.
+    const F = ovFilter && ((ovFilter.k==='step' && live.some(p=>p.step===ovFilter.v)) || (ovFilter.k==='who' && ppl[ovFilter.v])) ? ovFilter : null;
+    const shown = live.filter(p => !F || (F.k==='step' ? p.step===F.v : ownerName(p)===F.v)).sort((a,b)=>Number(isLate(b))-Number(isLate(a)) || a.post_date.localeCompare(b.post_date));
+    const head = !F ? 'Everything in progress' : F.k==='step' ? `At ${STEP_LABEL[F.v]}` : `Waiting on ${esc(F.v)}`;
+    const stepBox = s0 => { const a = live.filter(p=>p.step===s0), on = F && F.k==='step' && F.v===s0;
+      const inner = `<div class="h">${STEP_LABEL[s0]}</div><div class="c">${a.length}</div><div class="dots">${a.map(p=>`<i class="${isLate(p)?'r':''}" title="${esc(p.title)}"></i>`).join('')}</div>`;
+      return a.length ? `<div class="stepcol ovt ${on?'on':''}" role="button" tabindex="0" aria-pressed="${!!on}" onclick="ovSetFilter('step','${s0}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();ovSetFilter('step','${s0}')}">${inner}</div>` : `<div class="stepcol">${inner}</div>`; };
+    const names = Object.entries(ppl).sort((a,b)=>b[1].length-a[1].length);
+    return `<div class="box" id="ovPosts"><h3 class="bh">Where posts are now</h3>
+    <div class="stepcols">${steps.map(stepBox).join('')}</div>
+    ${names.length ? `<div class="ovhead"><h4>Waiting on</h4></div>` + names.map(([n,a], i)=>{ const l = a.filter(isLate).length, on = F && F.k==='who' && F.v===n;
+      return `<div class="wo ovt ${on?'on':''}" role="button" tabindex="0" aria-pressed="${!!on}" data-who="${esc(n)}" onclick="ovSetFilter('who',this.dataset.who)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();ovSetFilter('who',this.dataset.who)}"><span style="font-weight:600">${esc(n)}</span><span class="wbar"><span style="width:${l/max*100}%;background:#E24B4A"></span><span style="width:${(a.length-l)/max*100}%;background:#AFA9EC"></span></span><span class="muted">${a.length}${l?` · <span class="late-d">${l} late</span>`:''}</span></div>`; }).join('') : ''}
+    <div class="ovhead"><h4>${head} <span class="muted" style="font-weight:400">${shown.length}</span></h4>${F?'<button onclick="ovSetFilter(null)">Show everything</button>':''}</div>
+    ${shown.length ? shown.map(p=>line(p,true)).join('') : '<p class="meta" style="padding:8px 0">Nothing in progress.</p>'}
+    ${ideas?`<p class="meta" style="padding:10px 0"><a href="javascript:void 0" onclick="calMode='ideas';go('calendar')">${ideas} ideas with no date</a></p>`:''}
+  </div>`; })()}`;
+}
+// Suggested posts: school calendar + special dates, minus dismissed or already planned
+const openSugg = () => SUGG.filter(x=>x.date >= todayISO() && !HIDDEN.has(x.key));
+const sgKind = x => ({break:'School calendar', term:'School calendar', holiday:'Holiday', special:'Special date'}[x.kind]||'');
+function sgLine(x){
+  return `<div class="sgl"><span class="muted">${fmtShort(x.date)}</span><span><b>${esc(x.name)}</b> <span class="muted">· ${sgKind(x)}</span>${x.confirmed?'':' <span class="chip amber">Date to confirm</span>'}${x.note?`<br><span class="meta">${esc(x.note)}</span>`:''}</span>
+    <span class="acts">${canEdit?`<button class="btn-outline sm" onclick="hideSg(${SUGG.indexOf(x)})">Not this year</button><button class="btn-primary sm" onclick="planSg(${SUGG.indexOf(x)})">Plan this</button>`:''}</span></div>`;
+}
+function openSg(i){
+  const x = SUGG[i]; if(!x) return; const key = i;
+  cur = {sugg:true};
+  drawerShell('Suggested post', `<p style="font-size:15px;font-weight:600;margin-bottom:4px">${esc(x.name)}</p><p class="meta" style="margin-bottom:10px">${fmtShort(x.date)} · ${sgKind(x)}</p>${x.confirmed?'':'<p class="banner warn">The date is not confirmed yet. Check it before planning.</p>'}${x.note?`<p class="meta">${esc(x.note)}</p>`:''}<p class="meta" style="margin-top:10px">Nothing is created until you plan it.</p>`, null, false);
+  if($('#sv')){ $('#sv').textContent = 'Plan this'; $('#sv').onclick = () => planSg(key); }
+  if(canEdit){ const b = document.createElement('button'); b.className = 'btn-outline'; b.textContent = 'Not this year'; b.onclick = () => { closeD(); hideSg(key); }; $('#sv').before(b); }
+}
+async function hideSg(i){
+  const x = SUGG[i]; if(!x) return; const key = x.key;
+  const { error } = await sb.from('marketing_hidden_suggestions').insert({ key });
+  if(error && !/duplicate/i.test(error.message)){ showToast('Could not hide: ' + error.message); return; }
+  HIDDEN.add(key); showToast('Hidden for this year.'); render();
+}
+function planSg(i){
+  const x = SUGG[i]; if(!x) return;
+  const lab = LABELS.find(l=>l.name===(x.kind==='term'||x.kind==='break' ? 'Event' : 'Holiday'));
+  newTopic(x.date, { title: x.name, label: lab ? lab.name : '' }, x.key);
+}
+const weekStart = iso => { const d = new Date(iso+'T00:00:00'); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return localISO(d); };
+
+// ---------- Calendar ----------
+function calendarView(){
+  const t = todayISO();
+  if(!calMonth) calMonth = t.slice(0,7);
+  const [y,m] = calMonth.split('-').map(Number);
+  const shift = k => { const d = new Date(y, m-1+k, 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; };
+  const inMonth = POSTS.filter(p=>p.step!=='cancelled' && monthKey(p.post_date)===calMonth).sort((a,b)=>(a.post_date+(a.post_time||'')).localeCompare(b.post_date+(b.post_time||'')));
+  const ideas = POSTS.filter(p=>openStep(p) && !p.post_date);
+  const head = `<div class="mnav">
+    ${calMode==='ideas' ? `<h2 style="text-align:left;min-width:0">Ideas with no date</h2>` : calMode==='sugg' ? `<h2 style="text-align:left;min-width:0">Suggested posts for the school year</h2>` : `<button class="cal-nav" aria-label="Previous month" onclick="calMonth='${shift(-1)}';render()">&#8249;</button>
+    <h2>${new Date(y,m-1,1).toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</h2>
+    <button class="cal-nav" aria-label="Next month" onclick="calMonth='${shift(1)}';render()">&#8250;</button>
+    ${calMonth!==t.slice(0,7)?`<button class="link-btn" onclick="calMonth=null;render()">This month</button>`:''}`}
+    <span style="flex:1"></span>
+    <span class="seg">${[['month','Month'],['list','List'],['sugg',`Suggested (${openSugg().length})`],['ideas',`Ideas (${ideas.length})`]].map(([k,l])=>`<button class="${calMode===k?'on':''}" onclick="calMode='${k}';render()">${l}</button>`).join('')}</span>
+  </div>`;
+  if(calMode==='sugg'){ const a = openSugg();
+    return head + `<div class="box"><p class="meta" style="font-size:13px;margin-bottom:6px">From the school calendar and the special dates list. Nothing is created until someone plans it.</p>${a.length ? a.map(sgLine).join('') : '<p class="meta" style="padding:8px 0">No suggestions left.</p>'}</div>`; }
+  if(calMode==='ideas') return head + `<div class="box">${ideas.length ? ideas.map(p=>line(p,true)).join('') : '<p class="meta" style="padding:8px 0">No ideas waiting.</p>'}</div>`;
+  if(calMode==='list') return head + `<div class="box">${inMonth.length ? `<div class="pl pl-h"><span>Date</span><span>Topic</span><span>Step</span><span>Writer</span><span>Reviewer</span><span>Translator</span></div>` + inMonth.map(peopleLine).join('') : '<p class="meta" style="padding:8px 0">Nothing planned this month.</p>'}</div>`;
+  const first = new Date(y, m-1, 1), days = new Date(y, m, 0).getDate(), lead = first.getDay();
+  let cells = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="dow">${d}</div>`).join('');
+  for(let i=0;i<lead;i++) cells += '<div class="day out"></div>';
+  for(let d=1; d<=days; d++){
+    const iso = `${calMonth}-${String(d).padStart(2,'0')}`;
+    const ps = inMonth.filter(p=>p.post_date===iso), sg = iso >= t ? openSugg().filter(x=>x.date===iso) : [];
+    cells += `<div class="day ${iso===t?'today':iso<t?'past':''}">${d}${ps.map(p=>{ const late = isLate(p), k = p.step==='english'&&p.sent_back?'back':p.step;
+      return `<span class="pp" title="${esc(p.title)} · ${late?'Late':STEP_LABEL[p.step]}" style="background:${late?LATE_BG:STEP_BG[k]};color:${late?LATE_TEXT:STEP_FG[k]}" onclick="go('post/${p.id}')">${esc(p.title)}</span>`; }).join('')}${sg.map(x=>`<span class="sg" title="Suggested: ${esc(x.name)}${x.confirmed?'':' (date to confirm)'}" onclick="openSg(${SUGG.indexOf(x)})">${esc(x.name)}</span>`).join('')}</div>`;
+  }
+  return head + `<div class="cal-wrap"><div class="cal">${cells}</div>
+    <div class="legend">${[...STEP_ORDER,'posted'].map(s=>`<span><i style="background:${STEP_FG[s]}"></i>${STEP_LABEL[s]}</span>`).join('')}<span><i style="background:#E24B4A"></i>Late</span><span><i style="background:transparent;border:1px dashed #A8A39A"></i>Suggested</span></div></div>`;
+}
+
+// ---------- Post page ----------
+// Item 39: a step button shows only when its box has text; otherwise a short line says what to do first.
+function syncNeedText(){
+  document.querySelectorAll('.needtext').forEach(w=>{
+    const box = $('#f-'+w.dataset.for), has = !!box && box.value.trim() !== '';
+    const btn = w.querySelector('button'); if(btn) btn.style.display = has ? '' : 'none';
+    let m = w.querySelector('.needmsg');
+    if(!has && !m){ m = document.createElement('span'); m.className = 'needmsg muted'; m.style.fontSize = '13px'; m.textContent = w.dataset.msg; w.appendChild(m); }
+    if(has && m) m.remove();
+  });
+}
+// Item 31: the button names the step; this line names the person and the due date.
+function nextLine(p){
+  const who = ids => ids.map(nameOf).filter(Boolean).join(' or ');
+  const due = back => p.post_date ? fmtShort(addDays(p.post_date, -back)) : '';
+  const pic = nameOf(p.pic), tr = nameOf(p.translator), wr = nameOf(posterOf(p));
+  const thaiPart = p.needs_thai ? (tr ? `${tr} does the Thai${due(1)?', due '+due(1):''}` : 'No translator set yet') : '';
+  const postPart = wr ? `${wr} posts it${p.post_date?' on '+fmtShort(p.post_date):''}` : 'No poster set yet';
+  const parts = {
+    english: [pic ? `${pic} reviews it${due(2)?', due '+due(2):''}` : 'No reviewer set yet'],
+    review: [thaiPart || postPart],
+    thai: [postPart],
+    post: ['Post it on Facebook, then mark it as posted.']
+  }[p.step];
+  if(!parts) return '';
+  return p.step === 'post' ? 'Last step: ' + esc(parts[0]) : 'Next: ' + esc(parts[0]) + '.';
+}
+let draft = null;
+const BOX_KEYS = ['copy_en','copy_th','hashtags','video_url'], EXTRA_KEYS = ['note','url'];
+// Unsaved text on the open post: caption boxes that differ from the saved post, or a send-back note / Facebook link being typed.
+const dirty = () => !!draft && !!$('#pg') && (BOX_KEYS.some(k => { const e = $('#f-'+k); return !!e && !e.readOnly && e.value !== (draft[k]||''); })
+  || EXTRA_KEYS.some(k => (($('#f-'+k)||{}).value||'').trim() !== ''));
+// When the open post is drawn again, put back anything typed but not saved (items 21 and 22).
+function unsavedVals(){
+  if(!draft || !$('#pg')) return null;
+  const o = {};
+  BOX_KEYS.forEach(k => { const e = $('#f-'+k); if(e && !e.readOnly && e.value !== (draft[k]||'')) o[k] = e.value; });
+  EXTRA_KEYS.forEach(k => { const e = $('#f-'+k); if(e && e.value) o[k] = e.value; });
+  return Object.keys(o).length ? { id: draft.id, o } : null;
+}
+async function renderPost(el){
+  const id = postId(), p = POSTS.find(x=>x.id===id);
+  if(AI_SUG && AI_SUG.post !== id) AI_SUG = null;
+  if(!p){ el.innerHTML = '<div class="empty-state">This post was not found.</div>'; return; }
+  const keep = unsavedVals();
+  draft = p;
+  if(!EVENTS[id]){
+    EVENTS[id] = [];
+    sb.from('marketing_post_events').select('actor,kind,note,created_at').eq('post_id', id).order('created_at').then(({data})=>{ EVENTS[id] = data || []; if(postId()===id && !dirty()) renderPost($('#view')); });
+  }
+  if(!VERSIONS[id]){
+    VERSIONS[id] = [];
+    sb.from('marketing_post_versions').select('id,field,body,source,actor,created_at').eq('post_id', id).order('created_at', {ascending:false}).then(({data})=>{ VERSIONS[id] = data || []; if(postId()===id && !dirty() && !AI_SUG) renderPost($('#view')); });
+  }
+  const mine = isMine(p), pic = p.pic === ME, adm = isAdmin() && openStep(p), bk = backupFor(p);
+  const W = isWriterOf(p), T = isTranslatorOf(p);
+  const canEn = (W && ['english','post'].includes(p.step)) || (pic && p.step==='review') || adm;
+  const canTh = p.needs_thai && ((T && p.step==='thai') || adm);
+  const canTags = (W && ['english','post'].includes(p.step)) || (pic && p.step==='review') || adm;
+  const canImg = (W && openStep(p)) || (pic && p.step==='review') || adm;
+  const canTopic = (p.created_by===ME || canDelete || (!p.created_by && isWriterOf(p))) && openStep(p);
+  const canBrief = (p.created_by===ME || pic || isAdmin()) && p.step==='english';
+  // Thai AI draft is available as soon as there is English (item 12): translator at Thai, writer at English, PIC at Review, admin.
+  const canAiTh = p.needs_thai && openStep(p) && (canTh || (W && p.step==='english') || (pic && p.step==='review'));
+  window._canEdit = { en: canEn, th: canTh || canAiTh };
+  const steps = ['english', 'review', ...(p.needs_thai?['thai']:[]), 'post'];
+  const cur = p.step==='posted' ? steps.length : steps.indexOf(p.step);
+  const bar = steps.map((s,i)=>`<span class="sb ${i<cur?'done':i===cur?'now':''}"><span class="sd">${i<cur?'&#10003;':i+1}</span>${STEP_LABEL[s]}${{english:p.writer,review:p.pic,thai:p.translator,post:posterOf(p)}[s]!==undefined?` · ${esc(nameOf({english:p.writer,review:p.pic,thai:p.translator,post:posterOf(p)}[s])||'not set')}`:''}</span>`).join('<span class="sl"></span>');
+  const imgs = (p.images||[]);
+  const canAct = mine || bk || adm;
+  const asAdmin = !mine && !bk && adm ? ' <span class="adm">(as admin)</span>' : '';
+  let actions = '';
+  if(canAct){
+    if(p.step==='english') actions = `<span class="needtext" data-for="copy_en" data-msg="Write the English first, then send it to Review."><button class="btn-primary" onclick="doAct('send_on')">Send to Review</button></span>`;
+    if(p.step==='review' && (pic || adm)) actions = `<input id="f-note" placeholder="Note to the writer (needed to send back)" class="note-in">
+      <button class="btn-outline" onclick="doAct('send_back')">Send back to English</button>
+      <button class="btn-primary" onclick="doAct('approve')">Approve${p.needs_thai?', send to Translate':', send to Post'}</button>`;
+    if(p.step==='thai') actions = `<input id="f-note" placeholder="Note if the English is wrong" class="note-in">
+      <button class="btn-outline" onclick="doAct('translator_back')">Send back to Review</button>
+      <span class="needtext" data-for="copy_th" data-msg="Write the Thai or use Draft Thai with AI first."><button class="btn-primary" onclick="doAct('thai_checked')">Thai done, send to Post</button></span>`;
+    if(p.step==='post') actions = p.needs_thai && p.th_stale && !isAdmin()
+      ? `<span class="muted">The English changed after the Thai was checked. Ask the admin to update the Thai before this goes out.</span>`
+      : `<button class="btn-outline" onclick="copyCaption()">Copy caption</button>
+      <input id="f-url" placeholder="Facebook link (optional)" class="note-in">
+      <button class="btn-primary" onclick="doAct('mark_posted')">Mark as posted</button>`;
+  }
+  const stepWho = {english:nameOf(p.writer)||'the writer', review:nameOf(p.pic)||'the reviewer', thai:nameOf(p.translator)||'the translator', post:nameOf(posterOf(p))||'the poster'}[p.step] || '';
+  const adminLine = actions && asAdmin ? `<p class="adminline">You're doing ${esc(stepWho)}'s step as admin. This is logged.</p>` : '';
+  const nextHint = !openStep(p) ? '' : nextLine(p);
+  const briefHtml = (p.brief_goal || p.brief_format || (p.brief_audience||[]).length || p.brief)
+    ? `<div class="briefbox"><span><b>For</b>${esc((p.brief_audience||[]).join(', ')||'Not set')}</span><span><b>Goal</b>${esc(goalName(p.brief_goal)||'Not set')}</span><span><b>Format</b>${esc(formatName(p.brief_format)||'Not set')}</span>${canBrief?`<button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Edit brief</button>`:''}${p.brief?`<span class="kp"><b>Key points</b>${esc(p.brief)}</span>`:''}</div>`
+    : (canBrief ? `<div class="briefbox"><span class="meta">No brief yet.</span><button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Add brief</button></div>` : '');
+  const waiting = !canAct && openStep(p) ? `<span class="muted">Waiting on ${esc(ownerName(p))}${isLate(p)?' · <span class="late-d">late</span>':''}</span>` : '';
+  const hist = (EVENTS[id]||[]).map(e=>`${esc(nameOf(e.actor)||'System')} ${esc(e.kind)}${e.note?` ("${esc(e.note)}")`:''} · ${new Date(e.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`).join('<br>');
+  el.innerHTML = `<div id="pg">
+  <button class="link-btn" style="margin-bottom:14px" onclick="history.length>1?history.back():go('${lastTab||'turn'}')">&#8249; Back</button>
+  <div class="box" style="padding:20px 22px">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px">
+      <div><h2 style="font-family:Georgia,serif;font-size:22px;font-weight:700">${esc(p.title)}</h2>
+        <p class="meta" style="font-size:13px;margin-top:2px">${p.post_date?'Posts '+fmtShort(p.post_date):'No date yet'}${p.post_time?', '+esc(p.post_time):''} · Reviewer ${esc(nameOf(p.pic)||'not set')}${p.label?' · '+esc(p.label):''}${p.needs_thai?'':' · English only'}</p></div>
+      <div style="display:flex;gap:8px;align-items:center">${openStep(p)&&dueOf(p)?`<span class="chip ${isLate(p)?'rust':''}">${esc(dueText(p))}</span>`:''}${stepChip(p)}${canTopic?`<button class="btn-outline sm" onclick="editTopic('${p.id}')">Edit topic</button>`:''}</div>
+    </div>
+    <div class="stepbar">${bar}</div>
+    ${p.step==='english'&&p.sent_back&&p.back_note?`<div class="banner bad">${esc(nameOf(p.pic)||'Reviewer')}: ${esc(p.back_note)}</div>`:''}
+    ${p.step==='review'&&p.sent_back&&p.back_note?`<div class="banner bad">${esc(p.back_note)}</div>`:''}
+    ${briefHtml}
+    <div id="aiSlot"></div>
+    <div class="grid-2" style="margin-bottom:12px">
+      <div class="f"><label>English${canEn?(p.step==='post'?` <span class="hint" style="color:#854F0B">already approved: saving a change sends it back to Review</span>`:''):' <span class="hint">view only</span>'}</label><textarea id="f-copy_en" class="tall" ${canEn?'':'readonly'} placeholder="${canEn?'Write or paste the English caption':''}">${esc(p.copy_en||'')}</textarea>${canEn?`<div class="aibar"><button class="btn-outline sm" id="aiBtn-rewrite" onclick="aiRun('rewrite')">${(p.copy_en||'').trim()?'Rewrite with AI':'Draft with AI'}</button>${backBtn(p,'en')}</div>`:''}</div>
+      ${p.needs_thai ? `<div class="f"><label>Thai${p.th_machine?' <span class="hint" style="color:#854F0B">machine draft, not checked</span>':''}${canTh?'':' <span class="hint">'+(canAiTh?'AI draft only until the Thai step':'view only')+'</span>'}</label>
+        ${p.th_stale?`<div class="thnote">The English changed after this Thai was made.${canAiTh?`<button class="btn-outline sm" onclick="aiRun('thai')">Redo Thai with AI</button>`:''}</div>`:''}
+        <textarea id="f-copy_th" class="tall" ${canTh?'':'readonly'} placeholder="${canTh?'Write or fix the Thai caption':(canAiTh?'Use Draft Thai with AI below, or leave it for the translator':'The translator writes the Thai after the English is approved')}">${esc(p.copy_th||'')}</textarea>
+        ${canAiTh?`<div class="aibar"><button class="btn-outline sm" id="aiBtn-thai" onclick="aiRun('thai')">${(p.copy_th||'').trim()?'Redo Thai with AI':'Draft Thai with AI'}</button>${backBtn(p,'th')}</div>`:(canTh?`<div class="aibar">${backBtn(p,'th')}</div>`:'')}</div>`
+      : '<div class="f"><label>Thai</label><p class="meta">English only for this post.</p></div>'}
+    </div>
+    <div class="f"><label>Hashtags${canTags?'':' <span class="hint">view only</span>'}</label><input id="f-hashtags" ${canTags?'':'readonly'} value="${esc(p.hashtags||'')}" placeholder="#BloomChiangMai" oninput="renderTagChips()">
+      ${canTags?`<div class="aibar"><button class="btn-outline sm" id="aiBtn-hashtags" onclick="suggestTags()">Suggest hashtags</button><span class="meta">From Bloom's own tags. About 5 is enough on Facebook.</span></div><div class="tagchips" id="tagChips"></div>`:''}</div>
+    <div class="f"><label>Images</label><div class="imgs">${imgs.map((im,i)=>`<span class="im">${safeUrl(im.url)?`<a href="${esc(im.url)}" target="_blank" rel="noopener">${im.external?'<span class="ext">Drive link</span>':`<img src="${esc(im.url)}" alt="">`}</a>`:''}${canImg?`<button class="imx" title="Remove" onclick="removeImg(${i})">×</button>`:''}</span>`).join('')}
+      ${canImg?`<label class="imadd">+ Add<input type="file" accept="image/*" multiple onchange="addImgs(this.files)" hidden></label>`:''}${!imgs.length&&!canImg?'<span class="meta">No images yet.</span>':''}</div></div>
+    <div class="f"><label>Video link <span class="hint">reels: paste a link for now</span></label><input id="f-video_url" ${canImg?'':'readonly'} value="${esc(p.video_url||'')}" placeholder="https://"></div>
+    ${['post','posted'].includes(p.step) ? shareBox(p) : ''}
+    ${p.post_url?`<p style="margin-bottom:12px"><a href="${esc(safeUrl(p.post_url))}" target="_blank" rel="noopener" style="font-weight:600">View the live post</a></p>`:''}
+    <button class="link-btn" style="margin:2px 0 10px" onclick="togglePreview()">${SHOW_PREVIEW?'Hide':'Preview as'} Facebook post</button>
+    <div id="fbPreview">${SHOW_PREVIEW?fbPreviewHtml(p):''}</div>
+    ${adminLine}
+    <div class="actions">${(canEn||canTh||canTags||canImg)?`<button class="btn-outline" onclick="saveFields()">Save</button>`:''}${waiting}<span style="flex:1"></span>${actions}</div>
+    ${nextHint?`<p class="nexthint">${nextHint}</p>`:''}
+  </div>
+  <div class="hist"><b>History</b><br>${hist||'…'}${(VERSIONS[id]||[]).length?`<br><a href="javascript:void 0" onclick="SHOW_VERS=!SHOW_VERS;renderPost($('#view'))">${SHOW_VERS?'Hide':'Show'} earlier versions (${VERSIONS[id].length})</a>${SHOW_VERS?versionsHtml(p):''}`:''}</div>
+  </div>`;
+  syncNeedText();
+  ['copy_en','copy_th'].forEach(k=>{ const e = $('#f-'+k); if(e) e.addEventListener('input', syncNeedText); });
+  { const e = $('#f-copy_en'), b = $('#aiBtn-rewrite'); if(e && b) e.addEventListener('input', ()=>{ if(!b.disabled) b.textContent = enAiLabel(); }); }
+  if(keep && keep.id === id) Object.entries(keep.o).forEach(([k,v]) => { const e = $('#f-'+k); if(e && !e.readOnly) e.value = v; });
+  syncNeedText();
+  if(AI_SUG && AI_SUG.post === id) aiShowPanel();
+  el.querySelectorAll('textarea.tall').forEach(t=>{ growBox(t); t.addEventListener('input', ()=>growBox(t)); });
+  renderTagChips();
+}
+// Boxes grow with the text, so the whole caption is always visible (item 13).
+function growBox(t){ t.style.height = 'auto'; t.style.height = Math.max(220, t.scrollHeight + 2) + 'px'; }
+
+// ---------- AI ----------
+const SRC_LABEL = {human:'typed', ai:'AI', restore:'restored', original:'before tracking'};
+function fieldText(p, f){ return (f==='en' ? p.copy_en : p.copy_th) || ''; }
+// "Back to my version": when the current text is an AI version, restore the text from just before it.
+function backBtn(p, f){
+  const vs = (VERSIONS[p.id]||[]).filter(v=>v.field===f);
+  if(!vs.length || vs[0].source !== 'ai' || vs[0].body !== fieldText(p,f)) return '';
+  const prev = vs.slice(1).find(v=>v.source !== 'ai');
+  if(!prev) return '';
+  return `<button class="link-btn" onclick="restoreVersion('${prev.id}')">Back to my version</button><span class="meta">AI text in use</span>`;
+}
+function versionsHtml(p){
+  const vs = VERSIONS[p.id]||[];
+  return `<div class="vers">${vs.map(v=>{ const can = (window._canEdit||{})[v.field] && v.body !== fieldText(p, v.field);
+    return `<div class="v"><span>${v.field==='en'?'English':'Thai'} · ${esc(SRC_LABEL[v.source]||v.source)}${v.actor?' · '+esc(nameOf(v.actor)):''}</span>
+      <span>${new Date(v.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+      <span class="pv">${esc(v.body.slice(0,140))}</span>
+      ${can?`<button class="link-btn" onclick="restoreVersion('${v.id}')">Restore</button>`:'<span></span>'}</div>`; }).join('')}</div>`;
+}
+async function restoreVersion(vid){
+  const p = draft, v = (VERSIONS[p.id]||[]).find(x=>x.id===vid); if(!v) return;
+  if(!(await saveFields(true))) return;
+  const col = v.field==='en'?'copy_en':'copy_th';
+  const r = await act('save', p.id, { source: 'restore', version_id: v.id }); if(!r) return;
+  p[col] = v.body; const box = $('#f-'+col); if(box) box.value = v.body;
+  showToast('Earlier version restored.'); delete EVENTS[p.id]; delete VERSIONS[p.id]; AI_SUG = null; await reloadPosts(true);
+}
+async function aiCall(action, postId, text){
+  let out = null;
+  try{
+    const r = await sb.functions.invoke('mkt-ai', { body: { action, post_id: postId, text } });
+    out = r.data;
+    if(r.error && r.error.context){ try{ out = await r.error.context.json(); }catch(e){} }
+    if(!out && r.error) out = { ok:false, reason:'network' };
+  }catch(e){ out = { ok:false, reason:'network' }; }
+  return out;
+}
+async function aiRun(action){
+  const p = draft, text = (($('#f-copy_en')||{}).value||'').trim();
+  // Item X: with an empty English box the button drafts from the brief; once there is text it rewrites.
+  if(action==='rewrite' && !text) action = 'draft';
+  const btn = $('#aiBtn-'+(action==='draft'?'rewrite':action));
+  const field = action==='thai' ? 'th' : 'en';
+  if(!text && action!=='draft'){ showToast('Write or paste some English first.'); return; }
+  if(btn){ btn.disabled = true; btn.textContent = 'Working…'; }
+  const out = await aiCall(action, p.id, text);
+  if(btn){ btn.disabled = false; btn.textContent = action==='thai' ? ((p.copy_th||'').trim()?'Redo Thai with AI':'Draft Thai with AI') : enAiLabel(); }
+  if(!out || !out.ok){
+    const reason = (out && out.reason) || 'api_error';
+    if(['no_credit','spend_limit','bad_key'].includes(reason)){ AISTATUS = Object.assign({}, AISTATUS||{}, { last_error: reason, last_error_at: new Date().toISOString() }); const ab = $('#aiBanner'); if(ab) ab.innerHTML = aiBannerHtml(); }
+    const slot = $('#aiSlot'); if(slot) slot.innerHTML = `<div class="aimsg">${esc((out && out.message) || AI_MSG[reason] || AI_MSG.api_error)}</div>`;
+    return;
+  }
+  if(AISTATUS) AISTATUS.last_ok_at = new Date().toISOString();
+  AI_SUG = { post: p.id, field, text: out.text, from: text, mine: field==='en' ? text : (($('#f-copy_th')||{}).value||'') };
+  aiShowPanel();
+}
+// Item VIII: where this post can be shared, from Communities. Only groups that allow it, matched to the post's audience.
+const SHARE_RANK = {'Yes':0, 'Specific days only':1, 'Admin approval':2};
+const SHARE_RULE = {'Yes':'Allowed', 'Specific days only':'Limited, check the rule', 'Admin approval':'Ask the admin first'};
+function audTags(list){
+  const map = [[/expat|english/i,'Expat English'],[/thai/i,'Thai'],[/chinese/i,'Chinese'],[/alternative/i,'Alternative education'],[/homeschool/i,'Homeschool'],[/worldschool/i,'Worldschool']];
+  const out = new Set(); (list||[]).forEach(a=>map.forEach(([re,t])=>{ if(re.test(a)) out.add(t); })); return out;
+}
+function shareList(p){
+  const want = audTags(p.brief_audience);
+  return (DATA.groups||[]).filter(g=>g.status!=='Avoid' && SHARE_RANK[g.promo] !== undefined && (!want.size || g.audience==='Mixed' || want.has(g.audience)))
+    .sort((a,b)=>SHARE_RANK[a.promo]-SHARE_RANK[b.promo] || memberCount(b.members)-memberCount(a.members));
+}
+function daysAgo(d){ const n = Math.round((new Date(new Date().toDateString()) - new Date(d+'T00:00:00')) / 86400000); return n<=0 ? 'today' : n===1 ? 'yesterday' : n + ' days ago'; }
+function shareBox(p){
+  const list = shareList(p), today = new Date().toLocaleDateString('en-CA');
+  if(!list.length) return '';
+  return `<div class="sharebox"><h4>Where to share</h4>${list.map(g=>{ const link = linkOf('groups', g), done = g.last_posted === today;
+    return `<div class="sh"><span class="sh-n">${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(g.name)} &#8599;</a>`:esc(g.name)}${g.status!=='Joined'&&g.status!=='Active'?' <span class="rowtag">not joined yet</span>':''}</span>
+      <span class="sh-r" title="${esc(g.rules||'')}">${esc(SHARE_RULE[g.promo])}</span>
+      <span class="sh-l">${g.last_posted ? 'Last shared ' + daysAgo(g.last_posted) : 'Never shared'}</span>
+      ${canEdit ? (done ? '<span class="sh-d">Shared today</span>' : `<button class="btn-outline sm" onclick="markShared('${g.id}')">Shared</button>`) : '<span></span>'}</div>`; }).join('')}</div>`;
+}
+async function markShared(gid){
+  const g = (DATA.groups||[]).find(x=>x.id===gid); if(!g) return;
+  const body = Object.fromEntries(Object.entries(g).filter(([k])=>k!=='id' && !k.startsWith('_')));
+  body.last_posted = new Date().toLocaleDateString('en-CA');
+  const { error } = await sb.from('marketing_entries').update({ data: body }).eq('id', gid);
+  if(error){ showToast('Could not save: ' + error.message); return; }
+  g.last_posted = body.last_posted; showToast('Noted: shared in ' + g.name + ' today.'); renderPost($('#view'));
+}
+function enAiLabel(){ return ((($('#f-copy_en')||{}).value||'').trim()) ? 'Rewrite with AI' : 'Draft with AI'; }
+function aiShowPanel(){
+  const slot = $('#aiSlot'); if(!slot || !AI_SUG) return;
+  const en = AI_SUG.field === 'en';
+  const d = en ? wordDiff(AI_SUG.mine, AI_SUG.text) : null;
+  slot.innerHTML = `<div class="aipanel">
+    <h4>${en?(AI_SUG.mine?'AI rewrite':'AI first draft'):'AI Thai draft'} <span class="meta" style="font-weight:400">${en?'Your text stays as it is until you choose.':'Made from the English shown on the left. The translator still checks it.'}</span></h4>
+    <div class="aicmp">
+      <div><div class="lbl2">${en?'Yours':'English'}</div><div class="txt">${en?d.left:esc(AI_SUG.from)}</div></div>
+      <div><div class="lbl2">${en?(AI_SUG.mine?'AI rewrite':'AI first draft'):'Thai draft'}</div><div class="txt">${en?d.right:esc(AI_SUG.text)}</div></div>
+    </div>
+    <div class="row"><span class="meta" style="margin-right:auto">${en?'<ins style="background:#E1F5EE;color:#085041;text-decoration:none;padding:0 4px;border-radius:3px">Green</ins> added or changed by the AI, <del style="background:#FCEBEB;color:#791F1F;padding:0 4px;border-radius:3px">red</del> removed. Check dates, names and numbers.'+(AI_SUG.mine?'':' Fill every [ADD ...] gap before sending it on.'):'You can still edit the Thai in its box after using it.'}</span>
+      <button class="btn-outline sm" onclick="aiDismiss()">${en?'Keep mine':'Not now'}</button>
+      <button class="btn-primary sm" onclick="aiUse()">Use this</button></div></div>`;
+}
+function aiDismiss(){ AI_SUG = null; const s = $('#aiSlot'); if(s) s.innerHTML = ''; }
+async function aiUse(){
+  if(!AI_SUG) return;
+  const p = draft, f = AI_SUG.field, text = AI_SUG.text;
+  // Save whatever is in the boxes first, so the person's own text is kept as a version.
+  if(!(await saveFields(true))) return;
+  const col = f==='en'?'copy_en':'copy_th';
+  const r = await act('save', p.id, f==='en' ? { copy_en: text, source: 'ai' } : { copy_th: text, source: 'ai', th_from_en: AI_SUG.from }); if(!r) return;
+  p[col] = text; const box = $('#f-'+col); if(box) box.value = text; syncNeedText();
+  AI_SUG = null; showToast(f==='en' ? 'AI rewrite in use. "Back to my version" restores yours.' : 'AI Thai in use. Check it before marking Thai done.');
+  delete EVENTS[p.id]; delete VERSIONS[p.id]; await reloadPosts(true);
+}
+// Word-level difference between two texts, kept simple (longest common subsequence on words).
+function wordDiff(a, b){
+  const A = String(a||'').split(/(\s+)/), B = String(b||'').split(/(\s+)/);
+  const n = A.length, m = B.length;
+  if(n*m > 400000) return { left: esc(a), right: esc(b) };
+  const L = Array.from({length:n+1}, ()=>new Uint16Array(m+1));
+  for(let i=n-1;i>=0;i--) for(let j=m-1;j>=0;j--) L[i][j] = A[i]===B[j] ? L[i+1][j+1]+1 : Math.max(L[i+1][j], L[i][j+1]);
+  let i=0, j=0, left='', right='';
+  while(i<n && j<m){
+    if(A[i]===B[j]){ left += esc(A[i]); right += esc(B[j]); i++; j++; }
+    else if(L[i+1][j] >= L[i][j+1]){ left += /^\s+$/.test(A[i]) ? esc(A[i]) : `<del>${esc(A[i])}</del>`; i++; }
+    else { right += /^\s+$/.test(B[j]) ? esc(B[j]) : `<ins>${esc(B[j])}</ins>`; j++; }
+  }
+  while(i<n){ left += /^\s+$/.test(A[i]) ? esc(A[i]) : `<del>${esc(A[i])}</del>`; i++; }
+  while(j<m){ right += /^\s+$/.test(B[j]) ? esc(B[j]) : `<ins>${esc(B[j])}</ins>`; j++; }
+  return { left, right };
+}
+// Hashtag chips (item 14): suggestions and the tags already in the box, click to add or remove.
+let TAG_SUG = [];
+const tagList = () => (((($('#f-hashtags')||{}).value)||'').match(/#[^\s#]+/g) || []);
+function renderTagChips(){
+  const box = $('#tagChips'); if(!box) return;
+  const cur = tagList(), curL = cur.map(t=>t.toLowerCase());
+  const all = [...TAG_SUG, ...cur.filter(t=>!TAG_SUG.some(x=>x.toLowerCase()===t.toLowerCase()))];
+  box.innerHTML = all.map(t=>`<button type="button" class="tagchip ${curL.includes(t.toLowerCase())?'on':''}" data-tag="${esc(t)}" onclick="toggleTag(this.dataset.tag)">${esc(t)}</button>`).join('');
+}
+function toggleTag(t){
+  const inp = $('#f-hashtags'); if(!inp) return;
+  const cur = tagList(), has = cur.some(x=>x.toLowerCase()===t.toLowerCase());
+  inp.value = (has ? cur.filter(x=>x.toLowerCase()!==t.toLowerCase()) : [...cur, t]).join(' ');
+  renderTagChips();
+}
+async function suggestTags(){
+  const p = draft, btn = $('#aiBtn-hashtags');
+  const text = (($('#f-copy_en')||{}).value||'').trim();
+  if(btn){ btn.disabled = true; btn.textContent = 'Working…'; }
+  let out = null;
+  try{
+    const r = await sb.functions.invoke('mkt-ai', { body: { action:'hashtags', post_id: p.id, text } });
+    out = r.data; if(r.error && r.error.context){ try{ out = await r.error.context.json(); }catch(e){} }
+  }catch(e){ out = { ok:false, reason:'network' }; }
+  if(btn){ btn.disabled = false; btn.textContent = 'Suggest hashtags'; }
+  if(!out || !out.ok){ showToast(AI_MSG[(out&&out.reason)||'api_error'] || AI_MSG.api_error); return; }
+  TAG_SUG = out.tags || [];
+  const inp = $('#f-hashtags'); if(inp && !inp.value.trim()) inp.value = TAG_SUG.join(' ');
+  renderTagChips();
+}
+// Facebook preview (item 13): English, Thai, hashtags, first image. The "See more" line is approximate.
+let SHOW_PREVIEW = false;
+function togglePreview(){ SHOW_PREVIEW = !SHOW_PREVIEW; const b = $('#fbPreview'); if(b) b.innerHTML = SHOW_PREVIEW ? fbPreviewHtml(draft) : ''; const l = b && b.previousElementSibling; if(l) l.textContent = (SHOW_PREVIEW?'Hide':'Preview as') + ' Facebook post'; }
+function fbPreviewHtml(p){
+  const v = id => (($('#'+id)||{}).value ?? '');
+  const en = ($('#f-copy_en') ? v('f-copy_en') : p.copy_en||'').trim();
+  const th = p.needs_thai ? ($('#f-copy_th') ? v('f-copy_th') : p.copy_th||'').trim() : '';
+  const tags = ($('#f-hashtags') ? v('f-hashtags') : p.hashtags||'').trim();
+  const full = [en, th, tags].filter(Boolean).join('\n\n');
+  const lines = full.split('\n'); let cutAt = full.length, seen = 0, pos = 0;
+  for(const ln of lines){ seen += Math.max(1, Math.ceil(ln.length / 60)); pos += ln.length + 1; if(seen >= 5){ cutAt = Math.min(full.length, pos); break; } }
+  const img = (p.images||[]).find(im=>!im.external && safeUrl(im.url));
+  const when = p.post_date ? fmtShort(p.post_date) + (p.post_time ? ' at ' + esc(p.post_time) : '') : 'Date not set';
+  return `<div class="fbwrap"><div class="fbcard">
+    <div class="fbhead"><div class="fbav">B</div><div><div class="fbname">Bloom Chiangmai</div><div class="fbtime">${when}</div></div></div>
+    <div class="fbtext">${esc(full.slice(0, cutAt)) || '<span class="meta">Nothing written yet.</span>'}</div>
+    ${cutAt < full.length ? `<div class="fbmore">Facebook shows "See more" about here (it varies by phone)</div><div class="fbtext fbrest">${esc(full.slice(cutAt))}</div>` : ''}
+    ${img ? `<img class="fbimg" src="${esc(img.url)}" alt="">` : ''}
+  </div></div>`;
+}
+function aiBannerHtml(){
+  if(!isAdmin() || !AISTATUS || !AISTATUS.last_error || !['no_credit','spend_limit','bad_key'].includes(AISTATUS.last_error)) return '';
+  if(AISTATUS.last_ok_at && AISTATUS.last_ok_at > AISTATUS.last_error_at) return '';
+  const when = new Date(AISTATUS.last_error_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  const what = {no_credit:'AI credit ran out', spend_limit:'AI monthly limit reached', bad_key:'AI key stopped working'}[AISTATUS.last_error];
+  const fix = AISTATUS.last_error==='bad_key' ? 'Make a new key in the Claude Console and save it in Supabase as ANTHROPIC_API_KEY.' : 'Top up at platform.claude.com/settings/billing.';
+  return `<div class="aibanner">${what} on ${when}. AI buttons are paused for everyone. ${fix}</div>`;
+}
+function fieldVals(){
+  const o = {};
+  ['copy_en','copy_th','hashtags','video_url'].forEach(k=>{ const e = $('#f-'+k); if(e && !e.readOnly) o[k] = e.value; });
+  return o;
+}
+async function saveFields(quiet){
+  const p = draft, o = fieldVals(), ch = {};
+  Object.keys(o).forEach(k=>{ if(o[k] !== (p[k]||'')) ch[k] = o[k]; });
+  if(!Object.keys(ch).length){ if(!quiet) showToast('Nothing to save.'); return true; }
+  const wasPost = p.step === 'post';
+  const r = await act('save', p.id, ch); if(!r) return false;
+  Object.assign(p, ch); delete EVENTS[p.id];
+  if(!quiet){ showToast(wasPost && ch.copy_en !== undefined ? 'Saved. It goes back to Review for approval.' : 'Saved.'); await reloadPosts(true); }
+  return true;
+}
+async function doAct(a){
+  const p = draft;
+  const thEdited = !!$('#f-copy_th') && !$('#f-copy_th').readOnly && $('#f-copy_th').value !== (p.copy_th||'');
+  const pay = {};
+  // Item 27: Thai made from older English needs updating, or a clear yes that it still matches.
+  if(p.needs_thai && p.th_stale && !thEdited && (a==='thai_checked' || a==='mark_posted')){
+    if(!confirm('The English changed after this Thai was made.\n\nIs the Thai still correct for the new English?\n\nOK: yes, it still matches. Cancel: go back and update it.')) return;
+    pay.confirm_current = true;
+  }
+  if(!(await saveFields(true))) return;
+  // A draft gap like [ADD TIME] must be filled before the post moves on.
+  if(['send_on','approve','mark_posted'].includes(a) && /\[ADD[^\]]*\]/i.test(p.copy_en||'')){ showToast('Fill the [ADD ...] gaps in the English first.'); return; }
+  if(a==='send_on' && !p.pic){ showToast('Pick the reviewer first.'); editTopic(p.id); return; }
+  if(a==='translator_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the reviewer knows what to check.'); $('#f-note').focus(); return; } }
+  if(a==='send_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the writer knows what to change.'); $('#f-note').focus(); return; } }
+  if(a==='mark_posted') pay.post_url = (($('#f-url')||{}).value||'').trim();
+  // Item IX: approving a Thai post with no Thai yet makes an AI Thai draft first, so the translator starts from it.
+  let aiTh = '';
+  if(a==='approve' && p.needs_thai && !(p.copy_th||'').trim() && (p.copy_en||'').trim()){
+    showToast('Approving. Making a Thai draft for the translator…');
+    const out = await aiCall('thai', p.id, p.copy_en);
+    if(out && out.ok && out.text){ const s2 = await act('save', p.id, { copy_th: out.text, source: 'ai', th_from_en: p.copy_en }); aiTh = s2 ? 'ok' : 'fail'; }
+    else aiTh = 'fail';
+  }
+  const r = await act(a, p.id, pay); if(!r) return;
+  EXTRA_KEYS.forEach(k => { const e = $('#f-'+k); if(e) e.value = ''; });
+  if(aiTh) showToast(aiTh==='ok' ? 'Approved. The translator starts from an AI Thai draft.' : 'Approved. The AI Thai draft did not work, so the translator writes the Thai.');
+  else showToast({send_on:'Sent to Review.', thai_checked:'Thai done. Sent to Post.', send_back:'Sent back to English with your note.', translator_back:'Sent back to Review with your note.', approve: p.needs_thai ? 'Approved. Sent to Translate.' : 'Approved. Sent to Post.', mark_posted:'Marked as posted.'}[a] || 'Done.');
+  delete EVENTS[p.id]; await reloadPosts(true);
+}
+async function copyCaption(){
+  const p = draft;
+  const text = [p.copy_en, p.needs_thai ? p.copy_th : '', p.hashtags].filter(x=>x && x.trim()).join('\n\n');
+  try { await navigator.clipboard.writeText(text); }
+  catch(e){ const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+  showToast('Caption copied: English, Thai, then hashtags.');
+}
+async function addImgs(files){
+  const p = draft, list = [...(p.images||[])];
+  for(const f of files){
+    if(f.size > 10*1024*1024){ showToast(f.name + ' is over 10 MB.'); continue; }
+    const path = `${p.id}/${Date.now()}-${f.name.replace(/[^\w.\-]+/g,'_')}`;
+    const { error } = await sb.storage.from(IMG_BUCKET).upload(path, f, { cacheControl:'3600', upsert:false });
+    if(error){ showToast('Upload failed: ' + error.message); continue; }
+    list.push({ path, url: sb.storage.from(IMG_BUCKET).getPublicUrl(path).data.publicUrl });
+  }
+  const r = await act('save', p.id, { images: list }); if(r){ showToast('Images updated.'); await reloadPosts(true); }
+}
+async function removeImg(i){
+  const p = draft, list = [...(p.images||[])], [gone] = list.splice(i,1);
+  const r = await act('save', p.id, { images: list }); if(!r) return;
+  if(gone && gone.path) await sb.storage.from(IMG_BUCKET).remove([gone.path]);
+  await reloadPosts(true);
+}
+
+// ---------- New topic / edit topic ----------
+// Anyone on the HQ team can be picked for any role on a post. Languages show next to the name.
+// Item 85: posts in progress a person is named on, so the picker shows who has room.
+const openLoad = id => POSTS.filter(p=>openStep(p) && p.post_date && [p.writer, p.pic, p.translator, posterOf(p)].includes(id)).length;
+function personOptions(sel, empty, load){
+  const ok = members().map(id=>STAFF[id]);
+  const ld = id => { if(!load) return ''; const n = openLoad(id); return ' · ' + (n ? n + ' open' : 'free'); };
+  return `<option value="">${empty||'Choose a person'}</option>` + ok.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''} ${NO_ACCESS.has(s.id)&&s.id!==sel?'disabled':''}>${esc(s.name)}${LANGS[s.id]?' · '+esc(LANGS[s.id]):''}${NO_ACCESS.has(s.id)?' (no HQ access yet)':ld(s.id)}</option>`).join('')
+    + (sel && !ok.some(s=>s.id===sel) && STAFF[sel] ? `<option value="${sel}" selected>${esc(STAFF[sel].name)} (not on the team)</option>` : '');
+}
+const picOptions = sel => personOptions(sel);
+function briefFields(p){
+  const aud = p.brief_audience || [], list = [...audienceList(), ...aud.filter(a=>!audienceList().includes(a))];
+  return `
+    <div class="f"><label>Who is it for? <span class="hint">pick one or more</span></label><div class="checks">${list.map(a=>`<label><input type="checkbox" name="brief_audience" value="${esc(a)}" ${aud.includes(a)?'checked':''}>${esc(a)}</label>`).join('')}</div></div>
+    <div class="grid-2"><div class="f"><label>Goal</label><select name="brief_goal"><option value="">Choose</option>${GOALS.map(([v,l])=>`<option value="${v}" ${p.brief_goal===v?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div class="f"><label>Format</label><select name="brief_format"><option value="">Choose</option>${FORMATS.map(([v,l])=>`<option value="${v}" ${p.brief_format===v?'selected':''}>${l}</option>`).join('')}</select></div></div>
+    <div class="f"><label>Key points <span class="hint">optional</span></label><textarea name="brief" placeholder="What must the post say? Dates, times, names, links.">${esc(p.brief||'')}</textarea></div>`;
+}
+function briefPayload(){
+  const fd = new FormData($('#fm'));
+  return { brief_audience: fd.getAll('brief_audience').map(String), brief_goal: String(fd.get('brief_goal')||''), brief_format: String(fd.get('brief_format')||''), brief: String(fd.get('brief')||'').trim() };
+}
+function briefMissing(o){
+  if(!o.brief_audience.length) return 'Pick who the post is for.';
+  if(!o.brief_goal) return 'Pick the goal.';
+  if(!o.brief_format) return 'Pick the format.';
+  return '';
+}
+function editBrief(id){
+  const p = POSTS.find(x=>x.id===id); if(!p) return;
+  cur = {topic:true};
+  drawerShell('Brief', briefFields(p), null, false);
+  $('#sv').onclick = async () => {
+    const o = briefPayload(), miss = briefMissing(o);
+    if(miss){ $('#msg').textContent = miss; return; }
+    const r = await act('brief', id, o); if(!r) return;
+    closeD(); showToast('Brief updated.'); delete EVENTS[id]; await reloadPosts(true);
+  };
+}
+function topicForm(p, withBrief){
+  const thai = p.needs_thai === undefined ? 'true' : String(p.needs_thai);
+  return `
+    <div class="f"><label>Topic</label><input name="title" value="${esc(p.title||'')}" placeholder="Loy Krathong at Bloom"></div>
+    <div class="grid-2"><div class="f"><label>Posting date</label><input name="post_date" type="date" value="${esc(p.post_date||'')}"></div>
+      <div class="f"><label>Time <span class="hint">optional</span></label><input name="post_time" type="time" value="${esc(p.post_time||'')}"></div></div>
+    <div class="f"><label>Label <span class="hint">optional</span></label><select name="label"><option value="">Choose a label</option>${LABELS.map(l=>`<option ${l.name===p.label?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div>
+    <h4 class="who-h">Who does this post</h4>
+    <div class="f"><label>Writer</label><select name="writer">${personOptions(p.writer === undefined ? (TEAM[ME] ? ME : '') : p.writer)}</select></div>
+    <div class="f"><label>Reviewer <span class="hint">needed before Send to Review</span></label><select name="pic">${personOptions(p.pic, 'Pick a reviewer', true)}</select></div>
+    <div class="f"><label>Translation</label><select name="needs_thai" onchange="$('#trWrap').style.display=this.value==='true'?'':'none'"><option value="true" ${thai==='true'?'selected':''}>Thai needed</option><option value="false" ${thai==='false'?'selected':''}>English only</option></select></div>
+    <div class="f" id="trWrap" style="${thai==='true'?'':'display:none'}"><label>Translator <span class="hint">needed before Send to Review</span></label><select name="translator">${personOptions(p.translator, 'Pick a translator', true)}</select></div>
+    <div class="f"><label>Poster</label><select name="poster">${personOptions(p.poster || '', 'The writer posts it')}</select></div>
+    ${withBrief ? `<p style="margin:10px 0"><a href="javascript:void 0" onclick="$('#briefWrap').style.display='';this.parentElement.remove()">+ Add a brief (the AI writes better with it)</a></p><div id="briefWrap" style="display:none"><h4 style="font-size:13px;margin:16px 0 8px;color:#5F5E5A">Brief for the writer</h4>${briefFields(p)}</div>` : ''}`;
+}
+function topicPayload(){
+  const fd = new FormData($('#fm')), o = {};
+  ['title','post_date','post_time','pic','label','writer','translator','poster'].forEach(k=>o[k] = String(fd.get(k)||'').trim());
+  // Leave out an empty label, reviewer, writer or translator: not set yet is fine, and an edit never clears one by accident.
+  ['pic','label','writer','translator'].forEach(k=>{ if(!o[k]) delete o[k]; });
+  const t = String(fd.get('needs_thai')||'');
+  if(t) o.needs_thai = t === 'true';
+  return o;
+}
+function topicMissing(o){
+  if(!o.title) return 'Add a topic.';
+  if(!o.post_date) return 'Pick a posting date.';
+  return '';
+}
+function newTopic(date, pre, suggKey){
+  cur = {topic:true};
+  pre = pre || {};
+  drawerShell('New topic', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || '', writer: TEAM[ME] ? ME : '', pic: '', translator: '', poster: ''}, true), null, false);
+  $('#sv').textContent = 'Create';
+  $('#sv').onclick = async () => {
+    const o = {...topicPayload(), ...briefPayload()}, miss = topicMissing(o);
+    if(miss){ $('#msg').textContent = miss; return; }
+    const r = await act('create', null, o); if(!r) return;
+    if(suggKey){ await sb.from('marketing_hidden_suggestions').insert({ key: suggKey }); HIDDEN.add(suggKey); }
+    closeD(); showToast(o.pic ? 'Created. It is now with the writer.' : 'Created. Set the reviewer before it goes to Review.'); await reloadPosts(true); go('post/'+r.id);
+  };
+  setTimeout(()=>{ const f = $('#fm [name="title"]'); if(f) f.focus(); }, 50);
+}
+function editTopic(id){
+  const p = POSTS.find(x=>x.id===id); if(!p) return;
+  cur = {topic:true};
+  drawerShell('Edit topic', topicForm(p, false) + `<p style="margin-top:6px"><button type="button" class="link-btn" style="color:#A23F1C" onclick="cancelPost('${id}')">Cancel this post</button></p>`, null, false);
+  $('#sv').onclick = async () => {
+    const o = topicPayload(), miss = topicMissing(o);
+    if(miss){ $('#msg').textContent = miss; return; }
+    const r = await act('edit_topic', id, o); if(!r) return;
+    closeD(); showToast('Topic updated.'); delete EVENTS[id]; await reloadPosts(true);
+  };
+}
+async function cancelPost(id){
+  if(!confirm('Cancel this post? It will not go out.')) return;
+  const r = await act('cancel', id, {}); if(!r) return;
+  closeD(); showToast('Cancelled.'); await reloadPosts(true);
+}
+
+// ---------- Team (marketing full only) ----------
+// Item 58: the team is just who takes part. Roles are picked on each post.
+function teamView(){
+  const ms = members();
+  const others = Object.values(STAFF).filter(s=>s.status==='active' && !TEAM[s.id]).sort((a,b)=>a.name.localeCompare(b.name));
+  const sel = 'style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px;background:#fff"';
+
+  const th = (t, d) => `<span class="tt-h">${t}<small>${d}</small></span>`;
+  // Items 85, 86: the team is who takes part, their HQ access and who is kept informed. People are picked on each post.
+  const row = id => {
+    const lv = LEVEL[id] || (NO_ACCESS.has(id) ? 'none' : 'edit'), ok = !NO_ACCESS.has(id);
+    const badge = canManageAccess() ? `<button class="lvl lvl-${lv} lvl-btn" aria-haspopup="menu" onclick="openAccessMenu(event,'${id}')">${lv.charAt(0).toUpperCase()+lv.slice(1)}${ACC.ov[id]?'<span class="acc-dot"></span>':''}</button>` : `<span class="lvl lvl-${lv}">${lv.charAt(0).toUpperCase()+lv.slice(1)}</span>`;
+    const inf = `<span class="tt-c"><input type="checkbox" class="tick" aria-label="Keep ${esc(STAFF[id].name)} informed" ${INFORMED[id]?'checked':''} ${canDelete && ok ? '' : 'disabled'} onchange="setInformed('${id}', this.checked)"></span>`;
+    return `<div class="tt-r"><b>${esc(STAFF[id].name)}</b>
+      <span class="tt-c">${badge}</span>
+      ${inf}<span></span>
+      <span class="tt-c" style="justify-content:flex-end">${canDelete?`<button class="link-btn" style="color:#A23F1C" onclick="removeMember('${id}')">Remove</button>`:''}</span></div>`;
+  };
+  const team = `<div class="box"><h3 class="bh">Marketing team</h3>
+    <div class="tt-wrap"><div class="tt">
+      <div class="tt-r tt-head"><span class="tt-h" style="text-align:left">PERSON</span>${th('HQ ACCESS', canManageAccess() ? 'click to change' : 'from Roles and access')}${th('KEPT INFORMED','sees approved posts')}<span></span><span></span></div>
+      ${ms.length ? ms.map(row).join('') : '<p class="meta" style="padding:8px 0">No one yet.</p>'}
+      ${others.length && canDelete ? `<div class="tt-add"><select id="addWho" ${sel}><option value="">Add a person</option>${others.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select><button class="btn-primary sm" onclick="addMember()">Add</button></div>` : ''}
+    </div></div>
+  </div>`;
+  const labels = `<div class="box"><h3 class="bh">Labels</h3>
+    <div class="lb-top"></div>
+    ${LABELS.map(l=>`<div class="lb-r"><b>${esc(l.name)}</b>
+      <span class="muted">${(n=>n+' post'+(n===1?'':'s'))(POSTS.filter(p=>p.label===l.name).length)}</span><span></span>
+      ${canDelete?`<button class="link-btn" style="color:#A23F1C" data-name="${esc(l.name)}" onclick="removeLabel(this.dataset.name)">Remove</button>`:'<span></span>'}</div>`).join('')}
+    ${canDelete?`<div class="lb-r"><input id="newLabel" placeholder="New label" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px"><span></span><span></span><button class="btn-primary sm" onclick="addLabel()">Add</button></div>`:''}
+  </div>`;
+  return team + labels + `
+  <div class="box"><h3 class="bh">Special dates</h3>
+    <div class="sd-r lb-head"><span>NAME</span><span>DATE</span><span>STATUS <small>moving dates stay "to confirm" until checked</small></span><span></span></div>
+    ${SPECIAL.map(x=>`<div class="sd-r"><b>${esc(x.name)}</b><span>${fmtDate(x.date)}</span>
+      <span>${x.confirmed?'<span class="muted">Confirmed</span>':`${canDelete?`<button class="link-btn" onclick="confirmSpecial('${x.id}')">Mark confirmed</button>`:'<span class="muted">To confirm</span>'}`}${x.note?` <span class="meta">${esc(x.note)}</span>`:''}</span>
+      ${canDelete?`<button class="link-btn" style="color:#A23F1C" onclick="removeSpecial('${x.id}')">Remove</button>`:'<span></span>'}</div>`).join('')}
+    ${canDelete?`<div class="sd-r"><input id="spName" placeholder="Name, e.g. Loy Krathong" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
+      <input id="spDate" type="date" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
+      <label style="font-size:13px;display:flex;gap:6px;align-items:center"><input id="spConf" type="checkbox" checked> Date confirmed</label>
+      <button class="btn-primary sm" onclick="addSpecial()">Add</button></div>`:''}
+  </div>`;
+}
+async function addSpecial(){
+  const name = ($('#spName').value||'').trim(), date = $('#spDate').value, confirmed = $('#spConf').checked;
+  if(!name || !date){ showToast('Add a name and a date.'); return; }
+  const { error } = await sb.from('marketing_special_dates').insert({ name, date, confirmed });
+  if(error){ showToast('Could not add: ' + error.message); return; }
+  showToast('Added.'); loadAll();
+}
+async function confirmSpecial(id){
+  const { error } = await sb.from('marketing_special_dates').update({ confirmed:true, note:null }).eq('id', id);
+  if(error){ showToast('Could not save: ' + error.message); return; }
+  showToast('Marked confirmed.'); loadAll();
+}
+async function removeSpecial(id){
+  if(!confirm('Remove this special date?')) return;
+  const { error } = await sb.from('marketing_special_dates').delete().eq('id', id);
+  if(error){ showToast('Could not remove: ' + error.message); return; }
+  showToast('Removed.'); loadAll();
+}
+const firstName = n => String(n||'').split(' ')[0];
+// Item 84: admin, director and IT can change someone's Marketing level here. Same data as Roles and access.
+let ACC = { loaded:false, role:{}, def:{}, ov:{} };
+const canManageAccess = () => !!(window.currentStaff && ['admin','director','it'].includes(window.currentStaff.role));
+async function loadAccess(){
+  if(!canManageAccess()) return;
+  const [st, rp, ov] = await Promise.all([
+    sb.from('staff').select('id,role'),
+    sb.from('role_permissions').select('role,level').eq('module','marketing'),
+    sb.from('staff_permission_overrides').select('staff_id,level').eq('module','marketing')]);
+  ACC = { loaded:true, role:Object.fromEntries((st.data||[]).map(x=>[x.id,x.role])), def:Object.fromEntries((rp.data||[]).map(x=>[x.role,x.level])), ov:Object.fromEntries((ov.data||[]).map(x=>[x.staff_id,x.level])) };
+}
+function openAccessMenu(ev, id){
+  ev.stopPropagation();
+  let m = $('#accMenu');
+  if(!m){ m = document.createElement('div'); m.id = 'accMenu'; m.className = 'acc-menu'; m.setAttribute('role','menu'); document.body.appendChild(m); }
+  if(!m.hidden && m.dataset.id === id){ m.hidden = true; return; }
+  const def = ACC.def[ACC.role[id]] || 'none', cur = ACC.ov[id] || def;
+  const T = { none:'No access', view:'Look only', edit:'Do the work', full:'Manage everything' };
+  m.innerHTML = ['none','view','edit','full'].map(l=>`<button role="menuitem" class="${l===cur?'on':''}" onclick="pickAccess('${id}','${l}')"><span class="lvl lvl-${l}">${l.charAt(0).toUpperCase()+l.slice(1)}</span>${T[l]}</button>`).join('')
+    + (ACC.ov[id] ? `<button role="menuitem" class="acc-def" onclick="pickAccess('${id}','')">Back to role default (${def.charAt(0).toUpperCase()+def.slice(1)})</button>` : '');
+  const r = ev.currentTarget.getBoundingClientRect();
+  m.style.top = (window.scrollY + r.bottom + 6) + 'px';
+  m.style.left = Math.max(8, Math.min(window.scrollX + r.left + r.width/2 - 115, window.scrollX + document.documentElement.clientWidth - 238)) + 'px';
+  m.dataset.id = id; m.hidden = false;
+  const f = m.querySelector('button.on') || m.querySelector('button'); if(f) f.focus();
+}
+document.addEventListener('click', e => { const m = $('#accMenu'); if(m && !m.hidden && !e.target.closest('#accMenu')) m.hidden = true; });
+document.addEventListener('keydown', e => { const m = $('#accMenu'); if(e.key === 'Escape' && m && !m.hidden) m.hidden = true; });
+async function pickAccess(id, level){
+  const m = $('#accMenu'); if(m) m.hidden = true;
+  const def = ACC.def[ACC.role[id]] || 'none', lv = level === def ? '' : level;
+  if(id === ME && (lv || def) !== 'full' && !confirm('This changes your own Marketing access. If it goes below Full you may not be able to change it back here. Continue?')) return;
+  const { error } = lv
+    ? await sb.from('staff_permission_overrides').upsert({ staff_id:id, module:'marketing', level:lv, granted_by: window.currentStaff.id })
+    : await sb.from('staff_permission_overrides').delete().eq('staff_id', id).eq('module', 'marketing');
+  if(error){ showToast('Could not save: ' + error.message); return; }
+  showToast(firstName(STAFF[id].name) + ': Marketing ' + (lv || def) + '.');
+  await loadAccess(); await loadAll();
+}
+async function setInformed(id, on){
+  const { error } = await sb.from('marketing_team').update(on ? { informed:true, fyi_read_at: new Date().toISOString() } : { informed:false }).eq('staff_id', id);
+  if(error){ showToast('Could not save: ' + error.message); render(); return; }
+  INFORMED[id] = on; showToast(firstName(STAFF[id].name) + (on ? ' will see posts when they are approved.' : ' is no longer kept informed.'));
+}
+async function addMember(){
+  const id = $('#addWho').value, langs = '';
+  if(!id){ showToast('Pick a person to add.'); return; }
+  const { error } = await sb.from('marketing_team').upsert({ staff_id:id, langs: langs || null }, { onConflict:'staff_id' });
+  if(error){ showToast('Could not add: ' + error.message); return; }
+  TEAM[id] = 'member'; LANGS[id] = langs; showToast('Added.'); await loadAll();
+}
+async function setLangs(id, langs){
+  const { error } = await sb.from('marketing_team').update({ langs: langs.trim() || null }).eq('staff_id', id);
+  if(error){ showToast('Could not save: ' + error.message); return; }
+  LANGS[id] = langs.trim();
+}
+async function removeMember(id){
+  const open = POSTS.filter(p=>openStep(p) && [p.pic, p.writer, p.translator, p.poster].includes(id)).length;
+  if(!confirm(`Remove ${STAFF[id].name} from the marketing team?` + (open ? ` They are named on ${open} post${open>1?'s':''} in progress, which will need someone else.` : ''))) return;
+  const { error } = await sb.from('marketing_team').delete().eq('staff_id', id);
+  if(error){ showToast('Could not remove: ' + error.message); return; }
+  delete TEAM[id]; showToast('Removed.'); render();
+}
+async function addLabel(){
+  const name = ($('#newLabel').value||'').trim();
+  if(!name){ showToast('Type a label name.'); return; }
+  if(LABELS.some(l=>l.name.toLowerCase()===name.toLowerCase())){ showToast('That label already exists.'); return; }
+  const sort = (LABELS.reduce((m,l)=>Math.max(m,l.sort||0),0)) + 1;
+  const { error } = await sb.from('marketing_labels').insert({ name, sort });
+  if(error){ showToast('Could not add: ' + error.message); return; }
+  LABELS.push({ name, default_pic:null, sort }); showToast('Label added.'); render();
+}
+async function removeLabel(name){
+  const n = POSTS.filter(p=>p.label===name).length;
+  if(!confirm(`Remove the label "${name}"?` + (n ? ` ${n} post${n>1?'s':''} will lose this label.` : ''))) return;
+  const { error } = await sb.from('marketing_labels').delete().eq('name', name);
+  if(error){ showToast('Could not remove: ' + error.message); return; }
+  LABELS = LABELS.filter(l=>l.name!==name); POSTS.forEach(p=>{ if(p.label===name) p.label = null; }); showToast('Removed.'); render();
+}
+
+// ---------- Reference (edited here) ----------
+const REF_PER_PAGE = 15, REF_PAGE = {}, REF_FILTER = {}, REF_SORT = {};
+// Item 68: click a column header to sort. Stages sort by meaning, counts by number, empty values always last.
+const SORT_STAGE = {status:['Active','Joined','Pending approval','To verify','Avoid','To do','Doing','Waiting','Done'], relationship:['Partner','Meeting held','Contacted','Not contacted'], fit:['Very High','High','Medium-High','Medium','Low'], job_posts:['Yes','Specific days only','Admin approval','Unknown','No'], promo:['Yes','Specific days only','Admin approval','Unknown','No']};
+const SORT_NUM = new Set(['members','followers']);
+function refCmp(key, dir){
+  return (a, b) => {
+    const x = a[key], y = b[key], ex = x == null || x === '', ey = y == null || y === '';
+    if(ex || ey) return ex && ey ? 0 : ex ? 1 : -1;
+    let c;
+    if(SORT_NUM.has(key)) c = memberCount(y) - memberCount(x);
+    else if(SORT_STAGE[key]){ const o = SORT_STAGE[key], i = o.indexOf(x), j = o.indexOf(y); c = (i<0?99:i) - (j<0?99:j) || String(x).localeCompare(String(y)); }
+    else c = String(x).localeCompare(String(y), undefined, {sensitivity:'base', numeric:true});
+    return dir * c;
+  };
+}
+function refSort(k, key){
+  const cur = REF_SORT[k];
+  REF_SORT[k] = !cur || cur.key !== key ? {key, dir:1} : cur.dir === 1 ? {key, dir:-1} : null;
+  REF_PAGE[k] = 0; render();
+}
+function renderGroup(el, g){
+  const k = g.secs[0], s = SEC[k]; let rows = (DATA[k]||[]).slice();
   if(s.sort) rows.sort((a,b)=>String(a[s.sort]||'9999').localeCompare(String(b[s.sort]||'9999')));
-  const chipField = s.f.find(x=>x[0]===s.chip);
-  const opts = chipField && chipField[3] ? chipField[3] : [];
-  el.innerHTML = `
-    <div class="top-bar" style="margin-bottom:16px;">
-      <p class="sub">${esc(s.d)}</p>
-      ${canEdit ? `<button class="btn-primary" onclick="edit('${k}')">Add entry</button>` : ''}
-    </div>
-    <div class="tools">
-      <input id="q" placeholder="Search ${esc(s.t.toLowerCase())}" value="${esc(filt.q)}">
-      ${opts.length ? `<select id="sf"><option value="">All ${esc(chipField[1].toLowerCase())}</option>${opts.map(o=>`<option ${o===filt.s?'selected':''}>${esc(o)}</option>`).join('')}</select>` : ''}
-      <span class="count">${rows.length} of ${all.length}</span>
-    </div>
-    ${!rows.length ? `<div class="empty-state">${all.length ? 'Nothing matches that filter.' : 'Nothing here yet.'}</div>`
-      : s.view === 'table' ? table(s, rows) : cards(s, rows)}`;
-  const q = $('#q'); if(q) q.oninput = e => { filt.q = e.target.value; const p = e.target.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(p,p); };
-  const sf = $('#sf'); if(sf) sf.onchange = e => { filt.s = e.target.value; render(); };
+  if(s.rank) rows.sort(s.rank);
+  const all = rows.length, fv = s.filter ? REF_FILTER[k] || '' : '';
+  let filters = '';
+  if(s.filter){
+    const vals = [...new Set(rows.map(r=>r[s.filter]).filter(Boolean))].sort((a,b)=>{ const i=AUD.indexOf(a), j=AUD.indexOf(b); return (i<0?99:i)-(j<0?99:j) || a.localeCompare(b); });
+    const btn = (v, t, n) => `<button class="${v===fv?'on':''}" onclick="refFilter('${k}','${esc(v)}')">${esc(t)} <span class="n">${n}</span></button>`;
+    filters = `<div class="reffilter">${btn('', 'All', all)}${vals.map(v=>btn(v, v, rows.filter(r=>r[s.filter]===v).length)).join('')}</div>`;
+    if(fv) rows = rows.filter(r=>r[s.filter]===fv);
+  }
+  if(REF_SORT[k]) rows.sort(refCmp(REF_SORT[k].key, REF_SORT[k].dir));
+  const pages = Math.max(1, Math.ceil(rows.length / REF_PER_PAGE));
+  const pg = Math.min(REF_PAGE[k] || 0, pages - 1); REF_PAGE[k] = pg;
+  const from = pg * REF_PER_PAGE, part = rows.slice(from, from + REF_PER_PAGE);
+  const pager = rows.length > REF_PER_PAGE ? `<div class="refpager"><span class="muted">${from+1} to ${from+part.length} of ${rows.length}</span><button class="btn-outline sm" ${pg===0?'disabled':''} onclick="refPage('${k}',-1)" aria-label="Previous page">&#8249;</button><button class="btn-outline sm" ${pg>=pages-1?'disabled':''} onclick="refPage('${k}',1)" aria-label="Next page">&#8250;</button></div>` : '';
+  el.innerHTML = `<section class="ref-sec" id="ref-${k}"><div class="top-bar"><div><h2>${esc(s.t)} <span class="muted" style="font-family:inherit;font-size:14px;font-weight:400">${all}</span></h2><p class="meta" style="font-size:13px">${esc(s.d)}</p></div>
+      ${canEdit?`<button class="btn-outline" onclick="editRef('${k}')">Add</button>`:''}</div>
+      ${filters}${rows.length ? table(s, part, fv ? [s.filter] : [], true) + pager : '<div class="empty-state">Nothing here yet.</div>'}</section>`;
+}
+function refFilter(k, v){ REF_FILTER[k] = v; REF_PAGE[k] = 0; render(); }
+function refPage(k, d){ REF_PAGE[k] = (REF_PAGE[k] || 0) + d; render(); window.scrollTo(0, 0); }
+// Clicking an entry opens it read-only on the side; Edit opens the form (editors only).
+function viewRef(k, id){
+  const s = SEC[k], r = (DATA[k]||[]).find(x=>x.id===id); if(!r) return;
+  cur = {k, id, view:true};
+  const lk = LINK_KEY[k], link = linkOf(k, r);
+  const linkHtml = lk ? `<div class="rv"><div class="rv-k">Link</div><div class="rv-v">${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(String(r[lk]).replace(/^https?:\/\/(www\.)?/,'').slice(0,60))} &#8599;</a>` : r[lk] ? esc(r[lk]) : `<span class="muted">No link yet</span>${canEdit?` · <a href="javascript:void 0" onclick="editRef('${k}','${id}')">Add link</a>`:''}`}</div></div>` : '';
+  // Item 70: who to contact comes first, then the link, then the rest.
+  const lastContact = Math.max(...['person','phone','email'].map(c=>s.f.findIndex(f=>f[0]===c)));
+  const kv = s.f.map((f, i) => {
+    if(f[0]===s.title) return '';
+    if(f[0]===lk) return lastContact < 0 ? linkHtml : '';
+    const v = r[f[0]], after = i === lastContact && lk ? linkHtml : '';
+    if(!v) return after;
+    const tel = String(v).replace(/[^+\d]/g,''), mail = /^[^\s@<>"']+@[^\s@<>"']+\.[a-z]{2,}$/i.test(String(v).trim());
+    const val = f[0]==='phone' && tel.length >= 6 ? `<a href="tel:${tel}">${esc(v)}</a>` : f[0]==='email' && mail ? `<a href="mailto:${esc(String(v).trim())}">${esc(v)}</a>` : f[2]==='url' && safeUrl(v) ? `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(String(v).replace(/^https?:\/\/(www\.)?/,'').slice(0,60))}</a>` : f[2]==='date' ? fmtDate(v) : f[2]==='select' ? chip(v) : esc(v).replace(/\n/g,'<br>');
+    return `<div class="rv"><div class="rv-k">${esc(f[1])}</div><div class="rv-v">${val}</div></div>` + after; }).join('');
+  $('#drawer').className = 'drawer';
+  $('#drawer').innerHTML = `<header><h3>${esc(r[s.title]||'Entry')}</h3><button class="x" onclick="closeD()" aria-label="Close">×</button></header>
+    <div class="body">${kv || '<p class="meta">No details yet.</p>'}${metaLine(r)}</div>
+    <footer><div></div><div style="display:flex;gap:8px"><button class="btn-outline" onclick="closeD()">Close</button>${canEdit?`<button class="btn-primary" onclick="editRef('${k}','${id}')">Edit</button>`:''}</div></footer>`;
+  $('#dw').classList.add('dw-open');
 }
 function label(s,key){ return (s.f.find(x=>x[0]===key)||[0,key])[1]; }
 function cell(s,key,v){ const f = s.f.find(x=>x[0]===key); if(!f) return esc(v);
-  if(f[2]==='date') return fmtDate(v); if(f[2]==='select') return chip(v); if(f[2]==='long') return `<span class="clip">${esc(v)}</span>`; return esc(v); }
-function table(s,rows){
-  return `<div class="tbl"><table><thead><tr><th>${label(s,s.title)}</th>${s.cols.map(c=>`<th>${label(s,c)}</th>`).join('')}</tr></thead><tbody>
-  ${rows.map(r=>`<tr onclick="edit('${s.k}','${r.id}')"><td class="main">${esc(r[s.title])}${safeUrl(r.url)?` <a href="${esc(r.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:400;font-size:12px">link</a>`:''}</td>
-  ${s.cols.map(c=>`<td>${cell(s,c,r[c])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  if(f[2]==='date') return fmtDate(v); if(f[2]==='select') return QUIET.has(v) ? `<span class="quiet">${esc(v)}</span>` : (key==='audience' || key==='use_for') ? `<span class="plain">${esc(v)}</span>` : chip(v); if(f[2]==='long') return `<span class="clip">${esc(v)}</span>`; return esc(v); }
+function table(s,rows,hide=[],sortable=false){
+  const cols = s.cols.filter(c=>!hide.includes(c)), so = sortable && REF_SORT[s.k];
+  const th = c => sortable ? `<th class="sortable${so && so.key===c ? ' sorted' : ''}" onclick="refSort('${s.k}','${c}')" aria-sort="${so && so.key===c ? (so.dir===1?'ascending':'descending') : 'none'}">${label(s,c)}<span class="arr">${so && so.key===c ? (so.dir===1?'▲':'▼') : '↕'}</span></th>` : `<th>${label(s,c)}</th>`;
+  const tag = r => s.tag && r[s.tag] && r[s.tag] !== s.f.find(f=>f[0]===s.tag)[3][0] ? ` <span class="rowtag">${esc(r[s.tag])}</span>` : '';
+  return `<div class="tbl"><table><thead><tr>${th(s.title)}${cols.map(th).join('')}</tr></thead><tbody>
+  ${rows.map(r=>`<tr onclick="viewRef('${s.k}','${r.id}')"><td class="main">${esc(r[s.title])}${tag(r)}</td>
+  ${cols.map(c=>`<td>${cell(s,c,r[c])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
 function cards(s,rows){
-  return `<div class="cards">${rows.map(r=>`<div class="entry" onclick="edit('${s.k}','${r.id}')">
+  return `<div class="cards">${rows.map(r=>`<div class="entry" onclick="editRef('${s.k}','${r.id}')">
     <h3><span>${esc(r[s.title])}</span>${chip(r[s.chip])}</h3>
     ${s.f.filter(f=>f[0]!==s.title&&f[0]!==s.chip&&r[f[0]]).map(f => f[2]==='url' && safeUrl(r[f[0]])
       ? `<div class="kv"><b>${f[1]}</b><span><a href="${esc(r[f[0]])}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(String(r[f[0]]).replace(/^https?:\/\/(www\.)?/,'').slice(0,48))}</a></span></div>`
       : `<div class="kv"><b>${f[1]}</b><span>${f[2]==='date'?fmtDate(r[f[0]]):esc(r[f[0]])}</span></div>`).join('')}
   </div>`).join('')}</div>`;
 }
-function overview(){
-  const P = PLAN || {}; const g = DATA.groups||[], c = DATA.content||[], t = DATA.tasks||[], f = DATA.facts||[], ch = DATA.channels||[];
-  const cnt = (arr,key,val) => arr.filter(x=>x[key]===val).length;
-  const bar = parts => { const tot = parts.reduce((a,p)=>a+p[0],0)||1; return `<div class="bar">${parts.map(p=>`<i style="width:${p[0]/tot*100}%;background:${p[1]}"></i>`).join('')}</div>`; };
-  const today = new Date().toISOString().slice(0,10);
-  const upcoming = c.filter(x=>x.status!=='Published').sort((a,b)=>String(a.date||'9').localeCompare(String(b.date||'9'))).slice(0,6);
-  const decisions = [...f.filter(x=>x.status==='To confirm').map(x=>({t:x.label,s:'Info bank',k:'facts',id:x.id})),
-                     ...ch.filter(x=>x.status==='To confirm'||x.status==='To create').map(x=>({t:x.name+': '+String(x.status).toLowerCase(),s:'Channels',k:'channels',id:x.id}))];
-  const open = t.filter(x=>x.status!=='Done').sort((a,b)=>String(a.due||'9').localeCompare(String(b.due||'9'))).slice(0,6);
-  const insights = (DATA.insights||[]).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).slice(0,5);
-  const list = (items, empty) => items.length ? `<ul class="list">${items.join('')}</ul>` : `<div class="empty-state">${empty}</div>`;
-  return `<div class="ov">
-   <div class="goal">
-     <div><div class="lbl">Goal</div><div class="big">${esc(P.goal||'Not set yet')}</div>
-       ${canEdit?`<button class="edit" onclick="editPlan()">Edit goal, deadline and budget</button>`:''}</div>
-     <div><div class="lbl">Deadline</div><div class="val">${P.deadline?fmtDate(P.deadline):'Not set'}</div></div>
-     <div><div class="lbl">Ad budget / month</div><div class="val">${esc(P.budget||'Not set')}</div></div>
-     <div><div class="lbl">Success measure</div><div class="val">${esc(P.measure||'Not set')}</div></div>
-   </div>
-   <div class="card stat"><div class="num">${g.length}</div><div class="cap">Groups mapped, ${cnt(g,'status','Active')} active</div>
-     ${bar([[cnt(g,'status','Active'),'#0F6E56'],[g.filter(x=>/Joined|Pending/.test(x.status)).length,'#E8941E'],[cnt(g,'status','To verify'),'#D6D1C6'],[cnt(g,'status','Avoid'),'#D85A30']])}</div>
-   <div class="card stat"><div class="num">${c.length}</div><div class="cap">Posts planned, ${cnt(c,'status','Published')} published</div>
-     ${bar([[cnt(c,'status','Published'),'#0F6E56'],[c.filter(x=>/Ready|Scheduled/.test(x.status)).length,'#534AB7'],[c.filter(x=>/Idea|Drafting/.test(x.status)).length,'#D6D1C6']])}</div>
-   <div class="card stat"><div class="num">${ch.filter(x=>x.status==='Active').length}<span style="font-size:18px;color:#888780"> / ${ch.length}</span></div><div class="cap">Channels active</div>
-     ${bar([[ch.filter(x=>x.status==='Active').length,'#0F6E56'],[ch.filter(x=>x.status!=='Active').length,'#D6D1C6']])}</div>
-   <div class="card stat"><div class="num">${f.filter(x=>x.status==='To confirm').length}</div><div class="cap">Facts still to confirm</div>
-     ${bar([[cnt(f,'status','Confirmed'),'#0F6E56'],[cnt(f,'status','To confirm'),'#E8941E']])}</div>
-   <div class="card half"><h2>Needs a decision <a onclick="go('facts')">Info bank</a></h2>
-     ${list(decisions.slice(0,8).map(x=>`<li onclick="edit('${x.k}','${x.id}')"><span class="t">${esc(x.t)}</span><span class="s">${x.s}</span></li>`), 'Nothing waiting on a decision.')}</div>
-   <div class="card half"><h2>Open tasks <a onclick="go('tasks')">All tasks</a></h2>
-     ${list(open.map(x=>`<li onclick="edit('tasks','${x.id}')"><span class="t">${esc(x.title)}</span><span class="s">${esc(x.owner||'')}${x.due?' · '+fmtDate(x.due):''}${x.due&&x.due<today?' · <b style="color:#A23F1C">overdue</b>':''}</span></li>`), 'No open tasks.')}</div>
-   <div class="card half"><h2>Coming up <a onclick="go('content')">Content plan</a></h2>
-     ${list(upcoming.map(x=>`<li onclick="edit('content','${x.id}')"><span class="t">${esc(x.title)}</span><span class="s">${esc(x.channel||'')}${x.date?' · '+fmtDate(x.date):''}</span></li>`), 'No posts planned yet.')}</div>
-   <div class="card half"><h2>Latest research <a onclick="go('insights')">All notes</a></h2>
-     ${list(insights.map(x=>`<li onclick="edit('insights','${x.id}')"><span class="t">${esc(x.title)}</span><span class="s">${esc(x.audience||'')}</span></li>`), 'No research notes yet.')}</div>
-  </div>`;
-}
 
-// ---- Drawer editor ----
+// ---------- Drawer ----------
 let cur = null, saving = false;
 function closeD(){ $('#dw').classList.remove('dw-open'); cur = null; }
 $('#scrim').onclick = closeD;
 document.addEventListener('keydown', e => { if(e.key === 'Escape') closeD(); });
-function field(f, v){ const [k,l,t,o] = f; v = v ?? '';
-  const inp = t==='long' ? `<textarea name="${k}">${esc(v)}</textarea>`
+function field(f, v, cls='', extra=''){ const [k,l,t,o,hint] = f; v = v ?? '';
+  const inp = t==='long' ? `<textarea name="${k}" class="${cls}">${esc(v)}</textarea>`
     : t==='select' ? `<select name="${k}"><option value=""></option>${o.map(x=>`<option ${x===v?'selected':''}>${esc(x)}</option>`).join('')}${v&&!o.includes(v)?`<option selected>${esc(v)}</option>`:''}</select>`
-    : `<input name="${k}" type="${t==='date'?'date':t==='url'?'url':'text'}" value="${esc(v)}">`;
-  return `<div class="f"><label>${l}</label>${inp}</div>`; }
+    : `<input name="${k}" type="${t==='date'?'date':t==='url'?'url':t==='time'?'time':'text'}" value="${esc(v)}">`;
+  const open = t==='url' && safeUrl(v) ? `<a class="openl" href="${esc(v)}" target="_blank" rel="noopener">Open</a>` : '';
+  return `<div class="f"><label>${l}${hint?` <span class="hint">${hint}</span>`:''}${extra}</label>${inp}${open}</div>`; }
 function metaLine(r){
   if(!r || !r._updated) return '';
-  const who = r._by && STAFF_NAMES[r._by] ? ' by ' + esc(STAFF_NAMES[r._by]) : '';
-  return `<div class="meta">Last updated ${new Date(r._updated).toLocaleString('en-GB')}${who}</div>`;
+  const who = r._by && nameOf(r._by) ? ' by ' + esc(nameOf(r._by)) : '';
+  return `<div class="meta">Last updated ${new Date(r._updated).toLocaleString('en-GB')}${who}${r.source?' · '+esc(r.source):''}</div>`;
 }
-function edit(k, id){
-  const s = SEC[k]; const r = id ? (DATA[k]||[]).find(x=>x.id===id) : {}; if(id && !r) return;
-  cur = {k, id}; const ro = !canEdit;
-  $('#drawer').innerHTML = `<header><h3>${id ? esc(r[s.title]||'Entry') : 'New entry'}</h3><button class="x" onclick="closeD()">×</button></header>
-    <form class="body" id="fm" onsubmit="return false">${s.f.map(f=>field(f, r[f[0]])).join('')}${metaLine(r)}</form>
-    <footer><div>${id && canDelete ? `<button class="btn-danger" id="del">Delete</button><span class="confirm" id="cf">Delete this entry? <button class="btn-danger" id="yes">Yes, delete</button><button class="btn-outline" id="no">Keep</button></span>` : ''}</div>
+// ---------- Item 79: Plan several ----------
+// Give dates to ideas in one go, or paste rows (topic, date, label) from the Google Sheet.
+// Rows without a date, and topics already planned, are flagged and skipped. People come from the pickers at the top (item 85).
+let PL = null;
+const normT = t => String(t||'').toLowerCase().replace(/[^a-z0-9ก-๙]+/g,' ').trim();
+const MON = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12};
+function parseDay(t){
+  t = String(t||'').trim(); if(!t) return '';
+  const pad = n => String(n).padStart(2,'0'), now = new Date(), Y = now.getFullYear();
+  const mk = (d, m, y) => {
+    if(!(m>=1 && m<=12 && d>=1 && d<=31)) return '';
+    if(y === undefined){ y = Y; if(new Date(y, m-1, d) < new Date(now.toDateString())) y++; }
+    else if(y < 100) y += 2000;
+    const dt = new Date(y, m-1, d); return dt.getMonth() === m-1 ? `${y}-${pad(m)}-${pad(d)}` : '';
+  };
+  let m;
+  if((m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) return mk(+m[3], +m[2], +m[1]);
+  if((m = t.match(/^(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?$/))) return mk(+m[1], +m[2], m[3] === undefined ? undefined : +m[3]);
+  if((m = t.match(/^(\d{1,2})\s+([a-z]{3,9})\.?,?(?:\s+(\d{2,4}))?$/i)) && MON[m[2].toLowerCase().slice(0,3)]) return mk(+m[1], MON[m[2].toLowerCase().slice(0,3)], m[3] === undefined ? undefined : +m[3]);
+  return '';
+}
+function planSeveral(){
+  const ideas = POSTS.filter(p=>openStep(p) && !p.post_date).sort((a,b)=>String(a.title).localeCompare(String(b.title)));
+  PL = { who:{ writer: TEAM[ME] ? ME : '', pic:'', translator:'', poster:'' }, tab:'ideas', q:'', paste:'', rows: ideas.map(p=>({ key:'i'+p.id, src:'idea', id:p.id, title:p.title, date:'', label:p.label||'', thai: p.needs_thai !== false, on:false })), pasted:[] };
+  drawerShell('Plan several', '<div id="plBody"></div>', null, true);
+  $('#sv').textContent = 'Plan 0 posts'; $('#sv').onclick = planRun;
+  planDraw();
+}
+function planCheck(){
+  const dated = new Map(POSTS.filter(p=>openStep(p) && p.post_date).map(p=>[normT(p.title), p]));
+  const ideaT = new Set(POSTS.filter(p=>openStep(p) && !p.post_date).map(p=>normT(p.title)));
+  const seen = new Set(), labels = new Set(LABELS.map(l=>l.name));
+  const all = [...PL.rows, ...PL.pasted];
+  all.forEach(r => { r.flag = ''; r.skip = false; r.badLabel = false; });
+  all.filter(r=>r.on).forEach(r => {
+    const k = normT(r.title), d = dated.get(k);
+    if(!r.title.trim()){ r.flag = 'Needs a topic'; r.skip = true; }
+    else if(d){ r.flag = `Already planned for ${fmtShort(d.post_date)}. Skipped.`; r.skip = true; }
+    else if(r.src === 'paste' && ideaT.has(k)){ r.flag = 'Already in Ideas: plan it from the Ideas tab. Skipped.'; r.skip = true; }
+    else if(seen.has(k)){ r.flag = 'Same topic as another row. Only one will be planned.'; r.skip = true; }
+    else if(!r.date){ r.flag = 'Needs a posting date'; r.skip = true; }
+    if(r.label && !labels.has(r.label)){ r.badLabel = true; if(!r.flag) r.flag = `No label called "${r.label}". It will be left blank.`; }
+    if(!r.skip) seen.add(k);
+  });
+  return all.filter(r=>r.on && !r.skip);
+}
+function planRow(r){
+  const opts = `<option value="">Label</option>${LABELS.map(l=>`<option ${l.name===r.label?'selected':''}>${esc(l.name)}</option>`).join('')}`;
+  return `<div class="pl-r ${r.on?'':'off'}"><input type="checkbox" class="tick" ${r.on?'checked':''} onchange="planSet('${r.key}','on',this.checked)" aria-label="Plan ${esc(r.title)}">
+    ${r.src==='paste' ? `<input class="pl-in" value="${esc(r.title)}" onchange="planSet('${r.key}','title',this.value)" aria-label="Topic">` : `<span class="pl-t" title="${esc(r.title)}">${esc(r.title)}</span>`}
+    <input type="date" class="pl-in ${r.on && !r.date ? 'need' : ''}" value="${r.date}" onchange="planSet('${r.key}','date',this.value)" aria-label="Posting date">
+    <select class="pl-in" onchange="planSet('${r.key}','label',this.value)" aria-label="Label">${opts}</select>
+    <label class="pl-th"><input type="checkbox" class="tick" ${r.thai?'checked':''} onchange="planSet('${r.key}','thai',this.checked)"> Thai</label>
+    ${r.flag ? `<div class="pl-flag ${r.skip?'skip':''}">${esc(r.flag)}</div>` : ''}</div>`;
+}
+function planDraw(){
+  if(!PL || !$('#plBody')) return;
+  const ready = planCheck(), ticked = [...PL.rows, ...PL.pasted].filter(r=>r.on);
+  const head = `<div class="pl-r pl-head"><span></span><span>TOPIC</span><span>POSTING DATE</span><span>LABEL</span><span>THAI</span></div>`;
+  const tabs = `<div class="reffilter"><button class="${PL.tab==='ideas'?'on':''}" onclick="planTab('ideas')">From ideas <span class="n">${PL.rows.length}</span></button><button class="${PL.tab==='paste'?'on':''}" onclick="planTab('paste')">Paste from the sheet</button></div>`;
+  let body;
+  if(PL.tab === 'ideas'){
+    const q = normT(PL.q), list = PL.rows.filter(r=>!q || normT(r.title).includes(q));
+    body = `<input class="pl-in pl-search" placeholder="Search ideas" value="${esc(PL.q)}" oninput="PL.q=this.value;planDrawList()">
+      <div id="plList">${head}${list.map(planRow).join('') || '<p class="meta" style="padding:10px 0">No ideas match.</p>'}</div>`;
+  } else {
+    body = `<label class="pl-lbl">Paste rows: topic, date, label</label>
+      <textarea class="pl-in pl-paste" placeholder="Father's Day at Bloom&#9;4/12/2026&#9;Holiday" oninput="planPaste(this.value)">${esc(PL.paste)}</textarea>
+      <div id="plList">${PL.pasted.length ? `<label class="pl-lbl">Read as ${PL.pasted.length} post${PL.pasted.length===1?'':'s'}</label>${head}${PL.pasted.map(planRow).join('')}` : ''}</div>`;
+  }
+  const pick = (k, lab, empty) => `<div><label>${lab}</label><select class="pl-in" onchange="PL.who.${k}=this.value" aria-label="${lab}">${personOptions(PL.who[k], empty, k==='pic'||k==='translator')}</select></div>`;
+  const who = `<div class="pl-who">${pick('writer','WRITER','Pick a writer')}${pick('pic','REVIEWER','Pick a reviewer')}${pick('translator','TRANSLATOR','Pick a translator')}${pick('poster','POSTER','The writer posts it')}</div>`;
+  $('#plBody').innerHTML = who + tabs + body;
+  const skipped = ticked.length - ready.length;
+  $('#sv').textContent = `Plan ${ready.length} post${ready.length===1?'':'s'}`;
+  $('#sv').disabled = !ready.length;
+  $('#msg').textContent = ticked.length ? `${ticked.length} ticked${skipped ? ' · ' + skipped + ' skipped' : ''}` : '';
+}
+function planDrawList(){ const y = ($('#plList')||{}).scrollTop; planDraw(); const s = $('.pl-search'); if(s){ s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
+function planTab(t){ PL.tab = t; planDraw(); }
+function planSet(key, f, v){
+  const r = [...PL.rows, ...PL.pasted].find(x=>x.key===key); if(!r) return;
+  r[f] = v; if(f==='date' && v) r.on = true; if(f==='title') r.title = String(v).trim();
+  planDraw();
+}
+function planPaste(txt){
+  PL.paste = txt;
+  PL.pasted = txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map((l, i) => {
+    const c = (l.includes('\t') ? l.split('\t') : l.includes(',') ? l.split(',') : l.split(/\s{2,}/)).map(x=>x.trim());
+    const title = c[0] || '', date = parseDay(c[1] || ''), lab = c[2] || '';
+    const label = (LABELS.find(x=>x.name.toLowerCase()===lab.toLowerCase()) || {}).name || lab;
+    const th = (c[3]||'').toLowerCase();
+    return { key:'p'+i, src:'paste', title, date, label, thai: !/^(no|english|en|false|n)$/.test(th), on:true, raw:c[1] || '' };
+  });
+  const ta = $('.pl-paste'), pos = ta ? ta.selectionStart : 0;
+  planDraw();
+  const t2 = $('.pl-paste'); if(t2){ t2.focus(); t2.setSelectionRange(pos, pos); }
+}
+async function planRun(){
+  const ready = planCheck(); if(!ready.length) return;
+  const U = PL.who, b = $('#sv'); b.disabled = true; b.textContent = 'Working…';
+  let ok = 0; const fails = [];
+  for(const r of ready){
+    const people = {};
+    const p = r.src === 'idea' ? POSTS.find(x=>x.id===r.id) : null;
+    if(U.writer && p && !p.writer) people.writer = U.writer;
+    if(U.pic && !(p && p.pic)) people.pic = U.pic;
+    if(r.thai && U.translator && !(p && p.translator)) people.translator = U.translator;
+    if(U.poster && !(p && p.poster)) people.poster = U.poster;
+    const pay = { post_date: r.date, needs_thai: !!r.thai, ...(r.label && !r.badLabel ? { label: r.label } : {}), ...people };
+    let res;
+    if(r.src === 'idea') res = await sb.rpc('mkt_post', { p_action:'edit_topic', p_id:r.id, p: pay });
+    else res = await sb.rpc('mkt_post', { p_action:'create', p_id:null, p: { title:r.title, ...pay, writer: U.writer || ME } });
+    if(res.error) fails.push(`${r.title}: ${res.error.message.replace(/^.*?: /,'')}`); else ok++;
+  }
+  await reloadPosts(true);
+  closeD(); render();
+  showToast(`${ok} post${ok===1?'':'s'} planned.` + (fails.length ? ` ${fails.length} could not be planned: ${fails.join('; ')}` : ''));
+}
+function drawerShell(title, body, id, wide){
+  const ro = !canEdit;
+  $('#drawer').className = 'drawer' + (wide ? ' wide' : '');
+  $('#drawer').innerHTML = `<header><h3>${title}</h3><button class="x" onclick="closeD()">×</button></header>
+    <form class="body" id="fm" onsubmit="return false">${body}</form>
+    <footer><div>${id && canDelete ? `<button class="btn-danger" id="del">Delete</button><span class="confirm" id="cf">Delete this? <button class="btn-danger" id="yes">Yes, delete</button><button class="btn-outline" id="no">Keep</button></span>` : ''}</div>
     <div style="display:flex;gap:8px;align-items:center"><span id="msg" style="font-size:12px;color:#A23F1C"></span><button class="btn-outline" onclick="closeD()">${ro?'Close':'Cancel'}</button>${ro?'':'<button class="btn-primary" id="sv">Save</button>'}</div></footer>`;
   if(ro) $('#fm').querySelectorAll('input,select,textarea').forEach(e=>e.disabled=true);
   $('#dw').classList.add('dw-open');
-  if($('#sv')) $('#sv').onclick = save;
   if($('#del')){
     $('#del').onclick = () => { $('#del').style.display='none'; $('#cf').style.display='flex'; };
     $('#no').onclick = () => { $('#del').style.display=''; $('#cf').style.display='none'; };
@@ -336,51 +1855,59 @@ function edit(k, id){
       if(error){ $('#msg').textContent = 'Could not delete: ' + error.message; return; }
       closeD(); showToast('Deleted.'); loadAll(); };
   }
-  setTimeout(()=>{ const first = $('#fm [name]'); if(first && !id && !ro) first.focus(); }, 50);
 }
-function readForm(fields){
+function readForm(keys){
   const fd = new FormData($('#fm')); const body = {};
-  fields.forEach(f => { const v = String(fd.get(f[0]) ?? '').trim(); if(v) body[f[0]] = v; });
+  keys.forEach(k => { const v = String(fd.get(k) ?? '').trim(); if(v) body[k] = v; });
   return body;
 }
-async function save(){
-  if(saving || !cur) return; const {k, id} = cur; const s = SEC[k];
-  const body = readForm(s.f);
-  if(!body[s.title]){ $('#msg').textContent = label(s, s.title) + ' is required.'; return; }
-  saving = true; $('#sv').disabled = true;
+async function persist(collection, id, body){
+  if(saving) return; saving = true; const b = $('#sv'); if(b) b.disabled = true;
   const { error } = id
     ? await sb.from('marketing_entries').update({ data: body }).eq('id', id)
-    : await sb.from('marketing_entries').insert({ collection: k, data: body });
-  saving = false; const b = $('#sv'); if(b) b.disabled = false;
+    : await sb.from('marketing_entries').insert({ collection, data: body });
+  saving = false; if($('#sv')) $('#sv').disabled = false;
   if(error){ $('#msg').textContent = 'Could not save: ' + error.message; return; }
   closeD(); showToast('Saved.'); loadAll();
 }
-function editPlan(){
-  const P = PLAN || {}; cur = {plan:true};
-  $('#drawer').innerHTML = `<header><h3>Goal and targets</h3><button class="x" onclick="closeD()">×</button></header>
-    <form class="body" id="fm" onsubmit="return false">${PLAN_FIELDS.map(f=>field(f, P[f[0]])).join('')}${metaLine(PLAN)}</form>
-    <footer><div></div><div style="display:flex;gap:8px;align-items:center"><span id="msg" style="font-size:12px;color:#A23F1C"></span><button class="btn-outline" onclick="closeD()">Cancel</button><button class="btn-primary" id="sv">Save</button></div></footer>`;
-  $('#dw').classList.add('dw-open');
-  $('#sv').onclick = async () => {
-    const body = readForm(PLAN_FIELDS); $('#sv').disabled = true;
-    const { error } = PLAN
-      ? await sb.from('marketing_entries').update({ data: body }).eq('id', PLAN.id)
-      : await sb.from('marketing_entries').insert({ collection: 'plan', data: body });
-    if(error){ $('#msg').textContent = 'Could not save: ' + error.message; $('#sv').disabled = false; return; }
-    closeD(); showToast('Saved.'); loadAll();
+
+// Reference / tasks editor
+function editRef(k, id){
+  const s = SEC[k]; const r = id ? (DATA[k]||[]).find(x=>x.id===id) : {}; if(id && !r) return;
+  cur = {k, id};
+  drawerShell(id ? esc(r[s.title]||'Entry') : 'New entry', s.f.map(f=>field(f, r[f[0]])).join('') + metaLine(r), id, false);
+  if($('#sv')) $('#sv').onclick = () => {
+    const data = readForm(s.f.map(f=>f[0]));
+    if(!data[s.title]){ $('#msg').textContent = label(s, s.title) + ' is required.'; return; }
+    persist(k, id, data);
   };
+  setTimeout(()=>{ const first = $('#fm [name]'); if(first && !id && canEdit) first.focus(); }, 50);
+}
+function editPlan(){
+  if(!canEditPlan()) return;
+  const P = PLAN || {}; cur = {plan:true};
+  drawerShell('Goal and targets', PLAN_FIELDS.map(f=>field(f, P[f[0]])).join('') + metaLine(PLAN), null, false);
+  if($('#sv')) $('#sv').onclick = () => persist('plan', PLAN && PLAN.id, { ...planData(), ...readForm(PLAN_FIELDS.map(f=>f[0])) });
 }
 
-// ---- Boot ----
+// ---------- Boot ----------
 async function onStaffReady(){
   if(!canAccess('marketing', 'view')){ window.location.href = 'staff-dashboard.html'; return; }
   canEdit = canAccess('marketing', 'edit');
   canDelete = canAccess('marketing', 'full');
+  ME = window.currentStaff && window.currentStaff.id;
   render();
-  loadAll();
+  await loadAccess();
+  await loadAll();
+  listen();
 }
-window.addEventListener('hashchange', () => { filt.q=''; filt.s=''; closeD(); render(); window.scrollTo(0,0); });
-window.addEventListener('focus', () => { if(loaded && !cur) loadAll(); });
+let curHash = location.hash, skipHash = false;
+window.addEventListener('hashchange', () => {
+  if(skipHash){ skipHash = false; curHash = location.hash; return; }
+  if(curHash.startsWith('#post/') && dirty() && !confirm('You have unsaved changes on this post. Leave without saving?')){ skipHash = true; location.hash = curHash; return; }
+  curHash = location.hash; filt.q=''; filt.s=''; closeD(); render(); window.scrollTo(0,0);
+});
+window.addEventListener('beforeunload', e => { if(dirty()){ e.preventDefault(); e.returnValue = ''; } });
 
 window.STAFF_PAGE_KEY = 'marketing';
 checkStaffAndInit();

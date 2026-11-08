@@ -14,31 +14,32 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:#FDFAF5;color:#2C2
 main{max-width:900px;margin:0 auto;padding:60px 32px 100px;}
 .eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#534AB7;text-transform:uppercase;margin-bottom:14px;}
 h1{font-family:Georgia,serif;font-size:32px;font-weight:700;margin-bottom:8px;}
-.sub{font-size:15px;color:#5F5E5A;margin-bottom:40px;}
+.stat-row{margin-top:8px;}
+.wbox{background:#fff;border:1px solid #E8E3D8;border-radius:14px;padding:6px 24px 10px;margin-bottom:24px;}
+.wbox h2{font-family:Georgia,serif;font-size:21px;margin:16px 0 4px;}
+.wl{display:flex;align-items:center;gap:16px;padding:15px 0;border-bottom:1px solid #EFEAE0;flex-wrap:wrap;}
+.wl:last-child{border-bottom:0;}
+.wtag{font-size:12px;font-weight:700;color:#3C3489;background:#EEEDFE;padding:4px 10px;border-radius:8px;min-width:104px;text-align:center;}
+.wtxt{flex:1 1 240px;font-size:15px;}
+.wtxt .late{color:#A32D2D;font-weight:600;}
+.wbtn{font-size:14px;font-weight:600;text-decoration:none;padding:8px 14px;border:1px solid #CECBF6;border-radius:8px;color:#534AB7;background:#fff;cursor:pointer;font-family:inherit;}
+.wbtn:hover{border-color:#534AB7;}
+.quiet{font-size:15px;color:#5F5E5A;padding:14px 0 10px;}
+.sublist{width:100%;padding:4px 0 0 120px;}
+.sublist a{display:block;padding:8px 0;border-top:1px solid #F3EFE6;text-decoration:none;color:#2C2C2A;font-size:14px;}
+@media (max-width:700px){.sublist{padding-left:0;}}
 
 .stat-row{display:grid;grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));gap:16px;margin-bottom:40px;}
 .stat-card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:20px;}
 .stat-num{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#534AB7;}
 .stat-label{font-size:12px;color:#888780;text-transform:uppercase;letter-spacing:.4px;margin-top:4px;}
 
-h2{font-family:Georgia,serif;font-size:20px;margin-bottom:16px;}
-.shortcut-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:16px;}
-.shortcut-card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:22px;text-decoration:none;color:#2C2C2A;display:block;transition:border-color .15s;}
-.shortcut-card:hover{border-color:#534AB7;}
-.shortcut-title{font-weight:700;font-size:16px;margin-bottom:4px;}
-.shortcut-desc{font-size:13px;color:#5F5E5A;}
 
 #authLoading{text-align:center;padding:80px 20px;color:#888780;font-size:14px;}
 .toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
 .btn-small-outline{padding:6px 12px;font-size:12px;border:1px solid #534AB7;border-radius:6px;background:#fff;color:#534AB7;cursor:pointer;font-weight:600;}
 .btn-small-outline:hover{background:#f5f3ee;}
 
-input#toggleCalendar:checked + span, input#toggleBloombrary:checked + span{background:#534AB7;}
-input#toggleCalendar + span::before, input#toggleBloombrary + span::before{
-  content:"";position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;
-}
-input#toggleCalendar:checked + span::before, input#toggleBloombrary:checked + span::before{transform:translateX(20px);}
-.toggle-track{position:absolute;inset:0;background:#ccc;border-radius:24px;transition:.2s;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -47,52 +48,15 @@ input#toggleCalendar:checked + span::before, input#toggleBloombrary:checked + sp
 
 <div id="pageContent" class="page-content" style="display:none;">
 <main>
+  <div class="eyebrow" id="today"></div>
   <h1 id="greeting">Welcome</h1>
-  <p class="sub">Here's what's happening today.</p>
 
   <div class="stat-row" id="statRow"></div>
 
-  <div id="requestsPanel" style="display:none;background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:20px 24px;margin:-8px 0 24px;"></div>
-
-  <div id="approvalsPanel" style="display:none;background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:20px 24px;margin:-8px 0 24px;"></div>
-
-  <h2>Your tools</h2>
-  <div class="shortcut-grid" id="shortcutGrid"></div>
-
-  <div id="siteFeaturesCard" style="display:none;margin-top:40px;">
-    <h2>Site Features</h2>
-    <div style="background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:22px;">
-      <p style="font-size:13px;color:#5F5E5A;margin-bottom:16px;">
-        Turn Calendar or Library off temporarily (e.g. for maintenance). Parents and staff will see a "temporarily unavailable" message instead.
-      </p>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #E8E3D8;">
-        <div>
-          <div style="font-weight:600;">Calendar</div>
-          <div style="font-size:12px;color:#888780;">bloomcalendar.learn2bloom.org and the Calendar tool</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span id="toggleCalendarStatus" style="font-size:12px;font-weight:600;color:#5F5E5A;width:28px;text-align:right;">On</span>
-          <label style="position:relative;display:inline-block;width:44px;height:24px;">
-            <input type="checkbox" id="toggleCalendar" onchange="toggleFeature('calendar_enabled', this.checked)" style="opacity:0;width:0;height:0;">
-            <span id="toggleCalendarTrack" class="toggle-track"></span>
-          </label>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;">
-        <div>
-          <div style="font-weight:600;">Bloombrary</div>
-          <div style="font-size:12px;color:#888780;">bloombrary.learn2bloom.org, public catalog and admin</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span id="toggleBloombraryStatus" style="font-size:12px;font-weight:600;color:#5F5E5A;width:28px;text-align:right;">On</span>
-          <label style="position:relative;display:inline-block;width:44px;height:24px;">
-            <input type="checkbox" id="toggleBloombrary" onchange="toggleFeature('bloombrary_enabled', this.checked)" style="opacity:0;width:0;height:0;">
-            <span id="toggleBloombraryTrack" class="toggle-track"></span>
-          </label>
-        </div>
-      </div>
-    </div>
-  </div>
+  <section class="wbox" aria-labelledby="waitTitle">
+    <h2 id="waitTitle">Waiting on you</h2>
+    <div id="waitList"><p class="quiet">Loading…</p></div>
+  </section>
 </main>
 
 <div class="toast" id="toast"></div>
@@ -101,268 +65,80 @@ input#toggleCalendar:checked + span::before, input#toggleBloombrary:checked + sp
 <script>
 window.STAFF_PAGE_KEY = 'dashboard';
 
-const SHORTCUTS = [
-  { key:'admissions', href:'staff-admissions.html', title:'Admissions', desc:'Review and manage new applications.', module:'students' },
-  { key:'learners', href:'learners.html', title:'Learners', desc:'View and edit enrolled students.', module:'students' },
-  { key:'calendar', href:'staff-calendar.html', title:'Calendar', desc:'Manage the school calendar and term dates.', module:'calendar' },
-  { key:'library', href:'https://bloombrary.learn2bloom.org/admin', title:'Bloombrary', desc:'Manage the book catalog, checkouts, and holds.', module:'library' },
-  { key:'marketing', href:'staff-marketing.html', title:'Marketing HQ', desc:'Info bank, audiences, groups, content plan and tasks.', module:'marketing' },
-  { key:'archive', href:'archive.html', title:'Archive', desc:'Restore or review archived records.', module:'students' },
-  { key:'team', href:'staff-team.html', title:'Team', desc:'See the staff directory, update your contact info.' },
-  { key:'permissions', href:'staff-permissions.html', title:'Permissions', desc:'Manage roles, access, and approvals.', adminOnly:true }
-];
+// The home page answers one question: what needs me today?
+// Each tool adds a line only when something needs this person. Open tools from the menu.
+const escD = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let OPEN_SUB = null;
 
 async function onStaffReady(staffRow){
-  document.getElementById('greeting').textContent = `Welcome, ${staffRow.name.split(' ')[0]}`;
-
+  const now = new Date(), h = now.getHours();
+  document.getElementById('today').textContent = now.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
+  document.getElementById('greeting').textContent = `Good ${h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening'}, ${staffRow.name.split(' ')[0]}`;
   window._isAdminOrIt = window.currentStaffRole === 'admin' || window.currentStaffRole === 'director' || window.currentStaffRole === 'it';
-
-  // Shortcuts, filtered by role
-  const grid = document.getElementById('shortcutGrid');
-  grid.innerHTML = SHORTCUTS
-    .filter(s => !s.adminOnly || window._isAdminOrIt)
-    .filter(s => !s.module || canAccess(s.module, 'view'))
-    .map(s => `
-      <a href="${s.href}" class="shortcut-card">
-        <div class="shortcut-title">${s.title}</div>
-        <div class="shortcut-desc">${s.desc}</div>
-      </a>
-    `).join('');
-
-  await loadDashboardStats();
-
-  if(window._isAdminOrIt){
-    document.getElementById('siteFeaturesCard').style.display = 'block';
-    const { data: settings } = await sb.from('bloom_settings').select('calendar_enabled, bloombrary_enabled').maybeSingle();
-    setToggleState('toggleCalendar', settings?.calendar_enabled !== false);
-    setToggleState('toggleBloombrary', settings?.bloombrary_enabled !== false);
-  }
-
-  // Keep Requests/Approvals fresh without needing a manual refresh.
-  setInterval(loadDashboardStats, 5000);
+  await loadHome();
+  setInterval(loadHome, 30000);
 }
 
-async function loadDashboardStats(){
-  const isAdminOrIt = window._isAdminOrIt;
-  const stats = [];
-  let requestsData = { enquiries: [], parentRequests: [] };
+// Each source returns { stats: [...], lines: [...] }. A line: { tag, html, href | onclick, btn, sub }
+const SOURCES = [];
 
-  if(canAccess('students', 'view')){
-    const { count: activeCount } = await sb.from('students').select('*', { count: 'exact', head: true }).not('status', 'in', '("archived")');
-    stats.push({ num: activeCount ?? '—', label: 'Active students' });
+// Admissions and Learners: new enquiries and parent requests
+SOURCES.push(async () => {
+  if(!canAccess('students', 'view')) return null;
+  const [{ count: active }, { data: enq }, { data: notes }] = await Promise.all([
+    sb.from('students').select('*', { count: 'exact', head: true }).not('status', 'in', '("archived")'),
+    sb.from('students').select('id, first_name, last_name, student_id_code').eq('status', 'enquiry'),
+    sb.from('parent_notes').select('id, note, student_id, students(first_name, last_name, student_id_code)').eq('resolved', false).order('created_at', { ascending: false })
+  ]);
+  const e = enq || [], n = notes || [];
+  const lines = [];
+  if(e.length) lines.push({ tag:'Admissions', html:`${e.length} new enquir${e.length === 1 ? 'y' : 'ies'} to reply to`, href:'staff-admissions.html', btn:'Open',
+    sub: e.map(x => `<a href="staff-admissions.html">${escD(x.first_name)} ${escD(x.last_name || '')}${x.student_id_code ? ` <span style="color:#888780;font-size:12px;">· ${escD(x.student_id_code)}</span>` : ''}</a>`).join('') });
+  if(n.length) lines.push({ tag:'Learners', html:`${n.length} parent request${n.length === 1 ? '' : 's'}`, btn:'Show', subOnly:true,
+    sub: n.map(x => { const st = x.students || {}; const link = st.student_id_code ? `learners.html?student=${encodeURIComponent(st.student_id_code)}` : 'learners.html';
+      return `<a href="${link}"><b>${escD(st.first_name)} ${escD(st.last_name || '')}</b><br><span style="color:#5F5E5A;font-size:13px;">${escD(x.note)}</span></a>`; }).join('') });
+  return { stats: [{ num: active ?? '—', label: 'Active students' }, { num: e.length, label: 'New enquiries', href: 'staff-admissions.html' }], lines };
+});
 
-    const { data: enquiries } = await sb.from('students').select('id, first_name, last_name, student_id_code').eq('status', 'enquiry');
-    requestsData.enquiries = enquiries || [];
+// Approvals (admin and IT)
+SOURCES.push(async () => {
+  if(!window._isAdminOrIt) return null;
+  const { count } = await sb.from('approval_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+  const c = count || 0;
+  return { stats: [{ num: c, label: 'Approvals waiting', href: 'staff-permissions.html#approvals' }],
+    lines: c ? [{ tag:'Permissions', html:`${c} approval${c === 1 ? '' : 's'} waiting for you`, href:'staff-permissions.html#approvals', btn:'Review' }] : [] };
+});
 
-    const { data: parentNotes } = await sb
-      .from('parent_notes')
-      .select('id, note, student_id, students(first_name, last_name, student_id_code)')
-      .eq('resolved', false)
-      .order('created_at', { ascending: false });
-    requestsData.parentRequests = parentNotes || [];
+// Calendar: changes this person asked for that are still waiting
+SOURCES.push(async () => {
+  if(!canAccess('calendar', 'view') || window._isAdminOrIt) return null;
+  const { count } = await sb.from('approval_requests').select('*', { count: 'exact', head: true })
+    .eq('status', 'pending').eq('module', 'calendar').eq('requested_by', window.currentStaff.id);
+  const c = count || 0;
+  return { stats: [], lines: c ? [{ tag:'Calendar', html:`${c} calendar change${c === 1 ? '' : 's'} you asked for ${c === 1 ? 'is' : 'are'} waiting for approval`, href:'staff-calendar.html', btn:'View' }] : [] };
+});
 
-    const total = requestsData.enquiries.length + requestsData.parentRequests.length;
-    stats.push({ num: total, label: 'Requests', clickable: true });
-  }
+async function loadHome(){
+  const results = (await Promise.all(SOURCES.map(fn => fn().catch(err => { console.log('dashboard source failed', err); return null; })))).filter(Boolean);
+  const stats = results.flatMap(r => r.stats || []), lines = results.flatMap(r => r.lines || []);
+  window._lines = lines;
 
-  let approvalsData = [];
-  if(isAdminOrIt){
-    const { data: approvals } = await sb
-      .from('approval_requests')
-      .select('id, module, action_type, entity_table, entity_id, payload, created_at, staff:requested_by(name)')
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
-    approvalsData = approvals || [];
-    stats.push({ num: approvalsData.length, label: 'Pending approvals', clickable: true, panel: 'approvals' });
-  }
+  document.getElementById('statRow').innerHTML = stats.map(s => s.href
+    ? `<a class="stat-card" href="${s.href}" style="text-decoration:none;color:inherit;"><div class="stat-num">${escD(s.num)}</div><div class="stat-label">${escD(s.label)}</div></a>`
+    : `<div class="stat-card"><div class="stat-num">${escD(s.num)}</div><div class="stat-label">${escD(s.label)}</div></div>`).join('');
+  document.getElementById('statRow').style.display = stats.length ? '' : 'none';
 
-  document.getElementById('statRow').innerHTML = stats.map(s => `
-    <div class="stat-card" ${s.clickable ? `onclick="togglePanel('${s.panel || 'requests'}')" style="cursor:pointer;"` : ''}>
-      <div class="stat-num">${s.num}</div>
-      <div class="stat-label">${s.label}</div>
-    </div>
-  `).join('');
-
-  window._requestsData = requestsData;
-  window._approvalsData = approvalsData;
-  renderRequestsPanel();
-  renderApprovalsPanel();
+  document.getElementById('waitTitle').textContent = lines.length ? `Waiting on you: ${lines.length}` : 'Waiting on you';
+  document.getElementById('waitList').innerHTML = lines.length
+    ? lines.map((l, i) => `<div class="wl">
+        <span class="wtag">${escD(l.tag)}</span>
+        <span class="wtxt">${l.html}</span>
+        ${l.subOnly ? `<button class="wbtn" onclick="toggleSub(${i})">${OPEN_SUB === i ? 'Hide' : l.btn}</button>` : `<a class="wbtn" href="${l.href}">${escD(l.btn)}</a>`}
+        ${l.sub && l.subOnly && OPEN_SUB === i ? `<div class="sublist">${l.sub}</div>` : ''}
+      </div>`).join('')
+    : '<p class="quiet">Nothing needs you right now. Open any tool from the menu.</p>';
 }
-
-function togglePanel(which){
-  const requestsPanel = document.getElementById('requestsPanel');
-  const approvalsPanel = document.getElementById('approvalsPanel');
-  if(which === 'requests'){
-    approvalsPanel.style.display = 'none';
-    requestsPanel.style.display = requestsPanel.style.display === 'none' ? 'block' : 'none';
-  } else {
-    requestsPanel.style.display = 'none';
-    approvalsPanel.style.display = approvalsPanel.style.display === 'none' ? 'block' : 'none';
-  }
-}
-
-function renderRequestsPanel(){
-  const { enquiries, parentRequests } = window._requestsData || { enquiries: [], parentRequests: [] };
-  const panel = document.getElementById('requestsPanel');
-
-  if(enquiries.length === 0 && parentRequests.length === 0){
-    panel.innerHTML = `<p style="font-size:13px;color:#888780;margin:0;">No pending requests right now.</p>`;
-    return;
-  }
-
-  let html = '';
-  if(enquiries.length > 0){
-    html += `<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888780;margin-bottom:8px;">New Enquiries (${enquiries.length})</div>`;
-    html += enquiries.map(e => `
-      <a href="staff-admissions.html" style="display:block;padding:8px 0;border-bottom:1px solid #E8E3D8;text-decoration:none;color:#2C2C2A;font-size:14px;">
-        ${e.first_name} ${e.last_name || ''} ${e.student_id_code ? `<span style="color:#888780;font-size:12px;">· ${e.student_id_code}</span>` : ''}
-      </a>
-    `).join('');
-    html += '<div style="height:14px;"></div>';
-  }
-  if(parentRequests.length > 0){
-    html += `<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888780;margin-bottom:8px;">Parent Requests (${parentRequests.length})</div>`;
-    html += parentRequests.map(n => {
-      const s = n.students || {};
-      const link = s.student_id_code ? `learners.html?student=${encodeURIComponent(s.student_id_code)}` : 'learners.html';
-      return `
-        <a href="${link}" style="display:block;padding:8px 0;border-bottom:1px solid #E8E3D8;text-decoration:none;color:#2C2C2A;font-size:14px;">
-          <div style="font-weight:600;">${s.first_name || ''} ${s.last_name || ''}</div>
-          <div style="font-size:13px;color:#5F5E5A;">${n.note}</div>
-        </a>
-      `;
-    }).join('');
-  }
-  panel.innerHTML = html;
-}
-
-function describeApprovalPayload(a){
-  const p = a.payload || {};
-  if(a.module === 'calendar'){
-    const typeLabels = {school:'School Day',early:'Early Dismissal',event:'School Event',pd:'PD Day',holiday:'Public Holiday',break:'School Break',closure:'Emergency Closure',makeup:'Make-up Day',none:'Remove'};
-    let title, from;
-    if(p.events){
-      title = `${p.events.length} day${p.events.length===1?'':'s'} imported`;
-    } else if(p.dates){
-      title = `${p.dates.length} day${p.dates.length===1?'':'s'} → ${typeLabels[p.type]||p.type}${p.label?' ('+p.label+')':''}`;
-    } else {
-      const toLabel = `${typeLabels[p.day_type]||p.day_type}${p.label?' ('+p.label+')':''}`;
-      from = p.previous_day_type ? `${typeLabels[p.previous_day_type]||p.previous_day_type}${p.previous_label?' ('+p.previous_label+')':''}` : null;
-      title = `${p.date}: ${from ? from+' → ' : ''}${toLabel}`;
-    }
-    return { title, reason: p.reason || null };
-  }
-  if(a.module === 'students'){
-    return { title: 'Learner profile update', reason: null };
-  }
-  return { title: `${a.action_type} on ${a.entity_table || a.module}`, reason: null };
-}
-
-function renderApprovalsPanel(){
-  const panel = document.getElementById('approvalsPanel');
-  const items = window._approvalsData || [];
-
-  if(items.length === 0){
-    panel.innerHTML = `<p style="font-size:13px;color:#888780;margin:0;">No pending approvals right now.</p>`;
-    return;
-  }
-
-  panel.innerHTML = items.map(a => {
-    const d = describeApprovalPayload(a);
-    return `
-    <div style="padding:12px 0;border-bottom:1px solid #E8E3D8;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
-        <div>
-          <div style="font-weight:600;font-size:14px;">${d.title}</div>
-          ${d.reason ? `<div style="font-size:13px;color:#5F5E5A;margin-top:2px;">"${d.reason}"</div>` : ''}
-          <div style="font-size:12px;color:#888780;margin-top:2px;">
-            ${a.staff?.name || 'Unknown'} · ${a.module} · ${new Date(a.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
-          </div>
-        </div>
-        <div style="display:flex;gap:6px;flex-shrink:0;">
-          <button class="btn-small-outline" style="border-color:#2E7D46;color:#2E7D46;" onclick="reviewApproval('${a.id}','approved')">Approve</button>
-          <button class="btn-small-outline" style="border-color:#B23A3A;color:#B23A3A;" onclick="reviewApproval('${a.id}','rejected')">Reject</button>
-        </div>
-      </div>
-    </div>
-  `;
-  }).join('');
-}
-
-async function reviewApproval(id, status){
-  const item = (window._approvalsData || []).find(a => a.id === id);
-  if(!item) return;
-
-  if(status === 'approved' && item.module === 'calendar'){
-    const p = item.payload || {};
-    try {
-      if(p.events){
-        const rows = p.events.map(e => ({location_id:p.location_id, academic_year_id:p.academic_year_id, date:e.date, day_type:e.type, label:e.label||'', is_draft:false, updated_at:new Date().toISOString()}));
-        for(let i=0;i<rows.length;i+=100) await sb.from('bloom_calendar_events').upsert(rows.slice(i,i+100), {onConflict:'location_id,date'});
-      } else if(p.dates){
-        const rows = p.dates.map(d => ({location_id:p.location_id, academic_year_id:p.academic_year_id, date:d, day_type:p.type, label:p.label||'', is_draft:false, updated_at:new Date().toISOString()}));
-        for(let i=0;i<rows.length;i+=100) await sb.from('bloom_calendar_events').upsert(rows.slice(i,i+100), {onConflict:'location_id,date'});
-      } else if(p.date){
-        await sb.from('bloom_calendar_events').upsert(
-          {location_id:p.location_id, academic_year_id:p.academic_year_id, date:p.date, day_type:p.day_type, label:p.label||'', is_draft:false, updated_at:new Date().toISOString()},
-          {onConflict:'location_id,date'}
-        );
-      }
-    } catch(e){
-      showToast('Error applying calendar change: ' + e.message);
-      return;
-    }
-  }
-
-  const { error } = await sb.from('approval_requests').update({
-    status, reviewed_by: window.currentStaff.id, reviewed_at: new Date().toISOString()
-  }).eq('id', id);
-
-  if(error){ showToast('Error: ' + error.message); return; }
-
-  if(item.module === 'calendar'){
-    const desc = describeApprovalPayload(item).title;
-    try {
-      await sb.from('calendar_audit_log').insert({
-        staff_id: window.currentStaff.id,
-        staff_name: window.currentStaff.name,
-        action_text: `${status === 'approved' ? 'Approved' : 'Rejected'} (requested by ${item.staff?.name || 'staff'}): ${desc}`
-      });
-    } catch(e){ console.log('Failed to log audit entry', e); }
-  }
-
-  if(status === 'approved'){
-    showToast(item.module === 'calendar' ? 'Approved and published to the live calendar.' : 'Approved. If this change needs to be applied elsewhere, do that now.');
-  } else {
-    showToast('Rejected.');
-  }
-
-  window._approvalsData = (window._approvalsData || []).filter(a => a.id !== id);
-  renderApprovalsPanel();
-  document.querySelectorAll('.stat-card').forEach(el => {
-    if(el.querySelector('.stat-label')?.textContent === 'Pending approvals'){
-      el.querySelector('.stat-num').textContent = window._approvalsData.length;
-    }
-  });
-}
-
-function setToggleState(id, isOn){
-  document.getElementById(id).checked = isOn;
-  document.getElementById(id + 'Status').textContent = isOn ? 'On' : 'Off';
-}
-
-async function toggleFeature(column, enabled){
-  const toggleId = column === 'calendar_enabled' ? 'toggleCalendar' : 'toggleBloombrary';
-  const { error } = await sb.from('bloom_settings').update({ [column]: enabled }).eq('location_id', (await sb.from('bloom_locations').select('id').limit(1).single()).data.id);
-  if(error){
-    showToast('Error: ' + error.message);
-    // Revert the checkbox visually on failure
-    setToggleState(toggleId, !enabled);
-    return;
-  }
-  setToggleState(toggleId, enabled);
-  showToast(enabled ? 'Turned back on.' : 'Turned off — visitors will see a maintenance message.');
-}
+function toggleSub(i){ OPEN_SUB = OPEN_SUB === i ? null : i; loadHome(); }
 
 checkStaffAndInit();
 </script>

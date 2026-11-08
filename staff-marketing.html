@@ -318,8 +318,8 @@ button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-vi
 @media (max-width: 760px){ .pl{grid-template-columns:90px minmax(0,1fr) 90px;} .pl>:nth-child(n+4){display:none;} }
 .reffilter{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 12px;} .reffilter button{font:inherit;font-size:13px;font-weight:600;border:0;background:none;color:#5F5E5A;padding:5px 12px;border-radius:8px;cursor:pointer;} .reffilter button:hover{background:#F3F1FD;} .reffilter button.on{background:#EEEDFE;color:#3C3489;} .reffilter .n{font-weight:400;opacity:.7;}
 .quiet{color:#8A877F;font-size:13px;}
-.tt-wrap{overflow-x:auto;} .tt{min-width:860px;}
-.tt-r{display:grid;grid-template-columns:minmax(150px,1.6fr) 96px 72px 72px 72px 100px 100px 116px 72px;gap:6px;align-items:center;padding:12px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
+.tt-wrap{overflow-x:auto;} .tt{min-width:620px;}
+.tt-r{display:grid;grid-template-columns:minmax(150px,1.6fr) 110px 100px 100px 100px 72px;gap:6px;align-items:center;padding:12px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
 .tt-head{align-items:start;padding:0 0 10px;border-bottom:1px solid #E8E3D8;font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;}
 .tt-h{text-align:center;} .tt-h small{display:block;font-size:10px;letter-spacing:0;font-weight:500;color:#8A877F;margin-top:2px;line-height:1.25;}
 .tt-c{display:flex;justify-content:center;align-items:center;}
@@ -1444,17 +1444,15 @@ function teamView(){
   // Item 81: one table for the team: access, languages as ticks, and the usual people for new topics.
   const row = id => {
     const lv = LEVEL[id] || (NO_ACCESS.has(id) ? 'none' : 'edit'), ok = !NO_ACCESS.has(id);
-    const tick = l => `<span class="tt-c"><input type="checkbox" class="tick" aria-label="${l}" ${hasLang(id,l)?'checked':''} ${dis} onchange="toggleLang('${id}','${l}')"></span>`;
     const radio = (k, enabled) => `<span class="tt-c"><input type="radio" class="rad" name="us-${k}" aria-label="Usual ${k}" ${U[k]===id?'checked':''} ${canDelete && enabled ? '' : 'disabled'} onclick="setUsual('${k}','${id}')"></span>`;
     return `<div class="tt-r"><b>${esc(STAFF[id].name)}</b>
       <span class="tt-c"><span class="lvl lvl-${lv}">${lv.charAt(0).toUpperCase()+lv.slice(1)}</span></span>
-      ${tick('English')}${tick('Thai')}${tick('Chinese')}
-      ${radio('writer', ok)}${radio('pic', ok)}${radio('translator', ok && hasLang(id,'Thai'))}
+      ${radio('writer', ok)}${radio('pic', ok)}${radio('translator', ok)}
       <span class="tt-c" style="justify-content:flex-end">${canDelete?`<button class="link-btn" style="color:#A23F1C" onclick="removeMember('${id}')">Remove</button>`:''}</span></div>`;
   };
   const team = `<div class="box"><h3 class="bh">Marketing team</h3>
     <div class="tt-wrap"><div class="tt">
-      <div class="tt-r tt-head"><span class="tt-h" style="text-align:left">PERSON</span>${th('HQ ACCESS','from Roles and access')}${th('ENGLISH','reads, writes')}${th('THAI','reads, writes')}${th('CHINESE','reads, writes')}${th('USUAL WRITER','new topics')}${th('USUAL REVIEWER','new topics')}${th('USUAL THAI TRANSLATOR','Thai readers only')}<span></span></div>
+      <div class="tt-r tt-head"><span class="tt-h" style="text-align:left">PERSON</span>${th('HQ ACCESS','from Roles and access')}${th('WRITER','new topics')}${th('REVIEWER','new topics')}${th('TRANSLATOR','new topics')}<span></span></div>
       ${ms.length ? ms.map(row).join('') : '<p class="meta" style="padding:8px 0">No one yet.</p>'}
       ${others.length && canDelete ? `<div class="tt-add"><select id="addWho" ${sel}><option value="">Add a person</option>${others.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select><button class="btn-primary sm" onclick="addMember()">Add</button></div>` : ''}
     </div></div>
@@ -1501,16 +1499,6 @@ async function removeSpecial(id){
   showToast('Removed.'); loadAll();
 }
 const firstName = n => String(n||'').split(' ')[0];
-const LANG_RE = { English:/english/i, Thai:/thai|ไทย/i, Chinese:/chinese|mandarin|中文/i };
-const hasLang = (id, l) => LANG_RE[l].test(LANGS[id]||'');
-// Ticks keep any other language someone typed before (e.g. French) and rewrite the three known ones.
-async function toggleLang(id, l){
-  const parts = String(LANGS[id]||'').split(/[,·\/]+/).map(x=>x.trim()).filter(x=>x && !Object.values(LANG_RE).some(re=>re.test(x)));
-  const known = ['English','Thai','Chinese'].filter(k => k===l ? !hasLang(id,k) : hasLang(id,k));
-  await setLangs(id, [...known, ...parts].join(', '));
-  if(l==='Thai' && !known.includes('Thai') && usual().translator===id) await setUsual('translator', id);
-  render();
-}
 async function setUsual(k, id){
   const key = {writer:'usual_writer', pic:'usual_reviewer', translator:'usual_translator'}[k];
   const val = usual()[k] === id ? '' : id;

@@ -377,7 +377,7 @@ th.sortable{cursor:pointer;user-select:none;white-space:nowrap;} th.sortable .ar
 .tk{display:flex;align-items:center;gap:10px;} .tk-m{flex:1;min-width:0;} .tk-c{flex:0 0 18px;display:flex;align-items:center;}
 .tk-m > .sgl,.tk-m > .wl,.tk-m > .pl{border-top:0;}
 .tk + .tk{border-top:1px solid #F0ECE3;}
-.tk-bar{display:flex;align-items:center;gap:10px;min-height:34px;padding:2px 0 8px;border-bottom:1px solid #E8E3D8;font-size:13px;} .tk-n{font-weight:600;color:#3C3489;}
+.tk-bar{display:flex;align-items:center;gap:10px;min-height:34px;padding:2px 0 8px;border-bottom:1px solid #E8E3D8;font-size:13px;} .tk-n{font-weight:600;color:#3C3489;} .tk-all{display:flex;align-items:center;gap:10px;cursor:pointer;color:#5F5E5A;}
 .pager{display:flex;justify-content:center;align-items:center;gap:14px;padding:14px 0 2px;font-size:13px;color:#6B6A64;border-top:1px solid #F0ECE3;}
 .pager .cal-nav:disabled{opacity:.35;cursor:default;}
 .sgl{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px 0;border-top:1px solid #F0ECE3;font-size:13.5px;}
@@ -969,7 +969,7 @@ function tickRow(set, key, html, enabled){
 function tickBar(set, keys, action){
   if(!canEdit || !keys.length) return '';
   const n = SEL[set].size, all = keys.every(k=>SEL[set].has(k)); PAGEKEYS[set] = keys;
-  return `<div class="tk-bar"><span class="tk-c"><input type="checkbox" class="tick" aria-label="Tick all on this page" ${all?'checked':''} onchange="tickAll('${set}',this.checked)"></span>
+  return `<div class="tk-bar"><label class="tk-all"><span class="tk-c"><input type="checkbox" class="tick" ${all?'checked':''} onchange="tickAll('${set}',this.checked)"></span>${n ? '' : 'Select all'}</label>
     ${n ? `<span class="tk-n">${n} ticked</span>${action}<button class="link-btn" onclick="SEL.${set}.clear();render()">Clear</button>` : ''}</div>`;
 }
 function tickOne(set, key, on){ on ? SEL[set].add(key) : SEL[set].delete(key); const y = window.scrollY; render(); window.scrollTo(0, y); }
@@ -1832,9 +1832,9 @@ function planDraw(){
   if(PL.tab === 'ideas'){
     const q = normT(PL.q), list = PL.rows.filter(r=>!q || normT(r.title).includes(q)), pg = pageOf('plan', list);
     const allOn = pg.length && pg.every(r=>r.on), nOn = PL.rows.filter(r=>r.on).length;
-    const ihead = `<div class="pl-r pl-head"><input type="checkbox" class="tick" aria-label="Tick all on this page" ${allOn?'checked':''} onchange="planTickPage(this.checked)"><span>TOPIC</span><span>POSTING DATE</span><span>LABEL</span><span>THAI</span></div>`;
+    const ihead = head;
     body = `<input class="pl-in pl-search" placeholder="Search ideas" value="${esc(PL.q)}" oninput="PL.q=this.value;PAGE.plan=0;planDrawList()">
-      ${nOn ? `<div class="tk-bar"><span class="tk-n">${nOn} ticked</span><button class="btn-outline sm" style="color:#A23F1C" onclick="planDelete()">Delete</button><button class="link-btn" onclick="PL.rows.forEach(r=>r.on=false);planDraw()">Clear</button></div>` : ''}
+      ${pg.length ? `<div class="tk-bar"><label class="tk-all"><span class="tk-c"><input type="checkbox" class="tick" ${allOn?'checked':''} onchange="planTickPage(this.checked)"></span>${nOn ? '' : 'Select all'}</label>${nOn ? `<span class="tk-n">${nOn} ticked</span><button class="btn-outline sm" style="color:#A23F1C" onclick="planDelete()">Delete</button><button class="link-btn" onclick="PL.rows.forEach(r=>r.on=false);planDraw()">Clear</button>` : ''}</div>` : ''}
       <div id="plList">${ihead}${pg.map(planRow).join('') || '<p class="meta" style="padding:10px 0">No ideas match.</p>'}${pager('plan', list.length, 'planDraw')}</div>`;
   } else {
     body = `<label class="pl-lbl">Paste rows: topic, date, label</label>

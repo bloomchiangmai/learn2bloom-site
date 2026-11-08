@@ -150,6 +150,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
 </div>
 
 <script>
+const escHtml = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let allData = [];
 let currentPage = 1;
 const pageSize = 15;
@@ -208,11 +209,11 @@ function applyFiltersAndRender(){
   tbody.innerHTML = pageData.map((s, i) => `
     <tr>
       <td>${start + i + 1}</td>
-      <td>${s.student_id_code || '—'}</td>
-      <td><a href="javascript:void(0)" onclick="openModal('${s.id}')" style="color:#534AB7;font-weight:600;text-decoration:none;">${s.first_name}</a></td>
-      <td>${s.families ? s.families.family_name : '—'}</td>
-      <td>${s.class_group || '—'}</td>
-      <td><button class="btn-small-outline" onclick="restoreStudent('${s.id}')">Restore</button></td>
+      <td>${escHtml(s.student_id_code || '—')}</td>
+      <td><a href="javascript:void(0)" onclick="openModal('${escHtml(s.id)}')" style="color:#534AB7;font-weight:600;text-decoration:none;">${escHtml(s.first_name)}</a></td>
+      <td>${escHtml(s.families ? s.families.family_name : '—')}</td>
+      <td>${escHtml(s.class_group || '—')}</td>
+      <td><button class="btn-small-outline" onclick="restoreStudent('${escHtml(s.id)}')">Restore</button></td>
     </tr>
   `).join('');
 
@@ -233,11 +234,11 @@ function restoreStudent(studentId){
   const s = allData.find(x => x.id === studentId);
   if(!s) return;
   const restoreTo = (s.previous_status || 'enquiry').replace('_',' ');
-  const label = (s.student_id_code || `${s.first_name} ${s.last_name}`).trim();
+  const label = (s.student_id_code || `${escHtml(s.first_name)} ${escHtml(s.last_name)}`).trim();
 
   pendingRestoreId = studentId;
   pendingRestoreMatch = label;
-  document.getElementById('restoreModalSub').textContent = `${s.first_name} ${s.last_name}`.trim();
+  document.getElementById('restoreModalSub').textContent = `${escHtml(s.first_name)} ${escHtml(s.last_name)}`.trim();
   document.getElementById('restoreModalExplain').textContent = `This sends them back to "${restoreTo}" — the status they had before being archived.`;
   document.getElementById('restoreMatchLabel').textContent = label;
   document.getElementById('restoreConfirmInput').value = '';
@@ -298,47 +299,47 @@ function openModal(studentId){
   const studIntake = s.intake_data || {};
 
   document.getElementById('modalContent').innerHTML = `
-    <h2>${s.first_name} ${s.last_name}</h2>
-    <p class="modal-sub">${fam.family_name || 'No family on file'} · ${s.student_id_code || 'No ID assigned'} · Archived (was: ${(s.previous_status || 'unknown').replace('_',' ')})</p>
+    <h2>${escHtml(s.first_name)} ${escHtml(s.last_name)}</h2>
+    <p class="modal-sub">${escHtml(fam.family_name || 'No family on file')} · ${escHtml(s.student_id_code || 'No ID assigned')} · Archived (was: ${(s.previous_status || 'unknown').replace('_',' ')})</p>
 
     <div class="detail-section">
       <h3>Learner details</h3>
-      <div class="detail-row"><div class="detail-label">Date of birth</div><div class="detail-value">${s.date_of_birth || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Class group</div><div class="detail-value">${s.class_group || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Gender</div><div class="detail-value">${studIntake.gender || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Nationality</div><div class="detail-value">${studIntake.nationality || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">First language</div><div class="detail-value">${studIntake.first_language || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Other languages</div><div class="detail-value">${studIntake.other_languages || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">School before Bloom</div><div class="detail-value">${studIntake.current_school || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Previous school</div><div class="detail-value">${studIntake.previous_school || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Allergies / Medical Conditions</div><div class="detail-value">${studIntake.health_learning_notes || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Date of birth</div><div class="detail-value">${escHtml(s.date_of_birth || '—')}</div></div>
+      <div class="detail-row"><div class="detail-label">Class group</div><div class="detail-value">${escHtml(s.class_group || '—')}</div></div>
+      <div class="detail-row"><div class="detail-label">Gender</div><div class="detail-value">${escHtml(studIntake.gender || '—')}</div></div>
+      <div class="detail-row"><div class="detail-label">Nationality</div><div class="detail-value">${escHtml(studIntake.nationality || '—')}</div></div>
+      <div class="detail-row"><div class="detail-label">First language</div><div class="detail-value">${escHtml(studIntake.first_language || '—')}</div></div>
+      <div class="detail-row"><div class="detail-label">Other languages</div><div class="detail-value">${escHtml(studIntake.other_languages || '—')}</div></div>
+      <div class="detail-row"><div class="detail-label">School before Bloom</div><div class="detail-value">${escHtml(studIntake.current_school || '—')}</div></div>
+      <div class="detail-row"><div class="detail-label">Previous school</div><div class="detail-value">${escHtml(studIntake.previous_school || '—')}</div></div>
+      <div class="detail-row"><div class="detail-label">Allergies / Medical Conditions</div><div class="detail-value">${escHtml(studIntake.health_learning_notes || '—')}</div></div>
     </div>
 
     <div class="detail-section">
       <h3>Parent / family contact</h3>
-      <div class="detail-row"><div class="detail-label">Family name</div><div class="detail-value">${fam.family_name || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value">${fam.contact_email || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Phone</div><div class="detail-value">${fam.contact_phone || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Preferred contact</div><div class="detail-value">${famIntake.preferred_contact || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Line / WeChat ID</div><div class="detail-value">${famIntake.line_wechat_id || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Family name</div><div class="detail-value">${escHtml(fam.family_name || '—')}</div></div>
+      <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value">${escHtml(fam.contact_email || '—')}</div></div>
+      <div class="detail-row"><div class="detail-label">Phone</div><div class="detail-value">${escHtml(fam.contact_phone || '—')}</div></div>
+      <div class="detail-row"><div class="detail-label">Preferred contact</div><div class="detail-value">${escHtml(famIntake.preferred_contact || '—')}</div></div>
+      <div class="detail-row"><div class="detail-label">Line / WeChat ID</div><div class="detail-value">${escHtml(famIntake.line_wechat_id || '—')}</div></div>
     </div>
 
     <div class="detail-section">
       <h3>Emergency contact</h3>
-      <div class="detail-row"><div class="detail-label">Name</div><div class="detail-value">${famIntake.emergency_name || '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Relationship</div><div class="detail-value">${famIntake.emergency_relationship || '—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Name</div><div class="detail-value">${escHtml(famIntake.emergency_name || '—')}</div></div>
+      <div class="detail-row"><div class="detail-label">Relationship</div><div class="detail-value">${escHtml(famIntake.emergency_relationship || '—')}</div></div>
       <div class="detail-row"><div class="detail-label">Number</div><div class="detail-value">${((famIntake.emergency_country_code || '') + ' ' + (famIntake.emergency_number || '')).trim() || '—'}</div></div>
     </div>
 
     ${s.staff_notes ? `
     <div class="detail-section">
       <h3>Internal notes (staff only)</h3>
-      <div class="detail-row"><div class="detail-value">${s.staff_notes}</div></div>
+      <div class="detail-row"><div class="detail-value">${escHtml(s.staff_notes)}</div></div>
     </div>` : ''}
 
     <div class="modal-save-bar">
       <button class="btn-small-outline" onclick="closeModal()">Close</button>
-      <button class="btn-primary" onclick="restoreStudent('${s.id}')">Restore</button>
+      <button class="btn-primary" onclick="restoreStudent('${escHtml(s.id)}')">Restore</button>
     </div>
   `;
   document.getElementById('detailModal').classList.add('open');

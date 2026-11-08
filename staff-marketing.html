@@ -318,8 +318,8 @@ button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-vi
 @media (max-width: 760px){ .pl{grid-template-columns:90px minmax(0,1fr) 90px;} .pl>:nth-child(n+4){display:none;} }
 .reffilter{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 12px;} .reffilter button{font:inherit;font-size:13px;font-weight:600;border:0;background:none;color:#5F5E5A;padding:5px 12px;border-radius:8px;cursor:pointer;} .reffilter button:hover{background:#F3F1FD;} .reffilter button.on{background:#EEEDFE;color:#3C3489;} .reffilter .n{font-weight:400;opacity:.7;}
 .quiet{color:#8A877F;font-size:13px;}
-.tt-wrap{overflow-x:auto;} .tt{min-width:620px;}
-.tt-r{display:grid;grid-template-columns:minmax(150px,1.6fr) 110px 100px 100px 100px 72px;gap:6px;align-items:center;padding:12px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
+.tt-wrap{overflow-x:auto;} .tt{min-width:720px;}
+.tt-r{display:grid;grid-template-columns:200px 110px 100px 100px 100px minmax(0,1fr) 80px;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
 .tt-head{align-items:start;padding:0 0 10px;border-bottom:1px solid #E8E3D8;font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;}
 .tt-h{text-align:center;} .tt-h small{display:block;font-size:10px;letter-spacing:0;font-weight:500;color:#8A877F;margin-top:2px;line-height:1.25;}
 .tt-c{display:flex;justify-content:center;align-items:center;}
@@ -327,8 +327,8 @@ button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-vi
 .tick,.rad{width:18px;height:18px;accent-color:#534AB7;cursor:pointer;margin:0;} .tick:disabled,.rad:disabled{cursor:not-allowed;opacity:.45;}
 .lvl{display:inline-block;min-width:44px;text-align:center;font-size:12px;font-weight:700;padding:4px 8px;border-radius:999px;}
 .lvl-none{background:#EFECE6;color:#8A877F;} .lvl-view{background:#E6EEFB;color:#2F5DA8;} .lvl-edit{background:#FDF0DC;color:#8A5A12;} .lvl-full{background:#E3F2E8;color:#2E7D4F;}
-.lb-r{display:grid;grid-template-columns:150px minmax(0,1fr) 80px 72px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
-.lb-r:last-child{border-bottom:0;} .lb-head{font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;padding:0 0 8px;border-bottom:1px solid #E8E3D8;} .lb-head small{font-size:10px;letter-spacing:0;font-weight:500;color:#8A877F;margin-left:6px;}
+.lb-r{display:grid;grid-template-columns:200px minmax(0,1fr) 90px 80px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
+.lb-r:last-child{border-bottom:0;} .sd-r{display:grid;grid-template-columns:200px 150px minmax(0,1fr) 80px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #EFEAE0;font-size:14px;} .sd-r:last-child{border-bottom:0;} .sd-r > .link-btn, .sd-r > .btn-primary{justify-self:end;} .sd-r input{min-width:0;} @media (max-width:700px){ .sd-r{grid-template-columns:1fr auto;} } .lb-r > .link-btn, .lb-r > .btn-primary{justify-self:end;} .lb-head{font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;padding:0 0 8px;border-bottom:1px solid #E8E3D8;} .lb-head small{font-size:10px;letter-spacing:0;font-weight:500;color:#8A877F;margin-left:6px;}
 .pchips{display:flex;gap:6px;flex-wrap:wrap;} .pchip{font:inherit;font-size:13px;padding:5px 12px;border-radius:999px;border:1px solid #DCD5C6;background:#fff;color:#2C2C2A;cursor:pointer;} .pchip:hover{border-color:#534AB7;} .pchip.on{border-color:#534AB7;background:#EEEDFE;color:#3C3489;font-weight:700;} .pchip:disabled{cursor:default;}
 @media (max-width:700px){ .lb-r{grid-template-columns:1fr auto;} .lb-r .pchips{grid-column:1 / -1;} }
 .us-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;} .us-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;} @media (max-width:700px){ .us-grid{grid-template-columns:1fr;} }
@@ -1447,12 +1447,12 @@ function teamView(){
     const radio = (k, enabled) => `<span class="tt-c"><input type="radio" class="rad" name="us-${k}" aria-label="Usual ${k}" ${U[k]===id?'checked':''} ${canDelete && enabled ? '' : 'disabled'} onclick="setUsual('${k}','${id}')"></span>`;
     return `<div class="tt-r"><b>${esc(STAFF[id].name)}</b>
       <span class="tt-c"><span class="lvl lvl-${lv}">${lv.charAt(0).toUpperCase()+lv.slice(1)}</span></span>
-      ${radio('writer', ok)}${radio('pic', ok)}${radio('translator', ok)}
+      ${radio('writer', ok)}${radio('pic', ok)}${radio('translator', ok)}<span></span>
       <span class="tt-c" style="justify-content:flex-end">${canDelete?`<button class="link-btn" style="color:#A23F1C" onclick="removeMember('${id}')">Remove</button>`:''}</span></div>`;
   };
   const team = `<div class="box"><h3 class="bh">Marketing team</h3>
     <div class="tt-wrap"><div class="tt">
-      <div class="tt-r tt-head"><span class="tt-h" style="text-align:left">PERSON</span>${th('HQ ACCESS','from Roles and access')}${th('WRITER','new topics')}${th('REVIEWER','new topics')}${th('TRANSLATOR','new topics')}<span></span></div>
+      <div class="tt-r tt-head"><span class="tt-h" style="text-align:left">PERSON</span>${th('HQ ACCESS','from Roles and access')}${th('WRITER','new topics')}${th('REVIEWER','new topics')}${th('TRANSLATOR','new topics')}<span></span><span></span></div>
       ${ms.length ? ms.map(row).join('') : '<p class="meta" style="padding:8px 0">No one yet.</p>'}
       ${others.length && canDelete ? `<div class="tt-add"><select id="addWho" ${sel}><option value="">Add a person</option>${others.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select><button class="btn-primary sm" onclick="addMember()">Add</button></div>` : ''}
     </div></div>
@@ -1470,14 +1470,14 @@ function teamView(){
   </div>`;
   return team + labels + `
   <div class="box"><h3 class="bh">Special dates</h3>
-    <p class="meta" style="font-size:13px;margin-bottom:6px">These show as suggested posts in the Calendar, next to the school calendar dates. Dates that move each year (Loy Krathong, Makha Bucha) stay marked "to confirm" until checked.</p>
-    ${SPECIAL.map(x=>`<div class="tm"><span style="font-weight:600">${esc(x.name)}</span><span>${fmtDate(x.date)}</span>
-      <span>${x.confirmed?'<span class="muted">Confirmed</span>':`<button class="link-btn" onclick="confirmSpecial('${x.id}')">Mark confirmed</button>`}${x.note?` <span class="meta">${esc(x.note)}</span>`:''}</span>
-      <button class="link-btn" style="color:#A23F1C" onclick="removeSpecial('${x.id}')">Remove</button></div>`).join('')}
-    <div class="tm add"><input id="spName" placeholder="Name, e.g. Loy Krathong" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
+    <div class="sd-r lb-head"><span>NAME</span><span>DATE</span><span>STATUS <small>moving dates stay "to confirm" until checked</small></span><span></span></div>
+    ${SPECIAL.map(x=>`<div class="sd-r"><b>${esc(x.name)}</b><span>${fmtDate(x.date)}</span>
+      <span>${x.confirmed?'<span class="muted">Confirmed</span>':`${canDelete?`<button class="link-btn" onclick="confirmSpecial('${x.id}')">Mark confirmed</button>`:'<span class="muted">To confirm</span>'}`}${x.note?` <span class="meta">${esc(x.note)}</span>`:''}</span>
+      ${canDelete?`<button class="link-btn" style="color:#A23F1C" onclick="removeSpecial('${x.id}')">Remove</button>`:'<span></span>'}</div>`).join('')}
+    ${canDelete?`<div class="sd-r"><input id="spName" placeholder="Name, e.g. Loy Krathong" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
       <input id="spDate" type="date" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
       <label style="font-size:13px;display:flex;gap:6px;align-items:center"><input id="spConf" type="checkbox" checked> Date confirmed</label>
-      <button class="btn-primary sm" onclick="addSpecial()">Add</button></div>
+      <button class="btn-primary sm" onclick="addSpecial()">Add</button></div>`:''}
   </div>`;
 }
 async function addSpecial(){

@@ -61,6 +61,29 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
 .perm-cell{text-align:center;}
 .perm-cell .mod-name{font-size:10px;color:#888780;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
 
+.ra-key{display:flex;align-items:center;gap:8px;font-size:13px;color:#5F5E5A;margin:0 0 12px;}
+.ra-dot{width:8px;height:8px;border-radius:50%;background:#534AB7;display:inline-block;flex:0 0 auto;}
+.ra-wrap{overflow-x:auto;background:#fff;border:1px solid #E8E3D8;border-radius:12px;}
+table.ra{min-width:940px;table-layout:fixed;}
+table.ra th{vertical-align:top;text-align:center;font-size:11px;letter-spacing:.6px;padding:12px 4px 10px;border-bottom:1px solid #E8E3D8;}
+table.ra th small{display:block;font-size:10px;letter-spacing:0;font-weight:500;text-transform:none;color:#8A877F;margin-top:2px;line-height:1.25;}
+table.ra th.ra-name,table.ra th.ra-role{text-align:left;padding-left:14px;}
+table.ra td{padding:11px 4px;text-align:center;border-bottom:1px solid #EFEAE0;}
+table.ra tr:nth-child(even) td{background:#FBF8F2;}
+table.ra td.ra-name{text-align:left;padding-left:14px;}
+table.ra td.ra-name a{color:#534AB7;font-weight:700;text-decoration:none;}
+table.ra td.ra-name .em{font-size:12px;color:#8A877F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+table.ra td.ra-role{text-align:left;padding-left:14px;}
+table.ra td.ra-role select{width:100%;font-size:13px;padding:6px 8px;border:1px solid #DCD5C6;border-radius:8px;background:#fff;}
+.lv{position:relative;font:inherit;min-width:58px;font-size:12px;font-weight:700;padding:5px 8px;border-radius:999px;border:0;cursor:pointer;}
+.lv:hover,.lv:focus-visible{box-shadow:0 0 0 2px #534AB7;outline:none;}
+.lv-none{background:#EDEBE6;color:#888780;} .lv-view{background:#E6ECF7;color:#3457A8;} .lv-edit{background:#FFF1D6;color:#9A6A1B;} .lv-full{background:#E3F0E1;color:#2E6B2A;}
+.lv .ra-dot{position:absolute;top:-4px;right:-4px;width:12px;height:12px;border:2px solid #fff;box-sizing:border-box;}
+.lv-menu{position:absolute;z-index:120;width:230px;background:#fff;border:1px solid #E8E3D8;border-radius:12px;box-shadow:0 10px 30px rgba(44,44,42,.16);padding:6px;}
+.lv-menu button{display:flex;align-items:center;gap:8px;width:100%;padding:7px 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:12px;color:#5F5E5A;cursor:pointer;text-align:left;}
+.lv-menu button:hover,.lv-menu button.on{background:#F3F1FD;} .lv-menu button:focus-visible{outline:2px solid #534AB7;outline-offset:-2px;} .lv-menu button:focus:not(:focus-visible){outline:none;}
+.lv-menu button .lv{pointer-events:none;}
+.lv-menu .lv-def{border-top:1px solid #EFEAE0;margin-top:4px;padding-top:9px;color:#534AB7;font-weight:600;}
 .override-row{display:none;background:#fff;}
 .override-row.open{display:table-row;}
 .override-inner{padding:16px;}
@@ -132,14 +155,12 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
     </div>
 
     <div class="card" data-panel="roles">
-      <h2>Roles & Access</h2>
-      <p style="font-size:13px;color:#888780;margin-top:-12px;margin-bottom:16px;">Click a name to change their role or override specific module access. For password or to remove someone, use the <a href="staff-team.html" style="color:#534AB7;">Team</a> page.</p>
-      <table>
-        <thead>
-          <tr><th>Name</th><th>Contact</th><th>Role</th><th>Access (role default)</th></tr>
-        </thead>
+      <p class="ra-key"><span class="ra-dot"></span>Changed from the role default</p>
+      <div class="ra-wrap"><table class="ra">
+        <thead id="raHead"></thead>
         <tbody id="staffTable"></tbody>
-      </table>
+      </table></div>
+      <div class="lv-menu" id="lvMenu" role="menu" hidden></div>
     </div>
 
     <div class="card" data-panel="approvals" style="display:none;">
@@ -297,28 +318,61 @@ function getOverridesFor(staffId){
   return map;
 }
 
+// S12: one table, area names once, click a level to change it.
+const MODULE_INFO = { families:'parent records', students:'admissions, learners', staff:'team pages', calendar:'school calendar', payments:'not used yet', library:'Bloombrary', marketing:'Marketing HQ', settings:'not used yet' };
+const LEVELS = ['none','view','edit','full'];
+const LEVEL_TEXT = { none:'No access', view:'Look only', edit:'Do the work', full:'Manage everything' };
+const cap = v => v.charAt(0).toUpperCase() + v.slice(1);
+const ROLE_KEYS = ['admin','director','education_lead','education_consultant','lead_teacher','learning_coach','learning_coach_assistant','admissions','enrollment','front_desk','it','teaching_assistant','marketing'];
+
 function renderStaffTable(){
+  document.getElementById('raHead').innerHTML = `<tr><th class="ra-name" style="width:22%">Name</th><th class="ra-role" style="width:15%">Role</th>${MODULES.map(m=>`<th>${escShared(m)}<small>${MODULE_INFO[m]||''}</small></th>`).join('')}</tr>`;
   const tbody = document.getElementById('staffTable');
   tbody.innerHTML = staffCache.map(s => {
-    const defaults = getRoleDefaults(s.role);
-    const overrides = getOverridesFor(s.id);
-    const summary = MODULES.map(m => {
+    const defaults = getRoleDefaults(s.role), overrides = getOverridesFor(s.id);
+    const cells = MODULES.map(m => {
       const eff = overrides[m] ? overrides[m].level : (defaults[m] ? defaults[m].level : 'none');
-      const overridden = !!overrides[m];
-      return `<div class="perm-cell"><div class="mod-name">${m}${overridden ? ' *' : ''}</div>${levelBadge(eff)}</div>`;
+      return `<td><button class="lv lv-${eff}" aria-haspopup="menu" aria-label="${escShared(s.name)}, ${m}: ${cap(eff)}" onclick="openLevelMenu(event,'${s.id}','${m}')">${cap(eff)}${overrides[m] ? '<span class="ra-dot"></span>' : ''}</button></td>`;
     }).join('');
+    return `<tr>
+      <td class="ra-name"><a href="javascript:void(0)" onclick="openStaffProfile('${s.id}')">${escShared(s.name)}</a><div class="em" title="${escShared(s.email)}">${escShared(s.email)}</div></td>
+      <td class="ra-role"><select aria-label="Role of ${escShared(s.name)}" onchange="confirmRole('${s.id}', this)">${ROLE_KEYS.map(r=>`<option value="${r}" ${r===s.role?'selected':''}>${roleLabel(r)}</option>`).join('')}</select></td>
+      ${cells}</tr>`;
+  }).join('') || `<tr><td colspan="${MODULES.length + 2}" class="empty-state">No staff yet.</td></tr>`;
+}
 
-    return `
-      <tr>
-        <td><a href="javascript:void(0)" onclick="openStaffProfile('${s.id}')" style="color:#534AB7;font-weight:600;text-decoration:none;">${s.name}</a></td>
-        <td>
-          <div style="font-size:13px;">${s.email}</div>
-        </td>
-        <td>${roleLabel(s.role)}</td>
-        <td><div class="perm-grid">${summary}</div></td>
-      </tr>
-    `;
-  }).join('') || '<tr><td colspan="4" class="empty-state">No staff yet.</td></tr>';
+let lvOpen = null;
+function openLevelMenu(ev, staffId, module){
+  ev.stopPropagation();
+  const menu = document.getElementById('lvMenu'), btn = ev.currentTarget;
+  if(lvOpen && lvOpen.btn === btn){ closeLevelMenu(); return; }
+  const s = staffCache.find(x => x.id === staffId), def = (getRoleDefaults(s.role)[module] || {}).level || 'none', ov = getOverridesFor(staffId)[module];
+  const cur = ov ? ov.level : def;
+  menu.innerHTML = LEVELS.map(l => `<button role="menuitem" class="${l===cur?'on':''}" onclick="pickLevel('${staffId}','${module}','${l}')"><span class="lv lv-${l}">${cap(l)}</span>${LEVEL_TEXT[l]}</button>`).join('')
+    + (ov ? `<button role="menuitem" class="lv-def" onclick="pickLevel('${staffId}','${module}','')">Back to role default (${cap(def)})</button>` : '');
+  const card = btn.closest('.card'), r = btn.getBoundingClientRect(), c = card.getBoundingClientRect();
+  card.style.position = 'relative';
+  menu.hidden = false;
+  menu.style.top = (r.bottom - c.top + 6) + 'px';
+  menu.style.left = Math.max(8, Math.min(r.left - c.left + r.width/2 - 115, c.width - 238)) + 'px';
+  lvOpen = { btn };
+  const first = menu.querySelector('button.on') || menu.querySelector('button'); if(first) first.focus();
+}
+function closeLevelMenu(){ const m = document.getElementById('lvMenu'); if(m) m.hidden = true; if(lvOpen && lvOpen.btn && document.body.contains(lvOpen.btn)) lvOpen.btn.focus(); lvOpen = null; }
+document.addEventListener('click', e => { if(lvOpen && !e.target.closest('#lvMenu')) closeLevelMenu(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && lvOpen) closeLevelMenu(); });
+async function pickLevel(staffId, module, level){
+  closeLevelMenu();
+  const s = staffCache.find(x => x.id === staffId), def = (getRoleDefaults(s.role)[module] || {}).level || 'none';
+  // Picking the role's own level is the same as going back to the default: no override is kept.
+  await setOverride(staffId, module, level === def ? '' : level);
+}
+async function confirmRole(staffId, sel){
+  const s = staffCache.find(x => x.id === staffId), to = sel.value;
+  const self = window.currentStaff && staffId === window.currentStaff.id;
+  const ok = confirm(`Change ${s.name}'s role from ${roleLabel(s.role)} to ${roleLabel(to)}? Their access follows the new role, except the areas changed by hand.` + (self ? ' This is your own role: you may lose access to this page.' : ''));
+  if(!ok){ sel.value = s.role; return; }
+  await changeRole(staffId, to);
 }
 
 function openStaffProfile(staffId){
@@ -389,13 +443,13 @@ async function setOverride(staffId, module, level){
   if(!level){
     const { error } = await sb.from('staff_permission_overrides').delete().eq('staff_id', staffId).eq('module', module);
     if(error){ showToast('Error: ' + error.message); return; }
-    showToast('Override removed — back to role default.');
+    showToast('Back to the role default.');
   } else {
     const { error } = await sb.from('staff_permission_overrides').upsert({
       staff_id: staffId, module, level, granted_by: window.currentStaff.id
     });
     if(error){ showToast('Error: ' + error.message); return; }
-    showToast('Override saved.');
+    showToast('Saved.');
   }
   await loadTeamData();
   if(document.getElementById('profileModal').classList.contains('open') && document.getElementById('profileModal').dataset.staffId === staffId){

@@ -481,7 +481,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
     </div>
 
-    <div class="settings-group">
+    <div class="settings-group" id="publicAccessGroup">
       <div class="settings-group-title">Public Site Access</div>
       <div class="toggle-wrap">
         <div class="toggle-info">
@@ -2530,7 +2530,10 @@ async function onStaffReady(staffRow){
   const setupDone = localStorage.getItem('bloom_setup_done') || !!_yearId;
   if(setupDone) localStorage.setItem('bloom_setup_done','true');
   routeAfterAuth(setupDone);
-  loadPublicAccessSettings();
+  // S15: only admin, director, IT and Calendar full can save these switches, so only they see them.
+  const canSwitch = ['admin','director','it'].includes(window.currentStaffRole) || canAccess('calendar','full');
+  document.getElementById('publicAccessGroup').style.display = canSwitch ? '' : 'none';
+  if(canSwitch) loadPublicAccessSettings();
   refreshArchiveSettingsUI();
 
   // Roles that require approval never accumulate drafts of their own to publish —

@@ -180,7 +180,7 @@ details.orig summary{cursor:pointer;font-size:13px;font-weight:600;color:#534AB7
 .goal-line .meta2{color:#888780;font-size:13px;}
 .goal-line .act{margin-left:auto;color:#534AB7;font-weight:600;font-size:13px;white-space:nowrap;}
 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px;}
-.tile{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:16px 18px;cursor:pointer;text-align:left;}
+.tile{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:16px 18px;cursor:pointer;text-align:left;display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;}
 .tile:hover{border-color:#DCD5C6;} .tile.on{border-color:#534AB7;box-shadow:0 0 0 1px #534AB7;}
 .tile .n{font-family:Georgia,serif;font-size:30px;font-weight:700;line-height:1.1;}
 .tile .l{font-size:13px;color:#5F5E5A;margin-top:2px;}
@@ -273,7 +273,7 @@ div.tile{cursor:default;}
 .wl:hover .ptt{color:#534AB7;}
 .wl-due{text-align:right;} .wl-act{text-align:right;}
 .stepcols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0 10px;}
-.stepcol{background:#F7F3EC;border-radius:10px;padding:10px;text-align:center;}
+.stepcol{background:#F7F3EC;border:1px solid transparent;border-radius:10px;padding:10px;text-align:center;}
 .stepcol .h{font-size:12px;color:#5F5E5A;} .stepcol .c{font-family:Georgia,serif;font-size:24px;font-weight:700;}
 .dots{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;min-height:8px;margin-top:4px;}
 .dots i{width:8px;height:8px;border-radius:50%;background:#B4B2A9;display:inline-block;} .dots i.r{background:#E24B4A;}
@@ -304,9 +304,15 @@ textarea[readonly],input[readonly]{background:#F7F3EC!important;color:#5F5E5A;}
 .emptyweeks{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px dashed #DCD5C6;border-radius:12px;padding:12px 16px;margin:-4px 0 14px;font-size:13.5px;color:#5F5E5A;}
 .emptyweeks b{color:#9A5D0C;margin-right:4px;}
 .emptyweeks.flash{box-shadow:0 0 0 3px #CECBF6;transition:box-shadow .3s;}
-button.tile.ovt{cursor:pointer;}
-button.tile.ovt.on{background:#fff;border:2px solid #534AB7;padding:15px 17px;}
-.ovmore{font-size:12px;font-weight:600;color:#534AB7;margin-top:8px;}
+button.tile.ovt,.stepcol.ovt,.wo.ovt{cursor:pointer;}
+button.tile.ovt:hover,.stepcol.ovt:hover{border-color:#534AB7;}
+button.tile.ovt.on,.stepcol.ovt.on{background:#fff;border-color:#534AB7;box-shadow:inset 0 0 0 1px #534AB7;}
+button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-visible,.wo.ovt:focus-visible{outline:2px solid #534AB7;outline-offset:2px;}
+.wo.ovt:hover{background:#FAF8F3;} .wo.ovt.on{background:#F3F1FD;}
+.ovhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:14px 0 2px;}
+.ovhead h4{font-size:14px;font-weight:700;margin:0;}
+.ovhead button{background:none;border:0;color:#534AB7;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;padding:0;}
+.refback{display:inline-block;font-size:14px;font-weight:600;color:#534AB7;text-decoration:none;margin-bottom:14px;background:none;border:0;padding:0;cursor:pointer;font-family:inherit;}
 .ovlist{background:#fff;border:1px solid #CECBF6;border-radius:14px;padding:4px 18px;margin:-4px 0 14px;}
 .ovlist .wl:last-child{border-bottom:none;}
 .emptyweeks span{margin-right:auto;}
@@ -649,6 +655,13 @@ function render(){
   else if(v==='settings') el.innerHTML = teamView();
   else if(v==='post') renderPost(el);
   else renderGroup(el, REF_GROUPS.find(g=>g.k===refKey) || REF_GROUPS[0]);
+  if(v==='ref' && REF_BACK){
+    el.insertAdjacentHTML('afterbegin', '<button class="refback" onclick="refBackToOverview()">&#8249; Back to Overview</button>');
+    if(REF_BACK.sec && !REF_BACK.landed){ REF_BACK.landed = true; const t = document.getElementById('ref-' + REF_BACK.sec); if(t) requestAnimationFrame(()=>t.scrollIntoView({block:'start'})); }
+  } else if(v!=='ref' && REF_BACK){
+    const b = REF_BACK; REF_BACK = null;
+    if(b.back && v==='overview') requestAnimationFrame(()=>window.scrollTo(0, b.scroll));
+  }
 }
 
 // ---------- Lines ----------
@@ -702,14 +715,18 @@ async function quickMark(id){
 
 // ---------- Overview ----------
 // Item 49: a posting tile with posts opens its list in place; click again to close. "Weeks with nothing planned" jumps to the empty-weeks box.
-let ovOpen = null;
+let ovOpen = null, ovFilter = null;
+function ovSetFilter(k, v){
+  ovFilter = !k || (ovFilter && ovFilter.k===k && ovFilter.v===v) ? null : {k, v};
+  const y = window.scrollY; render(); window.scrollTo(0, y);
+}
 function ovTile(k, n, cls, label){
   if(!n) return `<div class="tile"><div class="n ${cls}">${n}</div><div class="l">${label}</div></div>`;
   const on = ovOpen === k;
-  return `<button class="tile ovt ${on?'on':''}" onclick="ovToggle('${k}')" aria-expanded="${on}"><div class="n ${cls}">${n}</div><div class="l">${label}</div><div class="ovmore">${k==='empty' ? 'Plan ▼' : on ? 'Hide ▲' : 'Show ▼'}</div></button>`;
+  return `<button class="tile ovt ${on?'on':''}" onclick="ovToggle('${k}')" aria-expanded="${on}"><div class="n ${cls}">${n}</div><div class="l">${label}</div></button>`;
 }
 function ovToggle(k){
-  if(k === 'empty'){ const e = document.querySelector('.emptyweeks'); if(e){ e.scrollIntoView({behavior:'smooth', block:'center'}); e.classList.add('flash'); setTimeout(()=>e.classList.remove('flash'), 1200); } return; }
+  if(k === 'empty'){ const e = document.querySelector('.emptyweeks'); if(e){ e.scrollIntoView({behavior:'smooth', block:'nearest'}); e.classList.add('flash'); setTimeout(()=>e.classList.remove('flash'), 1200); } return; }
   ovOpen = ovOpen === k ? null : k; render();
 }
 const fmtBudget = v => { const t = String(v ?? '').trim(); if(!t) return ''; if(/^[\d,.\s]+$/.test(t)){ const n = Number(t.replace(/[,\s]/g,'')); if(isFinite(n)) return n.toLocaleString('en-US', {maximumFractionDigits:2}) + ' THB'; } return t; };
@@ -722,18 +739,22 @@ function goalBox(P){
     ${col('','Success measure',P.measure,false,'<div></div>')}
   </div>`;
 }
+// Item 51: a Groundwork tile opens Reference at its own section, with a way back to the same spot on Overview.
+let REF_BACK = null;
+function refFromOverview(key, sec){ REF_BACK = { scroll: window.scrollY, sec }; refKey = key; go('ref'); }
+function refBackToOverview(){ if(REF_BACK) REF_BACK.back = true; go('overview'); }
 function groundwork(){
   const g = DATA.groups||[], c = DATA.channels||[], f = DATA.facts||[];
   if(!g.length && !c.length && !f.length) return '';
   const ga = g.filter(x=>x.status==='Active').length, ca = c.filter(x=>x.status==='Active').length;
   const ft = f.filter(x=>x.status==='To confirm').length, fc = f.filter(x=>x.status==='Confirmed').length;
   const pct = (a,b) => b ? Math.round(a/b*100) : 0;
-  const t = (key, n, l, sub, bar) => `<button class="gtile" onclick="refKey='${key}';go('ref')"><div class="gt"><span class="gn">${n}</span><span class="gl">${l}</span></div><div class="gs">${sub}</div><div class="gbar">${bar}</div></button>`;
+  const t = (key, sec, n, l, sub, bar) => `<button class="gtile" onclick="refFromOverview('${key}','${sec}')"><div class="gt"><span class="gn">${n}</span><span class="gl">${l}</span></div><div class="gs">${sub}</div><div class="gbar">${bar}</div></button>`;
   const seg = (w,c) => `<span style="width:${w}%;background:${c}"></span>`;
   return `<div class="ground-h">GROUNDWORK</div><div class="tiles ground">
-    ${t('who', `${ga} / ${g.length}`, 'Groups active', 'Groups where we post', seg(pct(ga,g.length),'#2F6B55'))}
-    ${t('who', `${ca} / ${c.length}`, 'Channels active', 'Pages and apps we use', seg(pct(ca,c.length),'#2F6B55'))}
-    ${t('about', ft, 'Facts to confirm', 'In the Info bank', seg(pct(fc,f.length),'#2F6B55')+seg(pct(ft,f.length),'#D9963A'))}
+    ${t('who', 'groups', `${ga} / ${g.length}`, 'Groups active', 'Groups where we post', seg(pct(ga,g.length),'#2F6B55'))}
+    ${t('who', 'channels', `${ca} / ${c.length}`, 'Channels active', 'Pages and apps we use', seg(pct(ca,c.length),'#2F6B55'))}
+    ${t('about', 'facts', ft, 'Facts to confirm', 'In the Info bank', seg(pct(fc,f.length),'#2F6B55')+seg(pct(ft,f.length),'#D9963A'))}
   </div>`;
 }
 function overview(){
@@ -760,21 +781,26 @@ function overview(){
   </div>
   ${(() => { const lists = { late: late.slice().sort((a,b)=>String(a.post_date).localeCompare(String(b.post_date))), week: week.slice().sort((a,b)=>String(a.post_date).localeCompare(String(b.post_date))), posted: postedList.slice().sort((a,b)=>String(b.posted_at||b.post_date).localeCompare(String(a.posted_at||a.post_date))) };
      const a = lists[ovOpen]; return a && a.length ? `<div class="ovlist">${a.map(p=>line(p,true)).join('')}</div>` : ''; })()}
-  ${groundwork()}
   ${urgent.length ? `<div class="urgent"><h3>Urgent: ${urgent.length} post${urgent.length>1?'s':''} due to go out but not ready</h3>${urgent.map(p=>line(p,true)).join('')}</div>` : ''}
   ${empty && canEdit ? `<div class="emptyweeks"><span><b>${empty} empty week${empty>1?'s':''}</b> coming up</span>${emptyWeeks.map(d=>`<button class="btn-outline sm" onclick="newTopic('${d}')">Plan a topic for ${fmtShort(d)}</button>`).join('')}</div>` : ''}
-  <div class="box"><h3 class="bh">Where posts are now</h3>
-    <div class="stepcols">${steps.map(s=>{ const a = live.filter(p=>p.step===s); return `<div class="stepcol"><div class="h">${STEP_LABEL[s]}</div><div class="c">${a.length}</div><div class="dots">${a.map(p=>`<i class="${isLate(p)?'r':''}" title="${esc(p.title)}"></i>`).join('')}</div></div>`; }).join('')}</div>
-  </div>
-  <div class="box"><h3 class="bh">Waiting on</h3>
-    ${Object.keys(ppl).length ? Object.entries(ppl).sort((a,b)=>b[1].length-a[1].length).map(([n,a])=>{ const l = a.filter(isLate).length;
-      return `<div class="wo"><span style="font-weight:600">${esc(n)}</span><span class="wbar"><span style="width:${l/max*100}%;background:#E24B4A"></span><span style="width:${(a.length-l)/max*100}%;background:#AFA9EC"></span></span><span class="muted">${a.length}${l?` · <span class="late-d">${l} late</span>`:''}</span></div>`; }).join('')
-      : '<p class="meta" style="padding:8px 0">Nothing in progress.</p>'}
-  </div>
-  <div class="box"><h3 class="bh">Everything in progress</h3>
-    ${live.length ? live.sort((a,b)=>Number(isLate(b))-Number(isLate(a)) || a.post_date.localeCompare(b.post_date)).map(p=>line(p,true)).join('') : '<p class="meta" style="padding:8px 0">Nothing in progress.</p>'}
+  ${groundwork()}
+  ${(() => {
+    // Item 53: one box. Step boxes and Waiting on names filter the list underneath; click again for everything.
+    const F = ovFilter && ((ovFilter.k==='step' && live.some(p=>p.step===ovFilter.v)) || (ovFilter.k==='who' && ppl[ovFilter.v])) ? ovFilter : null;
+    const shown = live.filter(p => !F || (F.k==='step' ? p.step===F.v : ownerName(p)===F.v)).sort((a,b)=>Number(isLate(b))-Number(isLate(a)) || a.post_date.localeCompare(b.post_date));
+    const head = !F ? 'Everything in progress' : F.k==='step' ? `At ${STEP_LABEL[F.v]}` : `Waiting on ${esc(F.v)}`;
+    const stepBox = s0 => { const a = live.filter(p=>p.step===s0), on = F && F.k==='step' && F.v===s0;
+      const inner = `<div class="h">${STEP_LABEL[s0]}</div><div class="c">${a.length}</div><div class="dots">${a.map(p=>`<i class="${isLate(p)?'r':''}" title="${esc(p.title)}"></i>`).join('')}</div>`;
+      return a.length ? `<div class="stepcol ovt ${on?'on':''}" role="button" tabindex="0" aria-pressed="${!!on}" onclick="ovSetFilter('step','${s0}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();ovSetFilter('step','${s0}')}">${inner}</div>` : `<div class="stepcol">${inner}</div>`; };
+    const names = Object.entries(ppl).sort((a,b)=>b[1].length-a[1].length);
+    return `<div class="box" id="ovPosts"><h3 class="bh">Where posts are now</h3>
+    <div class="stepcols">${steps.map(stepBox).join('')}</div>
+    ${names.length ? `<div class="ovhead"><h4>Waiting on</h4></div>` + names.map(([n,a], i)=>{ const l = a.filter(isLate).length, on = F && F.k==='who' && F.v===n;
+      return `<div class="wo ovt ${on?'on':''}" role="button" tabindex="0" aria-pressed="${!!on}" data-who="${esc(n)}" onclick="ovSetFilter('who',this.dataset.who)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();ovSetFilter('who',this.dataset.who)}"><span style="font-weight:600">${esc(n)}</span><span class="wbar"><span style="width:${l/max*100}%;background:#E24B4A"></span><span style="width:${(a.length-l)/max*100}%;background:#AFA9EC"></span></span><span class="muted">${a.length}${l?` · <span class="late-d">${l} late</span>`:''}</span></div>`; }).join('') : ''}
+    <div class="ovhead"><h4>${head} <span class="muted" style="font-weight:400">${shown.length}</span></h4>${F?'<button onclick="ovSetFilter(null)">Show everything</button>':''}</div>
+    ${shown.length ? shown.map(p=>line(p,true)).join('') : '<p class="meta" style="padding:8px 0">Nothing in progress.</p>'}
     ${ideas?`<p class="meta" style="padding:10px 0"><a href="javascript:void 0" onclick="calMode='ideas';go('calendar')">${ideas} ideas with no date</a></p>`:''}
-  </div>`;
+  </div>`; })()}`;
 }
 // Suggested posts: school calendar + special dates, minus dismissed or already planned
 const openSugg = () => SUGG.filter(x=>x.date >= todayISO() && !HIDDEN.has(x.key));
@@ -1386,7 +1412,7 @@ function renderGroup(el, g){
   el.innerHTML = `<p class="sub" style="margin-bottom:22px">${esc(g.d)}</p>` + g.secs.map(k=>{
     const s = SEC[k]; const rows = (DATA[k]||[]).slice();
     if(s.sort) rows.sort((a,b)=>String(a[s.sort]||'9999').localeCompare(String(b[s.sort]||'9999')));
-    return `<section class="ref-sec"><div class="top-bar"><div><h2>${esc(s.t)} <span class="muted" style="font-family:inherit;font-size:14px;font-weight:400">${rows.length}</span></h2><p class="meta" style="font-size:13px">${esc(s.d)}</p></div>
+    return `<section class="ref-sec" id="ref-${k}"><div class="top-bar"><div><h2>${esc(s.t)} <span class="muted" style="font-family:inherit;font-size:14px;font-weight:400">${rows.length}</span></h2><p class="meta" style="font-size:13px">${esc(s.d)}</p></div>
       ${canEdit?`<button class="btn-outline" onclick="editRef('${k}')">Add</button>`:''}</div>
       ${rows.length ? (s.view==='table' ? table(s, rows) : cards(s, rows)) : '<div class="empty-state">Nothing here yet.</div>'}</section>`;
   }).join('');

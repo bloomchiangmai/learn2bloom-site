@@ -318,14 +318,32 @@ button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-vi
 @media (max-width: 760px){ .pl{grid-template-columns:90px minmax(0,1fr) 90px;} .pl>:nth-child(n+4){display:none;} }
 .reffilter{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 12px;} .reffilter button{font:inherit;font-size:13px;font-weight:600;border:0;background:none;color:#5F5E5A;padding:5px 12px;border-radius:8px;cursor:pointer;} .reffilter button:hover{background:#F3F1FD;} .reffilter button.on{background:#EEEDFE;color:#3C3489;} .reffilter .n{font-weight:400;opacity:.7;}
 .quiet{color:#8A877F;font-size:13px;}
-.tt-wrap{overflow-x:auto;} .tt{min-width:720px;}
-.tt-r{display:grid;grid-template-columns:200px 110px 100px 100px 100px minmax(0,1fr) 80px;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
+.tt-wrap{overflow-x:auto;} .tt{min-width:820px;}
+.tt-r{display:grid;grid-template-columns:200px 110px 100px 100px 100px 100px minmax(0,1fr) 80px;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
 .tt-head{align-items:start;padding:0 0 10px;border-bottom:1px solid #E8E3D8;font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;}
 .tt-h{text-align:center;} .tt-h small{display:block;font-size:10px;letter-spacing:0;font-weight:500;color:#8A877F;margin-top:2px;line-height:1.25;}
 .tt-c{display:flex;justify-content:center;align-items:center;}
 .tt-add{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0 0;}
 .tick,.rad{width:18px;height:18px;accent-color:#534AB7;cursor:pointer;margin:0;} .tick:disabled,.rad:disabled{cursor:not-allowed;opacity:.45;}
 .lvl{display:inline-block;min-width:44px;text-align:center;font-size:12px;font-weight:700;padding:4px 8px;border-radius:999px;}
+.pl-r{display:grid;grid-template-columns:24px minmax(0,1fr) 150px 140px 70px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #EFEAE0;font-size:14px;}
+.pl-head{border-top:0;font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;padding:4px 0 6px;}
+.pl-r.off .pl-t,.pl-r.off .pl-in{opacity:.6;}
+.pl-t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pl-in{border:1px solid #DCD5C6;border-radius:8px;padding:6px 9px;background:#fff;font:inherit;font-size:13px;min-width:0;width:100%;box-sizing:border-box;}
+.pl-in.need{border-color:#D9963A;}
+.pl-th{display:flex;align-items:center;gap:6px;font-size:13px;}
+.pl-flag{grid-column:2 / -1;font-size:12px;color:#854F0B;margin-top:-2px;} .pl-flag.skip{color:#A23F1C;}
+.pl-search{margin:0 0 10px;padding:9px 12px;} .pl-paste{height:110px;font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.6;margin-bottom:12px;}
+.pl-lbl{display:block;font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;text-transform:uppercase;margin:4px 0 6px;}
+.pl-who{font-size:13px;color:#5F5E5A;border-top:1px solid #E8E3D8;margin-top:10px;padding-top:12px;}
+@media (max-width:700px){ .pl-r{grid-template-columns:24px 1fr;} .pl-r > :nth-child(n+3){grid-column:2;} .pl-head{display:none;} }
+.lvl-btn{position:relative;border:0;font-family:inherit;cursor:pointer;} .lvl-btn:hover,.lvl-btn:focus-visible{box-shadow:0 0 0 2px #534AB7;outline:none;}
+.acc-dot{position:absolute;top:-4px;right:-4px;width:12px;height:12px;border-radius:50%;background:#534AB7;border:2px solid #fff;box-sizing:border-box;}
+.acc-menu{position:absolute;z-index:200;width:230px;background:#fff;border:1px solid #E8E3D8;border-radius:12px;box-shadow:0 10px 30px rgba(44,44,42,.16);padding:6px;}
+.acc-menu button{display:flex;align-items:center;gap:8px;width:100%;padding:7px 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:12px;color:#5F5E5A;cursor:pointer;text-align:left;}
+.acc-menu button:hover,.acc-menu button.on{background:#F3F1FD;} .acc-menu button:focus-visible{outline:2px solid #534AB7;outline-offset:-2px;} .acc-menu button:focus:not(:focus-visible){outline:none;}
+.acc-menu .acc-def{border-top:1px solid #EFEAE0;margin-top:4px;padding-top:9px;color:#534AB7;font-weight:600;}
 .lvl-none{background:#EFECE6;color:#8A877F;} .lvl-view{background:#E6EEFB;color:#2F5DA8;} .lvl-edit{background:#FDF0DC;color:#8A5A12;} .lvl-full{background:#E3F2E8;color:#2E7D4F;}
 .lb-r{display:grid;grid-template-columns:200px minmax(0,1fr) 90px 80px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
 .lb-r:last-child{border-bottom:0;} .sd-r{display:grid;grid-template-columns:200px 150px minmax(0,1fr) 80px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #EFEAE0;font-size:14px;} .sd-r:last-child{border-bottom:0;} .sd-r > .link-btn, .sd-r > .btn-primary{justify-self:end;} .sd-r input{min-width:0;} @media (max-width:700px){ .sd-r{grid-template-columns:1fr auto;} } .lb-r > .link-btn, .lb-r > .btn-primary{justify-self:end;} .lb-head{font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;padding:0 0 8px;border-bottom:1px solid #E8E3D8;} .lb-head small{font-size:10px;letter-spacing:0;font-weight:500;color:#8A877F;margin-left:6px;}
@@ -345,7 +363,7 @@ th.sortable{cursor:pointer;user-select:none;white-space:nowrap;} th.sortable .ar
 .ovlist{background:#fff;border:1px solid #CECBF6;border-radius:14px;padding:4px 18px;margin:-4px 0 14px;}
 .ovlist .wl:last-child{border-bottom:none;}
 .emptyweeks span{margin-right:auto;}
-#newTopicBtn{align-self:flex-end;}
+#newTopicBtn{align-self:flex-end;} .hdr-btns{align-self:flex-end;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
 .urgent{border:1px solid #F0C2C2;background:#FDF5F5;border-radius:14px;padding:12px 16px;margin:-4px 0 14px;}
 .urgent h3{font-size:14px;color:#791F1F;margin-bottom:4px;}
 .cal .sg{display:block;margin-top:3px;font-size:11px;line-height:1.25;border-radius:4px;padding:1px 5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px dashed #C9C3B6;color:#888780;background:transparent;}
@@ -421,7 +439,7 @@ th.sortable{cursor:pointer;user-select:none;white-space:nowrap;} th.sortable .ar
         <h1 id="hqTitle">Marketing HQ</h1>
         <p class="sub" id="hqSub">Every post, from topic to Facebook, and whose turn it is.</p>
       </div>
-      <button class="btn-primary" id="newTopicBtn" style="display:none" onclick="newTopic()">+ New topic</button>
+      <div class="hdr-btns"><button class="btn-outline" id="planBtn" style="display:none" onclick="planSeveral()">Plan several</button><button class="btn-primary" id="newTopicBtn" style="display:none" onclick="newTopic()">+ New topic</button></div>
     </div>
     <nav class="tabs" id="tabs" style="display:none"></nav>
     <div id="subtabs"></div>
@@ -523,7 +541,7 @@ const isAdmin = () => canDelete;
 // The goal, deadline, budget and success measure: PICs, overseers and marketing full only.
 const canEditPlan = () => canEdit && canDelete;
 // Item VI: the usual writer, reviewer and translator fill every new topic. Stored with the goal (plan).
-const usual = () => ({ writer: (PLAN||{}).usual_writer || '', pic: (PLAN||{}).usual_reviewer || '', translator: (PLAN||{}).usual_translator || '' });
+const usual = () => ({ writer: (PLAN||{}).usual_writer || '', pic: (PLAN||{}).usual_reviewer || '', translator: (PLAN||{}).usual_translator || '', poster: (PLAN||{}).usual_poster || '' });
 const planData = () => Object.fromEntries(Object.entries(PLAN||{}).filter(([k])=>k!=='id' && !k.startsWith('_')));
 async function savePlan(extra){
   const body = { ...planData(), ...extra };
@@ -538,6 +556,7 @@ function usualGaps(){
     if(!p.writer && U.writer) o.writer = U.writer;
     if(!p.pic && U.pic) o.pic = U.pic;
     if(p.needs_thai && !p.translator && U.translator) o.translator = U.translator;
+    if(!p.poster && U.poster && U.poster !== p.writer) o.poster = U.poster;
     return Object.keys(o).length ? [p, o] : null; }).filter(Boolean);
 }
 async function applyUsual(){
@@ -549,6 +568,8 @@ async function applyUsual(){
 // Item 58: each post names its own writer, reviewer (pic) and translator.
 const members = () => Object.keys(TEAM).filter(id => STAFF[id] && STAFF[id].status === 'active').sort((a,b)=>STAFF[a].name.localeCompare(STAFF[b].name));
 const isWriterOf = p => !!p && p.writer === ME;
+// Item 83: posting is its own task. With no poster named, the writer posts.
+const posterOf = p => p ? (p.poster || p.writer) : null;
 const isTranslatorOf = p => !!p && p.translator === ME;
 const GOALS = [['inform','Inform'],['invite','Invite to an event'],['enrol','Get enrolments'],['celebrate','Celebrate or thank']];
 const FORMATS = [['post','Post'],['reel','Reel script'],['announcement','Short announcement']];
@@ -572,7 +593,8 @@ const openStep = p => !['posted','cancelled'].includes(p.step);
 
 // Who has the post now
 function ownerIds(p){
-  if(p.step === 'english' || p.step === 'post') return p.writer ? [p.writer] : [];
+  if(p.step === 'english') return p.writer ? [p.writer] : [];
+  if(p.step === 'post') return posterOf(p) ? [posterOf(p)] : [];
   if(p.step === 'thai') return p.translator ? [p.translator] : [];
   if(p.step === 'review') return p.pic ? [p.pic] : [];
   return [];
@@ -712,6 +734,7 @@ function tabs(){
 function render(){
   tabs();
   const nb = $('#newTopicBtn'); if(nb) nb.style.display = loaded && canEdit && view() === 'calendar' ? '' : 'none';
+  const pb = $('#planBtn'); if(pb) pb.style.display = loaded && canEdit && view() === 'calendar' ? '' : 'none';
   const el = $('#view'), v = view();
   if(!loaded){ el.innerHTML = '<div class="empty-state">Loading…</div>'; return; }
   let ab = $('#aiBanner'); if(!ab){ ab = document.createElement('div'); ab.id = 'aiBanner'; el.before(ab); }
@@ -753,7 +776,7 @@ function myTurn(){
     .sort((a,b)=>(Number(isLate(b))-Number(isLate(a))) || String(dueOf(a)||'9').localeCompare(String(dueOf(b)||'9')));
   const sub = 'The posts where you are named for the step they are at.';
   return `
-  ${notMarked().some(p=>p.writer===ME) ? notMarkedBox() : ''}
+  ${notMarked().some(p=>posterOf(p)===ME) ? notMarkedBox() : ''}
   <div class="box">
     <h3 class="bh">${mine.length ? `Your turn: ${mine.length}` : 'All clear'}</h3>
     <p class="meta" style="font-size:13px;margin-bottom:6px">${sub}</p>
@@ -768,7 +791,7 @@ function myTurn(){
 const notMarked = () => POSTS.filter(p=>p.step==='post' && p.post_date && p.post_date < todayISO()).sort((a,b)=>a.post_date.localeCompare(b.post_date));
 function notMarkedBox(){
   const a = notMarked(); if(!a.length) return '';
-  const canMarkP = p => isAdmin() || p.writer === ME;
+  const canMarkP = p => isAdmin() || posterOf(p) === ME;
   return `<div class="box" style="border-color:#EF9F27"><h3 class="bh">Posted? Not marked yet: ${a.length}</h3>
     <p class="meta" style="font-size:13px;margin-bottom:6px">These were due to go out and are still waiting at the Post step. If they are on Facebook, mark them so the numbers stay true.</p>
     ${a.map(p=>`<div class="wl" style="cursor:default"><span class="late-d">${fmtShort(p.post_date)}</span><span class="pt"><a href="javascript:void 0" onclick="go('post/${p.id}')" class="ptt">${esc(p.title)}</a></span><span></span><span></span><span class="wl-act">${canMarkP(p)?`<button class="btn-outline sm" onclick="quickMark('${p.id}')">Mark as posted</button>`:''}</span></div>`).join('')}
@@ -943,9 +966,9 @@ function syncNeedText(){
 function nextLine(p){
   const who = ids => ids.map(nameOf).filter(Boolean).join(' or ');
   const due = back => p.post_date ? fmtShort(addDays(p.post_date, -back)) : '';
-  const pic = nameOf(p.pic), tr = nameOf(p.translator), wr = nameOf(p.writer);
+  const pic = nameOf(p.pic), tr = nameOf(p.translator), wr = nameOf(posterOf(p));
   const thaiPart = p.needs_thai ? (tr ? `${tr} does the Thai${due(1)?', due '+due(1):''}` : 'No translator set yet') : '';
-  const postPart = wr ? `${wr} posts it${p.post_date?' on '+fmtShort(p.post_date):''}` : 'No writer set yet';
+  const postPart = wr ? `${wr} posts it${p.post_date?' on '+fmtShort(p.post_date):''}` : 'No poster set yet';
   const parts = {
     english: [pic ? `${pic} reviews it${due(2)?', due '+due(2):''}` : 'No reviewer set yet'],
     review: [thaiPart || postPart],
@@ -995,7 +1018,7 @@ async function renderPost(el){
   window._canEdit = { en: canEn, th: canTh || canAiTh };
   const steps = ['english', 'review', ...(p.needs_thai?['thai']:[]), 'post'];
   const cur = p.step==='posted' ? steps.length : steps.indexOf(p.step);
-  const bar = steps.map((s,i)=>`<span class="sb ${i<cur?'done':i===cur?'now':''}"><span class="sd">${i<cur?'&#10003;':i+1}</span>${STEP_LABEL[s]}${{english:p.writer,review:p.pic,thai:p.translator,post:p.writer}[s]!==undefined?` · ${esc(nameOf({english:p.writer,review:p.pic,thai:p.translator,post:p.writer}[s])||'not set')}`:''}</span>`).join('<span class="sl"></span>');
+  const bar = steps.map((s,i)=>`<span class="sb ${i<cur?'done':i===cur?'now':''}"><span class="sd">${i<cur?'&#10003;':i+1}</span>${STEP_LABEL[s]}${{english:p.writer,review:p.pic,thai:p.translator,post:posterOf(p)}[s]!==undefined?` · ${esc(nameOf({english:p.writer,review:p.pic,thai:p.translator,post:posterOf(p)}[s])||'not set')}`:''}</span>`).join('<span class="sl"></span>');
   const imgs = (p.images||[]);
   const canAct = mine || bk || adm;
   const asAdmin = !mine && !bk && adm ? ' <span class="adm">(as admin)</span>' : '';
@@ -1014,7 +1037,7 @@ async function renderPost(el){
       <input id="f-url" placeholder="Facebook link (optional)" class="note-in">
       <button class="btn-primary" onclick="doAct('mark_posted')">Mark as posted</button>`;
   }
-  const stepWho = {english:nameOf(p.writer)||'the writer', review:nameOf(p.pic)||'the reviewer', thai:nameOf(p.translator)||'the translator', post:nameOf(p.writer)||'the writer'}[p.step] || '';
+  const stepWho = {english:nameOf(p.writer)||'the writer', review:nameOf(p.pic)||'the reviewer', thai:nameOf(p.translator)||'the translator', post:nameOf(posterOf(p))||'the poster'}[p.step] || '';
   const adminLine = actions && asAdmin ? `<p class="adminline">You're doing ${esc(stepWho)}'s step as admin. This is logged.</p>` : '';
   const nextHint = !openStep(p) ? '' : nextLine(p);
   const briefHtml = (p.brief_goal || p.brief_format || (p.brief_audience||[]).length || p.brief)
@@ -1378,6 +1401,7 @@ function topicForm(p, withBrief){
     <div class="f"><label>Reviewer <span class="hint">needed before Send to Review</span></label><select name="pic" onchange="this.dataset.touched='1'">${personOptions(p.pic)}</select></div>
     <div class="f"><label>Translation</label><select name="needs_thai" onchange="$('#trWrap').style.display=this.value==='true'?'':'none'"><option value="true" ${thai==='true'?'selected':''}>Thai needed</option><option value="false" ${thai==='false'?'selected':''}>English only</option></select></div>
     <div class="f" id="trWrap" style="${thai==='true'?'':'display:none'}"><label>Translator <span class="hint">needed before Send to Review</span></label><select name="translator">${personOptions(p.translator, 'Choose later')}</select></div>
+    <div class="f"><label>Poster</label><select name="poster">${personOptions(p.poster || '', 'The writer posts it')}</select></div>
     ${withBrief ? `<p style="margin:10px 0"><a href="javascript:void 0" onclick="$('#briefWrap').style.display='';this.parentElement.remove()">+ Add a brief (the AI writes better with it)</a></p><div id="briefWrap" style="display:none"><h4 style="font-size:13px;margin:16px 0 8px;color:#5F5E5A">Brief for the writer</h4>${briefFields(p)}</div>` : ''}`;
 }
 // A label suggests who usually approves it, unless a person was already picked by hand.
@@ -1388,7 +1412,7 @@ function labelPicked(name){
 }
 function topicPayload(){
   const fd = new FormData($('#fm')), o = {};
-  ['title','post_date','post_time','pic','label','writer','translator'].forEach(k=>o[k] = String(fd.get(k)||'').trim());
+  ['title','post_date','post_time','pic','label','writer','translator','poster'].forEach(k=>o[k] = String(fd.get(k)||'').trim());
   // Leave out an empty label, reviewer, writer or translator: not set yet is fine, and an edit never clears one by accident.
   ['pic','label','writer','translator'].forEach(k=>{ if(!o[k]) delete o[k]; });
   const t = String(fd.get('needs_thai')||'');
@@ -1404,7 +1428,7 @@ function newTopic(date, pre, suggKey){
   cur = {topic:true};
   pre = pre || {};
   const U = usual();
-  drawerShell('New topic', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || '', ...(U.writer ? {writer: U.writer} : {}), pic: U.pic, translator: U.translator}, true), null, false);
+  drawerShell('New topic', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || '', ...(U.writer ? {writer: U.writer} : {}), pic: U.pic, translator: U.translator, poster: U.poster}, true), null, false);
   if(pre.label) setTimeout(()=>labelPicked(pre.label), 0);
   $('#sv').textContent = 'Create';
   $('#sv').onclick = async () => {
@@ -1444,15 +1468,16 @@ function teamView(){
   // Item 81: one table for the team: access, languages as ticks, and the usual people for new topics.
   const row = id => {
     const lv = LEVEL[id] || (NO_ACCESS.has(id) ? 'none' : 'edit'), ok = !NO_ACCESS.has(id);
+    const badge = canManageAccess() ? `<button class="lvl lvl-${lv} lvl-btn" aria-haspopup="menu" onclick="openAccessMenu(event,'${id}')">${lv.charAt(0).toUpperCase()+lv.slice(1)}${ACC.ov[id]?'<span class="acc-dot"></span>':''}</button>` : `<span class="lvl lvl-${lv}">${lv.charAt(0).toUpperCase()+lv.slice(1)}</span>`;
     const radio = (k, enabled) => `<span class="tt-c"><input type="radio" class="rad" name="us-${k}" aria-label="Usual ${k}" ${U[k]===id?'checked':''} ${canDelete && enabled ? '' : 'disabled'} onclick="setUsual('${k}','${id}')"></span>`;
     return `<div class="tt-r"><b>${esc(STAFF[id].name)}</b>
-      <span class="tt-c"><span class="lvl lvl-${lv}">${lv.charAt(0).toUpperCase()+lv.slice(1)}</span></span>
-      ${radio('writer', ok)}${radio('pic', ok)}${radio('translator', ok)}<span></span>
+      <span class="tt-c">${badge}</span>
+      ${radio('writer', ok)}${radio('pic', ok)}${radio('translator', ok)}${radio('poster', ok)}<span></span>
       <span class="tt-c" style="justify-content:flex-end">${canDelete?`<button class="link-btn" style="color:#A23F1C" onclick="removeMember('${id}')">Remove</button>`:''}</span></div>`;
   };
   const team = `<div class="box"><h3 class="bh">Marketing team</h3>
     <div class="tt-wrap"><div class="tt">
-      <div class="tt-r tt-head"><span class="tt-h" style="text-align:left">PERSON</span>${th('HQ ACCESS','from Roles and access')}${th('WRITER','new topics')}${th('REVIEWER','new topics')}${th('TRANSLATOR','new topics')}<span></span><span></span></div>
+      <div class="tt-r tt-head"><span class="tt-h" style="text-align:left">PERSON</span>${th('HQ ACCESS', canManageAccess() ? 'click to change' : 'from Roles and access')}${th('WRITER','new topics')}${th('REVIEWER','new topics')}${th('TRANSLATOR','new topics')}${th('POSTER','new topics')}<span></span><span></span></div>
       ${ms.length ? ms.map(row).join('') : '<p class="meta" style="padding:8px 0">No one yet.</p>'}
       ${others.length && canDelete ? `<div class="tt-add"><select id="addWho" ${sel}><option value="">Add a person</option>${others.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select><button class="btn-primary sm" onclick="addMember()">Add</button></div>` : ''}
     </div></div>
@@ -1499,8 +1524,47 @@ async function removeSpecial(id){
   showToast('Removed.'); loadAll();
 }
 const firstName = n => String(n||'').split(' ')[0];
+// Item 84: admin, director and IT can change someone's Marketing level here. Same data as Roles and access.
+let ACC = { loaded:false, role:{}, def:{}, ov:{} };
+const canManageAccess = () => !!(window.currentStaff && ['admin','director','it'].includes(window.currentStaff.role));
+async function loadAccess(){
+  if(!canManageAccess()) return;
+  const [st, rp, ov] = await Promise.all([
+    sb.from('staff').select('id,role'),
+    sb.from('role_permissions').select('role,level').eq('module','marketing'),
+    sb.from('staff_permission_overrides').select('staff_id,level').eq('module','marketing')]);
+  ACC = { loaded:true, role:Object.fromEntries((st.data||[]).map(x=>[x.id,x.role])), def:Object.fromEntries((rp.data||[]).map(x=>[x.role,x.level])), ov:Object.fromEntries((ov.data||[]).map(x=>[x.staff_id,x.level])) };
+}
+function openAccessMenu(ev, id){
+  ev.stopPropagation();
+  let m = $('#accMenu');
+  if(!m){ m = document.createElement('div'); m.id = 'accMenu'; m.className = 'acc-menu'; m.setAttribute('role','menu'); document.body.appendChild(m); }
+  if(!m.hidden && m.dataset.id === id){ m.hidden = true; return; }
+  const def = ACC.def[ACC.role[id]] || 'none', cur = ACC.ov[id] || def;
+  const T = { none:'No access', view:'Look only', edit:'Do the work', full:'Manage everything' };
+  m.innerHTML = ['none','view','edit','full'].map(l=>`<button role="menuitem" class="${l===cur?'on':''}" onclick="pickAccess('${id}','${l}')"><span class="lvl lvl-${l}">${l.charAt(0).toUpperCase()+l.slice(1)}</span>${T[l]}</button>`).join('')
+    + (ACC.ov[id] ? `<button role="menuitem" class="acc-def" onclick="pickAccess('${id}','')">Back to role default (${def.charAt(0).toUpperCase()+def.slice(1)})</button>` : '');
+  const r = ev.currentTarget.getBoundingClientRect();
+  m.style.top = (window.scrollY + r.bottom + 6) + 'px';
+  m.style.left = Math.max(8, Math.min(window.scrollX + r.left + r.width/2 - 115, window.scrollX + document.documentElement.clientWidth - 238)) + 'px';
+  m.dataset.id = id; m.hidden = false;
+  const f = m.querySelector('button.on') || m.querySelector('button'); if(f) f.focus();
+}
+document.addEventListener('click', e => { const m = $('#accMenu'); if(m && !m.hidden && !e.target.closest('#accMenu')) m.hidden = true; });
+document.addEventListener('keydown', e => { const m = $('#accMenu'); if(e.key === 'Escape' && m && !m.hidden) m.hidden = true; });
+async function pickAccess(id, level){
+  const m = $('#accMenu'); if(m) m.hidden = true;
+  const def = ACC.def[ACC.role[id]] || 'none', lv = level === def ? '' : level;
+  if(id === ME && (lv || def) !== 'full' && !confirm('This changes your own Marketing access. If it goes below Full you may not be able to change it back here. Continue?')) return;
+  const { error } = lv
+    ? await sb.from('staff_permission_overrides').upsert({ staff_id:id, module:'marketing', level:lv, granted_by: window.currentStaff.id })
+    : await sb.from('staff_permission_overrides').delete().eq('staff_id', id).eq('module', 'marketing');
+  if(error){ showToast('Could not save: ' + error.message); return; }
+  showToast(firstName(STAFF[id].name) + ': Marketing ' + (lv || def) + '.');
+  await loadAccess(); await loadAll();
+}
 async function setUsual(k, id){
-  const key = {writer:'usual_writer', pic:'usual_reviewer', translator:'usual_translator'}[k];
+  const key = {writer:'usual_writer', pic:'usual_reviewer', translator:'usual_translator', poster:'usual_poster'}[k];
   const val = usual()[k] === id ? '' : id;
   if(!(await savePlan({ [key]: val }))) { render(); return; }
   PLAN = Object.assign(PLAN || {}, { [key]: val });
@@ -1520,7 +1584,7 @@ async function setLangs(id, langs){
   LANGS[id] = langs.trim();
 }
 async function removeMember(id){
-  const open = POSTS.filter(p=>openStep(p) && [p.pic, p.writer, p.translator].includes(id)).length;
+  const open = POSTS.filter(p=>openStep(p) && [p.pic, p.writer, p.translator, p.poster].includes(id)).length;
   if(!confirm(`Remove ${STAFF[id].name} from the marketing team?` + (open ? ` They are named on ${open} post${open>1?'s':''} in progress, which will need someone else.` : ''))) return;
   const { error } = await sb.from('marketing_team').delete().eq('staff_id', id);
   if(error){ showToast('Could not remove: ' + error.message); return; }
@@ -1650,6 +1714,123 @@ function metaLine(r){
   const who = r._by && nameOf(r._by) ? ' by ' + esc(nameOf(r._by)) : '';
   return `<div class="meta">Last updated ${new Date(r._updated).toLocaleString('en-GB')}${who}${r.source?' · '+esc(r.source):''}</div>`;
 }
+// ---------- Item 79: Plan several ----------
+// Give dates to ideas in one go, or paste rows (topic, date, label) from the Google Sheet.
+// Rows without a date, and topics already planned, are flagged and skipped. People come from Usual team.
+let PL = null;
+const normT = t => String(t||'').toLowerCase().replace(/[^a-z0-9ก-๙]+/g,' ').trim();
+const MON = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12};
+function parseDay(t){
+  t = String(t||'').trim(); if(!t) return '';
+  const pad = n => String(n).padStart(2,'0'), now = new Date(), Y = now.getFullYear();
+  const mk = (d, m, y) => {
+    if(!(m>=1 && m<=12 && d>=1 && d<=31)) return '';
+    if(y === undefined){ y = Y; if(new Date(y, m-1, d) < new Date(now.toDateString())) y++; }
+    else if(y < 100) y += 2000;
+    const dt = new Date(y, m-1, d); return dt.getMonth() === m-1 ? `${y}-${pad(m)}-${pad(d)}` : '';
+  };
+  let m;
+  if((m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) return mk(+m[3], +m[2], +m[1]);
+  if((m = t.match(/^(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?$/))) return mk(+m[1], +m[2], m[3] === undefined ? undefined : +m[3]);
+  if((m = t.match(/^(\d{1,2})\s+([a-z]{3,9})\.?,?(?:\s+(\d{2,4}))?$/i)) && MON[m[2].toLowerCase().slice(0,3)]) return mk(+m[1], MON[m[2].toLowerCase().slice(0,3)], m[3] === undefined ? undefined : +m[3]);
+  return '';
+}
+function planSeveral(){
+  const ideas = POSTS.filter(p=>openStep(p) && !p.post_date).sort((a,b)=>String(a.title).localeCompare(String(b.title)));
+  PL = { tab:'ideas', q:'', paste:'', rows: ideas.map(p=>({ key:'i'+p.id, src:'idea', id:p.id, title:p.title, date:'', label:p.label||'', thai: p.needs_thai !== false, on:false })), pasted:[] };
+  drawerShell('Plan several', '<div id="plBody"></div>', null, true);
+  $('#sv').textContent = 'Plan 0 posts'; $('#sv').onclick = planRun;
+  planDraw();
+}
+function planCheck(){
+  const dated = new Map(POSTS.filter(p=>openStep(p) && p.post_date).map(p=>[normT(p.title), p]));
+  const ideaT = new Set(POSTS.filter(p=>openStep(p) && !p.post_date).map(p=>normT(p.title)));
+  const seen = new Set(), labels = new Set(LABELS.map(l=>l.name));
+  const all = [...PL.rows, ...PL.pasted];
+  all.forEach(r => { r.flag = ''; r.skip = false; r.badLabel = false; });
+  all.filter(r=>r.on).forEach(r => {
+    const k = normT(r.title), d = dated.get(k);
+    if(!r.title.trim()){ r.flag = 'Needs a topic'; r.skip = true; }
+    else if(d){ r.flag = `Already planned for ${fmtShort(d.post_date)}. Skipped.`; r.skip = true; }
+    else if(r.src === 'paste' && ideaT.has(k)){ r.flag = 'Already in Ideas: plan it from the Ideas tab. Skipped.'; r.skip = true; }
+    else if(seen.has(k)){ r.flag = 'Same topic as another row. Only one will be planned.'; r.skip = true; }
+    else if(!r.date){ r.flag = 'Needs a posting date'; r.skip = true; }
+    if(r.label && !labels.has(r.label)){ r.badLabel = true; if(!r.flag) r.flag = `No label called "${r.label}". It will be left blank.`; }
+    if(!r.skip) seen.add(k);
+  });
+  return all.filter(r=>r.on && !r.skip);
+}
+function planRow(r){
+  const opts = `<option value="">Label</option>${LABELS.map(l=>`<option ${l.name===r.label?'selected':''}>${esc(l.name)}</option>`).join('')}`;
+  return `<div class="pl-r ${r.on?'':'off'}"><input type="checkbox" class="tick" ${r.on?'checked':''} onchange="planSet('${r.key}','on',this.checked)" aria-label="Plan ${esc(r.title)}">
+    ${r.src==='paste' ? `<input class="pl-in" value="${esc(r.title)}" onchange="planSet('${r.key}','title',this.value)" aria-label="Topic">` : `<span class="pl-t" title="${esc(r.title)}">${esc(r.title)}</span>`}
+    <input type="date" class="pl-in ${r.on && !r.date ? 'need' : ''}" value="${r.date}" onchange="planSet('${r.key}','date',this.value)" aria-label="Posting date">
+    <select class="pl-in" onchange="planSet('${r.key}','label',this.value)" aria-label="Label">${opts}</select>
+    <label class="pl-th"><input type="checkbox" class="tick" ${r.thai?'checked':''} onchange="planSet('${r.key}','thai',this.checked)"> Thai</label>
+    ${r.flag ? `<div class="pl-flag ${r.skip?'skip':''}">${esc(r.flag)}</div>` : ''}</div>`;
+}
+function planDraw(){
+  if(!PL || !$('#plBody')) return;
+  const ready = planCheck(), U = usual(), ticked = [...PL.rows, ...PL.pasted].filter(r=>r.on);
+  const head = `<div class="pl-r pl-head"><span></span><span>TOPIC</span><span>POSTING DATE</span><span>LABEL</span><span>THAI</span></div>`;
+  const tabs = `<div class="reffilter"><button class="${PL.tab==='ideas'?'on':''}" onclick="planTab('ideas')">From ideas <span class="n">${PL.rows.length}</span></button><button class="${PL.tab==='paste'?'on':''}" onclick="planTab('paste')">Paste from the sheet</button></div>`;
+  let body;
+  if(PL.tab === 'ideas'){
+    const q = normT(PL.q), list = PL.rows.filter(r=>!q || normT(r.title).includes(q));
+    body = `<input class="pl-in pl-search" placeholder="Search ideas" value="${esc(PL.q)}" oninput="PL.q=this.value;planDrawList()">
+      <div id="plList">${head}${list.map(planRow).join('') || '<p class="meta" style="padding:10px 0">No ideas match.</p>'}</div>`;
+  } else {
+    body = `<label class="pl-lbl">Paste rows: topic, date, label</label>
+      <textarea class="pl-in pl-paste" placeholder="Father's Day at Bloom&#9;4/12/2026&#9;Holiday" oninput="planPaste(this.value)">${esc(PL.paste)}</textarea>
+      <div id="plList">${PL.pasted.length ? `<label class="pl-lbl">Read as ${PL.pasted.length} post${PL.pasted.length===1?'':'s'}</label>${head}${PL.pasted.map(planRow).join('')}` : ''}</div>`;
+  }
+  const who = k => nameOf(U[k]) || (k==='writer' ? 'the person planning' : k==='poster' ? 'the writer' : 'not set');
+  $('#plBody').innerHTML = tabs + body + `<p class="pl-who">Each post gets Writer <b>${esc(who('writer'))}</b> · Reviewer <b>${esc(who('pic'))}</b> · Translator <b>${esc(who('translator'))}</b> · Poster <b>${esc(who('poster'))}</b> from Usual team. People already set on an idea stay.</p>`;
+  const skipped = ticked.length - ready.length;
+  $('#sv').textContent = `Plan ${ready.length} post${ready.length===1?'':'s'}`;
+  $('#sv').disabled = !ready.length;
+  $('#msg').textContent = ticked.length ? `${ticked.length} ticked${skipped ? ' · ' + skipped + ' skipped' : ''}` : '';
+}
+function planDrawList(){ const y = ($('#plList')||{}).scrollTop; planDraw(); const s = $('.pl-search'); if(s){ s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
+function planTab(t){ PL.tab = t; planDraw(); }
+function planSet(key, f, v){
+  const r = [...PL.rows, ...PL.pasted].find(x=>x.key===key); if(!r) return;
+  r[f] = v; if(f==='date' && v) r.on = true; if(f==='title') r.title = String(v).trim();
+  planDraw();
+}
+function planPaste(txt){
+  PL.paste = txt;
+  PL.pasted = txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map((l, i) => {
+    const c = (l.includes('\t') ? l.split('\t') : l.includes(',') ? l.split(',') : l.split(/\s{2,}/)).map(x=>x.trim());
+    const title = c[0] || '', date = parseDay(c[1] || ''), lab = c[2] || '';
+    const label = (LABELS.find(x=>x.name.toLowerCase()===lab.toLowerCase()) || {}).name || lab;
+    const th = (c[3]||'').toLowerCase();
+    return { key:'p'+i, src:'paste', title, date, label, thai: !/^(no|english|en|false|n)$/.test(th), on:true, raw:c[1] || '' };
+  });
+  const ta = $('.pl-paste'), pos = ta ? ta.selectionStart : 0;
+  planDraw();
+  const t2 = $('.pl-paste'); if(t2){ t2.focus(); t2.setSelectionRange(pos, pos); }
+}
+async function planRun(){
+  const ready = planCheck(); if(!ready.length) return;
+  const U = usual(), b = $('#sv'); b.disabled = true; b.textContent = 'Working…';
+  let ok = 0; const fails = [];
+  for(const r of ready){
+    const people = {};
+    const p = r.src === 'idea' ? POSTS.find(x=>x.id===r.id) : null;
+    if(U.pic && !(p && p.pic)) people.pic = U.pic;
+    if(r.thai && U.translator && !(p && p.translator)) people.translator = U.translator;
+    if(U.poster && !(p && p.poster)) people.poster = U.poster;
+    const pay = { post_date: r.date, needs_thai: !!r.thai, ...(r.label && !r.badLabel ? { label: r.label } : {}), ...people };
+    let res;
+    if(r.src === 'idea') res = await sb.rpc('mkt_post', { p_action:'edit_topic', p_id:r.id, p: pay });
+    else res = await sb.rpc('mkt_post', { p_action:'create', p_id:null, p: { title:r.title, ...pay, writer: U.writer || ME } });
+    if(res.error) fails.push(`${r.title}: ${res.error.message.replace(/^.*?: /,'')}`); else ok++;
+  }
+  await reloadPosts(true);
+  closeD(); render();
+  showToast(`${ok} post${ok===1?'':'s'} planned.` + (fails.length ? ` ${fails.length} could not be planned: ${fails.join('; ')}` : ''));
+}
 function drawerShell(title, body, id, wide){
   const ro = !canEdit;
   $('#drawer').className = 'drawer' + (wide ? ' wide' : '');
@@ -1709,6 +1890,7 @@ async function onStaffReady(){
   canDelete = canAccess('marketing', 'full');
   ME = window.currentStaff && window.currentStaff.id;
   render();
+  await loadAccess();
   await loadAll();
   listen();
 }

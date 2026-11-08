@@ -123,13 +123,14 @@ SOURCES.push(async () => {
   if(!canAccess('marketing', 'view')) return null;
   const me = window.currentStaff.id;
   // Item 58: each post names its own writer, reviewer and translator.
-  const { data: posts } = await sb.from('marketing_posts').select('id, title, step, pic, writer, translator, post_date, sent_back').not('step', 'in', '("posted","cancelled")');
+  const { data: posts } = await sb.from('marketing_posts').select('id, title, step, pic, writer, translator, poster, post_date, sent_back').not('step', 'in', '("posted","cancelled")');
   const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const today = iso(new Date());
   const back = { english: 3, review: 2, thai: 1, post: 0 };
   const due = p => { if(!p.post_date || back[p.step] === undefined) return null; const d = new Date(p.post_date + 'T00:00:00'); d.setDate(d.getDate() - back[p.step]); return iso(d); };
   const mine = (posts || []).filter(p => (p.post_date || p.sent_back) && (
-    (p.writer === me && ['english', 'post'].includes(p.step)) ||
+    (p.writer === me && p.step === 'english') ||
+    ((p.poster || p.writer) === me && p.step === 'post') ||
     (p.translator === me && p.step === 'thai') ||
     (p.step === 'review' && p.pic === me)));
   const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });

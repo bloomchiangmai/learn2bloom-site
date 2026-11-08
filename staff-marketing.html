@@ -953,13 +953,14 @@ const weekStart = iso => { const d = new Date(iso+'T00:00:00'); d.setDate(d.getD
 // ---------- Calendar ----------
 // ---------- Item 88: pages of 15, tick boxes, delete ----------
 const PER = 15;
-let PAGE = { sugg:0, ideas:0 }, SEL = { sugg:new Set(), posts:new Set() }, PAGEKEYS = { sugg:[], posts:[] };
+let PAGE = { sugg:0, ideas:0, plan:0 }, SEL = { sugg:new Set(), posts:new Set() }, PAGEKEYS = { sugg:[], posts:[] };
 const canDel = p => !!p && openStep(p) && (p.created_by===ME || canDelete || (!p.created_by && isWriterOf(p)));
 function pageOf(k, arr){ const n = Math.max(0, Math.ceil(arr.length/PER)-1); if(PAGE[k] > n) PAGE[k] = n; return arr.slice(PAGE[k]*PER, PAGE[k]*PER + PER); }
-function pager(k, total){
+function pager(k, total, redraw){
+  redraw = redraw || 'render';
   if(total <= PER) return '';
   const a = PAGE[k]*PER + 1, b = Math.min(total, a + PER - 1), last = PAGE[k] >= Math.ceil(total/PER) - 1;
-  return `<div class="pager"><button class="cal-nav" aria-label="Previous" ${PAGE[k]?'':'disabled'} onclick="PAGE.${k}--;render()">&#8249;</button><span>${a} to ${b} of ${total}</span><button class="cal-nav" aria-label="Next" ${last?'disabled':''} onclick="PAGE.${k}++;render()">&#8250;</button></div>`;
+  return `<div class="pager"><button class="cal-nav" aria-label="Previous" ${PAGE[k]?'':'disabled'} onclick="PAGE.${k}--;${redraw}()">&#8249;</button><span>${a} to ${b} of ${total}</span><button class="cal-nav" aria-label="Next" ${last?'disabled':''} onclick="PAGE.${k}++;${redraw}()">&#8250;</button></div>`;
 }
 function tickRow(set, key, html, enabled){
   if(!canEdit) return html;
@@ -1789,6 +1790,7 @@ function parseDay(t){
 }
 function planSeveral(){
   const ideas = POSTS.filter(p=>openStep(p) && !p.post_date).sort((a,b)=>String(a.title).localeCompare(String(b.title)));
+  PAGE.plan = 0;
   PL = { who:{ writer: TEAM[ME] ? ME : '', pic:'', translator:'', poster:'' }, tab:'ideas', q:'', paste:'', rows: ideas.map(p=>({ key:'i'+p.id, src:'idea', id:p.id, title:p.title, date:'', label:p.label||'', thai: p.needs_thai !== false, on:false })), pasted:[] };
   drawerShell('Plan several', '<div id="plBody"></div>', null, true);
   $('#sv').textContent = 'Plan 0 posts'; $('#sv').onclick = planRun;
@@ -1828,9 +1830,9 @@ function planDraw(){
   const tabs = `<div class="reffilter"><button class="${PL.tab==='ideas'?'on':''}" onclick="planTab('ideas')">From ideas <span class="n">${PL.rows.length}</span></button><button class="${PL.tab==='paste'?'on':''}" onclick="planTab('paste')">Paste from the sheet</button></div>`;
   let body;
   if(PL.tab === 'ideas'){
-    const q = normT(PL.q), list = PL.rows.filter(r=>!q || normT(r.title).includes(q));
-    body = `<input class="pl-in pl-search" placeholder="Search ideas" value="${esc(PL.q)}" oninput="PL.q=this.value;planDrawList()">
-      <div id="plList">${head}${list.map(planRow).join('') || '<p class="meta" style="padding:10px 0">No ideas match.</p>'}</div>`;
+    const q = normT(PL.q), list = PL.rows.filter(r=>!q || normT(r.title).includes(q)), pg = pageOf('plan', list);
+    body = `<input class="pl-in pl-search" placeholder="Search ideas" value="${esc(PL.q)}" oninput="PL.q=this.value;PAGE.plan=0;planDrawList()">
+      <div id="plList">${head}${pg.map(planRow).join('') || '<p class="meta" style="padding:10px 0">No ideas match.</p>'}${pager('plan', list.length, 'planDraw')}</div>`;
   } else {
     body = `<label class="pl-lbl">Paste rows: topic, date, label</label>
       <textarea class="pl-in pl-paste" placeholder="Father's Day at Bloom&#9;4/12/2026&#9;Holiday" oninput="planPaste(this.value)">${esc(PL.paste)}</textarea>

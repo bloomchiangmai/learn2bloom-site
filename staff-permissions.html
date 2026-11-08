@@ -64,7 +64,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
 .ra-key{display:flex;align-items:center;gap:8px;font-size:13px;color:#5F5E5A;margin:0 0 12px;}
 .ra-dot{width:8px;height:8px;border-radius:50%;background:#534AB7;display:inline-block;flex:0 0 auto;}
 .ra-wrap{overflow-x:auto;background:#fff;border:1px solid #E8E3D8;border-radius:12px;}
-table.ra{min-width:940px;table-layout:fixed;}
+table.ra{width:100%;min-width:880px;table-layout:fixed;}
 table.ra th{vertical-align:top;text-align:center;font-size:11px;letter-spacing:.6px;padding:12px 4px 10px;border-bottom:1px solid #E8E3D8;}
 table.ra th small{display:block;font-size:10px;letter-spacing:0;font-weight:500;text-transform:none;color:#8A877F;margin-top:2px;line-height:1.25;}
 table.ra th.ra-name,table.ra th.ra-role{text-align:left;padding-left:14px;}
@@ -74,7 +74,7 @@ table.ra td.ra-name{text-align:left;padding-left:14px;}
 table.ra td.ra-name a{color:#534AB7;font-weight:700;text-decoration:none;}
 table.ra td.ra-name .em{font-size:12px;color:#8A877F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 table.ra td.ra-role{text-align:left;padding-left:14px;}
-table.ra td.ra-role select{width:100%;font-size:13px;padding:6px 8px;border:1px solid #DCD5C6;border-radius:8px;background:#fff;}
+table.ra td.ra-role select{width:100%;font-size:12.5px;padding:6px 6px;border:1px solid #DCD5C6;border-radius:8px;background:#fff;}
 .lv{position:relative;font:inherit;min-width:58px;font-size:12px;font-weight:700;padding:5px 8px;border-radius:999px;border:0;cursor:pointer;}
 .lv:hover,.lv:focus-visible{box-shadow:0 0 0 2px #534AB7;outline:none;}
 .lv-none{background:#EDEBE6;color:#888780;} .lv-view{background:#E6ECF7;color:#3457A8;} .lv-edit{background:#FFF1D6;color:#9A6A1B;} .lv-full{background:#E3F0E1;color:#2E6B2A;}
@@ -326,7 +326,7 @@ const cap = v => v.charAt(0).toUpperCase() + v.slice(1);
 const ROLE_KEYS = ['admin','director','education_lead','education_consultant','lead_teacher','learning_coach','learning_coach_assistant','admissions','enrollment','front_desk','it','teaching_assistant','marketing'];
 
 function renderStaffTable(){
-  document.getElementById('raHead').innerHTML = `<tr><th class="ra-name" style="width:22%">Name</th><th class="ra-role" style="width:15%">Role</th>${MODULES.map(m=>`<th>${escShared(m)}<small>${MODULE_INFO[m]||''}</small></th>`).join('')}</tr>`;
+  document.getElementById('raHead').innerHTML = `<tr><th class="ra-name" style="width:20%">Name</th><th class="ra-role" style="width:17%">Role</th>${MODULES.map(m=>`<th>${escShared(m)}<small>${MODULE_INFO[m]||''}</small></th>`).join('')}</tr>`;
   const tbody = document.getElementById('staffTable');
   tbody.innerHTML = staffCache.map(s => {
     const defaults = getRoleDefaults(s.role), overrides = getOverridesFor(s.id);

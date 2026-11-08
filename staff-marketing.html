@@ -1831,8 +1831,11 @@ function planDraw(){
   let body;
   if(PL.tab === 'ideas'){
     const q = normT(PL.q), list = PL.rows.filter(r=>!q || normT(r.title).includes(q)), pg = pageOf('plan', list);
+    const allOn = pg.length && pg.every(r=>r.on), nOn = PL.rows.filter(r=>r.on).length;
+    const ihead = `<div class="pl-r pl-head"><input type="checkbox" class="tick" aria-label="Tick all on this page" ${allOn?'checked':''} onchange="planTickPage(this.checked)"><span>TOPIC</span><span>POSTING DATE</span><span>LABEL</span><span>THAI</span></div>`;
     body = `<input class="pl-in pl-search" placeholder="Search ideas" value="${esc(PL.q)}" oninput="PL.q=this.value;PAGE.plan=0;planDrawList()">
-      <div id="plList">${head}${pg.map(planRow).join('') || '<p class="meta" style="padding:10px 0">No ideas match.</p>'}${pager('plan', list.length, 'planDraw')}</div>`;
+      ${nOn ? `<div class="tk-bar"><span class="tk-n">${nOn} ticked</span><button class="btn-outline sm" style="color:#A23F1C" onclick="planDelete()">Delete</button><button class="link-btn" onclick="PL.rows.forEach(r=>r.on=false);planDraw()">Clear</button></div>` : ''}
+      <div id="plList">${ihead}${pg.map(planRow).join('') || '<p class="meta" style="padding:10px 0">No ideas match.</p>'}${pager('plan', list.length, 'planDraw')}</div>`;
   } else {
     body = `<label class="pl-lbl">Paste rows: topic, date, label</label>
       <textarea class="pl-in pl-paste" placeholder="Father's Day at Bloom&#9;4/12/2026&#9;Holiday" oninput="planPaste(this.value)">${esc(PL.paste)}</textarea>
@@ -1845,6 +1848,18 @@ function planDraw(){
   $('#sv').textContent = `Plan ${ready.length} post${ready.length===1?'':'s'}`;
   $('#sv').disabled = !ready.length;
   $('#msg').textContent = ticked.length ? `${ticked.length} ticked${skipped ? ' · ' + skipped + ' skipped' : ''}` : '';
+}
+function planTickPage(on){
+  const q = normT(PL.q), list = PL.rows.filter(r=>!q || normT(r.title).includes(q));
+  list.slice(PAGE.plan*PER, PAGE.plan*PER + PER).forEach(r=>r.on = on); planDraw();
+}
+async function planDelete(){
+  const rows = PL.rows.filter(r=>r.on), ps = rows.map(r=>POSTS.find(p=>p.id===r.id)).filter(canDel);
+  if(!ps.length){ showToast('You can only delete ideas you created.'); return; }
+  const skip = rows.length - ps.length;
+  if(!confirm(`Delete ${ps.length} idea${ps.length===1?'':'s'}? ${ps.length===1?'It leaves':'They leave'} every list. The history is kept.` + (skip ? ` ${skip} you did not create will stay.` : ''))) return;
+  let n = 0; for(const p of ps){ if(await act('cancel', p.id, {})){ n++; PL.rows = PL.rows.filter(r=>r.id!==p.id); } }
+  showToast(n + ' deleted.'); await reloadPosts(true); planDraw();
 }
 function planDrawList(){ const y = ($('#plList')||{}).scrollTop; planDraw(); const s = $('.pl-search'); if(s){ s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }
 function planTab(t){ PL.tab = t; planDraw(); }

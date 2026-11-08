@@ -416,7 +416,7 @@ button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-vi
 
 <script>
 // ---------- Reference sections ----------
-const AUD = ['Expat English','Thai','Chinese','Alt-ed / homeschool','Mixed','All'];
+const AUD = ['Expat English','Thai','Chinese','Alternative education','Homeschool','Worldschool','Mixed','All'];
 const REF = [
  {k:'facts',t:'Info bank',view:'cards',d:'The true facts about Bloom. Every post should match these.',title:'label',chip:'status',cols:['category','status','source'],
   f:[['label','Fact','text'],['category','Category','select',['Identity','Programmes','Fees','Dates','Location','Proof points','Contact','Positioning']],['value','Detail','long'],['status','Status','select',['Confirmed','To confirm','Outdated']],['source','Source','text']]},
@@ -425,25 +425,27 @@ const REF = [
  {k:'channels',t:'Channels',view:'cards',d:'Every account Bloom owns, and how each one gets fed.',title:'name',chip:'status',cols:['type','automation','status'],
   f:[['name','Channel','text'],['type','Type','select',['Social','Messaging','Website','Email']],['handle','Link','url'],['automation','How it is fed','select',['Buffer (automated)','Manual','Own app','Not set up']],['status','Status','select',['Active','To confirm','To create','Paused']],['audience','Main audience','text'],['notes','Notes','long']]},
  {k:'groups',t:'Groups',view:'table',d:'Places where families already gather. Check the rules before posting.',title:'name',chip:'status',cols:['platform','audience','members','promo','status','last_posted'],
-  f:[['name','Group','text'],['platform','Platform','select',['Facebook group','Redbook','WeChat group','LINE group','Forum','Other']],['url','Link','url'],['audience','Audience','select',AUD.slice(0,5)],['members','Members','text'],['promo','Promotion allowed','select',['Unknown','Yes','Specific days only','Admin approval','No']],['status','Status','select',['To verify','Joined','Pending approval','Active','Avoid']],['last_posted','Last posted','date'],['angle','Best angle','long'],['rules','Rules','long'],['notes','Notes','long']]},
+  f:[['name','Group','text'],['platform','Platform','select',['Facebook group','Redbook','WeChat group','LINE group','Forum','Other']],['url','Link','url'],['audience','Audience','select',AUD.slice(0,7)],['members','Members','text'],['promo','Promotion allowed','select',['Unknown','Yes','Specific days only','Admin approval','No']],['status','Status','select',['To verify','Joined','Pending approval','Active','Avoid']],['last_posted','Last posted','date'],['angle','Best angle','long'],['rules','Rules','long'],['notes','Notes','long']]},
+ {k:'feeders',t:'Feeders',view:'table',d:'Playgroups and kindergartens that end around age 5. Their families are looking for what comes next.',title:'name',chip:'relationship',cols:['fit','ages','area','relationship'],
+  f:[['name','School','text'],['url','Link','url'],['fit','Fit','select',['Very High','High','Medium-High','Medium','Low']],['type','Type','text'],['ages','Ages','text'],['philosophy','Philosophy','long'],['fee','Annual fee (est.)','text'],['followers','Followers','text'],['area','Area','text'],['contact','Contact','text'],['relationship','Relationship','select',['Not contacted','Contacted','Meeting held','Partner']],['notes','Notes','long']]},
  {k:'competitors',t:'Competitors',view:'table',d:'Who families compare us with, and where we differ.',title:'name',chip:'type',cols:['type','curriculum','fees','area'],
   f:[['name','School','text'],['type','Type','select',['International school','Alt-ed / hub','Bilingual','Chinese-focused','Homeschool co-op']],['curriculum','Curriculum','text'],['fees','Fees (per year)','text'],['area','Area','text'],['positioning','How they position','long'],['vs_bcm','Where Bloom differs','long'],['url','Link','url']]},
  {k:'insights',t:'Research notes',view:'cards',d:'Findings worth acting on, with where they came from.',title:'title',chip:'audience',cols:['audience','date'],
-  f:[['title','Finding','text'],['audience','Audience','select',['Expat English','Thai','Chinese','Alt-ed / homeschool','All']],['finding','What we found','long'],['implication','What it means for Bloom','long'],['source','Source','url'],['date','Date','date']]},
+  f:[['title','Finding','text'],['audience','Audience','select',AUD.filter(a=>a!=='Mixed')],['finding','What we found','long'],['implication','What it means for Bloom','long'],['source','Source','url'],['date','Date','date']]},
 ];
 const TASKS = {k:'tasks',t:'Tasks',view:'table',d:'What has to happen next, and who owns it.',title:'title',chip:'status',cols:['owner','due','status'],sort:'due',
   f:[['title','Task','text'],['owner','Owner','text'],['due','Due','date'],['status','Status','select',['To do','Doing','Waiting','Done']],['notes','Notes','long']]};
 const SEC = Object.fromEntries([...REF, TASKS].map(s=>[s.k,s]));
 const PLAN_FIELDS = [['goal','Goal','long'],['deadline','Deadline','date'],['budget','Ad budget per month (THB)','text'],['measure','How we measure success','text']];
 // Item 55: Reference shows one list per page.
-const REF_GROUPS = ['facts','audiences','channels','groups','competitors','insights'].map(k => ({ k, t: SEC[k].t, d: SEC[k].d, secs: [k] }));
+const REF_GROUPS = ['facts','audiences','channels','groups','feeders','competitors','insights'].map(k => ({ k, t: SEC[k].t, d: SEC[k].d, secs: [k] }));
 const LATE_BG = '#FCEBEB', LATE_TEXT = '#791F1F';
 const $ = (s,el=document)=>el.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeUrl = v => /^https?:\/\//i.test(String(v||'')) ? v : '';
 // Item 59: a link typed without https (facebook.com/BLOOM.chiangmai) still opens; a bare handle (@name) stays text.
 const linkify = v => { v = String(v||'').trim(); if(/^https?:\/\//i.test(v)) return v; if(/^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i.test(v)) return 'https://' + v; return ''; };
-const LINK_KEY = {groups:'url', channels:'handle', competitors:'url'};
+const LINK_KEY = {groups:'url', channels:'handle', competitors:'url', feeders:'url'};
 const linkOf = (k, r) => LINK_KEY[k] ? linkify(r[LINK_KEY[k]]) : '';
 const tone = v => { v=String(v||'');
   if(/^(Confirmed|Active|Posted|Done|Yes|Primary|Buffer)/.test(v)) return 'leaf';
@@ -1439,7 +1441,7 @@ function viewRef(k, id){
     return `<div class="rv"><div class="rv-k">${esc(f[1])}</div><div class="rv-v">${val}</div></div>`; }).join('');
   $('#drawer').className = 'drawer';
   $('#drawer').innerHTML = `<header><h3>${esc(r[s.title]||'Entry')}</h3><button class="x" onclick="closeD()" aria-label="Close">×</button></header>
-    <div class="body">${lk ? `<p class="rv-link">${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(String(r[lk]).replace(/^https?:\/\/(www\.)?/,'').slice(0,60))} &#8599;</a>` : r[lk] ? `<span class="muted">${esc(r[lk])}</span>` : `<span class="muted">No link yet</span>${canEdit?` · <a href="javascript:void 0" onclick="editRef('${k}','${id}')">Add link</a>`:''}`}</p>` : ''}${kv || '<p class="meta">No details yet.</p>'}${metaLine(r)}</div>
+    <div class="body">${lk ? `<div class="rv"><div class="rv-k">Link</div><div class="rv-v">${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(String(r[lk]).replace(/^https?:\/\/(www\.)?/,'').slice(0,60))} &#8599;</a>` : r[lk] ? esc(r[lk]) : `<span class="muted">No link yet</span>${canEdit?` · <a href="javascript:void 0" onclick="editRef('${k}','${id}')">Add link</a>`:''}`}</div></div>` : ''}${kv || '<p class="meta">No details yet.</p>'}${metaLine(r)}</div>
     <footer><div></div><div style="display:flex;gap:8px"><button class="btn-outline" onclick="closeD()">Close</button>${canEdit?`<button class="btn-primary" onclick="editRef('${k}','${id}')">Edit</button>`:''}</div></footer>`;
   $('#dw').classList.add('dw-open');
 }
@@ -1448,7 +1450,7 @@ function cell(s,key,v){ const f = s.f.find(x=>x[0]===key); if(!f) return esc(v);
   if(f[2]==='date') return fmtDate(v); if(f[2]==='select') return chip(v); if(f[2]==='long') return `<span class="clip">${esc(v)}</span>`; return esc(v); }
 function table(s,rows){
   return `<div class="tbl"><table><thead><tr><th>${label(s,s.title)}</th>${s.cols.map(c=>`<th>${label(s,c)}</th>`).join('')}</tr></thead><tbody>
-  ${rows.map(r=>`<tr onclick="viewRef('${s.k}','${r.id}')"><td class="main">${esc(r[s.title])}${linkOf(s.k, r)?` <a href="${esc(linkOf(s.k, r))}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:400;font-size:12px">link</a>`:''}</td>
+  ${rows.map(r=>`<tr onclick="viewRef('${s.k}','${r.id}')"><td class="main">${esc(r[s.title])}</td>
   ${s.cols.map(c=>`<td>${cell(s,c,r[c])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
 function cards(s,rows){

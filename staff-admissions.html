@@ -84,13 +84,13 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
     <div class="top-bar" style="align-items:flex-end;gap:16px;flex-wrap:wrap;">
       <div>
         <div class="eyebrow">Students</div>
-        <h1>Admissions</h1>
-        <p style="font-size:15px;color:#5F5E5A;margin-top:6px;">Every enquiry and application, from first message to enrolled.</p>
+        <h1 id="admTitle">New enquiries</h1>
+        <p id="admSub" style="font-size:15px;color:#5F5E5A;margin-top:6px;"></p>
       </div>
       <button class="btn-primary" id="addAppBtn" onclick="toggleAddCard()" style="display:none;">+ Add application</button>
     </div>
 
-    <div id="admTabs" style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px;"></div>
+    <div id="admTabs" style="display:none"></div>
 
     <div class="card" id="addApplicationCard" style="display:none;">
       <h2>Add a new application</h2>
@@ -368,13 +368,15 @@ function applyFiltersAndRender(){
 // Tabs: New (enquiries), In progress, Withdrawn here; Enrolled and Archived open their own pages.
 let ADM_TAB = ['new','progress','withdrawn'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'new';
 const tabOf = s => s.status === 'enquiry' ? 'new' : s.status === 'withdrawn' ? 'withdrawn' : 'progress';
+const ADM_HEAD = { new:['New enquiries','Enquiries that have not moved to the next step yet.'], progress:['In progress','Applications between enquiry and enrolled.'], withdrawn:['Withdrawn','Families who stepped back. Move them on again if they return.'] };
 function renderAdmTabs(){
   const n = k => allData.filter(s => tabOf(s) === k).length;
-  const pill = (on, label, attrs) => `<a ${attrs} style="font-size:14px;font-weight:600;padding:8px 16px;border-radius:999px;text-decoration:none;cursor:pointer;${on ? 'background:#534AB7;color:#fff;border:1px solid #534AB7;' : 'background:#fff;color:#2C2C2A;border:1px solid #E8E3D8;'}">${label}</a>`;
-  document.getElementById('admTabs').innerHTML =
-    [['new','New'],['progress','In progress'],['withdrawn','Withdrawn']].map(([k,l]) => pill(ADM_TAB === k, `${l} <span style="opacity:.75;font-size:12px;">${n(k)}</span>`, `href="#${k}" onclick="setAdmTab('${k}');return false;"`)).join('')
-    + pill(false, 'Enrolled', 'href="learners.html"') + pill(false, 'Archived', 'href="archive.html"');
+  ['new','progress','withdrawn'].forEach(k => { if(typeof setSysCount === 'function') setSysCount(k, n(k)); });
+  const [t, sub] = ADM_HEAD[ADM_TAB];
+  document.getElementById('admTitle').textContent = t; document.getElementById('admSub').textContent = sub;
+  if(typeof setSysActive === 'function') setSysActive();
 }
+window.addEventListener('hashchange', () => { const k = location.hash.slice(1); if(['new','progress','withdrawn'].includes(k) && k !== ADM_TAB) setAdmTab(k); });
 function setAdmTab(k){ ADM_TAB = k; currentPage = 1; history.replaceState(null, '', '#' + k); applyFiltersAndRender(); }
 function toggleAddCard(){
   const c = document.getElementById('addApplicationCard'), open = c.style.display === 'none';

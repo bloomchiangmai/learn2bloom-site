@@ -118,7 +118,12 @@ td.nowrap{white-space:nowrap;}
 /* drawer */
 .scrim{position:fixed;inset:0;background:rgba(44,44,42,.28);display:none;z-index:80;}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:#FDFAF5;border-left:1px solid #E8E3D8;z-index:81;transform:translateX(100%);transition:transform .2s ease;display:flex;flex-direction:column;}
-.drawer.wide{width:min(980px,100%);}
+.drawer.wide{width:min(980px,100%);} .drawer.mid{width:min(664px,100%);}
+.grid-3{display:grid;grid-template-columns:1.25fr .85fr 1.1fr;gap:14px;} @media (max-width:700px){ .grid-3{grid-template-columns:1fr 1fr;} }
+.nchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.nchip{display:inline-flex;align-items:center;gap:5px;font:inherit;font-size:13.5px;padding:6px 11px;border-radius:999px;border:1px solid #DCD5C6;background:#fff;color:#2C2C2A;cursor:pointer;}
+.nchip:hover{border-color:#B4B2A9;} .nchip.on{border-color:#534AB7;background:#EEEDFE;color:#3C3489;font-weight:700;}
+.nchip:disabled{opacity:.45;cursor:default;} .nchip-n{font-size:11px;color:#8A877F;font-weight:500;} .nchip-sep{width:1px;height:22px;background:#E2DDD3;margin:0 2px;}
 .dw-open .scrim{display:block;} .dw-open .drawer{transform:none;}
 .drawer header{padding:18px 22px;border-bottom:1px solid #E8E3D8;display:flex;justify-content:space-between;align-items:center;gap:12px;}
 .drawer header h3{font-family:Georgia,serif;font-size:19px;font-weight:700;}
@@ -378,6 +383,8 @@ th.sortable{cursor:pointer;user-select:none;white-space:nowrap;} th.sortable .ar
 .tk-m > .sgl,.tk-m > .wl,.tk-m > .pl{border-top:0;}
 .tk + .tk{border-top:1px solid #F0ECE3;}
 .tk-bar{display:flex;align-items:center;gap:10px;min-height:34px;padding:2px 0 8px;border-bottom:1px solid #E8E3D8;font-size:13px;} .tk-n{font-weight:600;color:#3C3489;} .tk-all{display:flex;align-items:center;gap:10px;cursor:pointer;color:#5F5E5A;}
+.ps-r{display:grid;grid-template-columns:118px minmax(0,1fr) 150px 100px;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #F0ECE3;font-size:13.5px;cursor:pointer;} .ps-r:hover{background:#FAF8F3;} .ps-r.pl-h{cursor:default;border-top:0;} .ps-r.pl-h:hover{background:none;}
+.ps-toggle{display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:0;padding:0;font:inherit;cursor:pointer;text-align:left;margin-bottom:8px;}
 .pager{display:flex;justify-content:center;align-items:center;gap:14px;padding:14px 0 2px;font-size:13px;color:#6B6A64;border-top:1px solid #F0ECE3;}
 .pager .cal-nav:disabled{opacity:.35;cursor:default;}
 .sgl{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px 0;border-top:1px solid #F0ECE3;font-size:13.5px;}
@@ -953,6 +960,7 @@ const weekStart = iso => { const d = new Date(iso+'T00:00:00'); d.setDate(d.getD
 // ---------- Calendar ----------
 // ---------- Item 88: pages of 15, tick boxes, delete ----------
 const PER = 15;
+let LIST_POSTED = {};
 let PAGE = { sugg:0, ideas:0, plan:0 }, SEL = { sugg:new Set(), posts:new Set() }, PAGEKEYS = { sugg:[], posts:[] };
 const canDel = p => !!p && openStep(p) && (p.created_by===ME || canDelete || (!p.created_by && isWriterOf(p)));
 function pageOf(k, arr){ const n = Math.max(0, Math.ceil(arr.length/PER)-1); if(PAGE[k] > n) PAGE[k] = n; return arr.slice(PAGE[k]*PER, PAGE[k]*PER + PER); }
@@ -1008,8 +1016,14 @@ function calendarView(){
     return head + `<div class="box"><p class="meta" style="font-size:13px;margin-bottom:6px">From the school calendar and the special dates list. Nothing is created until someone plans it.</p>${a.length ? tickBar('sugg', pg.map(x=>x.key), '<button class="btn-outline sm" onclick="hideTicked()">Not this year</button>') + pg.map(x=>tickRow('sugg', x.key, sgLine(x), true)).join('') + pager('sugg', a.length) : '<p class="meta" style="padding:8px 0">No suggestions left.</p>'}</div>`; }
   if(calMode==='ideas'){ const pg = pageOf('ideas', ideas), dk = pg.filter(canDel).map(p=>p.id);
     return head + `<div class="box">${ideas.length ? tickBar('posts', dk, '<button class="btn-outline sm" style="color:#A23F1C" onclick="deleteTicked()">Delete</button>') + pg.map(p=>tickRow('posts', p.id, line(p,true), canDel(p))).join('') + pager('ideas', ideas.length) : '<p class="meta" style="padding:8px 0">No ideas waiting.</p>'}</div>`; }
-  if(calMode==='list'){ const dk = inMonth.filter(canDel).map(p=>p.id);
-    return head + `<div class="box">${inMonth.length ? tickBar('posts', dk, '<button class="btn-outline sm" style="color:#A23F1C" onclick="deleteTicked()">Delete</button>') + tickRow('posts', '', `<div class="pl pl-h"><span>Date</span><span>Topic</span><span>Step</span><span>Writer</span><span>Reviewer</span><span>Translator</span></div>`, false) + inMonth.map(p=>tickRow('posts', p.id, peopleLine(p), canDel(p))).join('') : '<p class="meta" style="padding:8px 0">Nothing planned this month.</p>'}</div>`; }
+  if(calMode==='list'){
+    // Item 89: posts still in progress first; posted ones in their own box below.
+    const planned = inMonth.filter(p=>p.step!=='posted'), done = inMonth.filter(p=>p.step==='posted'), dk = planned.filter(canDel).map(p=>p.id);
+    const open = LIST_POSTED[calMonth] !== undefined ? LIST_POSTED[calMonth] : done.length <= 5;
+    const top = `<div class="box">${planned.length ? tickBar('posts', dk, '<button class="btn-outline sm" style="color:#A23F1C" onclick="deleteTicked()">Delete</button>') + tickRow('posts', '', `<div class="pl pl-h"><span>Date</span><span>Topic</span><span>Step</span><span>Writer</span><span>Reviewer</span><span>Translator</span></div>`, false) + planned.map(p=>tickRow('posts', p.id, peopleLine(p), canDel(p))).join('') : '<p class="meta" style="padding:8px 0">Nothing planned this month.</p>'}</div>`;
+    const bottom = done.length ? `<div class="box"><button class="ps-toggle" aria-expanded="${open}" onclick="LIST_POSTED['${calMonth}']=${!open};render()"><h3 class="bh" style="margin:0">Posted <span class="fyi-n">${done.length}</span></h3><span class="muted">${open?'Hide':'Show'}</span></button>
+      ${open ? tickRow('posts', '', `<div class="ps-r pl-h"><span>Date</span><span>Topic</span><span>Posted by</span><span>Facebook</span></div>`, false) + done.map(p=>tickRow('posts', '', `<div class="ps-r" onclick="go('post/${p.id}')"><span class="muted">${fmtShort(p.post_date)}</span><span class="pt"><span class="ptt">${esc(p.title)}</span></span><span>${esc(nameOf(posterOf(p))||'') || '<span class="muted">—</span>'}</span><span>${p.post_url && /^https:\/\//i.test(p.post_url) ? `<a href="${esc(p.post_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Open</a>` : '<span class="muted">—</span>'}</span></div>`, false)).join('') : ''}</div>` : '';
+    return head + top + bottom; }
   const first = new Date(y, m-1, 1), days = new Date(y, m, 0).getDate(), lead = first.getDay();
   let cells = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="dow">${d}</div>`).join('');
   for(let i=0;i<lead;i++) cells += '<div class="day out"></div>';
@@ -1465,19 +1479,37 @@ function editBrief(id){
   };
 }
 function topicForm(p, withBrief){
-  const thai = p.needs_thai === undefined ? 'true' : String(p.needs_thai);
+  const thai = p.needs_thai === false ? 'false' : 'true';
   return `
-    <div class="f"><label>Topic</label><input name="title" value="${esc(p.title||'')}" placeholder="Loy Krathong at Bloom"></div>
-    <div class="grid-2"><div class="f"><label>Posting date</label><input name="post_date" type="date" value="${esc(p.post_date||'')}"></div>
-      <div class="f"><label>Time <span class="hint">optional</span></label><input name="post_time" type="time" value="${esc(p.post_time||'')}"></div></div>
-    <div class="f"><label>Label <span class="hint">optional</span></label><select name="label"><option value="">Choose a label</option>${LABELS.map(l=>`<option ${l.name===p.label?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div>
+    <div class="f"><label>Topic</label><input name="title" value="${esc(p.title||'')}" placeholder="e.g. Loy Krathong at Bloom"></div>
+    <div class="grid-3"><div class="f"><label>Posting date</label><input name="post_date" type="date" value="${esc(p.post_date||'')}"></div>
+      <div class="f"><label>Time <span class="hint">optional</span></label><input name="post_time" type="time" value="${esc(p.post_time||'')}"></div>
+      <div class="f"><label>Label</label><select name="label"><option value="">Choose</option>${LABELS.map(l=>`<option ${l.name===p.label?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div></div>
     <h4 class="who-h">Who does this post</h4>
-    <div class="f"><label>Writer</label><select name="writer">${personOptions(p.writer === undefined ? (TEAM[ME] ? ME : '') : p.writer)}</select></div>
-    <div class="f"><label>Reviewer <span class="hint">needed before Send to Review</span></label><select name="pic">${personOptions(p.pic, 'Pick a reviewer', true)}</select></div>
-    <div class="f"><label>Translation</label><select name="needs_thai" onchange="$('#trWrap').style.display=this.value==='true'?'':'none'"><option value="true" ${thai==='true'?'selected':''}>Thai needed</option><option value="false" ${thai==='false'?'selected':''}>English only</option></select></div>
-    <div class="f" id="trWrap" style="${thai==='true'?'':'display:none'}"><label>Translator <span class="hint">needed before Send to Review</span></label><select name="translator">${personOptions(p.translator, 'Pick a translator', true)}</select></div>
-    <div class="f"><label>Poster</label><select name="poster">${personOptions(p.poster || '', 'The writer posts it')}</select></div>
-    ${withBrief ? `<p style="margin:10px 0"><a href="javascript:void 0" onclick="$('#briefWrap').style.display='';this.parentElement.remove()">+ Add a brief (the AI writes better with it)</a></p><div id="briefWrap" style="display:none"><h4 style="font-size:13px;margin:16px 0 8px;color:#5F5E5A">Brief for the writer</h4>${briefFields(p)}</div>` : ''}`;
+    ${chipField('writer', 'Writer', p.writer === undefined ? (TEAM[ME] ? ME : '') : (p.writer||''))}
+    ${chipField('pic', 'Reviewer', p.pic||'')}
+    <input type="hidden" name="needs_thai" value="${thai}">
+    ${chipField('translator', 'Translator', thai==='false' ? '__none' : (p.translator||''), ['__none','No Thai'])}
+    ${chipField('poster', 'Poster', p.poster||'', ['','Writer'])}
+    ${withBrief ? `<p style="margin:10px 0"><a href="javascript:void 0" onclick="$('#briefWrap').style.display='';this.parentElement.remove()">+ Add a brief</a></p><div id="briefWrap" style="display:none"><h4 style="font-size:13px;margin:16px 0 8px;color:#5F5E5A">Brief for the writer</h4>${briefFields(p)}</div>` : ''}`;
+}
+// Item 91: people are name chips. First names; a small grey number shows posts in progress. Click again to clear.
+function chipField(name, label, sel, first){
+  const ids = members(), fn = id => { const f = firstName(STAFF[id].name); return ids.filter(x=>firstName(STAFF[x].name)===f).length > 1 ? STAFF[id].name : f; };
+  const chip = (v, text, extra, dis) => `<button type="button" class="nchip ${String(sel)===String(v)?'on':''}" data-f="${name}" data-v="${esc(v)}" ${dis?'disabled title="No HQ access yet"':''} onclick="pickChip(this)">${text}${extra||''}</button>`;
+  let out = first ? chip(first[0], first[1]) + '<span class="nchip-sep"></span>' : '';
+  out += ids.map(id => { const n = openLoad(id); return chip(id, esc(fn(id)), n ? `<span class="nchip-n">${n}</span>` : '', NO_ACCESS.has(id) && String(sel)!==id); }).join('');
+  if(sel && sel !== '__none' && !ids.includes(sel) && STAFF[sel]) out += chip(sel, esc(STAFF[sel].name) + ' (not on the team)');
+  const val = sel === '__none' ? '' : sel;
+  return `<div class="f"><label>${label}</label><input type="hidden" name="${name}" value="${esc(val)}"><div class="nchips">${out}</div></div>`;
+}
+function pickChip(b){
+  const f = b.dataset.f, wrap = b.parentElement, inp = $(`#fm input[name="${f}"]`);
+  let v = b.dataset.v;
+  if(b.classList.contains('on') && v !== '' && v !== '__none'){ v = ''; wrap.querySelectorAll('.nchip').forEach(c=>c.classList.toggle('on', f === 'poster' && c.dataset.v === '')); }
+  else wrap.querySelectorAll('.nchip').forEach(c=>c.classList.toggle('on', c === b));
+  if(f === 'translator'){ $('#fm input[name="needs_thai"]').value = v === '__none' ? 'false' : 'true'; inp.value = v === '__none' ? '' : v; }
+  else inp.value = v;
 }
 function topicPayload(){
   const fd = new FormData($('#fm')), o = {};
@@ -1491,12 +1523,14 @@ function topicPayload(){
 function topicMissing(o){
   if(!o.title) return 'Add a topic.';
   if(!o.post_date) return 'Pick a posting date.';
+  if(!o.label) return 'Pick a label.';
   return '';
 }
 function newTopic(date, pre, suggKey){
   cur = {topic:true};
   pre = pre || {};
   drawerShell('New topic', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || '', writer: TEAM[ME] ? ME : '', pic: '', translator: '', poster: ''}, true), null, false);
+  $('#drawer').classList.add('mid');
   $('#sv').textContent = 'Create';
   $('#sv').onclick = async () => {
     const o = {...topicPayload(), ...briefPayload()}, miss = topicMissing(o);
@@ -1511,8 +1545,9 @@ function editTopic(id){
   const p = POSTS.find(x=>x.id===id); if(!p) return;
   cur = {topic:true};
   drawerShell('Edit topic', topicForm(p, false) + `<p style="margin-top:6px"><button type="button" class="link-btn" style="color:#A23F1C" onclick="cancelPost('${id}')">Delete this post</button></p>`, null, false);
+  $('#drawer').classList.add('mid');
   $('#sv').onclick = async () => {
-    const o = topicPayload(), miss = topicMissing(o);
+    const o = topicPayload(), miss = (!o.title ? 'Add a topic.' : (o.post_date && !o.label) ? 'Pick a label.' : '');
     if(miss){ $('#msg').textContent = miss; return; }
     const r = await act('edit_topic', id, o); if(!r) return;
     closeD(); showToast('Topic updated.'); delete EVENTS[id]; await reloadPosts(true);
@@ -1811,7 +1846,8 @@ function planCheck(){
     else if(r.src === 'paste' && ideaT.has(k)){ r.flag = 'Already in Ideas: plan it from the Ideas tab. Skipped.'; r.skip = true; }
     else if(seen.has(k)){ r.flag = 'Same topic as another row. Only one will be planned.'; r.skip = true; }
     else if(!r.date){ r.flag = 'Needs a posting date'; r.skip = true; }
-    if(r.label && !labels.has(r.label)){ r.badLabel = true; if(!r.flag) r.flag = `No label called "${r.label}". It will be left blank.`; }
+    if(r.label && !labels.has(r.label)) r.badLabel = true;
+    if(!r.skip && (!r.label || r.badLabel)){ r.flag = r.badLabel ? `No label called "${r.label}". Pick one.` : 'Needs a label'; r.skip = true; }
     if(!r.skip) seen.add(k);
   });
   return all.filter(r=>r.on && !r.skip);

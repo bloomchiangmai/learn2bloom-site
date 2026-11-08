@@ -141,6 +141,15 @@ SOURCES.push(async () => {
       html:`${p.sent_back ? 'Sent back: ' : (word[p.step] || '') + ' '}${escD(p.title)}${d ? (late ? ` <span class="late">(late, due ${fmt(d)})</span>` : ` <span style="color:#888780;">(due ${fmt(d)})</span>`) : ''}` };
   });
   if(mine.length > 5) lines.push({ tag:'Marketing HQ', html:`${mine.length - 5} more posts are your turn`, href:'staff-marketing.html#turn', btn:'See all' });
+  // Item 86: people kept informed see how many posts were approved since they last cleared the list
+  const { data: tm } = await sb.from('marketing_team').select('informed, fyi_read_at').eq('staff_id', me).maybeSingle();
+  if(tm && tm.informed){
+    const since = tm.fyi_read_at || new Date(Date.now() - 14*864e5).toISOString();
+    const { data: ev } = await sb.from('marketing_post_events').select('post_id').like('kind', 'approved%').gt('created_at', since).neq('actor', me).limit(200);
+    const open = new Set((posts || []).map(p => p.id));
+    const n = new Set((ev || []).map(e => e.post_id).filter(id => open.has(id))).size;
+    if(n) lines.push({ tag:'Marketing HQ', html:`${n} post${n === 1 ? ' was' : 's were'} approved, for your info`, href:'staff-marketing.html#turn', btn:'See' });
+  }
   // The admin sees posts that are late at someone else's step
   if(window._isAdminOrIt && canAccess('marketing', 'full')){
     const lateOthers = (posts || []).filter(p => !mine.includes(p) && p.post_date && due(p) && due(p) < today);

@@ -318,8 +318,8 @@ button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-vi
 @media (max-width: 760px){ .pl{grid-template-columns:90px minmax(0,1fr) 90px;} .pl>:nth-child(n+4){display:none;} }
 .reffilter{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 12px;} .reffilter button{font:inherit;font-size:13px;font-weight:600;border:0;background:none;color:#5F5E5A;padding:5px 12px;border-radius:8px;cursor:pointer;} .reffilter button:hover{background:#F3F1FD;} .reffilter button.on{background:#EEEDFE;color:#3C3489;} .reffilter .n{font-weight:400;opacity:.7;}
 .quiet{color:#8A877F;font-size:13px;}
-.tt-wrap{overflow-x:auto;} .tt{min-width:820px;}
-.tt-r{display:grid;grid-template-columns:200px 110px 100px 100px 100px 100px minmax(0,1fr) 80px;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
+.tt-wrap{overflow-x:auto;} .tt{min-width:560px;}
+.tt-r{display:grid;grid-template-columns:200px 110px 110px minmax(0,1fr) 80px;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
 .tt-head{align-items:start;padding:0 0 10px;border-bottom:1px solid #E8E3D8;font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;}
 .tt-h{text-align:center;} .tt-h small{display:block;font-size:10px;letter-spacing:0;font-weight:500;color:#8A877F;margin-top:2px;line-height:1.25;}
 .tt-c{display:flex;justify-content:center;align-items:center;}
@@ -336,7 +336,13 @@ button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-vi
 .pl-flag{grid-column:2 / -1;font-size:12px;color:#854F0B;margin-top:-2px;} .pl-flag.skip{color:#A23F1C;}
 .pl-search{margin:0 0 10px;padding:9px 12px;} .pl-paste{height:110px;font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.6;margin-bottom:12px;}
 .pl-lbl{display:block;font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;text-transform:uppercase;margin:4px 0 6px;}
-.pl-who{font-size:13px;color:#5F5E5A;border-top:1px solid #E8E3D8;margin-top:10px;padding-top:12px;}
+.pl-who{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:0 0 14px;margin-bottom:12px;border-bottom:1px solid #E8E3D8;}
+.pl-who label{display:block;font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;margin-bottom:4px;}
+.pl-who select{width:100%;}
+@media (max-width:700px){ .pl-who{grid-template-columns:1fr 1fr;} }
+.lb-top{border-bottom:1px solid #E8E3D8;}
+.fyi-h{display:flex;justify-content:space-between;align-items:baseline;}
+.fyi-n{display:inline-block;font-family:inherit;font-size:12px;font-weight:700;color:#6B6A64;background:#F1EFE8;border-radius:999px;padding:1px 8px;vertical-align:middle;margin-left:4px;}
 @media (max-width:700px){ .pl-r{grid-template-columns:24px 1fr;} .pl-r > :nth-child(n+3){grid-column:2;} .pl-head{display:none;} }
 .lvl-btn{position:relative;border:0;font-family:inherit;cursor:pointer;} .lvl-btn:hover,.lvl-btn:focus-visible{box-shadow:0 0 0 2px #534AB7;outline:none;}
 .acc-dot{position:absolute;top:-4px;right:-4px;width:12px;height:12px;border-radius:50%;background:#534AB7;border:2px solid #fff;box-sizing:border-box;}
@@ -345,7 +351,7 @@ button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-vi
 .acc-menu button:hover,.acc-menu button.on{background:#F3F1FD;} .acc-menu button:focus-visible{outline:2px solid #534AB7;outline-offset:-2px;} .acc-menu button:focus:not(:focus-visible){outline:none;}
 .acc-menu .acc-def{border-top:1px solid #EFEAE0;margin-top:4px;padding-top:9px;color:#534AB7;font-weight:600;}
 .lvl-none{background:#EFECE6;color:#8A877F;} .lvl-view{background:#E6EEFB;color:#2F5DA8;} .lvl-edit{background:#FDF0DC;color:#8A5A12;} .lvl-full{background:#E3F2E8;color:#2E7D4F;}
-.lb-r{display:grid;grid-template-columns:200px minmax(0,1fr) 90px 80px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
+.lb-r{display:grid;grid-template-columns:200px 150px minmax(0,1fr) 80px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #EFEAE0;font-size:14px;}
 .lb-r:last-child{border-bottom:0;} .sd-r{display:grid;grid-template-columns:200px 150px minmax(0,1fr) 80px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #EFEAE0;font-size:14px;} .sd-r:last-child{border-bottom:0;} .sd-r > .link-btn, .sd-r > .btn-primary{justify-self:end;} .sd-r input{min-width:0;} @media (max-width:700px){ .sd-r{grid-template-columns:1fr auto;} } .lb-r > .link-btn, .lb-r > .btn-primary{justify-self:end;} .lb-head{font-size:11px;letter-spacing:.6px;font-weight:700;color:#6B6A64;padding:0 0 8px;border-bottom:1px solid #E8E3D8;} .lb-head small{font-size:10px;letter-spacing:0;font-weight:500;color:#8A877F;margin-left:6px;}
 .pchips{display:flex;gap:6px;flex-wrap:wrap;} .pchip{font:inherit;font-size:13px;padding:5px 12px;border-radius:999px;border:1px solid #DCD5C6;background:#fff;color:#2C2C2A;cursor:pointer;} .pchip:hover{border-color:#534AB7;} .pchip.on{border-color:#534AB7;background:#EEEDFE;color:#3C3489;font-weight:700;} .pchip:disabled{cursor:default;}
 @media (max-width:700px){ .lb-r{grid-template-columns:1fr auto;} .lb-r .pchips{grid-column:1 / -1;} }
@@ -529,6 +535,8 @@ const IMG_BUCKET = 'marketing-media';
 
 let POSTS = [], STAFF = {}, TEAM = {}, NO_ACCESS = new Set(), LEVEL = {}, EVENTS = {}, PLAN = null, DATA = {}, loaded = false;
 let canEdit = false, canDelete = false, ME = null, LANGS = {};
+// Item 86: managers kept informed see approved posts in My turn.
+let INFORMED = {}, FYI = [], FYI_READ = null;
 let refKey = 'facts', calMonth = null, calMode = 'month', postTimer = null;
 const filt = {q:'', s:''};
 
@@ -540,30 +548,12 @@ const isOverseer = () => myDuty() === 'overseer';
 const isAdmin = () => canDelete;
 // The goal, deadline, budget and success measure: PICs, overseers and marketing full only.
 const canEditPlan = () => canEdit && canDelete;
-// Item VI: the usual writer, reviewer and translator fill every new topic. Stored with the goal (plan).
-const usual = () => ({ writer: (PLAN||{}).usual_writer || '', pic: (PLAN||{}).usual_reviewer || '', translator: (PLAN||{}).usual_translator || '', poster: (PLAN||{}).usual_poster || '' });
 const planData = () => Object.fromEntries(Object.entries(PLAN||{}).filter(([k])=>k!=='id' && !k.startsWith('_')));
 async function savePlan(extra){
   const body = { ...planData(), ...extra };
   const { error } = PLAN && PLAN.id ? await sb.from('marketing_entries').update({ data: body }).eq('id', PLAN.id) : await sb.from('marketing_entries').insert({ collection:'plan', data: body });
   if(error){ showToast('Could not save: ' + error.message); return false; }
   return true;
-}
-// Open posts with nobody set get the usual people. A person already picked is never changed.
-function usualGaps(){
-  const U = usual();
-  return POSTS.filter(p=>openStep(p)).map(p=>{ const o = {};
-    if(!p.writer && U.writer) o.writer = U.writer;
-    if(!p.pic && U.pic) o.pic = U.pic;
-    if(p.needs_thai && !p.translator && U.translator) o.translator = U.translator;
-    if(!p.poster && U.poster && U.poster !== p.writer) o.poster = U.poster;
-    return Object.keys(o).length ? [p, o] : null; }).filter(Boolean);
-}
-async function applyUsual(){
-  const list = usualGaps(); if(!list.length) return;
-  const b = $('#usApply'); if(b){ b.disabled = true; b.textContent = 'Working…'; }
-  let n = 0; for(const [p, o] of list){ if(await act('edit_topic', p.id, o)) n++; }
-  showToast(n + ' post' + (n===1?'':'s') + ' updated.'); await reloadPosts(true); render();
 }
 // Item 58: each post names its own writer, reviewer (pic) and translator.
 const members = () => Object.keys(TEAM).filter(id => STAFF[id] && STAFF[id].status === 'active').sort((a,b)=>STAFF[a].name.localeCompare(STAFF[b].name));
@@ -628,12 +618,39 @@ function stepChip(p){
 }
 const actionWord = p => ({english: p.sent_back ? 'Fix' : 'Write', thai:'Translate', review:'Review', post:'Post it'}[p.step] || 'Open');
 
+// ---------- Item 86: For your info ----------
+// People ticked "Kept informed" see each post approved since they last cleared the list. Their own approvals are left out.
+async function loadFyi(){
+  if(!ME || !INFORMED[ME]){ FYI = []; return; }
+  const since = FYI_READ || new Date(Date.now() - 14*864e5).toISOString();
+  const { data, error } = await sb.from('marketing_post_events').select('post_id,actor,kind,created_at').like('kind','approved%').gt('created_at', since).neq('actor', ME).order('created_at', {ascending:false}).limit(200);
+  if(error){ FYI = []; return; }
+  const seen = new Set(); FYI = (data||[]).filter(e=>!seen.has(e.post_id) && seen.add(e.post_id));
+}
+const fyiList = () => FYI.map(e=>({ e, p: POSTS.find(x=>x.id===e.post_id) })).filter(x=>x.p && !['posted','cancelled'].includes(x.p.step));
+const whenText = t => { const d = new Date(t), now = new Date(), y = new Date(now); y.setDate(now.getDate()-1);
+  const hm = d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  if(d.toDateString()===now.toDateString()) return 'today, ' + hm;
+  if(d.toDateString()===y.toDateString()) return 'yesterday';
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); };
+function fyiBox(){
+  const a = fyiList(); if(!a.length) return '';
+  return `<div class="box"><div class="fyi-h"><h3 class="bh">For your info <span class="fyi-n">${a.length}</span></h3><button class="link-btn" onclick="fyiRead()">Mark all read</button></div>
+    ${a.map(({e,p})=>`<div class="wl" onclick="go('post/${p.id}')"><span class="muted">${p.post_date?fmtShort(p.post_date):'No date'}</span><span class="pt"><span class="ptt">${esc(p.title)}</span>${p.label?`<span class="fmt">${esc(p.label)}</span>`:''}</span><span>${stepChip(p)}</span><span class="wl-due muted fyi-who">${esc(firstName(nameOf(e.actor)||'Someone'))} · ${whenText(e.created_at)}</span><span class="wl-act"></span></div>`).join('')}
+  </div>`;
+}
+async function fyiRead(){
+  const { data, error } = await sb.rpc('mkt_fyi_read');
+  if(error){ showToast('Could not save: ' + error.message); return; }
+  FYI_READ = data; FYI = []; render();
+}
+
 // ---------- Data ----------
 async function loadAll(){
   const [posts, staff, team, labels, ent, sch, spec, hid, ais, acc] = await Promise.all([
     sb.from('marketing_posts').select('*').order('post_date', {ascending:true, nullsFirst:false}),
     sb.from('staff').select('id,name,status'),
-    sb.from('marketing_team').select('staff_id,duty,langs'),
+    sb.from('marketing_team').select('staff_id,duty,langs,informed,fyi_read_at'),
     sb.from('marketing_labels').select('name,default_pic,sort').order('sort'),
     sb.from('marketing_entries').select('id,collection,data,updated_at,updated_by').neq('collection','content').order('created_at'),
     sb.rpc('mkt_school_dates'),
@@ -647,6 +664,9 @@ async function loadAll(){
   STAFF = Object.fromEntries((staff.data||[]).map(s=>[s.id, s]));
   TEAM = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, t.duty || 'member']));
   LANGS = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, t.langs || '']));
+  INFORMED = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, !!t.informed]));
+  FYI_READ = ((team.data||[]).find(t=>t.staff_id===ME) || {}).fyi_read_at || null;
+  await loadFyi();
   // Team members who cannot open the HQ (no Marketing edit). Unknown if the check failed.
   NO_ACCESS = new Set(((acc && acc.data) || []).filter(x=>!x.can_edit).map(x=>x.staff_id));
   LEVEL = Object.fromEntries(((acc && acc.data) || []).map(x=>[x.staff_id, x.level || (x.can_edit ? 'edit' : 'none')]));
@@ -668,6 +688,7 @@ async function loadAll(){
 // force: after the person's own action. Otherwise (someone else saved) do not redraw while they are typing.
 async function reloadPosts(force){
   const { data } = await sb.from('marketing_posts').select('*').order('post_date', {ascending:true, nullsFirst:false});
+  await loadFyi();
   if(data){ POSTS = data; const id = postId(); if(id){ delete EVENTS[id]; delete VERSIONS[id]; } if(force === true || !dirty()) render(); }
 }
 function listen(){
@@ -723,7 +744,7 @@ function hqSidebar(cur, mine, late){
 function tabs(){
   const v = view();
   if(v !== 'post') lastTab = v;
-  const mineList = POSTS.filter(p=>isMine(p) && (p.post_date || p.sent_back)), mine = mineList.length, mineLate = mineList.some(isLate);
+  const mineList = POSTS.filter(p=>isMine(p) && (p.post_date || p.sent_back)), mine = mineList.length + fyiList().length, mineLate = mineList.some(isLate);
   const cur = v==='post' ? (lastTab || 'turn') : v;
   hqSidebar(cur, mine, mineLate);
   const [t, sub] = HQ_HEAD[cur] || HQ_HEAD.overview;
@@ -776,6 +797,7 @@ function myTurn(){
     .sort((a,b)=>(Number(isLate(b))-Number(isLate(a))) || String(dueOf(a)||'9').localeCompare(String(dueOf(b)||'9')));
   const sub = 'The posts where you are named for the step they are at.';
   return `
+  ${fyiBox()}
   ${notMarked().some(p=>posterOf(p)===ME) ? notMarkedBox() : ''}
   <div class="box">
     <h3 class="bh">${mine.length ? `Your turn: ${mine.length}` : 'All clear'}</h3>
@@ -1027,7 +1049,7 @@ async function renderPost(el){
     if(p.step==='english') actions = `<span class="needtext" data-for="copy_en" data-msg="Write the English first, then send it to Review."><button class="btn-primary" onclick="doAct('send_on')">Send to Review</button></span>`;
     if(p.step==='review' && (pic || adm)) actions = `<input id="f-note" placeholder="Note to the writer (needed to send back)" class="note-in">
       <button class="btn-outline" onclick="doAct('send_back')">Send back to English</button>
-      <button class="btn-primary" onclick="doAct('approve')">${p.en_written_by===ME&&isAdmin()?'Approve my own post':'Approve'}${p.needs_thai?', send to Translate':', send to Post'}</button>`;
+      <button class="btn-primary" onclick="doAct('approve')">Approve${p.needs_thai?', send to Translate':', send to Post'}</button>`;
     if(p.step==='thai') actions = `<input id="f-note" placeholder="Note if the English is wrong" class="note-in">
       <button class="btn-outline" onclick="doAct('translator_back')">Send back to Review</button>
       <span class="needtext" data-for="copy_th" data-msg="Write the Thai or use Draft Thai with AI first."><button class="btn-primary" onclick="doAct('thai_checked')">Thai done, send to Post</button></span>`;
@@ -1354,9 +1376,12 @@ async function removeImg(i){
 
 // ---------- New topic / edit topic ----------
 // Anyone on the HQ team can be picked for any role on a post. Languages show next to the name.
-function personOptions(sel, empty){
+// Item 85: posts in progress a person is named on, so the picker shows who has room.
+const openLoad = id => POSTS.filter(p=>openStep(p) && p.post_date && [p.writer, p.pic, p.translator, posterOf(p)].includes(id)).length;
+function personOptions(sel, empty, load){
   const ok = members().map(id=>STAFF[id]);
-  return `<option value="">${empty||'Choose a person'}</option>` + ok.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''} ${NO_ACCESS.has(s.id)&&s.id!==sel?'disabled':''}>${esc(s.name)}${LANGS[s.id]?' · '+esc(LANGS[s.id]):''}${NO_ACCESS.has(s.id)?' (no HQ access yet)':''}</option>`).join('')
+  const ld = id => { if(!load) return ''; const n = openLoad(id); return ' · ' + (n ? n + ' open' : 'free'); };
+  return `<option value="">${empty||'Choose a person'}</option>` + ok.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''} ${NO_ACCESS.has(s.id)&&s.id!==sel?'disabled':''}>${esc(s.name)}${LANGS[s.id]?' · '+esc(LANGS[s.id]):''}${NO_ACCESS.has(s.id)?' (no HQ access yet)':ld(s.id)}</option>`).join('')
     + (sel && !ok.some(s=>s.id===sel) && STAFF[sel] ? `<option value="${sel}" selected>${esc(STAFF[sel].name)} (not on the team)</option>` : '');
 }
 const picOptions = sel => personOptions(sel);
@@ -1395,20 +1420,14 @@ function topicForm(p, withBrief){
     <div class="f"><label>Topic</label><input name="title" value="${esc(p.title||'')}" placeholder="Loy Krathong at Bloom"></div>
     <div class="grid-2"><div class="f"><label>Posting date</label><input name="post_date" type="date" value="${esc(p.post_date||'')}"></div>
       <div class="f"><label>Time <span class="hint">optional</span></label><input name="post_time" type="time" value="${esc(p.post_time||'')}"></div></div>
-    <div class="f"><label>Label <span class="hint">optional</span></label><select name="label" onchange="labelPicked(this.value)"><option value="">Choose a label</option>${LABELS.map(l=>`<option ${l.name===p.label?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div>
+    <div class="f"><label>Label <span class="hint">optional</span></label><select name="label"><option value="">Choose a label</option>${LABELS.map(l=>`<option ${l.name===p.label?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div>
     <h4 class="who-h">Who does this post</h4>
     <div class="f"><label>Writer</label><select name="writer">${personOptions(p.writer === undefined ? (TEAM[ME] ? ME : '') : p.writer)}</select></div>
-    <div class="f"><label>Reviewer <span class="hint">needed before Send to Review</span></label><select name="pic" onchange="this.dataset.touched='1'">${personOptions(p.pic)}</select></div>
+    <div class="f"><label>Reviewer <span class="hint">needed before Send to Review</span></label><select name="pic">${personOptions(p.pic, 'Pick a reviewer', true)}</select></div>
     <div class="f"><label>Translation</label><select name="needs_thai" onchange="$('#trWrap').style.display=this.value==='true'?'':'none'"><option value="true" ${thai==='true'?'selected':''}>Thai needed</option><option value="false" ${thai==='false'?'selected':''}>English only</option></select></div>
-    <div class="f" id="trWrap" style="${thai==='true'?'':'display:none'}"><label>Translator <span class="hint">needed before Send to Review</span></label><select name="translator">${personOptions(p.translator, 'Choose later')}</select></div>
+    <div class="f" id="trWrap" style="${thai==='true'?'':'display:none'}"><label>Translator <span class="hint">needed before Send to Review</span></label><select name="translator">${personOptions(p.translator, 'Pick a translator', true)}</select></div>
     <div class="f"><label>Poster</label><select name="poster">${personOptions(p.poster || '', 'The writer posts it')}</select></div>
     ${withBrief ? `<p style="margin:10px 0"><a href="javascript:void 0" onclick="$('#briefWrap').style.display='';this.parentElement.remove()">+ Add a brief (the AI writes better with it)</a></p><div id="briefWrap" style="display:none"><h4 style="font-size:13px;margin:16px 0 8px;color:#5F5E5A">Brief for the writer</h4>${briefFields(p)}</div>` : ''}`;
-}
-// A label suggests who usually approves it, unless a person was already picked by hand.
-function labelPicked(name){
-  const l = LABELS.find(x=>x.name===name), sel = $('#fm [name="pic"]');
-  if(!l || !l.default_pic || !sel || sel.dataset.touched) return;
-  if([...sel.options].some(o=>o.value===l.default_pic)) sel.value = l.default_pic;
 }
 function topicPayload(){
   const fd = new FormData($('#fm')), o = {};
@@ -1427,9 +1446,7 @@ function topicMissing(o){
 function newTopic(date, pre, suggKey){
   cur = {topic:true};
   pre = pre || {};
-  const U = usual();
-  drawerShell('New topic', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || '', ...(U.writer ? {writer: U.writer} : {}), pic: U.pic, translator: U.translator, poster: U.poster}, true), null, false);
-  if(pre.label) setTimeout(()=>labelPicked(pre.label), 0);
+  drawerShell('New topic', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || '', writer: TEAM[ME] ? ME : '', pic: '', translator: '', poster: ''}, true), null, false);
   $('#sv').textContent = 'Create';
   $('#sv').onclick = async () => {
     const o = {...topicPayload(), ...briefPayload()}, miss = topicMissing(o);
@@ -1463,33 +1480,29 @@ function teamView(){
   const ms = members();
   const others = Object.values(STAFF).filter(s=>s.status==='active' && !TEAM[s.id]).sort((a,b)=>a.name.localeCompare(b.name));
   const sel = 'style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px;background:#fff"';
-  const U = usual(), gaps = canDelete ? usualGaps().length : 0, dis = canDelete ? '' : 'disabled';
+
   const th = (t, d) => `<span class="tt-h">${t}<small>${d}</small></span>`;
-  // Item 81: one table for the team: access, languages as ticks, and the usual people for new topics.
+  // Items 85, 86: the team is who takes part, their HQ access and who is kept informed. People are picked on each post.
   const row = id => {
     const lv = LEVEL[id] || (NO_ACCESS.has(id) ? 'none' : 'edit'), ok = !NO_ACCESS.has(id);
     const badge = canManageAccess() ? `<button class="lvl lvl-${lv} lvl-btn" aria-haspopup="menu" onclick="openAccessMenu(event,'${id}')">${lv.charAt(0).toUpperCase()+lv.slice(1)}${ACC.ov[id]?'<span class="acc-dot"></span>':''}</button>` : `<span class="lvl lvl-${lv}">${lv.charAt(0).toUpperCase()+lv.slice(1)}</span>`;
-    const radio = (k, enabled) => `<span class="tt-c"><input type="radio" class="rad" name="us-${k}" aria-label="Usual ${k}" ${U[k]===id?'checked':''} ${canDelete && enabled ? '' : 'disabled'} onclick="setUsual('${k}','${id}')"></span>`;
+    const inf = `<span class="tt-c"><input type="checkbox" class="tick" aria-label="Keep ${esc(STAFF[id].name)} informed" ${INFORMED[id]?'checked':''} ${canDelete && ok ? '' : 'disabled'} onchange="setInformed('${id}', this.checked)"></span>`;
     return `<div class="tt-r"><b>${esc(STAFF[id].name)}</b>
       <span class="tt-c">${badge}</span>
-      ${radio('writer', ok)}${radio('pic', ok)}${radio('translator', ok)}${radio('poster', ok)}<span></span>
+      ${inf}<span></span>
       <span class="tt-c" style="justify-content:flex-end">${canDelete?`<button class="link-btn" style="color:#A23F1C" onclick="removeMember('${id}')">Remove</button>`:''}</span></div>`;
   };
   const team = `<div class="box"><h3 class="bh">Marketing team</h3>
     <div class="tt-wrap"><div class="tt">
-      <div class="tt-r tt-head"><span class="tt-h" style="text-align:left">PERSON</span>${th('HQ ACCESS', canManageAccess() ? 'click to change' : 'from Roles and access')}${th('WRITER','new topics')}${th('REVIEWER','new topics')}${th('TRANSLATOR','new topics')}${th('POSTER','new topics')}<span></span><span></span></div>
+      <div class="tt-r tt-head"><span class="tt-h" style="text-align:left">PERSON</span>${th('HQ ACCESS', canManageAccess() ? 'click to change' : 'from Roles and access')}${th('KEPT INFORMED','sees approved posts')}<span></span><span></span></div>
       ${ms.length ? ms.map(row).join('') : '<p class="meta" style="padding:8px 0">No one yet.</p>'}
       ${others.length && canDelete ? `<div class="tt-add"><select id="addWho" ${sel}><option value="">Add a person</option>${others.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select><button class="btn-primary sm" onclick="addMember()">Add</button></div>` : ''}
     </div></div>
-    ${gaps ? `<div class="us-act"><button class="btn-outline sm" id="usApply" onclick="applyUsual()">Fill ${gaps} open post${gaps===1?'':'s'} that have nobody set</button></div>` : ''}
   </div>`;
-  const pics = ms.filter(id=>!NO_ACCESS.has(id));
-  const chip = (l, id) => `<button class="pchip ${l.default_pic===id?'on':''}" ${dis} data-name="${esc(l.name)}" onclick="setLabelPic(this.dataset.name, '${l.default_pic===id?'':id}')">${esc(firstName(STAFF[id].name))}</button>`;
   const labels = `<div class="box"><h3 class="bh">Labels</h3>
-    <div class="lb-r lb-head"><span>LABEL</span><span>USUAL REVIEWER <small>click a name, click again to clear</small></span><span>USED</span><span></span></div>
+    <div class="lb-top"></div>
     ${LABELS.map(l=>`<div class="lb-r"><b>${esc(l.name)}</b>
-      <span class="pchips">${pics.map(id=>chip(l,id)).join('')}</span>
-      <span class="muted">${(n=>n+' post'+(n===1?'':'s'))(POSTS.filter(p=>p.label===l.name).length)}</span>
+      <span class="muted">${(n=>n+' post'+(n===1?'':'s'))(POSTS.filter(p=>p.label===l.name).length)}</span><span></span>
       ${canDelete?`<button class="link-btn" style="color:#A23F1C" data-name="${esc(l.name)}" onclick="removeLabel(this.dataset.name)">Remove</button>`:'<span></span>'}</div>`).join('')}
     ${canDelete?`<div class="lb-r"><input id="newLabel" placeholder="New label" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px"><span></span><span></span><button class="btn-primary sm" onclick="addLabel()">Add</button></div>`:''}
   </div>`;
@@ -1563,13 +1576,10 @@ async function pickAccess(id, level){
   showToast(firstName(STAFF[id].name) + ': Marketing ' + (lv || def) + '.');
   await loadAccess(); await loadAll();
 }
-async function setUsual(k, id){
-  const key = {writer:'usual_writer', pic:'usual_reviewer', translator:'usual_translator', poster:'usual_poster'}[k];
-  const val = usual()[k] === id ? '' : id;
-  if(!(await savePlan({ [key]: val }))) { render(); return; }
-  PLAN = Object.assign(PLAN || {}, { [key]: val });
-  if(!PLAN.id) await loadAll(); else render();
-  showToast(val ? 'Saved. New topics start with ' + firstName(STAFF[id].name) + '.' : 'Cleared.');
+async function setInformed(id, on){
+  const { error } = await sb.from('marketing_team').update(on ? { informed:true, fyi_read_at: new Date().toISOString() } : { informed:false }).eq('staff_id', id);
+  if(error){ showToast('Could not save: ' + error.message); render(); return; }
+  INFORMED[id] = on; showToast(firstName(STAFF[id].name) + (on ? ' will see posts when they are approved.' : ' is no longer kept informed.'));
 }
 async function addMember(){
   const id = $('#addWho').value, langs = '';
@@ -1589,11 +1599,6 @@ async function removeMember(id){
   const { error } = await sb.from('marketing_team').delete().eq('staff_id', id);
   if(error){ showToast('Could not remove: ' + error.message); return; }
   delete TEAM[id]; showToast('Removed.'); render();
-}
-async function setLabelPic(name, pic){
-  const { error } = await sb.from('marketing_labels').update({ default_pic: pic || null }).eq('name', name);
-  if(error){ showToast('Could not save: ' + error.message); return; }
-  const l = LABELS.find(x=>x.name===name); if(l) l.default_pic = pic || null; showToast(pic ? 'Saved.' : 'Cleared.'); if(view()==='settings') render();
 }
 async function addLabel(){
   const name = ($('#newLabel').value||'').trim();
@@ -1716,7 +1721,7 @@ function metaLine(r){
 }
 // ---------- Item 79: Plan several ----------
 // Give dates to ideas in one go, or paste rows (topic, date, label) from the Google Sheet.
-// Rows without a date, and topics already planned, are flagged and skipped. People come from Usual team.
+// Rows without a date, and topics already planned, are flagged and skipped. People come from the pickers at the top (item 85).
 let PL = null;
 const normT = t => String(t||'').toLowerCase().replace(/[^a-z0-9ก-๙]+/g,' ').trim();
 const MON = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12};
@@ -1737,7 +1742,7 @@ function parseDay(t){
 }
 function planSeveral(){
   const ideas = POSTS.filter(p=>openStep(p) && !p.post_date).sort((a,b)=>String(a.title).localeCompare(String(b.title)));
-  PL = { tab:'ideas', q:'', paste:'', rows: ideas.map(p=>({ key:'i'+p.id, src:'idea', id:p.id, title:p.title, date:'', label:p.label||'', thai: p.needs_thai !== false, on:false })), pasted:[] };
+  PL = { who:{ writer: TEAM[ME] ? ME : '', pic:'', translator:'', poster:'' }, tab:'ideas', q:'', paste:'', rows: ideas.map(p=>({ key:'i'+p.id, src:'idea', id:p.id, title:p.title, date:'', label:p.label||'', thai: p.needs_thai !== false, on:false })), pasted:[] };
   drawerShell('Plan several', '<div id="plBody"></div>', null, true);
   $('#sv').textContent = 'Plan 0 posts'; $('#sv').onclick = planRun;
   planDraw();
@@ -1771,7 +1776,7 @@ function planRow(r){
 }
 function planDraw(){
   if(!PL || !$('#plBody')) return;
-  const ready = planCheck(), U = usual(), ticked = [...PL.rows, ...PL.pasted].filter(r=>r.on);
+  const ready = planCheck(), ticked = [...PL.rows, ...PL.pasted].filter(r=>r.on);
   const head = `<div class="pl-r pl-head"><span></span><span>TOPIC</span><span>POSTING DATE</span><span>LABEL</span><span>THAI</span></div>`;
   const tabs = `<div class="reffilter"><button class="${PL.tab==='ideas'?'on':''}" onclick="planTab('ideas')">From ideas <span class="n">${PL.rows.length}</span></button><button class="${PL.tab==='paste'?'on':''}" onclick="planTab('paste')">Paste from the sheet</button></div>`;
   let body;
@@ -1784,8 +1789,9 @@ function planDraw(){
       <textarea class="pl-in pl-paste" placeholder="Father's Day at Bloom&#9;4/12/2026&#9;Holiday" oninput="planPaste(this.value)">${esc(PL.paste)}</textarea>
       <div id="plList">${PL.pasted.length ? `<label class="pl-lbl">Read as ${PL.pasted.length} post${PL.pasted.length===1?'':'s'}</label>${head}${PL.pasted.map(planRow).join('')}` : ''}</div>`;
   }
-  const who = k => nameOf(U[k]) || (k==='writer' ? 'the person planning' : k==='poster' ? 'the writer' : 'not set');
-  $('#plBody').innerHTML = tabs + body + `<p class="pl-who">Each post gets Writer <b>${esc(who('writer'))}</b> · Reviewer <b>${esc(who('pic'))}</b> · Translator <b>${esc(who('translator'))}</b> · Poster <b>${esc(who('poster'))}</b> from Usual team. People already set on an idea stay.</p>`;
+  const pick = (k, lab, empty) => `<div><label>${lab}</label><select class="pl-in" onchange="PL.who.${k}=this.value" aria-label="${lab}">${personOptions(PL.who[k], empty, k==='pic'||k==='translator')}</select></div>`;
+  const who = `<div class="pl-who">${pick('writer','WRITER','Pick a writer')}${pick('pic','REVIEWER','Pick a reviewer')}${pick('translator','TRANSLATOR','Pick a translator')}${pick('poster','POSTER','The writer posts it')}</div>`;
+  $('#plBody').innerHTML = who + tabs + body;
   const skipped = ticked.length - ready.length;
   $('#sv').textContent = `Plan ${ready.length} post${ready.length===1?'':'s'}`;
   $('#sv').disabled = !ready.length;
@@ -1813,11 +1819,12 @@ function planPaste(txt){
 }
 async function planRun(){
   const ready = planCheck(); if(!ready.length) return;
-  const U = usual(), b = $('#sv'); b.disabled = true; b.textContent = 'Working…';
+  const U = PL.who, b = $('#sv'); b.disabled = true; b.textContent = 'Working…';
   let ok = 0; const fails = [];
   for(const r of ready){
     const people = {};
     const p = r.src === 'idea' ? POSTS.find(x=>x.id===r.id) : null;
+    if(U.writer && p && !p.writer) people.writer = U.writer;
     if(U.pic && !(p && p.pic)) people.pic = U.pic;
     if(r.thai && U.translator && !(p && p.translator)) people.translator = U.translator;
     if(U.poster && !(p && p.poster)) people.poster = U.poster;

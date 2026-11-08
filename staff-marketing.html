@@ -537,6 +537,8 @@ let POSTS = [], STAFF = {}, TEAM = {}, NO_ACCESS = new Set(), LEVEL = {}, EVENTS
 let canEdit = false, canDelete = false, ME = null, LANGS = {};
 // Item 86: managers kept informed see approved posts in My turn.
 let INFORMED = {}, FYI = [], FYI_READ = null;
+// Site features: when the HQ is switched off, the team sees a short message. Admin, director and IT still get in.
+let HQ_OFF = false;
 let refKey = 'facts', calMonth = null, calMode = 'month', postTimer = null;
 const filt = {q:'', s:''};
 
@@ -757,9 +759,10 @@ function render(){
   const nb = $('#newTopicBtn'); if(nb) nb.style.display = loaded && canEdit && view() === 'calendar' ? '' : 'none';
   const pb = $('#planBtn'); if(pb) pb.style.display = loaded && canEdit && view() === 'calendar' ? '' : 'none';
   const el = $('#view'), v = view();
+  if(HQ_OFF && !canManageAccess()){ if(nb) nb.style.display='none'; if(pb) pb.style.display='none'; el.innerHTML = '<div class="box" style="text-align:center;padding:40px 20px"><h3 class="bh">Marketing HQ is temporarily unavailable</h3><p class="meta">It is being updated. Please check back later.</p></div>'; return; }
   if(!loaded){ el.innerHTML = '<div class="empty-state">Loading…</div>'; return; }
   let ab = $('#aiBanner'); if(!ab){ ab = document.createElement('div'); ab.id = 'aiBanner'; el.before(ab); }
-  ab.innerHTML = aiBannerHtml();
+  ab.innerHTML = (HQ_OFF ? '<div class="banner bad">Marketing HQ is switched off for the team in Staff › Access › Site features. Only admins can open it.</div>' : '') + aiBannerHtml();
   if(v==='turn') el.innerHTML = myTurn();
   else if(v==='overview') el.innerHTML = overview();
   else if(v==='calendar') el.innerHTML = calendarView();
@@ -1896,7 +1899,10 @@ async function onStaffReady(){
   canEdit = canAccess('marketing', 'edit');
   canDelete = canAccess('marketing', 'full');
   ME = window.currentStaff && window.currentStaff.id;
+  const st = await sb.from('bloom_settings').select('marketing_enabled').limit(1).maybeSingle();
+  HQ_OFF = !!(st && st.data && st.data.marketing_enabled === false);
   render();
+  if(HQ_OFF && !canManageAccess()) return;
   await loadAccess();
   await loadAll();
   listen();

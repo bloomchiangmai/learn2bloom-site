@@ -165,7 +165,6 @@ table.ra td.ra-role select{width:100%;font-size:12.5px;padding:6px 6px;border:1p
     </div>
 
     <div class="card" data-panel="approvals" style="display:none;">
-      <h2>Pending approvals</h2>
       <table>
         <thead>
           <tr><th>Requested by</th><th>Module</th><th>Action</th><th>Details</th><th>When</th><th></th></tr>
@@ -176,15 +175,17 @@ table.ra td.ra-role select{width:100%;font-size:12.5px;padding:6px 6px;border:1p
     </div>
 
     <div class="card" data-panel="features" style="display:none;">
-      <h2>Site features</h2>
-      <p style="font-size:13px;color:#888780;margin-top:-12px;margin-bottom:8px;">Turn a tool off for maintenance. Parents and staff see a "temporarily unavailable" message instead.</p>
       <div class="feat">
         <div><div style="font-weight:600;">Calendar</div><div style="font-size:12px;color:#888780;">bloomcalendar.learn2bloom.org and the Calendar tool</div></div>
         <label class="switch"><span id="toggleCalendarStatus">On</span><input type="checkbox" id="toggleCalendar" onchange="toggleFeature('calendar_enabled', this.checked)"><span class="track" aria-hidden="true"></span></label>
       </div>
-      <div class="feat" style="border-bottom:0;">
+      <div class="feat">
         <div><div style="font-weight:600;">Bloombrary</div><div style="font-size:12px;color:#888780;">bloombrary.learn2bloom.org, public catalog and admin</div></div>
         <label class="switch"><span id="toggleBloombraryStatus">On</span><input type="checkbox" id="toggleBloombrary" onchange="toggleFeature('bloombrary_enabled', this.checked)"><span class="track" aria-hidden="true"></span></label>
+      </div>
+      <div class="feat" style="border-bottom:0;">
+        <div><div style="font-weight:600;">Marketing HQ</div><div style="font-size:12px;color:#888780;">The Marketing HQ and its lines on the staff dashboard. Admins still get in.</div></div>
+        <label class="switch"><span id="toggleMarketingStatus">On</span><input type="checkbox" id="toggleMarketing" onchange="toggleFeature('marketing_enabled', this.checked)"><span class="track" aria-hidden="true"></span></label>
       </div>
     </div>
 
@@ -256,7 +257,7 @@ function showTab(t){
   document.querySelectorAll('.ptab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   document.querySelectorAll('[data-panel]').forEach(p => p.style.display = p.dataset.panel === t ? '' : 'none');
   if(location.hash.slice(1) !== t) history.replaceState(null, '', '#' + t);
-  const head = {roles:['Roles and access','Who can open which tool, and how much they can change.'], approvals:['Approvals','Calendar changes waiting for an admin.'], features:['Site features','Turn a tool off for maintenance.']}[t];
+  const head = {roles:['Roles and access','Who can open which tool, and how much they can change.'], approvals:['Approvals','Calendar changes waiting for an admin.'], features:['Site features','Turn a tool off for maintenance. People see a short "temporarily unavailable" message instead.']}[t];
   document.getElementById('permTitle').textContent = head[0]; document.getElementById('permSub').textContent = head[1];
   if(typeof setSysActive === 'function') setSysActive();
 }
@@ -264,16 +265,17 @@ window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
 
 // Site features (moved here from the dashboard)
 async function loadFeatures(){
-  const { data: settings } = await sb.from('bloom_settings').select('calendar_enabled, bloombrary_enabled').maybeSingle();
+  const { data: settings } = await sb.from('bloom_settings').select('calendar_enabled, bloombrary_enabled, marketing_enabled').maybeSingle();
   setToggleState('toggleCalendar', settings?.calendar_enabled !== false);
   setToggleState('toggleBloombrary', settings?.bloombrary_enabled !== false);
+  setToggleState('toggleMarketing', settings?.marketing_enabled !== false);
 }
 function setToggleState(id, isOn){
   document.getElementById(id).checked = isOn;
   document.getElementById(id + 'Status').textContent = isOn ? 'On' : 'Off';
 }
 async function toggleFeature(column, enabled){
-  const toggleId = column === 'calendar_enabled' ? 'toggleCalendar' : 'toggleBloombrary';
+  const toggleId = { calendar_enabled:'toggleCalendar', bloombrary_enabled:'toggleBloombrary', marketing_enabled:'toggleMarketing' }[column];
   const loc = (await sb.from('bloom_locations').select('id').limit(1).single()).data;
   const { error } = await sb.from('bloom_settings').update({ [column]: enabled }).eq('location_id', loc.id);
   if(error){ showToast('Error: ' + error.message); setToggleState(toggleId, !enabled); return; }

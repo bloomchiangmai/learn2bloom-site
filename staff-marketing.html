@@ -317,7 +317,9 @@ button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-vi
 .pl:hover{background:#FAF8F3;} .pl-h{font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;color:#6B6A64;cursor:default;border-top:none;} .pl-h:hover{background:none;}
 @media (max-width: 760px){ .pl{grid-template-columns:90px minmax(0,1fr) 90px;} .pl>:nth-child(n+4){display:none;} }
 .reffilter{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 12px;} .reffilter button{font:inherit;font-size:13px;font-weight:600;border:0;background:none;color:#5F5E5A;padding:5px 12px;border-radius:8px;cursor:pointer;} .reffilter button:hover{background:#F3F1FD;} .reffilter button.on{background:#EEEDFE;color:#3C3489;} .reffilter .n{font-weight:400;opacity:.7;}
-.quiet{color:#8A877F;font-size:13px;} .plain{color:#5F5E5A;font-size:13px;} .rowtag{font-size:12px;font-weight:600;color:#6B6A64;margin-left:6px;}
+.quiet{color:#8A877F;font-size:13px;}
+th.sortable{cursor:pointer;user-select:none;white-space:nowrap;} th.sortable .arr{margin-left:4px;opacity:0;font-size:10px;} th.sortable:hover .arr{opacity:.45;} th.sorted{color:#3C3489;} th.sorted .arr{opacity:1;color:#534AB7;}
+.subtabs.rows{flex-direction:column;align-items:flex-start;gap:8px;} .subrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;} .sublbl{font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;color:#6B6A64;width:132px;flex:0 0 132px;} @media (max-width:700px){ .sublbl{flex:0 0 100%;width:auto;} } .plain{color:#5F5E5A;font-size:13px;} .rowtag{font-size:12px;font-weight:600;color:#6B6A64;margin-left:6px;}
 .refpager{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:10px;font-size:13px;}
 .refpager button[disabled]{opacity:.4;cursor:default;}
 .rv{margin-bottom:14px;} .rv-link{font-size:14px;font-weight:600;margin:-4px 0 18px;} .rv-link a{color:#534AB7;text-decoration:none;} .rv-k{font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;color:#6B6A64;} .rv-v{font-size:14px;line-height:1.5;margin-top:3px;overflow-wrap:anywhere;}
@@ -435,14 +437,16 @@ const REF = [
   f:[['name','Segment','text'],['priority','Priority','select',['Primary','Secondary','Watch']],['who','Who they are','long'],['worries','What they worry about','long'],['message','Our message to them','long'],['channels','Where they are','text'],['language','Language','text']]},
  {k:'channels',t:'Channels',view:'cards',d:'Every account Bloom owns, and how each one gets fed.',title:'name',chip:'status',cols:['type','automation','status'],
   f:[['name','Channel','text'],['type','Type','select',['Social','Messaging','Website','Email']],['handle','Link','url'],['automation','How it is fed','select',['Buffer (automated)','Manual','Own app','Not set up']],['status','Status','select',['Active','To confirm','To create','Paused']],['audience','Main audience','text'],['notes','Notes','long']]},
- {k:'groups',t:'Groups',view:'table',d:'Places where families already gather. Check the rules before posting.',title:'name',chip:'status',cols:['audience','members','status'],filter:'audience',tag:'platform',rank:groupRank,
-  f:[['name','Group','text'],['platform','Platform','select',['Facebook group','Facebook Page','WhatsApp group','LINE group','Redbook','WeChat group','Forum','Other']],['url','Link','url'],['audience','Audience','select',AUD.slice(0,7)],['members','Members','text'],['promo','Promotion allowed','select',['Unknown','Yes','Specific days only','Admin approval','No']],['status','Status','select',['To verify','Joined','Pending approval','Active','Avoid']],['last_posted','Last posted','date'],['angle','Best angle','long'],['rules','Rules','long'],['notes','Notes','long']]},
+ {k:'groups',t:'Communities',view:'table',d:'Groups, pages and chats run by others, where families already gather. Check the rules before posting.',title:'name',chip:'status',cols:['audience','members','status'],filter:'audience',tag:'platform',rank:groupRank,
+  f:[['name','Community','text'],['platform','Platform','select',['Facebook group','Facebook Page','WhatsApp group','LINE group','Redbook','WeChat group','Forum','Other']],['url','Link','url'],['audience','Audience','select',AUD.slice(0,7)],['members','Members','text'],['promo','Promotion allowed','select',['Unknown','Yes','Specific days only','Admin approval','No']],['status','Status','select',['To verify','Joined','Pending approval','Active','Avoid']],['last_posted','Last posted','date'],['angle','Best angle','long'],['rules','Rules','long'],['notes','Notes','long']]},
+ {k:'coaches',t:'Coaches',view:'table',d:'Communities where coaches gather, for hiring and for showing Bloom as a place to work.',title:'name',chip:'status',cols:['use_for','members','status'],tag:'platform',rank:groupRank,
+  f:[['name','Community','text'],['platform','Platform','select',['Facebook group','Facebook Page','WhatsApp group','LINE group','Redbook','WeChat group','Forum','Other']],['url','Link','url'],['use_for','Use for','select',['Hiring','Promotion','Both']],['members','Members','text'],['job_posts','Job posts allowed','select',['Unknown','Yes','Specific days only','Admin approval','No']],['status','Status','select',['To verify','Joined','Pending approval','Active','Avoid']],['last_job_post','Last job post','date'],['rules','Rules','long'],['notes','Notes','long']]},
  {k:'feeders',t:'Feeders',view:'table',d:'Playgroups and kindergartens that end around age 5. Their families are looking for what comes next.',title:'name',chip:'relationship',cols:['fit','ages','area','relationship'],
-  f:[['name','School','text'],['url','Link','url'],['fit','Fit','select',['Very High','High','Medium-High','Medium','Low']],['type','Type','text'],['ages','Ages','text'],['philosophy','Philosophy','long'],['fee','Annual fee (est.)','text'],['followers','Followers','text'],['area','Area','text'],['contact','Contact','text'],['relationship','Relationship','select',['Not contacted','Contacted','Meeting held','Partner']],['notes','Notes','long']]},
+  f:[['name','School','text'],['person','Person in charge','text'],['phone','Contact number','text'],['email','Email','text'],['url','Link','url'],['fit','Fit','select',['Very High','High','Medium-High','Medium','Low']],['type','Type','text'],['ages','Ages','text'],['philosophy','Philosophy','long'],['fee','Annual fee (est.)','text'],['followers','Followers','text'],['area','Area','text'],['relationship','Relationship','select',['Not contacted','Contacted','Meeting held','Partner']],['notes','Notes','long']]},
  {k:'partners',t:'Partners',view:'table',d:'Companies and platforms that can introduce Bloom to families.',title:'name',chip:'relationship',cols:['type','audience','relationship'],
-  f:[['name','Name','text'],['url','Link','url'],['type','Type','select',['Worldschool platform','Relocation or visa agent','Family business','Media or blog','Other']],['audience','Audience','select',AUD],['offer','What they can do','select',['Listing','Introduction','Referral','Event','Other']],['relationship','Relationship','select',['Not contacted','Contacted','Meeting held','Partner']],['contact','Contact','text'],['notes','Notes','long']]},
+  f:[['name','Name','text'],['person','Person in charge','text'],['phone','Contact number','text'],['email','Email','text'],['url','Link','url'],['type','Type','select',['Worldschool platform','Relocation or visa agent','Family business','Media or blog','Other']],['audience','Audience','select',AUD],['offer','What they can do','select',['Listing','Introduction','Referral','Event','Other']],['relationship','Relationship','select',['Not contacted','Contacted','Meeting held','Partner']],['notes','Notes','long']]},
  {k:'competitors',t:'Competitors',view:'table',d:'Who families compare us with, and where we differ.',title:'name',chip:'type',cols:['type','curriculum','fees','area'],
-  f:[['name','School','text'],['type','Type','select',['International school','Alt-ed / hub','Bilingual','Chinese-focused','Homeschool co-op']],['curriculum','Curriculum','text'],['fees','Fees (per year)','text'],['area','Area','text'],['positioning','How they position','long'],['vs_bcm','Where Bloom differs','long'],['url','Link','url']]},
+  f:[['name','School','text'],['person','Person in charge','text'],['phone','Contact number','text'],['email','Email','text'],['url','Link','url'],['type','Type','select',['International school','Alt-ed / hub','Bilingual','Chinese-focused','Homeschool co-op']],['curriculum','Curriculum','text'],['fees','Fees (per year)','text'],['area','Area','text'],['positioning','How they position','long'],['vs_bcm','Where Bloom differs','long']]},
  {k:'insights',t:'Research notes',view:'cards',d:'Findings worth acting on, with where they came from.',title:'title',chip:'audience',cols:['audience','date'],
   f:[['title','Finding','text'],['audience','Audience','select',AUD.filter(a=>a!=='Mixed')],['finding','What we found','long'],['implication','What it means for Bloom','long'],['source','Source','url'],['date','Date','date']]},
 ];
@@ -451,14 +455,16 @@ const TASKS = {k:'tasks',t:'Tasks',view:'table',d:'What has to happen next, and 
 const SEC = Object.fromEntries([...REF, TASKS].map(s=>[s.k,s]));
 const PLAN_FIELDS = [['goal','Goal','long'],['deadline','Deadline','date'],['budget','Ad budget per month (THB)','text'],['measure','How we measure success','text']];
 // Item 55: Reference shows one list per page.
-const REF_GROUPS = ['facts','audiences','channels','groups','feeders','partners','competitors','insights'].map(k => ({ k, t: SEC[k].t, d: SEC[k].d, secs: [k] }));
+const REF_GROUPS = ['facts','audiences','channels','groups','coaches','feeders','partners','competitors','insights'].map(k => ({ k, t: SEC[k].t, d: SEC[k].d, secs: [k] }));
 const LATE_BG = '#FCEBEB', LATE_TEXT = '#791F1F';
 const $ = (s,el=document)=>el.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeUrl = v => /^https?:\/\//i.test(String(v||'')) ? v : '';
 // Item 59: a link typed without https (facebook.com/BLOOM.chiangmai) still opens; a bare handle (@name) stays text.
 const linkify = v => { v = String(v||'').trim(); if(/^https?:\/\//i.test(v)) return v; if(/^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i.test(v)) return 'https://' + v; return ''; };
-const LINK_KEY = {groups:'url', channels:'handle', competitors:'url', feeders:'url', partners:'url'};
+// Item 69: Reference tabs in two rows by purpose.
+const REF_ROWS = [['About Bloom', ['facts','audiences','channels','insights']], ['Outside contacts', ['groups','coaches','feeders','partners','competitors']]];
+const LINK_KEY = {groups:'url', channels:'handle', competitors:'url', feeders:'url', partners:'url', coaches:'url'};
 const linkOf = (k, r) => LINK_KEY[k] ? linkify(r[LINK_KEY[k]]) : '';
 const tone = v => { v=String(v||'');
   if(/^(Confirmed|Active|Posted|Done|Yes|Primary|Buffer)/.test(v)) return 'leaf';
@@ -658,7 +664,7 @@ function tabs(){
   const [t, sub] = HQ_HEAD[cur] || HQ_HEAD.overview;
   $('#hqTitle').textContent = t; $('#hqSub').textContent = sub;
   $('#subtabs').innerHTML = v==='ref'
-    ? (REF_BACK ? '<button class="refback" onclick="refBackToOverview()">&#8249; Back to Overview</button>' : '') + `<div class="subtabs">${REF_GROUPS.map(g=>`<button class="pill ${g.k===refKey?'on':''}" onclick="refKey='${g.k}';render()">${g.t}<span class="n">${g.secs.reduce((a,k)=>a+(DATA[k]||[]).length,0)}</span></button>`).join('')}</div>` : '';
+    ? (REF_BACK ? '<button class="refback" onclick="refBackToOverview()">&#8249; Back to Overview</button>' : '') + `<div class="subtabs rows">${REF_ROWS.map(([lbl, ks])=>`<div class="subrow"><span class="sublbl">${lbl}</span>${ks.map(k=>REF_GROUPS.find(g=>g.k===k)).map(g=>`<button class="pill ${g.k===refKey?'on':''}" onclick="refKey='${g.k}';render()">${g.t}<span class="n">${g.secs.reduce((a,k)=>a+(DATA[k]||[]).length,0)}</span></button>`).join('')}</div>`).join('')}</div>` : '';
 }
 function render(){
   tabs();
@@ -769,7 +775,7 @@ function groundwork(){
   const t = (key, sec, n, l, sub, bar) => `<button class="gtile" onclick="refFromOverview('${key}','${sec}')"><div class="gt"><span class="gn">${n}</span><span class="gl">${l}</span></div><div class="gs">${sub}</div><div class="gbar">${bar}</div></button>`;
   const seg = (w,c) => `<span style="width:${w}%;background:${c}"></span>`;
   return `<div class="ground-h">GROUNDWORK</div><div class="tiles ground">
-    ${t('who', 'groups', `${ga} / ${g.length}`, 'Groups active', 'Groups where we post', seg(pct(ga,g.length),'#2F6B55'))}
+    ${t('who', 'groups', `${ga} / ${g.length}`, 'Communities active', 'Where we post', seg(pct(ga,g.length),'#2F6B55'))}
     ${t('who', 'channels', `${ca} / ${c.length}`, 'Channels active', 'Pages and apps we use', seg(pct(ca,c.length),'#2F6B55'))}
     ${t('about', 'facts', ft, 'Facts to confirm', 'In the Info bank', seg(pct(fc,f.length),'#2F6B55')+seg(pct(ft,f.length),'#D9963A'))}
   </div>`;
@@ -1430,7 +1436,26 @@ async function removeLabel(name){
 }
 
 // ---------- Reference (edited here) ----------
-const REF_PER_PAGE = 15, REF_PAGE = {}, REF_FILTER = {};
+const REF_PER_PAGE = 15, REF_PAGE = {}, REF_FILTER = {}, REF_SORT = {};
+// Item 68: click a column header to sort. Stages sort by meaning, counts by number, empty values always last.
+const SORT_STAGE = {status:['Active','Joined','Pending approval','To verify','Avoid','To do','Doing','Waiting','Done'], relationship:['Partner','Meeting held','Contacted','Not contacted'], fit:['Very High','High','Medium-High','Medium','Low'], job_posts:['Yes','Specific days only','Admin approval','Unknown','No'], promo:['Yes','Specific days only','Admin approval','Unknown','No']};
+const SORT_NUM = new Set(['members','followers']);
+function refCmp(key, dir){
+  return (a, b) => {
+    const x = a[key], y = b[key], ex = x == null || x === '', ey = y == null || y === '';
+    if(ex || ey) return ex && ey ? 0 : ex ? 1 : -1;
+    let c;
+    if(SORT_NUM.has(key)) c = memberCount(y) - memberCount(x);
+    else if(SORT_STAGE[key]){ const o = SORT_STAGE[key], i = o.indexOf(x), j = o.indexOf(y); c = (i<0?99:i) - (j<0?99:j) || String(x).localeCompare(String(y)); }
+    else c = String(x).localeCompare(String(y), undefined, {sensitivity:'base', numeric:true});
+    return dir * c;
+  };
+}
+function refSort(k, key){
+  const cur = REF_SORT[k];
+  REF_SORT[k] = !cur || cur.key !== key ? {key, dir:1} : cur.dir === 1 ? {key, dir:-1} : null;
+  REF_PAGE[k] = 0; render();
+}
 function renderGroup(el, g){
   const k = g.secs[0], s = SEC[k]; let rows = (DATA[k]||[]).slice();
   if(s.sort) rows.sort((a,b)=>String(a[s.sort]||'9999').localeCompare(String(b[s.sort]||'9999')));
@@ -1443,13 +1468,14 @@ function renderGroup(el, g){
     filters = `<div class="reffilter">${btn('', 'All', all)}${vals.map(v=>btn(v, v, rows.filter(r=>r[s.filter]===v).length)).join('')}</div>`;
     if(fv) rows = rows.filter(r=>r[s.filter]===fv);
   }
+  if(REF_SORT[k]) rows.sort(refCmp(REF_SORT[k].key, REF_SORT[k].dir));
   const pages = Math.max(1, Math.ceil(rows.length / REF_PER_PAGE));
   const pg = Math.min(REF_PAGE[k] || 0, pages - 1); REF_PAGE[k] = pg;
   const from = pg * REF_PER_PAGE, part = rows.slice(from, from + REF_PER_PAGE);
   const pager = rows.length > REF_PER_PAGE ? `<div class="refpager"><span class="muted">${from+1} to ${from+part.length} of ${rows.length}</span><button class="btn-outline sm" ${pg===0?'disabled':''} onclick="refPage('${k}',-1)" aria-label="Previous page">&#8249;</button><button class="btn-outline sm" ${pg>=pages-1?'disabled':''} onclick="refPage('${k}',1)" aria-label="Next page">&#8250;</button></div>` : '';
   el.innerHTML = `<section class="ref-sec" id="ref-${k}"><div class="top-bar"><div><h2>${esc(s.t)} <span class="muted" style="font-family:inherit;font-size:14px;font-weight:400">${all}</span></h2><p class="meta" style="font-size:13px">${esc(s.d)}</p></div>
       ${canEdit?`<button class="btn-outline" onclick="editRef('${k}')">Add</button>`:''}</div>
-      ${filters}${rows.length ? table(s, part, fv ? [s.filter] : []) + pager : '<div class="empty-state">Nothing here yet.</div>'}</section>`;
+      ${filters}${rows.length ? table(s, part, fv ? [s.filter] : [], true) + pager : '<div class="empty-state">Nothing here yet.</div>'}</section>`;
 }
 function refFilter(k, v){ REF_FILTER[k] = v; REF_PAGE[k] = 0; render(); }
 function refPage(k, d){ REF_PAGE[k] = (REF_PAGE[k] || 0) + d; render(); window.scrollTo(0, 0); }
@@ -1458,23 +1484,31 @@ function viewRef(k, id){
   const s = SEC[k], r = (DATA[k]||[]).find(x=>x.id===id); if(!r) return;
   cur = {k, id, view:true};
   const lk = LINK_KEY[k], link = linkOf(k, r);
-  const kv = s.f.filter(f=>f[0]!==s.title && f[0]!==lk && r[f[0]]).map(f => {
-    const v = r[f[0]];
-    const val = f[2]==='url' && safeUrl(v) ? `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(String(v).replace(/^https?:\/\/(www\.)?/,'').slice(0,60))}</a>` : f[2]==='date' ? fmtDate(v) : f[2]==='select' ? chip(v) : esc(v).replace(/\n/g,'<br>');
-    return `<div class="rv"><div class="rv-k">${esc(f[1])}</div><div class="rv-v">${val}</div></div>`; }).join('');
+  const linkHtml = lk ? `<div class="rv"><div class="rv-k">Link</div><div class="rv-v">${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(String(r[lk]).replace(/^https?:\/\/(www\.)?/,'').slice(0,60))} &#8599;</a>` : r[lk] ? esc(r[lk]) : `<span class="muted">No link yet</span>${canEdit?` · <a href="javascript:void 0" onclick="editRef('${k}','${id}')">Add link</a>`:''}`}</div></div>` : '';
+  // Item 70: who to contact comes first, then the link, then the rest.
+  const lastContact = Math.max(...['person','phone','email'].map(c=>s.f.findIndex(f=>f[0]===c)));
+  const kv = s.f.map((f, i) => {
+    if(f[0]===s.title) return '';
+    if(f[0]===lk) return lastContact < 0 ? linkHtml : '';
+    const v = r[f[0]], after = i === lastContact && lk ? linkHtml : '';
+    if(!v) return after;
+    const tel = String(v).replace(/[^+\d]/g,''), mail = /^[^\s@<>"']+@[^\s@<>"']+\.[a-z]{2,}$/i.test(String(v).trim());
+    const val = f[0]==='phone' && tel.length >= 6 ? `<a href="tel:${tel}">${esc(v)}</a>` : f[0]==='email' && mail ? `<a href="mailto:${esc(String(v).trim())}">${esc(v)}</a>` : f[2]==='url' && safeUrl(v) ? `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(String(v).replace(/^https?:\/\/(www\.)?/,'').slice(0,60))}</a>` : f[2]==='date' ? fmtDate(v) : f[2]==='select' ? chip(v) : esc(v).replace(/\n/g,'<br>');
+    return `<div class="rv"><div class="rv-k">${esc(f[1])}</div><div class="rv-v">${val}</div></div>` + after; }).join('');
   $('#drawer').className = 'drawer';
   $('#drawer').innerHTML = `<header><h3>${esc(r[s.title]||'Entry')}</h3><button class="x" onclick="closeD()" aria-label="Close">×</button></header>
-    <div class="body">${lk ? `<div class="rv"><div class="rv-k">Link</div><div class="rv-v">${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${esc(String(r[lk]).replace(/^https?:\/\/(www\.)?/,'').slice(0,60))} &#8599;</a>` : r[lk] ? esc(r[lk]) : `<span class="muted">No link yet</span>${canEdit?` · <a href="javascript:void 0" onclick="editRef('${k}','${id}')">Add link</a>`:''}`}</div></div>` : ''}${kv || '<p class="meta">No details yet.</p>'}${metaLine(r)}</div>
+    <div class="body">${kv || '<p class="meta">No details yet.</p>'}${metaLine(r)}</div>
     <footer><div></div><div style="display:flex;gap:8px"><button class="btn-outline" onclick="closeD()">Close</button>${canEdit?`<button class="btn-primary" onclick="editRef('${k}','${id}')">Edit</button>`:''}</div></footer>`;
   $('#dw').classList.add('dw-open');
 }
 function label(s,key){ return (s.f.find(x=>x[0]===key)||[0,key])[1]; }
 function cell(s,key,v){ const f = s.f.find(x=>x[0]===key); if(!f) return esc(v);
-  if(f[2]==='date') return fmtDate(v); if(f[2]==='select') return QUIET.has(v) ? `<span class="quiet">${esc(v)}</span>` : key==='audience' ? `<span class="plain">${esc(v)}</span>` : chip(v); if(f[2]==='long') return `<span class="clip">${esc(v)}</span>`; return esc(v); }
-function table(s,rows,hide=[]){
-  const cols = s.cols.filter(c=>!hide.includes(c));
+  if(f[2]==='date') return fmtDate(v); if(f[2]==='select') return QUIET.has(v) ? `<span class="quiet">${esc(v)}</span>` : (key==='audience' || key==='use_for') ? `<span class="plain">${esc(v)}</span>` : chip(v); if(f[2]==='long') return `<span class="clip">${esc(v)}</span>`; return esc(v); }
+function table(s,rows,hide=[],sortable=false){
+  const cols = s.cols.filter(c=>!hide.includes(c)), so = sortable && REF_SORT[s.k];
+  const th = c => sortable ? `<th class="sortable${so && so.key===c ? ' sorted' : ''}" onclick="refSort('${s.k}','${c}')" aria-sort="${so && so.key===c ? (so.dir===1?'ascending':'descending') : 'none'}">${label(s,c)}<span class="arr">${so && so.key===c ? (so.dir===1?'▲':'▼') : '↕'}</span></th>` : `<th>${label(s,c)}</th>`;
   const tag = r => s.tag && r[s.tag] && r[s.tag] !== s.f.find(f=>f[0]===s.tag)[3][0] ? ` <span class="rowtag">${esc(r[s.tag])}</span>` : '';
-  return `<div class="tbl"><table><thead><tr><th>${label(s,s.title)}</th>${cols.map(c=>`<th>${label(s,c)}</th>`).join('')}</tr></thead><tbody>
+  return `<div class="tbl"><table><thead><tr>${th(s.title)}${cols.map(th).join('')}</tr></thead><tbody>
   ${rows.map(r=>`<tr onclick="viewRef('${s.k}','${r.id}')"><td class="main">${esc(r[s.title])}${tag(r)}</td>
   ${cols.map(c=>`<td>${cell(s,c,r[c])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }

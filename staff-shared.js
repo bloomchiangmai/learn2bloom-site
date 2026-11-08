@@ -184,7 +184,7 @@ function renderSidebar(activeKey){
       const items = g.items.filter(i => !i.adminOnly || isAdminOrIt);
       if(!items.length) return '';
       return `<div class="sidebar-group">${g.name}</div>` + items.map(i =>
-        `<a href="${i.href}" data-k="${i.key}" class="sidebar-link sys-link ${sysItemOn(i, activeKey) ? 'active' : ''}">${i.label}<span class="sys-n" style="display:none"></span></a>`).join('');
+        `<a href="${i.page === activeKey && i.hash ? '#' + i.hash : i.href}" data-k="${i.key}" class="sidebar-link sys-link ${sysItemOn(i, activeKey) ? 'active' : ''}">${i.label}<span class="sys-n" style="display:none"></span></a>`).join('');
     }).join('');
   } else {
     navHtml = NAV_ITEMS.filter(item => !(item.module && !canAccess(item.module, 'view'))).map(item =>

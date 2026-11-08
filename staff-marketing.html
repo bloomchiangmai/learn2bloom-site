@@ -374,6 +374,12 @@ th.sortable{cursor:pointer;user-select:none;white-space:nowrap;} th.sortable .ar
 .urgent h3{font-size:14px;color:#791F1F;margin-bottom:4px;}
 .cal .sg{display:block;margin-top:3px;font-size:11px;line-height:1.25;border-radius:4px;padding:1px 5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px dashed #C9C3B6;color:#888780;background:transparent;}
 .cal .sg:hover{border-color:#534AB7;color:#534AB7;}
+.tk{display:flex;align-items:center;gap:10px;} .tk-m{flex:1;min-width:0;} .tk-c{flex:0 0 18px;display:flex;align-items:center;}
+.tk-m > .sgl,.tk-m > .wl,.tk-m > .pl{border-top:0;}
+.tk + .tk{border-top:1px solid #F0ECE3;}
+.tk-bar{display:flex;align-items:center;gap:10px;min-height:34px;padding:2px 0 8px;border-bottom:1px solid #E8E3D8;font-size:13px;} .tk-n{font-weight:600;color:#3C3489;}
+.pager{display:flex;justify-content:center;align-items:center;gap:14px;padding:14px 0 2px;font-size:13px;color:#6B6A64;border-top:1px solid #F0ECE3;}
+.pager .cal-nav:disabled{opacity:.35;cursor:default;}
 .sgl{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px 0;border-top:1px solid #F0ECE3;font-size:13.5px;}
 .sgl:first-of-type{border-top:0;} .sgl .acts{display:flex;gap:6px;}
 .checks{display:flex;flex-wrap:wrap;gap:6px;}
@@ -917,7 +923,8 @@ function overview(){
   </div>`; })()}`;
 }
 // Suggested posts: school calendar + special dates, minus dismissed or already planned
-const openSugg = () => SUGG.filter(x=>x.date >= todayISO() && !HIDDEN.has(x.key));
+const sgPlanned = x => POSTS.some(p=>p.step!=='cancelled' && p.post_date===x.date && normT(p.title).includes(normT(x.name)));
+const openSugg = () => SUGG.filter(x=>x.date >= todayISO() && !HIDDEN.has(x.key) && !sgPlanned(x));
 const sgKind = x => ({break:'School calendar', term:'School calendar', holiday:'Holiday', special:'Special date'}[x.kind]||'');
 function sgLine(x){
   return `<div class="sgl"><span class="muted">${fmtShort(x.date)}</span><span><b>${esc(x.name)}</b> <span class="muted">· ${sgKind(x)}</span>${x.confirmed?'':' <span class="chip amber">Date to confirm</span>'}${x.note?`<br><span class="meta">${esc(x.note)}</span>`:''}</span>
@@ -944,6 +951,41 @@ function planSg(i){
 const weekStart = iso => { const d = new Date(iso+'T00:00:00'); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return localISO(d); };
 
 // ---------- Calendar ----------
+// ---------- Item 88: pages of 15, tick boxes, delete ----------
+const PER = 15;
+let PAGE = { sugg:0, ideas:0 }, SEL = { sugg:new Set(), posts:new Set() }, PAGEKEYS = { sugg:[], posts:[] };
+const canDel = p => !!p && openStep(p) && (p.created_by===ME || canDelete || (!p.created_by && isWriterOf(p)));
+function pageOf(k, arr){ const n = Math.max(0, Math.ceil(arr.length/PER)-1); if(PAGE[k] > n) PAGE[k] = n; return arr.slice(PAGE[k]*PER, PAGE[k]*PER + PER); }
+function pager(k, total){
+  if(total <= PER) return '';
+  const a = PAGE[k]*PER + 1, b = Math.min(total, a + PER - 1), last = PAGE[k] >= Math.ceil(total/PER) - 1;
+  return `<div class="pager"><button class="cal-nav" aria-label="Previous" ${PAGE[k]?'':'disabled'} onclick="PAGE.${k}--;render()">&#8249;</button><span>${a} to ${b} of ${total}</span><button class="cal-nav" aria-label="Next" ${last?'disabled':''} onclick="PAGE.${k}++;render()">&#8250;</button></div>`;
+}
+function tickRow(set, key, html, enabled){
+  if(!canEdit) return html;
+  return `<div class="tk"><span class="tk-c">${enabled ? `<input type="checkbox" class="tick" aria-label="Tick" data-k="${esc(key)}" ${SEL[set].has(key)?'checked':''} onchange="tickOne('${set}',this.dataset.k,this.checked)">` : ''}</span><div class="tk-m">${html}</div></div>`;
+}
+function tickBar(set, keys, action){
+  if(!canEdit || !keys.length) return '';
+  const n = SEL[set].size, all = keys.every(k=>SEL[set].has(k)); PAGEKEYS[set] = keys;
+  return `<div class="tk-bar"><span class="tk-c"><input type="checkbox" class="tick" aria-label="Tick all on this page" ${all?'checked':''} onchange="tickAll('${set}',this.checked)"></span>
+    ${n ? `<span class="tk-n">${n} ticked</span>${action}<button class="link-btn" onclick="SEL.${set}.clear();render()">Clear</button>` : ''}</div>`;
+}
+function tickOne(set, key, on){ on ? SEL[set].add(key) : SEL[set].delete(key); const y = window.scrollY; render(); window.scrollTo(0, y); }
+function tickAll(set, on){ PAGEKEYS[set].forEach(k=> on ? SEL[set].add(k) : SEL[set].delete(k)); const y = window.scrollY; render(); window.scrollTo(0, y); }
+async function hideTicked(){
+  const keys = [...SEL.sugg]; if(!keys.length) return;
+  const { error } = await sb.from('marketing_hidden_suggestions').insert(keys.map(key=>({ key })));
+  if(error && !/duplicate/i.test(error.message)){ showToast('Could not hide: ' + error.message); return; }
+  keys.forEach(k=>HIDDEN.add(k)); SEL.sugg.clear(); showToast(keys.length + ' hidden for this year.'); render();
+}
+async function deleteTicked(){
+  const ps = [...SEL.posts].map(id=>POSTS.find(p=>p.id===id)).filter(canDel); if(!ps.length) return;
+  if(!confirm(`Delete ${ps.length} post${ps.length===1?'':'s'}? ${ps.length===1?'It leaves':'They leave'} every list. The history is kept.`)) return;
+  let n = 0; for(const p of ps){ if(await act('cancel', p.id, {})) n++; }
+  SEL.posts.clear(); showToast(n + ' deleted.'); await reloadPosts(true);
+}
+
 function calendarView(){
   const t = todayISO();
   if(!calMonth) calMonth = t.slice(0,7);
@@ -959,10 +1001,12 @@ function calendarView(){
     <span style="flex:1"></span>
     <span class="seg">${[['month','Month'],['list','List'],['sugg',`Suggested (${openSugg().length})`],['ideas',`Ideas (${ideas.length})`]].map(([k,l])=>`<button class="${calMode===k?'on':''}" onclick="calMode='${k}';render()">${l}</button>`).join('')}</span>
   </div>`;
-  if(calMode==='sugg'){ const a = openSugg();
-    return head + `<div class="box"><p class="meta" style="font-size:13px;margin-bottom:6px">From the school calendar and the special dates list. Nothing is created until someone plans it.</p>${a.length ? a.map(sgLine).join('') : '<p class="meta" style="padding:8px 0">No suggestions left.</p>'}</div>`; }
-  if(calMode==='ideas') return head + `<div class="box">${ideas.length ? ideas.map(p=>line(p,true)).join('') : '<p class="meta" style="padding:8px 0">No ideas waiting.</p>'}</div>`;
-  if(calMode==='list') return head + `<div class="box">${inMonth.length ? `<div class="pl pl-h"><span>Date</span><span>Topic</span><span>Step</span><span>Writer</span><span>Reviewer</span><span>Translator</span></div>` + inMonth.map(peopleLine).join('') : '<p class="meta" style="padding:8px 0">Nothing planned this month.</p>'}</div>`;
+  if(calMode==='sugg'){ const a = openSugg(), pg = pageOf('sugg', a);
+    return head + `<div class="box"><p class="meta" style="font-size:13px;margin-bottom:6px">From the school calendar and the special dates list. Nothing is created until someone plans it.</p>${a.length ? tickBar('sugg', pg.map(x=>x.key), '<button class="btn-outline sm" onclick="hideTicked()">Not this year</button>') + pg.map(x=>tickRow('sugg', x.key, sgLine(x), true)).join('') + pager('sugg', a.length) : '<p class="meta" style="padding:8px 0">No suggestions left.</p>'}</div>`; }
+  if(calMode==='ideas'){ const pg = pageOf('ideas', ideas), dk = pg.filter(canDel).map(p=>p.id);
+    return head + `<div class="box">${ideas.length ? tickBar('posts', dk, '<button class="btn-outline sm" style="color:#A23F1C" onclick="deleteTicked()">Delete</button>') + pg.map(p=>tickRow('posts', p.id, line(p,true), canDel(p))).join('') + pager('ideas', ideas.length) : '<p class="meta" style="padding:8px 0">No ideas waiting.</p>'}</div>`; }
+  if(calMode==='list'){ const dk = inMonth.filter(canDel).map(p=>p.id);
+    return head + `<div class="box">${inMonth.length ? tickBar('posts', dk, '<button class="btn-outline sm" style="color:#A23F1C" onclick="deleteTicked()">Delete</button>') + tickRow('posts', '', `<div class="pl pl-h"><span>Date</span><span>Topic</span><span>Step</span><span>Writer</span><span>Reviewer</span><span>Translator</span></div>`, false) + inMonth.map(p=>tickRow('posts', p.id, peopleLine(p), canDel(p))).join('') : '<p class="meta" style="padding:8px 0">Nothing planned this month.</p>'}</div>`; }
   const first = new Date(y, m-1, 1), days = new Date(y, m, 0).getDate(), lead = first.getDay();
   let cells = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="dow">${d}</div>`).join('');
   for(let i=0;i<lead;i++) cells += '<div class="day out"></div>';
@@ -1076,7 +1120,7 @@ async function renderPost(el){
     <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px">
       <div><h2 style="font-family:Georgia,serif;font-size:22px;font-weight:700">${esc(p.title)}</h2>
         <p class="meta" style="font-size:13px;margin-top:2px">${p.post_date?'Posts '+fmtShort(p.post_date):'No date yet'}${p.post_time?', '+esc(p.post_time):''} · Reviewer ${esc(nameOf(p.pic)||'not set')}${p.label?' · '+esc(p.label):''}${p.needs_thai?'':' · English only'}</p></div>
-      <div style="display:flex;gap:8px;align-items:center">${openStep(p)&&dueOf(p)?`<span class="chip ${isLate(p)?'rust':''}">${esc(dueText(p))}</span>`:''}${stepChip(p)}${canTopic?`<button class="btn-outline sm" onclick="editTopic('${p.id}')">Edit topic</button>`:''}</div>
+      <div style="display:flex;gap:8px;align-items:center">${openStep(p)&&dueOf(p)?`<span class="chip ${isLate(p)?'rust':''}">${esc(dueText(p))}</span>`:''}${stepChip(p)}${canTopic?`<button class="btn-outline sm" onclick="editTopic('${p.id}')">Edit topic</button><button class="btn-outline sm" style="color:#A23F1C" onclick="cancelPost('${p.id}')">Delete</button>`:''}</div>
     </div>
     <div class="stepbar">${bar}</div>
     ${p.step==='english'&&p.sent_back&&p.back_note?`<div class="banner bad">${esc(nameOf(p.pic)||'Reviewer')}: ${esc(p.back_note)}</div>`:''}
@@ -1463,7 +1507,7 @@ function newTopic(date, pre, suggKey){
 function editTopic(id){
   const p = POSTS.find(x=>x.id===id); if(!p) return;
   cur = {topic:true};
-  drawerShell('Edit topic', topicForm(p, false) + `<p style="margin-top:6px"><button type="button" class="link-btn" style="color:#A23F1C" onclick="cancelPost('${id}')">Cancel this post</button></p>`, null, false);
+  drawerShell('Edit topic', topicForm(p, false) + `<p style="margin-top:6px"><button type="button" class="link-btn" style="color:#A23F1C" onclick="cancelPost('${id}')">Delete this post</button></p>`, null, false);
   $('#sv').onclick = async () => {
     const o = topicPayload(), miss = topicMissing(o);
     if(miss){ $('#msg').textContent = miss; return; }
@@ -1472,9 +1516,9 @@ function editTopic(id){
   };
 }
 async function cancelPost(id){
-  if(!confirm('Cancel this post? It will not go out.')) return;
+  if(!confirm('Delete this post? It leaves every list and will not go out. The history is kept.')) return;
   const r = await act('cancel', id, {}); if(!r) return;
-  closeD(); showToast('Cancelled.'); await reloadPosts(true);
+  closeD(); SEL.posts.delete(id); showToast('Deleted.'); if(postId()===id) go(lastTab || 'calendar'); await reloadPosts(true);
 }
 
 // ---------- Team (marketing full only) ----------

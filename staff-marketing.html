@@ -987,6 +987,8 @@ async function deleteTicked(){
   SEL.posts.clear(); showToast(n + ' deleted.'); await reloadPosts(true);
 }
 
+// The month view shows 4 states only; the step is on the post itself (hover shows it).
+const CAL_STATE = { open:{label:'In progress', bg:'#EEEDFE', fg:'#3C3489', dot:'#534AB7'}, late:{label:'Late', bg:LATE_BG, fg:LATE_TEXT, dot:'#E24B4A'}, posted:{label:'Posted', bg:'#F1EFE8', fg:'#5F5E5A', dot:'#B4B2A9'} };
 function calendarView(){
   const t = todayISO();
   if(!calMonth) calMonth = t.slice(0,7);
@@ -1014,11 +1016,11 @@ function calendarView(){
   for(let d=1; d<=days; d++){
     const iso = `${calMonth}-${String(d).padStart(2,'0')}`;
     const ps = inMonth.filter(p=>p.post_date===iso), sg = iso >= t ? openSugg().filter(x=>x.date===iso) : [];
-    cells += `<div class="day ${iso===t?'today':iso<t?'past':''}">${d}${ps.map(p=>{ const late = isLate(p), k = p.step==='english'&&p.sent_back?'back':p.step;
-      return `<span class="pp" title="${esc(p.title)} · ${late?'Late':STEP_LABEL[p.step]}" style="background:${late?LATE_BG:STEP_BG[k]};color:${late?LATE_TEXT:STEP_FG[k]}" onclick="go('post/${p.id}')">${esc(p.title)}</span>`; }).join('')}${sg.map(x=>`<span class="sg" title="Suggested: ${esc(x.name)}${x.confirmed?'':' (date to confirm)'}" onclick="openSg(${SUGG.indexOf(x)})">${esc(x.name)}</span>`).join('')}</div>`;
+    cells += `<div class="day ${iso===t?'today':iso<t?'past':''}">${d}${ps.map(p=>{ const late = isLate(p), k = late ? 'late' : p.step==='posted' ? 'posted' : 'open';
+      return `<span class="pp" title="${esc(p.title)} · ${late?'Late, at '+STEP_LABEL[p.step]:STEP_LABEL[p.step]}" style="background:${CAL_STATE[k].bg};color:${CAL_STATE[k].fg}" onclick="go('post/${p.id}')">${esc(p.title)}</span>`; }).join('')}${sg.map(x=>`<span class="sg" title="Suggested: ${esc(x.name)}${x.confirmed?'':' (date to confirm)'}" onclick="openSg(${SUGG.indexOf(x)})">${esc(x.name)}</span>`).join('')}</div>`;
   }
   return head + `<div class="cal-wrap"><div class="cal">${cells}</div>
-    <div class="legend">${[...STEP_ORDER,'posted'].map(s=>`<span><i style="background:${STEP_FG[s]}"></i>${STEP_LABEL[s]}</span>`).join('')}<span><i style="background:#E24B4A"></i>Late</span><span><i style="background:transparent;border:1px dashed #A8A39A"></i>Suggested</span></div></div>`;
+    <div class="legend">${['open','late','posted'].map(k=>`<span><i style="background:${CAL_STATE[k].dot}"></i>${CAL_STATE[k].label}</span>`).join('')}<span><i style="background:transparent;border:1px dashed #A8A39A"></i>Suggested</span></div></div>`;
 }
 
 // ---------- Post page ----------

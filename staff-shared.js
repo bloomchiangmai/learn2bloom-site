@@ -56,16 +56,60 @@ function nextStudentIdCode(existingCodes){
 
 // ---- Sidebar shell (persistent left nav across all staff pages) ----
 
+// The staff sidebar is a launcher: one link per system. A system with several sections
+// (Students, Staff) swaps the sidebar for its own menu, with a way back to the dashboard.
 const NAV_ITEMS = [
-  { key: 'dashboard', label: 'Dashboard', href: 'staff-dashboard.html', group: 'Home' },
-  { key: 'admissions', label: 'Admissions', href: 'staff-admissions.html', group: 'Students', module: 'students' },
-  { key: 'learners', label: 'Learners', href: 'learners.html', group: 'Students', module: 'students' },
-  { key: 'calendar', label: 'Calendar', href: 'staff-calendar.html', group: 'Tools', module: 'calendar' },
-  { key: 'library', label: 'Bloombrary', href: 'https://bloombrary.learn2bloom.org/admin', group: 'Tools', module: 'library', external: true },
-  { key: 'marketing', label: 'Marketing HQ', href: 'staff-marketing.html', group: 'Tools', module: 'marketing' },
-  { key: 'team', label: 'Team', href: 'staff-team.html', group: 'Staff' },
-  { key: 'permissions', label: 'Permissions', href: 'staff-permissions.html', group: 'Staff', adminOnly: true }
+  { key: 'dashboard', label: 'Dashboard', href: 'staff-dashboard.html' },
+  { key: 'students', label: 'Students', href: 'staff-admissions.html', module: 'students' },
+  { key: 'calendar', label: 'Calendar', href: 'staff-calendar.html', module: 'calendar' },
+  { key: 'library', label: 'Bloombrary', href: 'https://bloombrary.learn2bloom.org/admin', module: 'library', external: true },
+  { key: 'marketing', label: 'Marketing HQ', href: 'staff-marketing.html', module: 'marketing' },
+  { key: 'staff', label: 'Staff', href: 'staff-team.html' }
 ];
+const SYSTEMS = {
+  students: { label: 'Students', pages: ['admissions','learners','archive'], groups: [
+    { name: 'Admissions', items: [
+      { key: 'new', label: 'New', href: 'staff-admissions.html#new', page: 'admissions', hash: 'new', def: true },
+      { key: 'progress', label: 'In progress', href: 'staff-admissions.html#progress', page: 'admissions', hash: 'progress' },
+      { key: 'withdrawn', label: 'Withdrawn', href: 'staff-admissions.html#withdrawn', page: 'admissions', hash: 'withdrawn' } ] },
+    { name: 'Learners', items: [
+      { key: 'enrolled', label: 'Enrolled', href: 'learners.html', page: 'learners' },
+      { key: 'archived', label: 'Archived', href: 'archive.html', page: 'archive' } ] } ] },
+  staff: { label: 'Staff', pages: ['team','staff-archive','permissions'], groups: [
+    { name: 'Team', items: [
+      { key: 'directory', label: 'Directory', href: 'staff-team.html', page: 'team' },
+      { key: 'archived-staff', label: 'Archived staff', href: 'staff-archive.html', page: 'staff-archive', adminOnly: true } ] },
+    { name: 'Access', adminOnly: true, items: [
+      { key: 'roles', label: 'Roles and access', href: 'staff-permissions.html#roles', page: 'permissions', hash: 'roles', def: true },
+      { key: 'approvals', label: 'Approvals', href: 'staff-permissions.html#approvals', page: 'permissions', hash: 'approvals' },
+      { key: 'features', label: 'Site features', href: 'staff-permissions.html#features', page: 'permissions', hash: 'features' } ] } ] }
+};
+const systemOf = page => Object.keys(SYSTEMS).find(k => SYSTEMS[k].pages.includes(page));
+function sysItemOn(item, page){
+  if(item.page !== page) return false;
+  if(!item.hash) return true;
+  const h = location.hash.slice(1);
+  const sys = SYSTEMS[systemOf(page)], hashes = sys.groups.flatMap(g => g.items).filter(i => i.page === page && i.hash).map(i => i.hash);
+  return hashes.includes(h) ? h === item.hash : !!item.def;
+}
+// Pages call these to keep the menu in step: setSysActive() after changing their hash, setSysCount(key, n) for a count.
+function setSysActive(){
+  const page = window.STAFF_PAGE_KEY || '', sys = SYSTEMS[systemOf(page)]; if(!sys) return;
+  sys.groups.flatMap(g => g.items).forEach(i => { const a = document.querySelector(`.sys-link[data-k="${i.key}"]`); if(a) a.classList.toggle('active', sysItemOn(i, page)); });
+}
+function setSysCount(key, n){
+  const el = document.querySelector(`.sys-link[data-k="${key}"] .sys-n`); if(!el) return;
+  el.textContent = n ? n : ''; el.style.display = n ? '' : 'none';
+}
+async function loadStudentCounts(){
+  try{
+    const { data } = await sb.from('students').select('status');
+    if(!data) return;
+    const c = { new: 0, progress: 0, withdrawn: 0, enrolled: 0 };
+    data.forEach(s => { if(s.status === 'enquiry') c.new++; else if(s.status === 'withdrawn') c.withdrawn++; else if(s.status === 'enrolled') c.enrolled++; else if(s.status !== 'archived') c.progress++; });
+    Object.entries(c).forEach(([k,n]) => setSysCount(k, n));
+  }catch(e){}
+}
 // Archives are tabs inside their tool now: archive.html lights up Learners, staff-archive.html lights up Team.
 const NAV_ALIASES = { 'archive': 'learners', 'staff-archive': 'team' };
 const EXT_MARK = '<svg aria-hidden="true" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="margin-left:6px;vertical-align:-1px"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
@@ -102,6 +146,14 @@ function injectSidebarStyles(){
       border-radius:8px;text-decoration:none;margin-bottom:2px;}
     .sidebar-link:hover{background:#EFEAE0;}
     .sidebar-link.active{background:#534AB7;color:#fff;}
+    .sys-logo{border-bottom:none !important;padding-bottom:4px !important;}
+    .sys-head{padding:0 20px 14px;border-bottom:1px solid #E8E3D8;}
+    .sys-app{font-size:13px;font-weight:600;color:#534AB7;margin-bottom:8px;}
+    .sys-back{font-size:13px;font-weight:600;color:#534AB7;text-decoration:none;}
+    .sys-back:hover{text-decoration:underline;}
+    .sys-link{display:flex !important;align-items:center;justify-content:space-between;}
+    .sys-n{font-size:11px;font-weight:700;color:#fff;background:#534AB7;border-radius:999px;padding:1px 8px;margin-left:8px;}
+    .sidebar-link.active .sys-n{background:#fff;color:#534AB7;}
     .sidebar-footer{border-top:1px solid #E8E3D8;padding:14px 20px;font-size:12px;}
     .sidebar-footer .name{font-weight:700;color:#2C2C2A;font-size:13px;}
     .sidebar-footer .role{color:#888780;margin-bottom:8px;}
@@ -124,35 +176,40 @@ function renderSidebar(activeKey){
   document.body.classList.add('has-sidebar');
 
   const isAdminOrIt = window.currentStaffRole === 'admin' || window.currentStaffRole === 'director' || window.currentStaffRole === 'it';
-  const groups = [];
-  NAV_ITEMS.forEach(item => {
-    if(item.adminOnly && !isAdminOrIt) return;
-    if(item.module && !canAccess(item.module, 'view')) return;
-    let group = groups.find(g => g.name === item.group);
-    if(!group){ group = { name: item.group, items: [] }; groups.push(group); }
-    group.items.push(item);
-  });
-
-  const navHtml = groups.map(g => `
-    <div class="sidebar-group">${g.name}</div>
-    ${g.items.map(item => `
-      <a href="${item.href}" class="sidebar-link ${item.key === (NAV_ALIASES[activeKey] || activeKey) ? 'active' : ''}"${item.external ? ' target="_blank" rel="noopener"' : ''}>${item.label}${item.external ? EXT_MARK : ''}</a>
-    `).join('')}
-  `).join('');
+  const sysKey = systemOf(activeKey), sys = SYSTEMS[sysKey];
+  let head = '', navHtml = '';
+  if(sys){
+    head = `<div class="sys-head"><div class="sys-app">${sys.label}</div><a class="sys-back" href="staff-dashboard.html">&#8249; Staff dashboard</a></div>`;
+    navHtml = sys.groups.filter(g => !g.adminOnly || isAdminOrIt).map(g => {
+      const items = g.items.filter(i => !i.adminOnly || isAdminOrIt);
+      if(!items.length) return '';
+      return `<div class="sidebar-group">${g.name}</div>` + items.map(i =>
+        `<a href="${i.href}" data-k="${i.key}" class="sidebar-link sys-link ${sysItemOn(i, activeKey) ? 'active' : ''}">${i.label}<span class="sys-n" style="display:none"></span></a>`).join('');
+    }).join('');
+  } else {
+    navHtml = NAV_ITEMS.filter(item => !(item.module && !canAccess(item.module, 'view'))).map(item =>
+      `<a href="${item.href}" class="sidebar-link ${item.key === activeKey ? 'active' : ''}"${item.external ? ' target="_blank" rel="noopener"' : ''}>${item.label}${item.external ? EXT_MARK : ''}</a>`).join('');
+  }
 
   const el = document.createElement('div');
   el.className = 'sidebar';
   el.innerHTML = `
-    <a href="staff-dashboard.html" class="sidebar-logo">Bloom Chiangmai</a>
+    <a href="staff-dashboard.html" class="sidebar-logo${sys ? ' sys-logo' : ''}">Bloom Chiangmai</a>
+    ${head}
     <div class="sidebar-nav">${navHtml}</div>
     <div class="sidebar-footer">
-      <div class="name">${window.currentStaff ? window.currentStaff.name : ''}</div>
+      <div class="name">${window.currentStaff ? escShared(window.currentStaff.name) : ''}</div>
       <div class="role">${roleLabelShared(window.currentStaffRole)}</div>
       <span class="signout" onclick="doLogout()">Sign out</span>
     </div>
   `;
   document.body.insertBefore(el, document.body.firstChild);
+  if(sys){
+    window.addEventListener('hashchange', setSysActive);
+    if(sysKey === 'students') loadStudentCounts();
+  }
 }
+function escShared(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 function roleLabelShared(role){
   return {

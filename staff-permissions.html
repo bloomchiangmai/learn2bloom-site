@@ -119,12 +119,13 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
   <div id="pageContent" style="display:none;">
     <div class="top-bar">
       <div>
-        <div class="eyebrow">Internal Admin</div>
-        <h1>Permissions</h1>
+        <div class="eyebrow">Staff</div>
+        <h1 id="permTitle">Roles and access</h1>
+        <p class="sub" id="permSub" style="margin-bottom:0;"></p>
       </div>
     </div>
 
-    <div class="ptabs" role="tablist">
+    <div class="ptabs" role="tablist" style="display:none">
       <button class="ptab on" data-tab="roles" onclick="showTab('roles')">Roles and access</button>
       <button class="ptab" data-tab="approvals" onclick="showTab('approvals')">Approvals <span id="approvalsCount"></span></button>
       <button class="ptab" data-tab="features" onclick="showTab('features')">Site features</button>
@@ -233,7 +234,11 @@ function showTab(t){
   document.querySelectorAll('.ptab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   document.querySelectorAll('[data-panel]').forEach(p => p.style.display = p.dataset.panel === t ? '' : 'none');
   if(location.hash.slice(1) !== t) history.replaceState(null, '', '#' + t);
+  const head = {roles:['Roles and access','Who can open which tool, and how much they can change.'], approvals:['Approvals','Calendar changes waiting for an admin.'], features:['Site features','Turn a tool off for maintenance.']}[t];
+  document.getElementById('permTitle').textContent = head[0]; document.getElementById('permSub').textContent = head[1];
+  if(typeof setSysActive === 'function') setSysActive();
 }
+window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
 
 // Site features (moved here from the dashboard)
 async function loadFeatures(){
@@ -430,6 +435,7 @@ async function loadApprovals(){
 
   approvalsCache = data || [];
   const ac = document.getElementById('approvalsCount'); if(ac) ac.textContent = approvalsCache.length ? approvalsCache.length : '';
+  if(typeof setSysCount === 'function') setSysCount('approvals', approvalsCache.length);
   const tbody = document.getElementById('approvalsTable');
   const emptyEl = document.getElementById('approvalsEmpty');
   if(error || !data || data.length === 0){

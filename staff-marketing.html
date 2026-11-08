@@ -30,6 +30,7 @@ h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin
 .hq-link{display:flex !important;align-items:center;justify-content:space-between;}
 .hq-n{font-size:11px;font-weight:700;color:#fff;background:#534AB7;border-radius:999px;padding:1px 8px;margin-left:8px;}
 .sidebar-link.active .hq-n{background:#fff;color:#534AB7;}
+.hq-n.late,.sidebar-link.active .hq-n.late{background:#C0392B;color:#fff;}
 .tab{background:none;border:0;padding:10px 12px;font-size:15px;font-weight:600;color:#5F5E5A;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;}
 .tab:hover{color:#2C2C2A;}
 .tab.on{color:#534AB7;border-bottom-color:#534AB7;}
@@ -460,6 +461,8 @@ const nameOf = id => (STAFF[id]||{}).name ? STAFF[id].name.split(' ')[0] : '';
 const myDuty = () => TEAM[ME] || null;
 const isOverseer = () => myDuty() === 'overseer';
 const isAdmin = () => canDelete;
+// The goal, deadline, budget and success measure: PICs, overseers and marketing full only.
+const canEditPlan = () => canEdit && (canDelete || ['pic','overseer'].includes(myDuty()));
 const writers = () => Object.keys(TEAM).filter(id => TEAM[id] === 'writer');
 const translators = () => Object.keys(TEAM).filter(id => TEAM[id] === 'translator');
 const isWriterish = () => ['writer','writer_backup'].includes(myDuty());
@@ -590,8 +593,9 @@ const postId = () => { const h = location.hash.slice(1); return h.startsWith('po
 const go = k => { location.hash = k; };
 function tabsFor(){
   const d = myDuty(), t = [];
+  // Item 46: everyone opens on Overview; your own work is behind the My turn badge.
+  t.push(['overview','Overview']);
   if(d !== 'overseer') t.push(['turn','My turn']);
-  if(!['writer','translator','writer_backup','translator_backup'].includes(d)) t.push(['overview','Overview']);
   t.push(['calendar','Calendar']);
   t.push(['ref','Reference']);
   if(canDelete) t.push(['settings','Settings']);
@@ -606,21 +610,21 @@ const HQ_HEAD = {
   ref:['Reference','The facts, people and places behind every post.'],
   settings:['Settings','The team, labels and special dates.'],
 };
-function hqSidebar(cur, mine){
+function hqSidebar(cur, mine, late){
   const sb_ = document.querySelector('.sidebar'); if(!sb_) return;
   if(!sb_.querySelector('.hq-app')){
     const logo = sb_.querySelector('.sidebar-logo');
     if(logo) logo.insertAdjacentHTML('afterend', '<div class="hq-head"><div class="hq-app">Marketing HQ</div><a class="hq-back" href="staff-dashboard.html">&#8249; Staff dashboard</a></div>');
   }
   const nav = sb_.querySelector('.sidebar-nav'); if(!nav) return;
-  nav.innerHTML = tabsFor().map(([k,l]) => `<a href="#${k}" class="sidebar-link hq-link ${k===cur?'active':''}">${l}${k==='turn'&&mine?`<span class="hq-n">${mine}</span>`:''}</a>`).join('');
+  nav.innerHTML = tabsFor().map(([k,l]) => `<a href="#${k}" class="sidebar-link hq-link ${k===cur?'active':''}">${l}${k==='turn'&&mine?`<span class="hq-n${late?' late':''}" title="${late?'Something of yours is late':''}">${mine}</span>`:''}</a>`).join('');
 }
 function tabs(){
   const v = view();
   if(v !== 'post') lastTab = v;
-  const mine = POSTS.filter(p=>isMine(p) && (p.post_date || p.sent_back)).length;
+  const mineList = POSTS.filter(p=>isMine(p) && (p.post_date || p.sent_back)), mine = mineList.length, mineLate = mineList.some(isLate);
   const cur = v==='post' ? (lastTab || 'turn') : v;
-  hqSidebar(cur, mine);
+  hqSidebar(cur, mine, mineLate);
   const [t, sub] = HQ_HEAD[cur] || HQ_HEAD.overview;
   $('#hqTitle').textContent = t; $('#hqSub').textContent = sub;
   $('#subtabs').innerHTML = v==='ref'
@@ -695,7 +699,7 @@ const fmtBudget = v => { const t = String(v ?? '').trim(); if(!t) return ''; if(
 function goalBox(P){
   const col = (cls, l, v, big, extra='') => `<div class="gcol ${cls}"><div class="glbl">${l}</div><div class="gval ${big?'gbig':''} ${v?'':'none'}">${v ? esc(v) : (big ? 'Not set yet' : 'Not set')}</div>${extra}</div>`;
   return `<div class="goalbox">
-    ${col('gmain','Goal',P.goal,true, canEdit ? '<button class="gedit" onclick="editPlan()">Edit goal, deadline and budget</button>' : '<div></div>')}
+    ${col('gmain','Goal',P.goal,true, canEditPlan() ? '<button class="gedit" onclick="editPlan()">Edit goal, deadline and budget</button>' : '<div></div>')}
     ${col('','Deadline',P.deadline ? fmtDate(P.deadline) : '',false,'<div></div>')}
     ${col('','Ad budget / month',fmtBudget(P.budget),false,'<div></div>')}
     ${col('','Success measure',P.measure,false,'<div></div>')}
@@ -1447,6 +1451,7 @@ function editRef(k, id){
   setTimeout(()=>{ const first = $('#fm [name]'); if(first && !id && canEdit) first.focus(); }, 50);
 }
 function editPlan(){
+  if(!canEditPlan()) return;
   const P = PLAN || {}; cur = {plan:true};
   drawerShell('Goal and targets', PLAN_FIELDS.map(f=>field(f, P[f[0]])).join('') + metaLine(PLAN), null, false);
   if($('#sv')) $('#sv').onclick = () => persist('plan', PLAN && PLAN.id, readForm(PLAN_FIELDS.map(f=>f[0])));

@@ -280,7 +280,7 @@ div.tile{cursor:default;}
 .wo{display:grid;grid-template-columns:150px minmax(0,1fr) 220px;gap:12px;align-items:center;padding:8px 0;border-top:1px solid #F0ECE3;font-size:13.5px;}
 .wbar{display:flex;height:10px;border-radius:5px;background:#F1EFE8;overflow:hidden;}
 .seg{display:inline-flex;border:1px solid #DCD5C6;border-radius:8px;overflow:hidden;}
-.seg button{background:#fff;border:0;padding:6px 12px;font-size:13px;cursor:pointer;color:#5F5E5A;} .seg button.on{background:#2C2C2A;color:#fff;}
+.seg button{background:#fff;border:0;padding:6px 12px;font-size:13px;cursor:pointer;color:#5F5E5A;} .seg button.on{background:#534AB7;color:#fff;}
 .stepbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
 .sb{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#A8A39A;} .sb.now{color:#2C2C2A;font-weight:600;}
 .sd{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;border:1px solid #DCD5C6;}
@@ -303,6 +303,12 @@ textarea[readonly],input[readonly]{background:#F7F3EC!important;color:#5F5E5A;}
 .tm button{justify-self:end;}
 .emptyweeks{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px dashed #DCD5C6;border-radius:12px;padding:12px 16px;margin:-4px 0 14px;font-size:13.5px;color:#5F5E5A;}
 .emptyweeks b{color:#9A5D0C;margin-right:4px;}
+.emptyweeks.flash{box-shadow:0 0 0 3px #CECBF6;transition:box-shadow .3s;}
+button.tile.ovt{cursor:pointer;}
+button.tile.ovt.on{background:#fff;border:2px solid #534AB7;padding:15px 17px;}
+.ovmore{font-size:12px;font-weight:600;color:#534AB7;margin-top:8px;}
+.ovlist{background:#fff;border:1px solid #CECBF6;border-radius:14px;padding:4px 18px;margin:-4px 0 14px;}
+.ovlist .wl:last-child{border-bottom:none;}
 .emptyweeks span{margin-right:auto;}
 #newTopicBtn{align-self:flex-end;}
 .urgent{border:1px solid #F0C2C2;background:#FDF5F5;border-radius:14px;padding:12px 16px;margin:-4px 0 14px;}
@@ -596,7 +602,7 @@ function tabsFor(){
   // Item 46: everyone opens on Overview; your own work is behind the My turn badge.
   t.push(['overview','Overview']);
   if(d !== 'overseer') t.push(['turn','My turn']);
-  t.push(['calendar','Calendar']);
+  t.push(['calendar','Content']);
   t.push(['ref','Reference']);
   if(canDelete) t.push(['settings','Settings']);
   return t;
@@ -606,7 +612,7 @@ let lastTab = null;
 const HQ_HEAD = {
   turn:['My turn','Posts waiting on you.'],
   overview:['Overview','Where every post stands, and what the plan is.'],
-  calendar:['Calendar','When each post goes out.'],
+  calendar:['Content','Every post and idea, by date.'],
   ref:['Reference','The facts, people and places behind every post.'],
   settings:['Settings','The team, labels and special dates.'],
 };
@@ -632,7 +638,7 @@ function tabs(){
 }
 function render(){
   tabs();
-  const nb = $('#newTopicBtn'); if(nb) nb.style.display = loaded && canEdit ? '' : 'none';
+  const nb = $('#newTopicBtn'); if(nb) nb.style.display = loaded && canEdit && view() === 'calendar' ? '' : 'none';
   const el = $('#view'), v = view();
   if(!loaded){ el.innerHTML = '<div class="empty-state">Loading…</div>'; return; }
   let ab = $('#aiBanner'); if(!ab){ ab = document.createElement('div'); ab.id = 'aiBanner'; el.before(ab); }
@@ -695,6 +701,17 @@ async function quickMark(id){
 }
 
 // ---------- Overview ----------
+// Item 49: a posting tile with posts opens its list in place; click again to close. "Weeks with nothing planned" jumps to the empty-weeks box.
+let ovOpen = null;
+function ovTile(k, n, cls, label){
+  if(!n) return `<div class="tile"><div class="n ${cls}">${n}</div><div class="l">${label}</div></div>`;
+  const on = ovOpen === k;
+  return `<button class="tile ovt ${on?'on':''}" onclick="ovToggle('${k}')" aria-expanded="${on}"><div class="n ${cls}">${n}</div><div class="l">${label}</div><div class="ovmore">${k==='empty' ? 'Plan ▼' : on ? 'Hide ▲' : 'Show ▼'}</div></button>`;
+}
+function ovToggle(k){
+  if(k === 'empty'){ const e = document.querySelector('.emptyweeks'); if(e){ e.scrollIntoView({behavior:'smooth', block:'center'}); e.classList.add('flash'); setTimeout(()=>e.classList.remove('flash'), 1200); } return; }
+  ovOpen = ovOpen === k ? null : k; render();
+}
 const fmtBudget = v => { const t = String(v ?? '').trim(); if(!t) return ''; if(/^[\d,.\s]+$/.test(t)){ const n = Number(t.replace(/[,\s]/g,'')); if(isFinite(n)) return n.toLocaleString('en-US', {maximumFractionDigits:2}) + ' THB'; } return t; };
 function goalBox(P){
   const col = (cls, l, v, big, extra='') => `<div class="gcol ${cls}"><div class="glbl">${l}</div><div class="gval ${big?'gbig':''} ${v?'':'none'}">${v ? esc(v) : (big ? 'Not set yet' : 'Not set')}</div>${extra}</div>`;
@@ -724,7 +741,7 @@ function overview(){
   const late = live.filter(isLate);
   const ws = weekStart(t);
   const week = live.filter(p=>{ const d = dueOf(p); return d && d >= t && d <= addDays(t,6); });
-  const mk = t.slice(0,7), posted = POSTS.filter(p=>p.step==='posted' && String(p.posted_at||p.post_date||'').slice(0,7)===mk).length;
+  const mk = t.slice(0,7), postedList = POSTS.filter(p=>p.step==='posted' && String(p.posted_at||p.post_date||'').slice(0,7)===mk), posted = postedList.length;
   const emptyWeeks = []; for(let w=0; w<4; w++){ const a = addDays(ws, 7*w), b = addDays(a, 6); if(!POSTS.some(p=>p.step!=='cancelled' && p.post_date>=a && p.post_date<=b)) emptyWeeks.push(a < t ? t : a); }
   const empty = emptyWeeks.length;
   const steps = STEP_ORDER;
@@ -736,11 +753,13 @@ function overview(){
   ${notMarkedBox()}
   ${goalBox(P)}
   <div class="tiles four">
-    <div class="tile"><div class="n ${late.length?'bad':'good'}">${late.length}</div><div class="l">Late</div></div>
-    <div class="tile"><div class="n">${week.length}</div><div class="l">Due in the next 7 days</div></div>
-    <div class="tile"><div class="n">${posted}</div><div class="l">Posted this month</div></div>
-    <div class="tile"><div class="n ${empty?'warn':'good'}">${empty}</div><div class="l">Weeks with nothing planned (next 4)</div></div>
+    ${ovTile('late', late.length, late.length?'bad':'good', 'Late')}
+    ${ovTile('week', week.length, '', 'Due in the next 7 days')}
+    ${ovTile('posted', posted, '', 'Posted this month')}
+    ${ovTile('empty', empty, empty?'warn':'good', 'Weeks with nothing planned (next 4)')}
   </div>
+  ${(() => { const lists = { late: late.slice().sort((a,b)=>String(a.post_date).localeCompare(String(b.post_date))), week: week.slice().sort((a,b)=>String(a.post_date).localeCompare(String(b.post_date))), posted: postedList.slice().sort((a,b)=>String(b.posted_at||b.post_date).localeCompare(String(a.posted_at||a.post_date))) };
+     const a = lists[ovOpen]; return a && a.length ? `<div class="ovlist">${a.map(p=>line(p,true)).join('')}</div>` : ''; })()}
   ${groundwork()}
   ${urgent.length ? `<div class="urgent"><h3>Urgent: ${urgent.length} post${urgent.length>1?'s':''} due to go out but not ready</h3>${urgent.map(p=>line(p,true)).join('')}</div>` : ''}
   ${empty && canEdit ? `<div class="emptyweeks"><span><b>${empty} empty week${empty>1?'s':''}</b> coming up</span>${emptyWeeks.map(d=>`<button class="btn-outline sm" onclick="newTopic('${d}')">Plan a topic for ${fmtShort(d)}</button>`).join('')}</div>` : ''}

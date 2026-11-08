@@ -551,8 +551,9 @@ async function act(action, id, payload){
 
 // ---------- Routing ----------
 const view = () => {
-  const h = location.hash.slice(1);
+  let h = location.hash.slice(1);
   if(h.startsWith('post/')) return 'post';
+  if(h === 'team') h = 'settings';
   const allowed = tabsFor().map(t=>t[0]);
   return allowed.includes(h) ? h : allowed[0];
 };
@@ -564,7 +565,7 @@ function tabsFor(){
   if(!['writer','translator','writer_backup','translator_backup'].includes(d)) t.push(['overview','Overview']);
   t.push(['calendar','Calendar']);
   t.push(['ref','Reference']);
-  if(canDelete) t.push(['team','Team']);
+  if(canDelete) t.push(['settings','Settings']);
   return t;
 }
 let lastTab = null;
@@ -586,7 +587,7 @@ function render(){
   if(v==='turn') el.innerHTML = myTurn();
   else if(v==='overview') el.innerHTML = overview();
   else if(v==='calendar') el.innerHTML = calendarView();
-  else if(v==='team') el.innerHTML = teamView();
+  else if(v==='settings') el.innerHTML = teamView();
   else if(v==='post') renderPost(el);
   else renderGroup(el, REF_GROUPS.find(g=>g.k===refKey) || REF_GROUPS[0]);
 }
@@ -612,6 +613,7 @@ function myTurn(){
   const sub = {writer:'Write English, fix what comes back, post when it is ready', translator:'Translate approved English into Thai', writer_backup:'Backup writer', translator_backup:'Backup translator'}[d]
     || 'Review and approve the posts you are in charge of';
   return `
+  ${['writer','writer_backup'].includes(d) ? notMarkedBox() : ''}
   <div class="box">
     <h3 class="bh">${mine.length ? `Your turn: ${mine.length}` : 'All clear'}</h3>
     <p class="meta" style="font-size:13px;margin-bottom:6px">${sub}</p>
@@ -621,7 +623,22 @@ function myTurn(){
   </div>
   ${(()=>{ const bk = POSTS.filter(p=>backupFor(p) && p.post_date).sort((a,b)=>String(dueOf(a)).localeCompare(String(dueOf(b))));
     return ['writer_backup','translator_backup'].includes(d) ? `<div class="box"><h3 class="bh">As backup</h3><p class="meta" style="font-size:13px;margin-bottom:6px">You cover these if the ${d==='writer_backup'?'writer':'translator'} is away. Step in when one is late.</p>${bk.length ? bk.map(p=>line(p)).join('') : '<p class="meta" style="padding:8px 0">Nothing at this step right now.</p>'}</div>` : ''; })()}
-  ${!writers().length || !translators().length ? `<p class="meta" style="margin-top:14px">${!writers().length?'No writer is set yet. ':''}${!translators().length?'No translator is set yet. ':''}${canDelete?'Set them in the Team tab.':''}</p>` : ''}`;
+  ${!writers().length || !translators().length ? `<p class="meta" style="margin-top:14px">${!writers().length?'No writer is set yet. ':''}${!translators().length?'No translator is set yet. ':''}${canDelete?'Set them in Settings.':''}</p>` : ''}`;
+}
+
+// ---------- Item 41: posted on Facebook but not marked ----------
+const notMarked = () => POSTS.filter(p=>p.step==='post' && p.post_date && p.post_date < todayISO()).sort((a,b)=>a.post_date.localeCompare(b.post_date));
+function notMarkedBox(){
+  const a = notMarked(); if(!a.length) return '';
+  const canMark = isAdmin() || ['writer','writer_backup'].includes(myDuty());
+  return `<div class="box" style="border-color:#EF9F27"><h3 class="bh">Posted? Not marked yet: ${a.length}</h3>
+    <p class="meta" style="font-size:13px;margin-bottom:6px">These were due to go out and are still waiting at the Post step. If they are on Facebook, mark them so the numbers stay true.</p>
+    ${a.map(p=>`<div class="wl" style="cursor:default"><span class="late-d">${fmtShort(p.post_date)}</span><span class="pt"><a href="javascript:void 0" onclick="go('post/${p.id}')" class="ptt">${esc(p.title)}</a></span><span></span><span></span><span class="wl-act">${canMark?`<button class="btn-outline sm" onclick="quickMark('${p.id}')">Mark as posted</button>`:''}</span></div>`).join('')}
+  </div>`;
+}
+async function quickMark(id){
+  const r = await act('mark_posted', id, {}); if(!r) return;
+  showToast('Marked as posted.'); await reloadPosts(true);
 }
 
 // ---------- Overview ----------
@@ -639,6 +656,7 @@ function overview(){
   const max = Math.max(1, ...Object.values(ppl).map(a=>a.length));
   const ideas = POSTS.filter(p=>openStep(p) && !p.post_date).length;
   return `
+  ${notMarkedBox()}
   <div class="goal-line" onclick="${canEdit?'editPlan()':''}"><span class="lbl">Goal</span><span class="val">${esc(P.goal||'Not set yet')}</span>${P.deadline?`<span class="meta2">by ${fmtDate(P.deadline)}</span>`:''}</div>
   <div class="tiles four">
     <div class="tile"><div class="n ${late.length?'bad':'good'}">${late.length}</div><div class="l">Late</div></div>
@@ -722,6 +740,16 @@ function calendarView(){
 }
 
 // ---------- Post page ----------
+// Item 39: a step button shows only when its box has text; otherwise a short line says what to do first.
+function syncNeedText(){
+  document.querySelectorAll('.needtext').forEach(w=>{
+    const box = $('#f-'+w.dataset.for), has = !!box && box.value.trim() !== '';
+    const btn = w.querySelector('button'); if(btn) btn.style.display = has ? '' : 'none';
+    let m = w.querySelector('.needmsg');
+    if(!has && !m){ m = document.createElement('span'); m.className = 'needmsg muted'; m.style.fontSize = '13px'; m.textContent = w.dataset.msg; w.appendChild(m); }
+    if(has && m) m.remove();
+  });
+}
 // Item 31: the button names the step; this line names the person and the due date.
 function nextLine(p){
   const who = ids => ids.map(nameOf).filter(Boolean).join(' or ');
@@ -784,13 +812,13 @@ async function renderPost(el){
   const asAdmin = !mine && !bk && adm ? ' <span class="adm">(as admin)</span>' : '';
   let actions = '';
   if(canAct){
-    if(p.step==='english') actions = `<button class="btn-primary" onclick="doAct('send_on')">Send to Review</button>`;
+    if(p.step==='english') actions = `<span class="needtext" data-for="copy_en" data-msg="Write the English first, then send it to Review."><button class="btn-primary" onclick="doAct('send_on')">Send to Review</button></span>`;
     if(p.step==='review' && (pic || adm)) actions = `<input id="f-note" placeholder="Note to the writer (needed to send back)" class="note-in">
       <button class="btn-outline" onclick="doAct('send_back')">Send back to English</button>
       <button class="btn-primary" onclick="doAct('approve')">${p.en_written_by===ME&&isAdmin()?'Approve my own post':'Approve'}${p.needs_thai?', send to Thai':', send to Post'}</button>`;
     if(p.step==='thai') actions = `<input id="f-note" placeholder="Note if the English is wrong" class="note-in">
       <button class="btn-outline" onclick="doAct('translator_back')">Send back to Review</button>
-      <button class="btn-primary" onclick="doAct('thai_checked')">Thai done, send to Post</button>`;
+      <span class="needtext" data-for="copy_th" data-msg="Write the Thai or use Draft Thai with AI first."><button class="btn-primary" onclick="doAct('thai_checked')">Thai done, send to Post</button></span>`;
     if(p.step==='post') actions = p.needs_thai && p.th_stale && !isAdmin()
       ? `<span class="muted">The English changed after the Thai was checked. Ask the admin to update the Thai before this goes out.</span>`
       : `<button class="btn-outline" onclick="copyCaption()">Copy caption</button>
@@ -840,7 +868,10 @@ async function renderPost(el){
   </div>
   <div class="hist"><b>History</b><br>${hist||'…'}${(VERSIONS[id]||[]).length?`<br><a href="javascript:void 0" onclick="SHOW_VERS=!SHOW_VERS;renderPost($('#view'))">${SHOW_VERS?'Hide':'Show'} earlier versions (${VERSIONS[id].length})</a>${SHOW_VERS?versionsHtml(p):''}`:''}</div>
   </div>`;
+  syncNeedText();
+  ['copy_en','copy_th'].forEach(k=>{ const e = $('#f-'+k); if(e) e.addEventListener('input', syncNeedText); });
   if(keep && keep.id === id) Object.entries(keep.o).forEach(([k,v]) => { const e = $('#f-'+k); if(e && !e.readOnly) e.value = v; });
+  syncNeedText();
   if(AI_SUG && AI_SUG.post === id) aiShowPanel();
   el.querySelectorAll('textarea.tall').forEach(t=>{ growBox(t); t.addEventListener('input', ()=>growBox(t)); });
   renderTagChips();
@@ -921,7 +952,7 @@ async function aiUse(){
   if(!(await saveFields(true))) return;
   const col = f==='en'?'copy_en':'copy_th';
   const r = await act('save', p.id, f==='en' ? { copy_en: text, source: 'ai' } : { copy_th: text, source: 'ai', th_from_en: AI_SUG.from }); if(!r) return;
-  p[col] = text; const box = $('#f-'+col); if(box) box.value = text;
+  p[col] = text; const box = $('#f-'+col); if(box) box.value = text; syncNeedText();
   AI_SUG = null; showToast(f==='en' ? 'AI rewrite in use. "Back to my version" restores yours.' : 'AI Thai in use. Check it before marking Thai done.');
   delete EVENTS[p.id]; delete VERSIONS[p.id]; await reloadPosts(true);
 }

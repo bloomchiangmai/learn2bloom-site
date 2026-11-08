@@ -22,6 +22,14 @@ h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin
 
 /* main tabs */
 .tabs{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;border-bottom:1px solid #E8E3D8;margin-bottom:28px;}
+.sidebar-logo{border-bottom:none !important;padding-bottom:4px !important;}
+.hq-head{padding:0 20px 14px;border-bottom:1px solid #E8E3D8;}
+.hq-app{font-size:13px;font-weight:600;color:#534AB7;margin-bottom:8px;}
+.hq-back{font-size:13px;font-weight:600;color:#534AB7;text-decoration:none;}
+.hq-back:hover{text-decoration:underline;}
+.hq-link{display:flex !important;align-items:center;justify-content:space-between;}
+.hq-n{font-size:11px;font-weight:700;color:#fff;background:#534AB7;border-radius:999px;padding:1px 8px;margin-left:8px;}
+.sidebar-link.active .hq-n{background:#fff;color:#534AB7;}
 .tab{background:none;border:0;padding:10px 12px;font-size:15px;font-weight:600;color:#5F5E5A;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;}
 .tab:hover{color:#2C2C2A;}
 .tab.on{color:#534AB7;border-bottom-color:#534AB7;}
@@ -367,13 +375,13 @@ textarea[readonly],input[readonly]{background:#F7F3EC!important;color:#5F5E5A;}
   <div id="pageContent" style="display:none;">
     <div class="top-bar">
       <div>
-        <div class="eyebrow">Tools</div>
-        <h1>Marketing HQ</h1>
-        <p class="sub">Every post, from topic to Facebook, and whose turn it is.</p>
+        <div class="eyebrow">Marketing HQ</div>
+        <h1 id="hqTitle">Marketing HQ</h1>
+        <p class="sub" id="hqSub">Every post, from topic to Facebook, and whose turn it is.</p>
       </div>
       <button class="btn-primary" id="newTopicBtn" style="display:none" onclick="newTopic()">+ New topic</button>
     </div>
-    <nav class="tabs" id="tabs"></nav>
+    <nav class="tabs" id="tabs" style="display:none"></nav>
     <div id="subtabs"></div>
     <div id="view"></div>
   </div>
@@ -406,7 +414,7 @@ const REF = [
 const TASKS = {k:'tasks',t:'Tasks',view:'table',d:'What has to happen next, and who owns it.',title:'title',chip:'status',cols:['owner','due','status'],sort:'due',
   f:[['title','Task','text'],['owner','Owner','text'],['due','Due','date'],['status','Status','select',['To do','Doing','Waiting','Done']],['notes','Notes','long']]};
 const SEC = Object.fromEntries([...REF, TASKS].map(s=>[s.k,s]));
-const PLAN_FIELDS = [['goal','Goal','long'],['deadline','Deadline','date'],['budget','Ad budget per month','text'],['measure','How we measure success','text']];
+const PLAN_FIELDS = [['goal','Goal','long'],['deadline','Deadline','date'],['budget','Ad budget per month (THB)','text'],['measure','How we measure success','text']];
 const REF_GROUPS = [
   {k:'about', t:'About Bloom', d:'The facts every post should match.', secs:['facts']},
   {k:'who', t:'Who and where', d:'Who we talk to, the accounts we own, and the groups where families gather.', secs:['audiences','channels','groups']},
@@ -590,11 +598,31 @@ function tabsFor(){
   return t;
 }
 let lastTab = null;
+// Marketing HQ has its own menu (item 44): the staff sidebar shows only HQ sections, with a way back to the staff dashboard.
+const HQ_HEAD = {
+  turn:['My turn','Posts waiting on you.'],
+  overview:['Overview','Where every post stands, and what the plan is.'],
+  calendar:['Calendar','When each post goes out.'],
+  ref:['Reference','The facts, people and places behind every post.'],
+  settings:['Settings','The team, labels and special dates.'],
+};
+function hqSidebar(cur, mine){
+  const sb_ = document.querySelector('.sidebar'); if(!sb_) return;
+  if(!sb_.querySelector('.hq-app')){
+    const logo = sb_.querySelector('.sidebar-logo');
+    if(logo) logo.insertAdjacentHTML('afterend', '<div class="hq-head"><div class="hq-app">Marketing HQ</div><a class="hq-back" href="staff-dashboard.html">&#8249; Staff dashboard</a></div>');
+  }
+  const nav = sb_.querySelector('.sidebar-nav'); if(!nav) return;
+  nav.innerHTML = tabsFor().map(([k,l]) => `<a href="#${k}" class="sidebar-link hq-link ${k===cur?'active':''}">${l}${k==='turn'&&mine?`<span class="hq-n">${mine}</span>`:''}</a>`).join('');
+}
 function tabs(){
   const v = view();
   if(v !== 'post') lastTab = v;
   const mine = POSTS.filter(p=>isMine(p) && (p.post_date || p.sent_back)).length;
-  $('#tabs').innerHTML = tabsFor().map(([k,l]) => `<button class="tab ${k===(v==='post'?lastTab:v)?'on':''}" onclick="go('${k}')">${l}${k==='turn'&&mine?`<span class="n">${mine}</span>`:''}</button>`).join('');
+  const cur = v==='post' ? (lastTab || 'turn') : v;
+  hqSidebar(cur, mine);
+  const [t, sub] = HQ_HEAD[cur] || HQ_HEAD.overview;
+  $('#hqTitle').textContent = t; $('#hqSub').textContent = sub;
   $('#subtabs').innerHTML = v==='ref'
     ? `<div class="subtabs">${REF_GROUPS.map(g=>`<button class="pill ${g.k===refKey?'on':''}" onclick="refKey='${g.k}';render()">${g.t}<span class="n">${g.secs.reduce((a,k)=>a+(DATA[k]||[]).length,0)}</span></button>`).join('')}</div>` : '';
 }
@@ -663,12 +691,13 @@ async function quickMark(id){
 }
 
 // ---------- Overview ----------
+const fmtBudget = v => { const t = String(v ?? '').trim(); if(!t) return ''; if(/^[\d,.\s]+$/.test(t)){ const n = Number(t.replace(/[,\s]/g,'')); if(isFinite(n)) return n.toLocaleString('en-US', {maximumFractionDigits:2}) + ' THB'; } return t; };
 function goalBox(P){
   const col = (cls, l, v, big, extra='') => `<div class="gcol ${cls}"><div class="glbl">${l}</div><div class="gval ${big?'gbig':''} ${v?'':'none'}">${v ? esc(v) : (big ? 'Not set yet' : 'Not set')}</div>${extra}</div>`;
   return `<div class="goalbox">
     ${col('gmain','Goal',P.goal,true, canEdit ? '<button class="gedit" onclick="editPlan()">Edit goal, deadline and budget</button>' : '<div></div>')}
     ${col('','Deadline',P.deadline ? fmtDate(P.deadline) : '',false,'<div></div>')}
-    ${col('','Ad budget / month',P.budget,false,'<div></div>')}
+    ${col('','Ad budget / month',fmtBudget(P.budget),false,'<div></div>')}
     ${col('','Success measure',P.measure,false,'<div></div>')}
   </div>`;
 }

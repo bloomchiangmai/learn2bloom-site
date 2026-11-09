@@ -55,10 +55,12 @@ const canActOn = (r) => r.staff_id !== S.user?.id && ((r.status === 'submitted' 
 const noChkKey = (id) => 'bo_nochk_' + id;
 const chkChosen = (r) => !!r.checker_id || (() => { try { return !!sessionStorage.getItem(noChkKey(r.id)); } catch { return false; } })();
 const firstName = (n) => String(n || '').trim().split(/\s+/)[0];
+// Short name for chips: first name, plus the last initial when 2 people share a first name (Paul, Paul P.)
+const chipName = (p) => { const f = firstName(p.full_name), parts = String(p.full_name || '').trim().split(/\s+/); const twin = (S.people || []).filter((x) => firstName(x.full_name) === f).length > 1; return twin && parts.length > 1 ? `${f} ${parts[parts.length - 1][0]}.` : f; };
 function checkerPicker(r) {
   const ppl = (S.people || []).filter((p) => p.id !== S.user.id);
   const none = !r.checker_id && chkChosen(r);
-  return `<div class="field"><label>Who checks this form?</label><div class="chkpick">${ppl.map((p) => `<button type="button" class="chkchip${r.checker_id === p.id ? ' on' : ''}" data-chk="${p.id}" title="${esc(p.full_name)}">${esc(firstName(p.full_name))}</button>`).join('')}<button type="button" class="chkchip${none ? ' on' : ''}" data-chk="none">No checker, send to admin</button></div>
+  return `<div class="field"><label>Who checks this form?</label><div class="chkpick">${ppl.map((p) => `<button type="button" class="chkchip${r.checker_id === p.id ? ' on' : ''}" data-chk="${p.id}" title="${esc(p.full_name)}">${esc(chipName(p))}</button>`).join('')}<button type="button" class="chkchip${none ? ' on' : ''}" data-chk="none">No checker, send to admin</button></div>
   <span class="faint" style="font-size:12px">${r.checker_id ? `${esc(firstName(r.checker_name))} checks it first, then an admin gives the final approval and pays.` : none ? 'It goes straight to an admin for final approval.' : 'Pick one person. They check it first, then an admin gives the final approval and pays.'}</span></div>`;
 }
 function wireChecker(root, r, after) {

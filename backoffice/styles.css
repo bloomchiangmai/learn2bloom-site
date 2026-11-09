@@ -957,3 +957,5 @@ h2 { font-family: Georgia, "Times New Roman", serif; font-size: 19px; font-weigh
 .chkchip { border: 1px solid #DCD5C6; background: #fff; color: #2C2C2A; border-radius: 999px; padding: 6px 13px; font-size: 14px; font-weight: 600; cursor: pointer; }
 .chkchip:hover { border-color: #534AB7; }
 .chkchip.on { background: #534AB7; border-color: #534AB7; color: #fff; }
+
+.shell { grid-template-columns: 240px 1fr; }

@@ -52,3 +52,8 @@ end $$;select bo_private.sync_profiles();
 -- seed
 insert into bo.fa_meta (id) values (1) on conflict do nothing;
 insert into bo.holiday_meta (id) values (1) on conflict do nothing;
+
+-- 9 Nov fix (additive): staff may move their own draft or returned timesheet to "submitted"; ot_guard checks the rest.
+create policy "ot forms: owner submits" on bo.ot_forms for update to authenticated
+  using (staff_id = (select auth.uid()) and status = any (array['draft', 'rejected']))
+  with check (staff_id = (select auth.uid()) and status = 'submitted');

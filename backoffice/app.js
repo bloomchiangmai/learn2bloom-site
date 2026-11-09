@@ -4906,7 +4906,7 @@ async function pageFAExport() {
   const cardSt = must(await sb.from('card_statements').select('id, period_month').eq('status', 'ready'));
   let kpAll = must(await sb.from('kbiz_payments').select('*, kbiz_docs(*)').eq('admin_only', false));
   const months = [...new Set([...reps.map((r) => r.period_month.slice(0, 7)), ...cardSt.map((x) => x.period_month.slice(0, 7)), ...kpAll.map((x) => x.period_month.slice(0, 7))])].sort().reverse();
-  const mk = key || months[0] || '';
+  const mk = key || months[0] || new Date(Date.now() + 7 * 36e5).toISOString().slice(0, 7); // empty back office: this month
   // Fixed references (BILLyymmA, CARDyymmA): given once, never move, so paper and FlowAccount always agree
   if (mk) { await sb.rpc('assign_fa_refs', { p_month: mk + '-01' }); kpAll = must(await sb.from('kbiz_payments').select('*, kbiz_docs(*)').eq('admin_only', false)); }
   const stIds = cardSt.filter((x) => x.period_month.slice(0, 7) === mk).map((x) => x.id);

@@ -1752,14 +1752,14 @@ async function pageHomeAdmin() {
   const finalN = (chk.data || []).filter((r) => r.staff_id !== S.user.id && r.checked_by !== S.user.id).length;
   const tsN = (ots.count || 0) + (hasHR ? 0 : otsAll.count || 0);
   const tile = (href, n, title, sub) => `<a class="card card-pad home-card" href="${href}"><div style="font-size:34px;font-weight:600;line-height:1;${n ? '' : 'color:var(--ink-3)'}">${n}</div><h2 style="margin-top:8px">${title}</h2><p class="muted" style="margin:4px 0 0">${sub}</p></a>`;
-  shell(`<div class="page-head"><div><h1>Hello, ${esc(S.profile.full_name || S.profile.staff_no)}</h1><p>${finalN + tsN + (appr.count || 0) ? 'Here is what is waiting.' : 'Nothing is waiting for you.'}</p></div></div>
+  shell(`<div class="page-head"><div><h1>Hello, ${esc(S.profile.full_name || S.profile.staff_no)}</h1><p>${finalN + tsN + (appr.count || 0) + (S.pendingCount || 0) ? 'Here is what is waiting.' : 'Nothing is waiting for you.'}</p></div></div>
   <div class="home-grid">
     <a class="card card-pad home-card" href="#/forms"><h2>My expenses</h2><p class="muted" style="margin:6px 0 0">${forms.length ? `${forms.length} open form${forms.length > 1 ? 's' : ''}: ${forms.map((f) => esc(monthLabel(f.period_month.slice(0, 7)) + (f.form_type === 'project' ? ' (' + (f.project || 'project') + ')' : ''))).join(', ')}` : 'No open form. Start one for the month you need.'}</p></a>
+    ${S.pendingCount ? tile('#/approvals?s=todo&k=exp', S.pendingCount, 'For you to check', 'forms where you were picked (step 1)') : ''}
     ${tile('#/approvals?s=checked&k=exp', finalN, 'Expense forms', 'need your final approval')}
     ${STAGE >= 2 ? tile('#/approvals?s=todo&k=ts', tsN, 'Timesheets', 'need your final approval') : ''}
     ${tile('#/approvals?s=approved&k=exp', appr.count || 0, 'Approved forms', 'waiting to be paid')}
     ${tile('#/approvals?s=submitted&k=exp', sub.count || 0, 'Being checked', 'by the checker each sender picked (step 1)')}
-    ${S.pendingCount ? tile('#/approvals?s=todo&k=exp', S.pendingCount, 'For you to check', 'forms where you were picked (step 1)') : ''}
   </div>`);
 }
 

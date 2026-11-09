@@ -118,6 +118,27 @@ SOURCES.push(async () => {
   return { stats: [], lines: c ? [{ tag:'Calendar', html:`${c} calendar change${c === 1 ? '' : 's'} you asked for ${c === 1 ? 'is' : 'are'} waiting for approval`, href:'staff-calendar.html', btn:'View' }] : [] };
 });
 
+// Back office (S23): forms to check, final approvals and payments (Full), my returned forms
+SOURCES.push(async () => {
+  if(!canAccess('backoffice', 'edit')) return null;
+  const me = window.currentStaff.auth_user_id, full = canAccess('backoffice', 'full'), bo = sb.schema('bo');
+  const BO = 'backoffice/#';
+  const [chk, back, fin, pay] = await Promise.all([
+    bo.from('expense_reports').select('id', { count: 'exact', head: true }).eq('status', 'submitted').eq('checker_id', me),
+    bo.from('expense_reports').select('id', { count: 'exact', head: true }).eq('status', 'rejected').eq('staff_id', me),
+    full ? bo.from('expense_reports').select('id, staff_id, checked_by').eq('status', 'checked') : Promise.resolve({ data: [] }),
+    full ? bo.from('expense_reports').select('id', { count: 'exact', head: true }).eq('status', 'approved') : Promise.resolve({ count: 0 }),
+  ]);
+  const n1 = chk.count || 0, n2 = back.count || 0, n3 = (fin.data || []).filter(r => r.staff_id !== me && r.checked_by !== me).length, n4 = pay.count || 0;
+  const pl = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  const lines = [];
+  if(n1) lines.push({ tag:'Back office', html:`${pl(n1, 'expense form')} for you to check`, href: BO + '/approvals', btn:'Check' });
+  if(n3) lines.push({ tag:'Back office', html:`${pl(n3, 'expense form')} ${n3 === 1 ? 'needs' : 'need'} your final approval`, href: BO + '/approvals?s=checked', btn:'Review' });
+  if(n4) lines.push({ tag:'Back office', html:`${pl(n4, 'approved form')} waiting to be paid`, href: BO + '/approvals?s=approved', btn:'Pay' });
+  if(n2) lines.push({ tag:'Back office', html:`${pl(n2, 'expense form')} returned to you to fix`, href: BO + '/forms', btn:'Open' });
+  return { stats: [], lines };
+});
+
 // Marketing HQ: posts at this person's step, late ones, and posts not marked as posted
 SOURCES.push(async () => {
   if(!canAccess('marketing', 'view')) return null;

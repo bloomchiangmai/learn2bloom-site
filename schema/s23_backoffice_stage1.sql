@@ -3076,3 +3076,18 @@ alter function bo_private.norm_name(text) set search_path to '';
 select (select count(*) from pg_policies where schemaname='bo' and policyname='back office members only') restrictive_policies,
   (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='bo' and p.prosecdef and position('is_member' in p.prosrc)>0) gated_fns,
   (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='bo' and p.prosecdef) all_definer_fns;
+-- S23 fix: "No checker" submit goes straight to admin (status checked). The owner's own submit must not count as checking.
+create or replace function bo_private.no_self_approval()
+ returns trigger language plpgsql set search_path to '' as $function$
+begin
+  if new.status is distinct from old.status and new.status in ('checked','approved') and new.staff_id = auth.uid()
+     and old.status not in ('draft', 'rejected') then
+    raise exception 'You cannot check or approve your own form';
+  end if;
+  return new;
+end $function$;
+-- wording: step 1 is "Checked", matching the button
+do $do$ declare d text; begin
+  d := pg_get_functiondef('bo_private.report_status_side'::regproc);
+  if position('''Approved (step 1)''' in d) > 0 then execute replace(d, '''Approved (step 1)''', '''Checked (step 1)'''); end if;
+end $do$;

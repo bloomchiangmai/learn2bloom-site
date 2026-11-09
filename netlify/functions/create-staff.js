@@ -8,7 +8,7 @@ const VALID_ROLES = [
   'education_lead', 'education_consultant', 'lead_teacher',
   'learning_coach', 'learning_coach_assistant',
   'admissions', 'enrollment', 'front_desk',
-  'it', 'teaching_assistant', 'marketing'
+  'it', 'teaching_assistant', 'marketing', 'accountant'
 ];
 
 const ROLE_LABELS = {
@@ -16,7 +16,7 @@ const ROLE_LABELS = {
   education_lead: 'Education Lead', education_consultant: 'Education Consultant', lead_teacher: 'Lead Teacher',
   learning_coach: 'Learning Coach', learning_coach_assistant: 'Learning Coach Assistant',
   admissions: 'Admissions Officer', enrollment: 'Enrollment Coordinator', front_desk: 'Front Desk / Office Manager',
-  it: 'IT Support', teaching_assistant: 'Teaching Assistant', marketing: 'Marketing'
+  it: 'IT Support', teaching_assistant: 'Teaching Assistant', marketing: 'Marketing', accountant: 'Accountant (outside)'
 };
 
 function genTempPassword() {

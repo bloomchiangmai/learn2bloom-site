@@ -57,7 +57,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
 .badge-full{background:#E3F0E1;color:#2E6B2A;}
 .badge-approval{background:#FBE7E7;color:#B23A3A;font-size:10px;margin-left:4px;}
 
-.perm-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-top:8px;}
+.perm-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:8px;margin-top:8px;}
 .perm-cell{text-align:center;}
 .perm-cell .mod-name{font-size:10px;color:#888780;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
 
@@ -84,6 +84,10 @@ table.ra td.ra-role select{width:100%;font-size:12.5px;padding:6px 6px;border:1p
 .lv-menu button{display:flex;align-items:center;gap:8px;width:100%;padding:7px 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:12px;color:#5F5E5A;cursor:pointer;text-align:left;}
 .lv-menu button:hover,.lv-menu button.on{background:#F3F1FD;} .lv-menu button:focus-visible{outline:2px solid #534AB7;outline-offset:-2px;} .lv-menu button:focus:not(:focus-visible){outline:none;}
 .lv-menu button .lv{pointer-events:none;}
+.lv-menu .lv-sep{border-top:1px solid #EFEAE0;margin-top:4px;padding:8px 8px 2px;font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:#8A877F;font-weight:700;}
+.lv-menu .lv-job .tick{display:inline-block;width:16px;height:16px;border:1px solid #DCD5C6;border-radius:4px;text-align:center;line-height:15px;font-size:12px;color:#534AB7;}
+.lv-menu .lv-job.on .tick{border-color:#534AB7;}
+.ra-jobs{font-size:10.5px;color:#534AB7;margin-top:4px;line-height:1.2;}
 .lv-menu .lv-def{border-top:1px solid #EFEAE0;margin-top:4px;padding-top:9px;color:#534AB7;font-weight:600;}
 .override-row{display:none;background:#fff;}
 .override-row.open{display:table-row;}
@@ -233,7 +237,11 @@ table.ra td.ra-role select{width:100%;font-size:12.5px;padding:6px 6px;border:1p
 </main>
 
 <script>
-const MODULES = ['families','students','staff','calendar','payments','library','marketing','settings'];
+const MODULES = ['families','students','staff','calendar','payments','library','marketing','backoffice','settings'];
+const MODULE_NAME = { backoffice:'Back office' };
+// S23: finance jobs in the back office, ticked per person (bo.jobs)
+const JOBS = [['data_entry','Data entry'],['accountant','Accountant'],['hr','HR']];
+let jobsCache = [];
 let staffCache = [];
 let roleDefaultsCache = [];
 let overridesCache = [];
@@ -289,6 +297,8 @@ async function loadTeamData(){
     sb.from('role_permissions').select('*'),
     sb.from('staff_permission_overrides').select('*')
   ]);
+  const { data: jobs } = await sb.schema('bo').from('jobs').select('*');
+  jobsCache = jobs || [];
   staffCache = staff || [];
   roleDefaultsCache = roleDefaults || [];
   overridesCache = overrides || [];
@@ -322,20 +332,21 @@ function getOverridesFor(staffId){
 }
 
 // S12: one table, area names once, click a level to change it.
-const MODULE_INFO = { families:'parent records', students:'admissions, learners', staff:'team pages', calendar:'school calendar', payments:'not used yet', library:'Bloombrary', marketing:'Marketing HQ', settings:'not used yet' };
+const MODULE_INFO = { families:'parent records', students:'admissions, learners', staff:'team pages', calendar:'school calendar', payments:'not used yet', library:'Bloombrary', marketing:'Marketing HQ', backoffice:'expenses, approvals; finance jobs', settings:'not used yet' };
 const LEVELS = ['none','view','edit','full'];
 const LEVEL_TEXT = { none:'No access', view:'Look only', edit:'Do the work', full:'Manage everything' };
 const cap = v => v.charAt(0).toUpperCase() + v.slice(1);
 const ROLE_KEYS = ['admin','director','education_lead','education_consultant','lead_teacher','learning_coach','learning_coach_assistant','admissions','enrollment','front_desk','it','teaching_assistant','marketing'];
 
 function renderStaffTable(){
-  document.getElementById('raHead').innerHTML = `<tr><th class="ra-name" style="width:20%">Name</th><th class="ra-role" style="width:17%">Role</th>${MODULES.map(m=>`<th>${escShared(m)}<small>${MODULE_INFO[m]||''}</small></th>`).join('')}</tr>`;
+  document.getElementById('raHead').innerHTML = `<tr><th class="ra-name" style="width:18%">Name</th><th class="ra-role" style="width:16%">Role</th>${MODULES.map(m=>`<th>${escShared(MODULE_NAME[m] || m)}<small>${MODULE_INFO[m]||''}</small></th>`).join('')}</tr>`;
   const tbody = document.getElementById('staffTable');
   tbody.innerHTML = staffCache.map(s => {
     const defaults = getRoleDefaults(s.role), overrides = getOverridesFor(s.id);
     const cells = MODULES.map(m => {
       const eff = overrides[m] ? overrides[m].level : (defaults[m] ? defaults[m].level : 'none');
-      return `<td><button class="lv lv-${eff}" aria-haspopup="menu" aria-label="${escShared(s.name)}, ${m}: ${cap(eff)}" onclick="openLevelMenu(event,'${s.id}','${m}')">${cap(eff)}${overrides[m] ? '<span class="ra-dot"></span>' : ''}</button></td>`;
+      const jobs = m === 'backoffice' ? JOBS.filter(j => jobsCache.some(x => x.staff_id === s.id && x.job === j[0])).map(j => j[1]) : [];
+      return `<td><button class="lv lv-${eff}" aria-haspopup="menu" aria-label="${escShared(s.name)}, ${MODULE_NAME[m] || m}: ${cap(eff)}" onclick="openLevelMenu(event,'${s.id}','${m}')">${cap(eff)}${overrides[m] ? '<span class="ra-dot"></span>' : ''}</button>${jobs.length ? `<div class="ra-jobs">${jobs.join(', ')}</div>` : ''}</td>`;
     }).join('');
     return `<tr>
       <td class="ra-name"><a href="javascript:void(0)" onclick="openStaffProfile('${s.id}')">${escShared(s.name)}</a><div class="em" title="${escShared(s.email)}">${escShared(s.email)}</div></td>
@@ -352,7 +363,8 @@ function openLevelMenu(ev, staffId, module){
   const s = staffCache.find(x => x.id === staffId), def = (getRoleDefaults(s.role)[module] || {}).level || 'none', ov = getOverridesFor(staffId)[module];
   const cur = ov ? ov.level : def;
   menu.innerHTML = LEVELS.map(l => `<button role="menuitem" class="${l===cur?'on':''}" onclick="pickLevel('${staffId}','${module}','${l}')"><span class="lv lv-${l}">${cap(l)}</span>${LEVEL_TEXT[l]}</button>`).join('')
-    + (ov ? `<button role="menuitem" class="lv-def" onclick="pickLevel('${staffId}','${module}','')">Back to role default (${cap(def)})</button>` : '');
+    + (ov ? `<button role="menuitem" class="lv-def" onclick="pickLevel('${staffId}','${module}','')">Back to role default (${cap(def)})</button>` : '')
+    + (module === 'backoffice' ? `<div class="lv-sep">Finance jobs</div>` + JOBS.map(([k,l]) => { const on = jobsCache.some(x => x.staff_id === staffId && x.job === k); return `<button role="menuitemcheckbox" aria-checked="${on}" class="lv-job${on?' on':''}" onclick="toggleJob('${staffId}','${k}',${!on})"><span class="tick">${on?'✓':''}</span>${l}</button>`; }).join('') : '');
   const card = btn.closest('.card'), r = btn.getBoundingClientRect(), c = card.getBoundingClientRect();
   card.style.position = 'relative';
   menu.hidden = false;
@@ -364,6 +376,14 @@ function openLevelMenu(ev, staffId, module){
 function closeLevelMenu(){ const m = document.getElementById('lvMenu'); if(m) m.hidden = true; if(lvOpen && lvOpen.btn && document.body.contains(lvOpen.btn)) lvOpen.btn.focus(); lvOpen = null; }
 document.addEventListener('click', e => { if(lvOpen && !e.target.closest('#lvMenu')) closeLevelMenu(); });
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && lvOpen) closeLevelMenu(); });
+async function toggleJob(staffId, job, on){
+  closeLevelMenu();
+  const q = sb.schema('bo').from('jobs');
+  const { error } = on ? await q.insert({ staff_id: staffId, job }) : await q.delete().eq('staff_id', staffId).eq('job', job);
+  if(error){ showToast('Error: ' + error.message); return; }
+  showToast(on ? 'Job added.' : 'Job removed.');
+  await loadTeamData();
+}
 async function pickLevel(staffId, module, level){
   closeLevelMenu();
   const s = staffCache.find(x => x.id === staffId), def = (getRoleDefaults(s.role)[module] || {}).level || 'none';
@@ -403,7 +423,7 @@ function renderProfileAccess(staffId){
   document.getElementById('p-access-summary').innerHTML = MODULES.map(m => {
     const eff = overrides[m] ? overrides[m].level : (defaults[m] ? defaults[m].level : 'none');
     const overridden = !!overrides[m];
-    return `<div class="perm-cell"><div class="mod-name">${m}${overridden ? ' *' : ''}</div>${levelBadge(eff)}</div>`;
+    return `<div class="perm-cell"><div class="mod-name">${MODULE_NAME[m] || m}${overridden ? ' *' : ''}</div>${levelBadge(eff)}</div>`;
   }).join('');
 
   document.getElementById('p-overrides-panel').innerHTML = `

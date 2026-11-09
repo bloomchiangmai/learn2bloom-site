@@ -349,32 +349,6 @@ async function openStaffProfile(staffId){
         <div class="detail-row"><div class="detail-label">Start date</div><input type="date" class="detail-input" id="p-start-date" value="${escHtml(intake.start_date || '')}"></div>
         <div class="detail-row"><div class="detail-label">Date of birth</div><input type="date" class="detail-input" id="p-dob" value="${escHtml(intake.date_of_birth || '')}"></div>
       </div>
-      <div class="detail-section">
-        <h3>Address & ID</h3>
-        <div class="detail-row"><div class="detail-label">Home address</div><input class="detail-input" id="p-address" value="${escHtml(intake.address || '')}"></div>
-        <div class="detail-row"><div class="detail-label">National ID / Passport no.</div><input class="detail-input" id="p-national-id" value="${escHtml(intake.national_id || '')}"></div>
-        <div class="detail-row"><div class="detail-label">Nationality</div><input class="detail-input" id="p-nationality" value="${escHtml(intake.nationality || '')}"></div>
-      </div>
-      <div class="detail-section">
-        <h3>Emergency Contact</h3>
-        <div class="detail-row"><div class="detail-label">Name</div><input class="detail-input" id="p-emergency-name" value="${escHtml(intake.emergency_name || '')}"></div>
-        <div class="detail-row"><div class="detail-label">Relationship</div><input class="detail-input" id="p-emergency-relationship" value="${escHtml(intake.emergency_relationship || '')}"></div>
-        <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-emergency-phone" value="${escHtml(intake.emergency_phone || '')}"></div>
-      </div>
-      ${canEditAdminFields ? `
-      <div class="detail-section">
-        <h3>Notes (Admin only)</h3>
-        <div class="detail-row"><textarea class="detail-input" id="p-notes" rows="3" style="width:100%;">${escHtml(s.notes || '')}</textarea></div>
-      </div>` : ''}
-
-      <div class="detail-section">
-        <h3>Documents</h3>
-        <div id="p-documents-list" style="margin-bottom:12px;"></div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input type="file" id="p-document-upload" style="flex:1;font-size:13px;">
-          <button class="btn-small-outline" onclick="uploadStaffDocument('${staffId}')">Upload</button>
-        </div>
-      </div>
 
       ${isSelf ? `
       <div class="detail-section">
@@ -402,6 +376,32 @@ async function openStaffProfile(staffId){
           <button class="btn-small-outline" onclick="setPasswordDirectlyFromTeam('${staffId}')">Set</button>
         </div>
       </div>` : '')}
+      <div class="detail-section">
+        <h3>Address & ID</h3>
+        <div class="detail-row"><div class="detail-label">Home address</div><input class="detail-input" id="p-address" value="${escHtml(intake.address || '')}"></div>
+        <div class="detail-row"><div class="detail-label">National ID / Passport no.</div><input class="detail-input" id="p-national-id" value="${escHtml(intake.national_id || '')}"></div>
+        <div class="detail-row"><div class="detail-label">Nationality</div><input class="detail-input" id="p-nationality" value="${escHtml(intake.nationality || '')}"></div>
+      </div>
+      <div class="detail-section">
+        <h3>Emergency Contact</h3>
+        <div class="detail-row"><div class="detail-label">Name</div><input class="detail-input" id="p-emergency-name" value="${escHtml(intake.emergency_name || '')}"></div>
+        <div class="detail-row"><div class="detail-label">Relationship</div><input class="detail-input" id="p-emergency-relationship" value="${escHtml(intake.emergency_relationship || '')}"></div>
+        <div class="detail-row"><div class="detail-label">Phone</div><input class="detail-input" id="p-emergency-phone" value="${escHtml(intake.emergency_phone || '')}"></div>
+      </div>
+      ${canEditAdminFields ? `
+      <div class="detail-section">
+        <h3>Notes (Admin only)</h3>
+        <div class="detail-row"><textarea class="detail-input" id="p-notes" rows="3" style="width:100%;">${escHtml(s.notes || '')}</textarea></div>
+      </div>` : ''}
+
+      <div class="detail-section">
+        <h3>Documents</h3>
+        <div id="p-documents-list" style="margin-bottom:12px;"></div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="file" id="p-document-upload" style="flex:1;font-size:13px;">
+          <button class="btn-small-outline" onclick="uploadStaffDocument('${staffId}')">Upload</button>
+        </div>
+      </div>
 
       <div class="modal-save-bar">
         <button class="btn-small-outline" onclick="closeStaffProfile()">Cancel</button>

@@ -11,8 +11,8 @@ const bloomHubCookieStorage = {
   removeItem(key) { let c = key + '=; Max-Age=0; Path=/; SameSite=Lax; Secure'; if (location.hostname.endsWith('learn2bloom.org')) c += '; Domain=.learn2bloom.org'; document.cookie = c; },
 };
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { db: { schema: 'bo' }, auth: { storage: bloomHubCookieStorage, storageKey: 'bloom-hub-auth', persistSession: true, autoRefreshToken: true } });
-// Stage 1 (Expenses and Approvals). Time = stage 2, Accounting = stage 3.
-const STAGE = 1;
+// All 3 stages on: Expenses and Approvals, Time, Accounting.
+const STAGE = 3;
 const ORG = 'Bloom Chiangmai';
 const BUCKET = 'bo-receipts';
 const LOGIN = '/staff-login.html?redirect=' + encodeURIComponent('backoffice/');
@@ -3114,7 +3114,7 @@ async function otSetup(staffId) {
   ]);
   const ov = (await sb.from('ot_day_type').select('day, treat_as').eq('staff_id', staffId)).data || [];
   const od = (await sb.from('ot_offday').select('day, choice, save_until, swap_date').eq('staff_id', staffId)).data || [];
-  const st = set || { start_time: '09:00', end_time: '18:00', lunch_hours: 1, week_pattern: 'alt_sat', sat_off_anchor: '2026-10-03', dayoff_mult: 1, holiday_mult: 1, pay_type: 'full_time' };
+  const st = set || { start_time: '08:00', end_time: '16:30', lunch_hours: 1, week_pattern: 'mon_fri', sat_off_anchor: null, dayoff_mult: 1, holiday_mult: 1, pay_type: 'full_time' }; // BCM default
   st.__sid = staffId; st.ovr = Object.fromEntries(ov.map((x) => [x.day, x.treat_as])); st.offd = Object.fromEntries(od.map((x) => [x.day, x.choice])); st.swapd = Object.fromEntries(od.filter((x) => x.swap_date).map((x) => [x.day, x.swap_date]));
   return { set: st, hol };
 }
@@ -3464,8 +3464,8 @@ async function pageOTSettings() {
   const chg = (c) => Object.entries(c).map(([k, v]) => (LBL[k]?.[v] || (k === 'start_time' ? 'start ' : k === 'end_time' ? 'end ' : k === 'sat_off_anchor' ? 'Saturday off ' : '') + String(v).slice(0, 10))).join(', ');
   const row = (p) => { const x = { ...(S2[p.id] || {}), ...(RQ[p.id]?.changes || {}) }; const rq = RQ[p.id]; return `<tr data-sid="${p.id}"><td>${esc(p.full_name)}<div class="faint mono">${esc(p.staff_no)}</div>${rq ? `<div class="hr-wait">Waiting for ${esc(p.full_name)} to agree: ${esc(chg(rq.changes))} <a href="#" data-rqx="${rq.id}">cancel</a></div>` : ''}</td>
     <td><select class="input" data-k="pay_type">${[['full_time', 'Full-time'], ['part_time', 'Part-time'], ['freelance', 'Freelance']].map(([v, l]) => `<option value="${v}" ${(x.pay_type || 'full_time') === v ? 'selected' : ''}>${l}</option>`).join('')}</select></td>
-    <td><div class="row" style="gap:6px;flex-wrap:nowrap"><input class="input" type="time" data-k="start_time" value="${hhmm(x.start_time) || '09:00'}" style="width:118px"><span>to</span><input class="input" type="time" data-k="end_time" value="${hhmm(x.end_time) || '18:00'}" style="width:118px"></div></td>
-    <td><select class="input" data-k="week_pattern"><option value="alt_sat" ${(x.week_pattern || 'alt_sat') === 'alt_sat' ? 'selected' : ''}>Long/short week</option><option value="mon_fri" ${x.week_pattern === 'mon_fri' ? 'selected' : ''}>Mon to Fri</option><option value="mon_sat" ${x.week_pattern === 'mon_sat' ? 'selected' : ''}>Mon to Sat</option><option value="one_sat" ${x.week_pattern === 'one_sat' ? 'selected' : ''}>Mon to Sat, 1 Saturday off a month</option></select><div class="faint" style="font-size:11px">A Saturday off: <input class="input" type="date" data-k="sat_off_anchor" value="${esc(x.sat_off_anchor || '2026-10-03')}" style="width:140px;padding:2px 6px"></div></td>
+    <td><div class="row" style="gap:6px;flex-wrap:nowrap"><input class="input" type="time" data-k="start_time" value="${hhmm(x.start_time) || '08:00'}" style="width:118px"><span>to</span><input class="input" type="time" data-k="end_time" value="${hhmm(x.end_time) || '16:30'}" style="width:118px"></div></td>
+    <td><select class="input" data-k="week_pattern"><option value="alt_sat" ${(x.week_pattern || 'mon_fri') === 'alt_sat' ? 'selected' : ''}>Long/short week</option><option value="mon_fri" ${(x.week_pattern || 'mon_fri') === 'mon_fri' ? 'selected' : ''}>Mon to Fri</option><option value="mon_sat" ${x.week_pattern === 'mon_sat' ? 'selected' : ''}>Mon to Sat</option><option value="one_sat" ${x.week_pattern === 'one_sat' ? 'selected' : ''}>Mon to Sat, 1 Saturday off a month</option></select><div class="faint" style="font-size:11px">A Saturday off: <input class="input" type="date" data-k="sat_off_anchor" value="${esc(x.sat_off_anchor || '2026-10-03')}" style="width:140px;padding:2px 6px"></div></td>
 
 </tr>`; };
   shell(`<div class="page-head"><div><h1>Timesheet settings</h1><p>Normal hours and work week per person, and the company holiday calendar. ${viaReq ? 'Changes to other people wait until they agree; your own save straight away.' : 'Changes save as you go and the person gets a message.'}</p></div></div>
@@ -5174,7 +5174,7 @@ async function rosterTable(per) {
   const ctx = {}, dayList = {};
   const dot = (f) => { const st = f ? f.status : 'none'; const c = { none: 'grey', draft: 'amber', rejected: 'red', submitted: 'blue', approved: 'green', paid: 'green' }[st] || 'grey'; return `<i class="ro-dot ro-${c}" title="${f ? esc(STATUS_TEXT[f.status] || f.status) : 'Nothing logged'}"></i>`; };
   const rows = people.map((p) => {
-    const set = { ...(sets.find((x) => x.staff_id === p.id) || { start_time: '09:00', end_time: '18:00', lunch_hours: 1, week_pattern: 'alt_sat', sat_off_anchor: '2026-10-03', dayoff_mult: 1, holiday_mult: 1, pay_type: 'full_time' }) };
+    const set = { ...(sets.find((x) => x.staff_id === p.id) || { start_time: '08:00', end_time: '16:30', lunch_hours: 1, week_pattern: 'mon_fri', sat_off_anchor: null, dayoff_mult: 1, holiday_mult: 1, pay_type: 'full_time' }) };
     set.__sid = p.id; set.ovr = Object.fromEntries(ovs.filter((x) => x.staff_id === p.id).map((x) => [x.day, x.treat_as]));
     const f = forms.find((x) => x.staff_id === p.id);
     const es = f ? ents.filter((e) => e.form_id === f.id) : [];

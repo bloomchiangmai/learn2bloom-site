@@ -86,7 +86,7 @@ const SOURCES = [];
 SOURCES.push(async () => {
   if(!canAccess('students', 'view')) return null;
   const [{ count: active }, { data: enq }, { data: notes }] = await Promise.all([
-    sb.from('students').select('*', { count: 'exact', head: true }).not('status', 'in', '("archived")'),
+    sb.from('students').select('*', { count: 'exact', head: true }).eq('status', 'enrolled'),
     sb.from('students').select('id, first_name, last_name, student_id_code').eq('status', 'enquiry'),
     sb.from('parent_notes').select('id, note, student_id, students(first_name, last_name, student_id_code)').eq('resolved', false).order('created_at', { ascending: false })
   ]);
@@ -97,7 +97,7 @@ SOURCES.push(async () => {
   if(n.length) lines.push({ tag:'Learners', html:`${n.length} parent request${n.length === 1 ? '' : 's'}`, btn:'Show', subOnly:true,
     sub: n.map(x => { const st = x.students || {}; const link = st.student_id_code ? `learners.html?student=${encodeURIComponent(st.student_id_code)}` : 'learners.html';
       return `<a href="${link}"><b>${escD(st.first_name)} ${escD(st.last_name || '')}</b><br><span style="color:#5F5E5A;font-size:13px;">${escD(x.note)}</span></a>`; }).join('') });
-  return { stats: [{ num: active ?? '—', label: 'Active students' }, { num: e.length, label: 'New enquiries', href: 'staff-admissions.html' }], lines };
+  return { stats: [{ num: active ?? '—', label: 'Enrolled students', href: 'learners.html' }, { num: e.length, label: 'New enquiries', href: 'staff-admissions.html' }], lines };
 });
 
 // Approvals (admin and IT)

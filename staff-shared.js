@@ -64,6 +64,7 @@ const NAV_ITEMS = [
   { key: 'calendar', label: 'Calendar', href: 'staff-calendar.html', module: 'calendar' },
   { key: 'library', label: 'Bloombrary', href: 'https://bloombrary.learn2bloom.org/admin', module: 'library', external: true },
   { key: 'marketing', label: 'Marketing HQ', href: 'staff-marketing.html', module: 'marketing' },
+  { key: 'backoffice', label: 'Back office', href: 'backoffice/', module: 'backoffice' },
   { key: 'staff', label: 'Staff', href: 'staff-team.html' },
   { key: 'admin', label: 'Admin', href: 'staff-permissions.html#roles', adminOnly: true }
 ];

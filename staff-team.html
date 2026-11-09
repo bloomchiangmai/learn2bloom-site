@@ -340,7 +340,7 @@ async function openStaffProfile(staffId){
         <div class="detail-row"><div class="detail-label">Role</div>
           <div class="detail-static">${escHtml(roleLabel(s.role))}</div>
         </div>
-        ${canEditAdminFields ? '<div class="field-note" style="margin-left:196px;">To change role or access, use the Permissions page.</div>' : ''}
+        ${canEditAdminFields ? '<div class="field-note" style="margin-left:196px;">Change role or access in <a href="staff-permissions.html#roles">Admin › Roles and access</a>.</div>' : ''}
         ${canEditAdminFields ? `
         <div class="detail-row"><div class="detail-label">Account email</div>
           <input class="detail-input" id="p-email" type="email" value="${escHtml(s.email || '')}" data-original="${escHtml(s.email || '')}">

@@ -711,6 +711,8 @@ async function loadAll(){
     if(r.collection === 'plan') PLAN = row; else (DATA[r.collection] = DATA[r.collection] || []).push(row);
   });
   loaded = true;
+  // S26: the dashboard's "New post" button opens here with #new
+  if(location.hash === '#new'){ history.replaceState(null, '', '#calendar'); curHash = '#calendar'; render(); if(canEdit) newTopic(); return; }
   render();
 }
 // force: after the person's own action. Otherwise (someone else saved) do not redraw while they are typing.

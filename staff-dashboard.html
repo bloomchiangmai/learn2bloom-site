@@ -11,35 +11,48 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Helvetica Neue',Arial,sans-serif;background:#FDFAF5;color:#2C2C2A;}
-main{max-width:900px;margin:0 auto;padding:60px 32px 100px;}
-.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#534AB7;text-transform:uppercase;margin-bottom:14px;}
-h1{font-family:Georgia,serif;font-size:32px;font-weight:700;margin-bottom:8px;}
-.stat-row{margin-top:8px;}
-.wbox{background:#fff;border:1px solid #E8E3D8;border-radius:14px;padding:6px 24px 10px;margin-bottom:24px;}
-.wbox h2{font-family:Georgia,serif;font-size:21px;margin:16px 0 4px;}
-.wl{display:flex;align-items:center;gap:16px;padding:15px 0;border-bottom:1px solid #EFEAE0;flex-wrap:wrap;}
-.wl:last-child{border-bottom:0;}
-.wtag{font-size:12px;font-weight:700;color:#3C3489;background:#EEEDFE;padding:4px 10px;border-radius:8px;min-width:104px;text-align:center;}
-.wtxt{flex:1 1 240px;font-size:15px;}
+/* S26: start next to the sidebar and use the width */
+main{max-width:1240px;margin:0;padding:44px 48px 100px;display:flex;flex-direction:column;gap:24px;}
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#534AB7;text-transform:uppercase;margin-bottom:10px;}
+h1{font-family:Georgia,serif;font-size:34px;font-weight:700;margin-bottom:6px;}
+.summary{font-size:16px;color:#5F5E5A;}
+.quick{display:flex;flex-wrap:wrap;gap:10px;}
+.quick a{font-size:14px;font-weight:600;text-decoration:none;padding:9px 16px;border-radius:999px;border:1px solid #E8E3D8;background:#fff;color:#2C2C2A;}
+.quick a:hover{border-color:#534AB7;color:#534AB7;}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+.card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:14px 18px;display:flex;flex-direction:column;gap:8px;}
+.card-area{font-size:11px;letter-spacing:1.2px;font-weight:700;color:#6B6A64;}
+.card-nums{display:flex;gap:28px;flex-wrap:wrap;}
+.card-nums a,.card-nums div{text-decoration:none;color:inherit;}
+.card-num{font-family:Georgia,serif;font-size:26px;font-weight:700;color:#534AB7;}
+.card-lbl{font-size:13px;color:#5F5E5A;}
+.cols{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:20px;align-items:start;}
+.cols.single{grid-template-columns:minmax(0,1fr);}
+@media (max-width:900px){.cols{grid-template-columns:minmax(0,1fr);} main{padding:32px 20px 80px;}}
+.wbox,.tbox{background:#fff;border:1px solid #E8E3D8;border-radius:14px;padding:20px 24px;}
+.wbox h2,.tbox h2{font-family:Georgia,serif;font-size:21px;margin-bottom:6px;}
+.grp{margin-top:14px;}
+.grp-head{display:flex;align-items:center;gap:10px;padding-bottom:6px;}
+.wtag{font-size:12px;font-weight:700;color:#3C3489;background:#EEEDFE;padding:4px 10px;border-radius:999px;white-space:nowrap;}
+.grp-n{font-size:13px;color:#6B6A64;}
+.wl{display:flex;align-items:center;gap:16px;padding:12px 0;border-top:1px solid #F0EBE2;flex-wrap:wrap;}
+.wtxt{flex:1 1 240px;font-size:15px;line-height:1.4;}
 .wtxt .late{color:#A32D2D;font-weight:600;}
-.wbtn{font-size:14px;font-weight:600;text-decoration:none;padding:8px 14px;border:1px solid #CECBF6;border-radius:8px;color:#534AB7;background:#fff;cursor:pointer;font-family:inherit;}
+.wbtn{font-size:14px;font-weight:600;text-decoration:none;padding:8px 14px;border:1px solid #CECBF6;border-radius:8px;color:#534AB7;background:#fff;cursor:pointer;font-family:inherit;white-space:nowrap;}
 .wbtn:hover{border-color:#534AB7;}
-.quiet{font-size:15px;color:#5F5E5A;padding:14px 0 10px;}
-.sublist{width:100%;padding:4px 0 0 120px;}
+.quiet{font-size:15px;color:#5F5E5A;padding:10px 0 4px;}
+.sublist{width:100%;padding:0;}
 .sublist a{display:block;padding:8px 0;border-top:1px solid #F3EFE6;text-decoration:none;color:#2C2C2A;font-size:14px;}
-@media (max-width:700px){.sublist{padding-left:0;}}
-
-.stat-row{display:grid;grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));gap:16px;margin-bottom:40px;}
-.stat-card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:20px;}
-.stat-num{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#534AB7;}
-.stat-label{font-size:12px;color:#888780;text-transform:uppercase;letter-spacing:.4px;margin-top:4px;}
-
-
+.tblock{margin-top:14px;}
+.tblock-h{font-size:11px;letter-spacing:1.2px;font-weight:700;color:#6B6A64;padding-bottom:4px;}
+.trow{display:flex;gap:12px;padding:8px 0;border-top:1px solid #F0EBE2;font-size:14px;line-height:1.4;}
+.trow .ta{flex:0 0 76px;color:#6B6A64;}
+.trow .tb{flex:1;min-width:0;}
+.trow a{color:#2C2C2A;text-decoration:none;}
+.trow a:hover{color:#534AB7;}
 #authLoading{text-align:center;padding:80px 20px;color:#888780;font-size:14px;}
 .toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
-.btn-small-outline{padding:6px 12px;font-size:12px;border:1px solid #534AB7;border-radius:6px;background:#fff;color:#534AB7;cursor:pointer;font-weight:600;}
-.btn-small-outline:hover{background:#f5f3ee;}
-
 </style>
 </head>
 <body>
@@ -48,15 +61,27 @@ h1{font-family:Georgia,serif;font-size:32px;font-weight:700;margin-bottom:8px;}
 
 <div id="pageContent" class="page-content" style="display:none;">
 <main>
-  <div class="eyebrow" id="today"></div>
-  <h1 id="greeting">Welcome</h1>
+  <div class="head">
+    <div>
+      <div class="eyebrow" id="today"></div>
+      <h1 id="greeting">Welcome</h1>
+      <p class="summary" id="summary"></p>
+    </div>
+    <nav class="quick" id="quick" aria-label="Quick actions"></nav>
+  </div>
 
-  <div class="stat-row" id="statRow"></div>
+  <div class="cards" id="cards"></div>
 
-  <section class="wbox" aria-labelledby="waitTitle">
-    <h2 id="waitTitle">Waiting on you</h2>
-    <div id="waitList"><p class="quiet">Loading…</p></div>
-  </section>
+  <div class="cols" id="cols">
+    <section class="wbox" aria-labelledby="waitTitle">
+      <h2 id="waitTitle">Waiting on you</h2>
+      <div id="waitList"><p class="quiet">Loading…</p></div>
+    </section>
+    <aside class="tbox" id="todayBox" aria-labelledby="todayTitle" style="display:none;">
+      <h2 id="todayTitle">Today</h2>
+      <div id="todayList"></div>
+    </aside>
+  </div>
 </main>
 
 <div class="toast" id="toast"></div>
@@ -79,8 +104,18 @@ async function onStaffReady(staffRow){
   setInterval(loadHome, 30000);
 }
 
-// Each source returns { stats: [...], lines: [...] }. A line: { tag, html, href | onclick, btn, sub }
+// S26: one dashboard for all of Bloom. Each source returns any of:
+//   cards: [{ area, order, items:[{ num, label, href }] }]  (number cards, one per area)
+//   lines: [{ tag, html, href | subOnly+sub, btn }]          (Waiting on you, grouped by tag)
+//   today: [{ h, order, rows:[[left, right]] }]              (Today column)
+//   quick: [{ label, href, order }]                          (quick buttons)
+// A source only returns what this person can open.
 const SOURCES = [];
+const isoD = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const TODAY = () => isoD(new Date());
+const plural = (n, w, ws) => `${n} ${n === 1 ? w : (ws || w + 's')}`;
+const shortDate = d => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+const hm = t => String(t || '').slice(0, 5);
 
 // Admissions and Learners: new enquiries and parent requests
 SOURCES.push(async () => {
@@ -92,12 +127,11 @@ SOURCES.push(async () => {
   ]);
   const e = enq || [], n = notes || [];
   const lines = [];
-  if(e.length) lines.push({ tag:'Admissions', html:`${e.length} new enquir${e.length === 1 ? 'y' : 'ies'} to reply to`, href:'staff-admissions.html', btn:'Open',
-    sub: e.map(x => `<a href="staff-admissions.html">${escD(x.first_name)} ${escD(x.last_name || '')}${x.student_id_code ? ` <span style="color:#888780;font-size:12px;">· ${escD(x.student_id_code)}</span>` : ''}</a>`).join('') });
-  if(n.length) lines.push({ tag:'Learners', html:`${n.length} parent request${n.length === 1 ? '' : 's'}`, btn:'Show', subOnly:true,
+  if(e.length) lines.push({ tag:'Admissions', html:`${plural(e.length, 'new enquiry', 'new enquiries')} to reply to`, href:'staff-admissions.html', btn:'Open' });
+  if(n.length) lines.push({ tag:'Learners', html:`${plural(n.length, 'parent request')}`, btn:'Show', subOnly:true,
     sub: n.map(x => { const st = x.students || {}; const link = st.student_id_code ? `learners.html?student=${encodeURIComponent(st.student_id_code)}` : 'learners.html';
       return `<a href="${link}"><b>${escD(st.first_name)} ${escD(st.last_name || '')}</b><br><span style="color:#5F5E5A;font-size:13px;">${escD(x.note)}</span></a>`; }).join('') });
-  return { stats: [{ num: active ?? '—', label: 'Enrolled students', href: 'learners.html' }, { num: e.length, label: 'New enquiries', href: 'staff-admissions.html' }], lines };
+  return { cards: [{ area:'School', order:1, items:[{ num: active ?? '—', label:'enrolled students', href:'learners.html' }, { num: e.length, label: e.length === 1 ? 'new enquiry' : 'new enquiries', href:'staff-admissions.html' }] }], lines };
 });
 
 // Approvals (admin and IT)
@@ -105,20 +139,32 @@ SOURCES.push(async () => {
   if(!window._isAdminOrIt) return null;
   const { count } = await sb.from('approval_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending');
   const c = count || 0;
-  return { stats: [{ num: c, label: 'Approvals waiting', href: 'staff-permissions.html#approvals' }],
-    lines: c ? [{ tag:'Admin', html:`${c} approval${c === 1 ? '' : 's'} waiting for you`, href:'staff-permissions.html#approvals', btn:'Review' }] : [] };
+  return { lines: c ? [{ tag:'Admin', html:`${plural(c, 'approval')} waiting for you`, href:'staff-permissions.html#approvals', btn:'Review' }] : [] };
 });
 
-// Calendar: changes this person asked for that are still waiting
+// Calendar: changes this person asked for, and what kind of day today is
 SOURCES.push(async () => {
-  if(!canAccess('calendar', 'view') || window._isAdminOrIt) return null;
-  const { count } = await sb.from('approval_requests').select('*', { count: 'exact', head: true })
-    .eq('status', 'pending').eq('module', 'calendar').eq('requested_by', window.currentStaff.id);
-  const c = count || 0;
-  return { stats: [], lines: c ? [{ tag:'Calendar', html:`${c} calendar change${c === 1 ? '' : 's'} you asked for ${c === 1 ? 'is' : 'are'} waiting for approval`, href:'staff-calendar.html', btn:'View' }] : [] };
+  if(!canAccess('calendar', 'view')) return null;
+  const t = TODAY(), until = isoD(new Date(Date.now() + 14 * 864e5));
+  const [req, { data: ev }] = await Promise.all([
+    window._isAdminOrIt ? Promise.resolve({ count: 0 }) : sb.from('approval_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending').eq('module', 'calendar').eq('requested_by', window.currentStaff.id),
+    sb.from('bloom_calendar_events').select('date, day_type, label').eq('is_draft', false).gte('date', t).lte('date', until).order('date')
+  ]);
+  const c = req.count || 0;
+  const name = e => e.label || ({ school:'School day', break:'School break', pd:'Staff training', holiday:'Holiday' }[e.day_type] || e.day_type);
+  const rows = [];
+  const todays = (ev || []).filter(e => e.date === t);
+  rows.push(['Today', todays.length ? escD(todays.map(name).join(', ')) : 'Nothing on the calendar']);
+  // Coming up: the next days that are not ordinary school days
+  const seen = new Set();
+  (ev || []).filter(e => e.date > t && e.day_type !== 'school').forEach(e => { const k = name(e); if(!seen.has(k) && rows.length < 4){ seen.add(k); rows.push([shortDate(e.date), escD(k)]); } });
+  return {
+    lines: c ? [{ tag:'Calendar', html:`${plural(c, 'calendar change')} you asked for ${c === 1 ? 'is' : 'are'} waiting for approval`, href:'staff-calendar.html', btn:'View' }] : [],
+    today: [{ h:'Calendar', order:3, rows: rows.map(([a, b]) => [a, `<a href="staff-calendar.html">${b}</a>`]) }]
+  };
 });
 
-// Back office (S23): forms to check, final approvals and payments (Full), my returned forms
+// Back office expenses (S23, S24): forms to check, final approvals and payments, my returned forms
 SOURCES.push(async () => {
   if(!canAccess('backoffice', 'edit')) return null;
   const me = window.currentStaff.auth_user_id, full = canAccess('backoffice', 'full'), mgr = window.currentStaff.role === 'operations_manager', fullOrMgr = full || mgr, bo = sb.schema('bo');
@@ -137,39 +183,92 @@ SOURCES.push(async () => {
     over = new Set((t || []).filter(x => Number(x.total_spent) > 10000).map(x => x.report_id));
   }
   const n1 = chk.count || 0, n2 = back.count || 0, n3 = (fin.data || []).filter(r => r.staff_id !== me && r.checked_by !== me && !over.has(r.id)).length, n4 = (pay.data || []).filter(r => full || (r.staff_id !== me && !over.has(r.id))).length;
-  const pl = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
   const lines = [];
-  if(n1) lines.push({ tag:'Back office', html:`${pl(n1, 'expense form')} for you to check`, href: BO + '/approvals', btn:'Check' });
-  if(n3) lines.push({ tag:'Back office', html:`${pl(n3, 'expense form')} ${n3 === 1 ? 'needs' : 'need'} your final approval`, href: BO + '/approvals?s=checked', btn:'Review' });
-  if(n4) lines.push({ tag:'Back office', html:`${pl(n4, 'approved form')} waiting to be paid`, href: BO + '/approvals?s=approved', btn:'Pay' });
-  if(n2) lines.push({ tag:'Back office', html:`${pl(n2, 'expense form')} returned to you to fix`, href: BO + '/forms', btn:'Open' });
-  return { stats: [], lines };
+  if(n1) lines.push({ tag:'Back office', html:`${plural(n1, 'expense form')} for you to check`, href: BO + '/approvals', btn:'Check' });
+  if(n3) lines.push({ tag:'Back office', html:`${plural(n3, 'expense form')} ${n3 === 1 ? 'needs' : 'need'} your final approval`, href: BO + '/approvals?s=checked', btn:'Review' });
+  if(n4) lines.push({ tag:'Back office', html:`${plural(n4, 'approved form')} waiting to be paid`, href: BO + '/approvals?s=approved', btn:'Pay' });
+  if(n2) lines.push({ tag:'Back office', html:`${plural(n2, 'expense form')} returned to you to fix`, href: BO + '/forms', btn:'Open' });
+  return {
+    lines,
+    cards: fullOrMgr ? [{ area:'Money', order:2, items:[{ num:n3, label: n3 === 1 ? 'form to approve' : 'forms to approve', href: BO + '/approvals?s=checked' }, { num:n4, label:'to pay', href: BO + '/approvals?s=approved' }] }] : [],
+    quick: [{ label:'Add receipt', href: BO + '/capture', order:1 }]
+  };
 });
 
-// Marketing HQ: posts at this person's step, late ones, and posts not marked as posted
+// Timesheets (back office Time): my time today, timesheets to check or approve, who is off
+SOURCES.push(async () => {
+  if(!canAccess('backoffice', 'edit')) return null;
+  const me = window.currentStaff.auth_user_id, bo = sb.schema('bo'), BO = 'backoffice/#', t = TODAY();
+  const { data: prof } = await bo.from('profiles').select('role, is_hr, no_timesheet').eq('id', me).maybeSingle();
+  if(!prof) return null;
+  const admin = prof.role === 'admin', hr = !!prof.is_hr, keeps = !prof.no_timesheet;
+  const out = { lines: [], today: [], cards: [], quick: [] };
+  const [mine, toCheck, toApprove, hol] = await Promise.all([
+    keeps ? bo.from('ot_forms').select('id, status, period_start, period_end').eq('staff_id', me).lte('period_start', t).gte('period_end', t).maybeSingle() : Promise.resolve({ data: null }),
+    hr ? bo.from('ot_forms').select('id', { count: 'exact', head: true }).eq('status', 'submitted').neq('staff_id', me) : Promise.resolve({ count: 0 }),
+    admin ? bo.from('ot_forms').select('id', { count: 'exact', head: true }).eq('status', 'checked').neq('staff_id', me) : Promise.resolve({ count: 0 }),
+    bo.from('holidays').select('name').eq('day', t)
+  ]);
+  const nC = toCheck.count || 0, nA = toApprove.count || 0;
+  if(nC) out.lines.push({ tag:'Timesheets', html:`${plural(nC, 'timesheet')} to check`, href: BO + '/approvals?s=todo&k=ts', btn:'Check' });
+  if(nA) out.lines.push({ tag:'Timesheets', html:`${plural(nA, 'timesheet')} ${nA === 1 ? 'needs' : 'need'} your final approval`, href: BO + '/approvals?s=todo&k=ts', btn:'Review' });
+  const off = [];
+  (hol.data || []).forEach(h => off.push(['All day', `Public holiday: ${escD(h.name)}`]));
+  if(admin || hr){
+    const { data: leave } = await bo.from('ot_entries').select('leave_type, start_time, end_time, ot_forms!inner(staff_id)').eq('work_date', t).not('leave_type', 'is', null);
+    const ids = [...new Set((leave || []).map(l => l.ot_forms.staff_id))];
+    const { data: names } = ids.length ? await bo.from('profiles').select('id, full_name').in('id', ids) : { data: [] };
+    const nm = Object.fromEntries((names || []).map(p => [p.id, p.full_name]));
+    (leave || []).forEach(l => off.push([l.start_time ? `${hm(l.start_time)}–${hm(l.end_time)}` : 'All day', escD(nm[l.ot_forms.staff_id] || 'Someone')]));
+    out.cards.push({ area:'Team', order:3, items:[
+      { num: hr ? nC : nA, label: hr ? (nC === 1 ? 'timesheet to check' : 'timesheets to check') : (nA === 1 ? 'timesheet to approve' : 'timesheets to approve'), href: BO + '/approvals?s=todo&k=ts' },
+      { num: (leave || []).length, label:'off today', href: BO + '/roster' }] });
+    if(!off.length) off.push(['Today', 'Nobody']);
+  }
+  if(off.length) out.today.push({ h:'Off today', order:2, rows: off });
+  if(keeps){
+    out.quick.push({ label:'My timesheet', href: BO + '/ot', order:2 });
+    const { data: set } = await bo.from('ot_settings').select('start_time, end_time').eq('staff_id', me).maybeSingle();
+    const rows = [['Usual', `${hm(set?.start_time) || '08:00'} to ${hm(set?.end_time) || '16:30'}`]];
+    const f = mine.data;
+    if(f){
+      const { data: ents } = await bo.from('ot_entries').select('hours, leave_type').eq('form_id', f.id).eq('work_date', t);
+      (ents || []).forEach(e => rows.push(['Today', e.leave_type ? 'Time off' : `${Number(e.hours || 0)} h overtime logged`]));
+      const word = { draft:'Not sent yet', submitted:'Sent, being checked', checked:'Checked, waiting for approval', approved:'Approved', paid:'Paid', rejected:'Returned to you' }[f.status] || f.status;
+      rows.push(['This period', word]);
+      if(f.status === 'rejected') out.lines.push({ tag:'Timesheets', html:'Your timesheet was returned to fix', href: BO + '/ot', btn:'Open' });
+    }
+    out.today.push({ h:'My time', order:1, rows: rows.map(([a, b]) => [a, `<a href="${BO}/ot">${b}</a>`]) });
+  }
+  return out;
+});
+
+// Marketing HQ: posts at this person's step, late ones, this week's numbers, today's posts
 SOURCES.push(async () => {
   if(!canAccess('marketing', 'view')) return null;
   // Site features: no HQ lines while the HQ is switched off, except for admin, director and IT
   const { data: st } = await sb.from('bloom_settings').select('marketing_enabled').limit(1).maybeSingle();
   if(st && st.marketing_enabled === false && !['admin','director','it'].includes(window.currentStaff.role)) return null;
   const me = window.currentStaff.id;
+  const now = new Date(), mon = new Date(now); mon.setDate(now.getDate() - ((now.getDay() + 6) % 7)); const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
   // Item 58: each post names its own writer, reviewer and translator.
-  const { data: posts } = await sb.from('marketing_posts').select('id, title, step, pic, writer, translator, poster, post_date, sent_back').not('step', 'in', '("posted","cancelled")');
-  const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  const today = iso(new Date());
+  const [{ data: posts }, { data: week }] = await Promise.all([
+    sb.from('marketing_posts').select('id, title, step, pic, writer, translator, poster, post_date, sent_back').not('step', 'in', '("posted","cancelled")'),
+    sb.from('marketing_posts').select('id, title, step, post_date').gte('post_date', isoD(mon)).lte('post_date', isoD(sun)).neq('step', 'cancelled')
+  ]);
+  const today = TODAY();
   const back = { english: 3, review: 2, thai: 1, post: 0 };
-  const due = p => { if(!p.post_date || back[p.step] === undefined) return null; const d = new Date(p.post_date + 'T00:00:00'); d.setDate(d.getDate() - back[p.step]); return iso(d); };
+  const due = p => { if(!p.post_date || back[p.step] === undefined) return null; const d = new Date(p.post_date + 'T00:00:00'); d.setDate(d.getDate() - back[p.step]); return isoD(d); };
   const mine = (posts || []).filter(p => (p.post_date || p.sent_back) && (
     (p.writer === me && p.step === 'english') ||
     ((p.poster || p.writer) === me && p.step === 'post') ||
     (p.translator === me && p.step === 'thai') ||
     (p.step === 'review' && p.pic === me)));
-  const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
   const word = { english:'Write the English for', review:'Review', thai:'Translate', post:'Post' };
   const lines = mine.sort((a, b) => String(due(a) || '9').localeCompare(String(due(b) || '9'))).slice(0, 5).map(p => {
     const d = due(p), late = d && d < today;
     return { tag:'Marketing HQ', href:`staff-marketing.html#post/${p.id}`, btn:'Open',
-      html:`${p.sent_back ? 'Sent back: ' : (word[p.step] || '') + ' '}${escD(p.title)}${d ? (late ? ` <span class="late">(late, due ${fmt(d)})</span>` : ` <span style="color:#888780;">(due ${fmt(d)})</span>`) : ''}` };
+      html:`${p.sent_back ? 'Sent back: ' : (word[p.step] || '') + ' '}${escD(p.title)}${d ? (late ? ` <span class="late">(late, due ${shortDate(d)})</span>` : ` <span style="color:#888780;">(due ${shortDate(d)})</span>`) : ''}` };
   });
   if(mine.length > 5) lines.push({ tag:'Marketing HQ', html:`${mine.length - 5} more posts are your turn`, href:'staff-marketing.html#turn', btn:'See all' });
   // Item 86: people kept informed see how many posts were approved since they last cleared the list
@@ -181,33 +280,51 @@ SOURCES.push(async () => {
     const n = new Set((ev || []).map(e => e.post_id).filter(id => open.has(id))).size;
     if(n) lines.push({ tag:'Marketing HQ', html:`${n} post${n === 1 ? ' was' : 's were'} approved, for your info`, href:'staff-marketing.html#turn', btn:'See' });
   }
+  const lateAll = (posts || []).filter(p => p.post_date && due(p) && due(p) < today);
+  const boss = window._isAdminOrIt && canAccess('marketing', 'full');
   // The admin sees posts that are late at someone else's step
-  if(window._isAdminOrIt && canAccess('marketing', 'full')){
-    const lateOthers = (posts || []).filter(p => !mine.includes(p) && p.post_date && due(p) && due(p) < today);
-    if(lateOthers.length) lines.push({ tag:'Marketing HQ', html:`${lateOthers.length} post${lateOthers.length === 1 ? ' is' : 's are'} late at someone else's step`, href:'staff-marketing.html#overview', btn:'Overview' });
+  if(boss){
+    const lateOthers = lateAll.filter(p => !mine.includes(p));
+    if(lateOthers.length) lines.push({ tag:'Marketing HQ', html:`${plural(lateOthers.length, 'post is', 'posts are')} late at someone else's step`, href:'staff-marketing.html#overview', btn:'Overview' });
   }
-  return { stats: [], lines };
+  const todays = (week || []).filter(p => p.post_date === today);
+  return {
+    lines,
+    cards: canAccess('marketing', 'full') ? [{ area:'Marketing', order:4, items:[{ num:(week || []).length, label:'posts this week', href:'staff-marketing.html#overview' }, { num:lateAll.length, label:'late', href:'staff-marketing.html#overview' }] }] : [],
+    today: todays.length ? [{ h:'Marketing', order:4, rows: todays.slice(0, 3).map(p => [p.step === 'posted' ? 'Posted' : 'Goes out', `<a href="staff-marketing.html#post/${p.id}">${escD(p.title)}</a>`]) }] : [],
+    quick: canAccess('marketing', 'edit') ? [{ label:'New post', href:'staff-marketing.html#new', order:3 }] : []
+  };
 });
 
 async function loadHome(){
   const results = (await Promise.all(SOURCES.map(fn => fn().catch(err => { console.log('dashboard source failed', err); return null; })))).filter(Boolean);
-  const stats = results.flatMap(r => r.stats || []), lines = results.flatMap(r => r.lines || []);
+  const all = k => results.flatMap(r => r[k] || []);
+  const cards = all('cards').sort((a, b) => a.order - b.order), lines = all('lines'), today = all('today').sort((a, b) => a.order - b.order), quick = all('quick').sort((a, b) => a.order - b.order);
   window._lines = lines;
 
-  document.getElementById('statRow').innerHTML = stats.map(s => s.href
-    ? `<a class="stat-card" href="${s.href}" style="text-decoration:none;color:inherit;"><div class="stat-num">${escD(s.num)}</div><div class="stat-label">${escD(s.label)}</div></a>`
-    : `<div class="stat-card"><div class="stat-num">${escD(s.num)}</div><div class="stat-label">${escD(s.label)}</div></div>`).join('');
-  document.getElementById('statRow').style.display = stats.length ? '' : 'none';
+  document.getElementById('summary').textContent = lines.length ? `${plural(lines.length, 'thing waits', 'things wait')} for you across Bloom.` : 'Nothing waits for you right now.';
+  document.getElementById('quick').innerHTML = quick.map(q => `<a href="${q.href}">+ ${escD(q.label)}</a>`).join('');
 
+  const cEl = document.getElementById('cards');
+  cEl.innerHTML = cards.map(c => `<div class="card"><div class="card-area">${escD(c.area.toUpperCase())}</div><div class="card-nums">${c.items.map(i =>
+    `<${i.href ? `a href="${i.href}"` : 'div'}><div class="card-num">${escD(i.num)}</div><div class="card-lbl">${escD(i.label)}</div></${i.href ? 'a' : 'div'}>`).join('')}</div></div>`).join('');
+  cEl.style.display = cards.length ? '' : 'none';
+
+  // Waiting on you, grouped by where it comes from
+  const groups = [];
+  lines.forEach((l, i) => { let g = groups.find(x => x.tag === l.tag); if(!g){ g = { tag: l.tag, items: [] }; groups.push(g); } g.items.push([l, i]); });
   document.getElementById('waitTitle').textContent = lines.length ? `Waiting on you: ${lines.length}` : 'Waiting on you';
   document.getElementById('waitList').innerHTML = lines.length
-    ? lines.map((l, i) => `<div class="wl">
-        <span class="wtag">${escD(l.tag)}</span>
+    ? groups.map(g => `<div class="grp"><div class="grp-head"><span class="wtag">${escD(g.tag)}</span><span class="grp-n">${g.items.length}</span></div>${g.items.map(([l, i]) => `<div class="wl">
         <span class="wtxt">${l.html}</span>
         ${l.subOnly ? `<button class="wbtn" onclick="toggleSub(${i})">${OPEN_SUB === i ? 'Hide' : l.btn}</button>` : `<a class="wbtn" href="${l.href}">${escD(l.btn)}</a>`}
         ${l.sub && l.subOnly && OPEN_SUB === i ? `<div class="sublist">${l.sub}</div>` : ''}
-      </div>`).join('')
+      </div>`).join('')}</div>`).join('')
     : '<p class="quiet">Nothing needs you right now. Open any tool from the menu.</p>';
+
+  document.getElementById('todayList').innerHTML = today.map(b => `<div class="tblock"><div class="tblock-h">${escD(b.h.toUpperCase())}</div>${b.rows.map(([a, c]) => `<div class="trow"><span class="ta">${escD(a)}</span><span class="tb">${c}</span></div>`).join('')}</div>`).join('');
+  document.getElementById('todayBox').style.display = today.length ? '' : 'none';
+  document.getElementById('cols').classList.toggle('single', !today.length);
 }
 function toggleSub(i){ OPEN_SUB = OPEN_SUB === i ? null : i; loadHome(); }
 

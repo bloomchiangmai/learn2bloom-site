@@ -207,6 +207,7 @@ details.orig summary{cursor:pointer;font-size:13px;font-weight:600;color:#534AB7
 .daymenu{position:absolute;z-index:60;background:#fff;border:1px solid #DCD5C6;border-radius:10px;box-shadow:0 8px 24px rgba(44,44,42,.14);padding:6px;min-width:220px;max-width:300px;}
 .daymenu button{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;font:inherit;font-size:13px;background:none;border:0;border-radius:6px;padding:7px 9px;cursor:pointer;color:#2C2C2A;}
 .daymenu button:hover{background:#F6F3EC;} .daymenu .dm-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;} .daymenu .dm-s{font-size:11.5px;color:#8A877F;white-space:nowrap;}
+.daymenu .dm-v{font-size:12.5px;font-weight:600;color:#534AB7;white-space:nowrap;}
 .daymenu .dm-new{color:#534AB7;font-weight:700;border-top:1px solid #F0ECE3;border-radius:0 0 6px 6px;margin-top:2px;}
 .cal .day.past{color:#B4B2A9;background:#F1EFE8;border-color:transparent;}
 .cal .day.past .pp.k-posted{background:#fff !important;color:#8A877F !important;}
@@ -663,7 +664,7 @@ const whenText = t => { const d = new Date(t), now = new Date(), y = new Date(no
 function fyiBox(){
   const a = fyiList(); if(!a.length) return '';
   return `<div class="box"><div class="fyi-h"><h3 class="bh">For your info <span class="fyi-n">${a.length}</span></h3><button class="link-btn" onclick="fyiRead()">Mark all read</button></div>
-    ${a.map(({e,p})=>`<div class="wl" onclick="go('post/${p.id}')"><span class="muted">${p.post_date?fmtShort(p.post_date):'No date'}</span><span class="pt"><span class="ptt">${esc(p.title)}</span>${p.label?`<span class="fmt">${esc(p.label)}</span>`:''}</span><span>${stepChip(p)}</span><span class="wl-due muted fyi-who">${esc(firstName(nameOf(e.actor)||'Someone'))} · ${whenText(e.created_at)}</span><span class="wl-act"></span></div>`).join('')}
+    ${pageOf('fyi', a).map(({e,p})=>`<div class="wl" onclick="go('post/${p.id}')"><span class="muted">${p.post_date?fmtShort(p.post_date):'No date'}</span><span class="pt"><span class="ptt">${esc(p.title)}</span>${p.label?`<span class="fmt">${esc(p.label)}</span>`:''}</span><span>${stepChip(p)}</span><span class="wl-due muted fyi-who">${esc(firstName(nameOf(e.actor)||'Someone'))} · ${whenText(e.created_at)}</span><span class="wl-act"></span></div>`).join('')}${pager('fyi', a.length)}
   </div>`;
 }
 async function fyiRead(){
@@ -710,6 +711,8 @@ async function loadAll(){
     if(r.collection === 'plan') PLAN = row; else (DATA[r.collection] = DATA[r.collection] || []).push(row);
   });
   loaded = true;
+  // S26: the dashboard's "New post" button opens here with #new
+  if(location.hash === '#new'){ history.replaceState(null, '', '#calendar'); curHash = '#calendar'; render(); if(canEdit) newTopic(); return; }
   render();
 }
 // force: after the person's own action. Otherwise (someone else saved) do not redraw while they are typing.
@@ -830,7 +833,7 @@ function myTurn(){
   <div class="box">
     <h3 class="bh">${mine.length ? `Your turn: ${mine.length}` : 'All clear'}</h3>
     <p class="meta" style="font-size:13px;margin-bottom:6px">${sub}</p>
-    ${mine.length ? mine.map(p=>line(p)).join('') : '<p class="meta" style="padding:10px 0">Nothing is waiting on you right now.</p>'}
+    ${mine.length ? pageOf('turn', mine).map(p=>line(p)).join('') + pager('turn', mine.length) : '<p class="meta" style="padding:10px 0">Nothing is waiting on you right now.</p>'}
     ${(()=>{ const n = POSTS.filter(p=>isMine(p) && !p.post_date && !p.sent_back).length;
       return n ? `<p class="meta" style="padding:10px 0 0"><a href="javascript:void 0" onclick="calMode='ideas';go('calendar')">${n} idea${n>1?'s':''} with no date</a>. To use one, open it and set a date and the people with Edit topic.</p>` : ''; })()}
   </div>
@@ -844,7 +847,7 @@ function notMarkedBox(){
   const canMarkP = p => isAdmin() || posterOf(p) === ME;
   return `<div class="box" style="border-color:#EF9F27"><h3 class="bh">Posted? Not marked yet: ${a.length}</h3>
     <p class="meta" style="font-size:13px;margin-bottom:6px">These were due to go out and are still waiting at the Post step. If they are on Facebook, mark them so the numbers stay true.</p>
-    ${a.map(p=>`<div class="wl" style="cursor:default"><span class="late-d">${fmtShort(p.post_date)}</span><span class="pt"><a href="javascript:void 0" onclick="go('post/${p.id}')" class="ptt">${esc(p.title)}</a></span><span></span><span></span><span class="wl-act">${canMarkP(p)?`<button class="btn-outline sm" onclick="quickMark('${p.id}')">Mark as posted</button>`:''}</span></div>`).join('')}
+    ${pageOf('nm', a).map(p=>`<div class="wl" style="cursor:default"><span class="late-d">${fmtShort(p.post_date)}</span><span class="pt"><a href="javascript:void 0" onclick="go('post/${p.id}')" class="ptt">${esc(p.title)}</a></span><span></span><span></span><span class="wl-act">${canMarkP(p)?`<button class="btn-outline sm" onclick="quickMark('${p.id}')">Mark as posted</button>`:''}</span></div>`).join('')}${pager('nm', a.length)}
   </div>`;
 }
 async function quickMark(id){
@@ -919,8 +922,8 @@ function overview(){
     ${ovTile('empty', empty, empty?'warn':'good', 'Weeks with nothing planned (next 4)')}
   </div>
   ${(() => { const lists = { late: late.slice().sort((a,b)=>String(a.post_date).localeCompare(String(b.post_date))), week: week.slice().sort((a,b)=>String(a.post_date).localeCompare(String(b.post_date))), posted: postedList.slice().sort((a,b)=>String(b.posted_at||b.post_date).localeCompare(String(a.posted_at||a.post_date))) };
-     const a = lists[ovOpen]; return a && a.length ? `<div class="ovlist">${a.map(p=>line(p,true)).join('')}</div>` : ''; })()}
-  ${urgent.length ? `<div class="urgent"><h3>Urgent: ${urgent.length} post${urgent.length>1?'s':''} due to go out but not ready</h3>${urgent.map(p=>line(p,true)).join('')}</div>` : ''}
+     const a = lists[ovOpen]; pageFor('ov', ovOpen); return a && a.length ? `<div class="ovlist">${pageOf('ov', a).map(p=>line(p,true)).join('')}${pager('ov', a.length)}</div>` : ''; })()}
+  ${urgent.length ? `<div class="urgent"><h3>Urgent: ${urgent.length} post${urgent.length>1?'s':''} due to go out but not ready</h3>${pageOf('urg', urgent).map(p=>line(p,true)).join('')}${pager('urg', urgent.length)}</div>` : ''}
   ${empty && canEdit ? `<div class="emptyweeks"><span><b>${empty} empty week${empty>1?'s':''}</b> coming up</span>${emptyWeeks.map(d=>`<button class="btn-outline sm" onclick="newTopic('${d}')">Plan a topic for ${fmtShort(d)}</button>`).join('')}</div>` : ''}
   ${groundwork()}
   ${(() => {
@@ -973,8 +976,10 @@ const weekStart = iso => { const d = new Date(iso+'T00:00:00'); d.setDate(d.getD
 // ---------- Item 88: pages of 15, tick boxes, delete ----------
 const PER = 15;
 let LIST_POSTED = {};
-let PAGE = { sugg:0, ideas:0, plan:0 }, SEL = { sugg:new Set(), posts:new Set() }, PAGEKEYS = { sugg:[], posts:[] };
+let PAGE = { sugg:0, ideas:0, plan:0, turn:0, fyi:0, nm:0, ov:0, urg:0, lp:0, lx:0, share:0 }, PAGE_AT = {}, SEL = { sugg:new Set(), posts:new Set() }, PAGEKEYS = { sugg:[], posts:[] };
 const canDel = p => !!p && openStep(p) && (p.created_by===ME || canDelete || (!p.created_by && isWriterOf(p)));
+function pageFor(k, at){ if(PAGE_AT[k] !== at){ PAGE_AT[k] = at; PAGE[k] = 0; } }
+function redrawPost(){ renderPost($('#view')); }
 function pageOf(k, arr){ const n = Math.max(0, Math.ceil(arr.length/PER)-1); if(PAGE[k] > n) PAGE[k] = n; return arr.slice(PAGE[k]*PER, PAGE[k]*PER + PER); }
 function pager(k, total, redraw){
   redraw = redraw || 'render';
@@ -1030,11 +1035,12 @@ function calendarView(){
     return head + `<div class="box">${ideas.length ? tickBar('posts', dk, '<button class="btn-outline sm" style="color:#A23F1C" onclick="deleteTicked()">Delete</button>') + pg.map(p=>tickRow('posts', p.id, line(p,true), canDel(p))).join('') + pager('ideas', ideas.length) : '<p class="meta" style="padding:8px 0">No ideas waiting.</p>'}</div>`; }
   if(calMode==='list'){
     // Item 89: posts still in progress first; posted ones in their own box below.
-    const planned = inMonth.filter(p=>p.step!=='posted'), done = inMonth.filter(p=>p.step==='posted'), dk = planned.filter(canDel).map(p=>p.id);
+    pageFor('lp', calMonth); pageFor('lx', calMonth);
+    const planned = inMonth.filter(p=>p.step!=='posted'), done = inMonth.filter(p=>p.step==='posted'), pp = pageOf('lp', planned), dk = pp.filter(canDel).map(p=>p.id);
     const open = LIST_POSTED[calMonth] !== undefined ? LIST_POSTED[calMonth] : done.length <= 5;
-    const top = `<div class="box">${planned.length ? tickBar('posts', dk, '<button class="btn-outline sm" style="color:#A23F1C" onclick="deleteTicked()">Delete</button>') + tickRow('posts', '', `<div class="pl pl-h"><span>Date</span><span>Topic</span><span>Step</span><span>Writer</span><span>Reviewer</span><span>Translator</span></div>`, false) + planned.map(p=>tickRow('posts', p.id, peopleLine(p), canDel(p))).join('') : '<p class="meta" style="padding:8px 0">Nothing planned this month.</p>'}</div>`;
+    const top = `<div class="box">${planned.length ? tickBar('posts', dk, '<button class="btn-outline sm" style="color:#A23F1C" onclick="deleteTicked()">Delete</button>') + tickRow('posts', '', `<div class="pl pl-h"><span>Date</span><span>Topic</span><span>Step</span><span>Writer</span><span>Reviewer</span><span>Translator</span></div>`, false) + pp.map(p=>tickRow('posts', p.id, peopleLine(p), canDel(p))).join('') + pager('lp', planned.length) : '<p class="meta" style="padding:8px 0">Nothing planned this month.</p>'}</div>`;
     const bottom = done.length ? `<div class="box"><button class="ps-toggle" aria-expanded="${open}" onclick="LIST_POSTED['${calMonth}']=${!open};render()"><h3 class="bh" style="margin:0">Posted <span class="fyi-n">${done.length}</span></h3><span class="muted">${open?'Hide':'Show'}</span></button>
-      ${open ? tickRow('posts', '', `<div class="ps-r pl-h"><span>Date</span><span>Topic</span><span>Posted by</span><span>Facebook</span></div>`, false) + done.map(p=>tickRow('posts', '', `<div class="ps-r" onclick="go('post/${p.id}')"><span class="muted">${fmtShort(p.post_date)}</span><span class="pt"><span class="ptt">${esc(p.title)}</span></span><span>${esc(nameOf(posterOf(p))||'') || '<span class="muted">—</span>'}</span><span>${p.post_url && /^https:\/\//i.test(p.post_url) ? `<a href="${esc(p.post_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Open</a>` : '<span class="muted">—</span>'}</span></div>`, false)).join('') : ''}</div>` : '';
+      ${open ? tickRow('posts', '', `<div class="ps-r pl-h"><span>Date</span><span>Topic</span><span>Posted by</span><span>Facebook</span></div>`, false) + pageOf('lx', done).map(p=>tickRow('posts', '', `<div class="ps-r" onclick="go('post/${p.id}')"><span class="muted">${fmtShort(p.post_date)}</span><span class="pt"><span class="ptt">${esc(p.title)}</span></span><span>${esc(nameOf(posterOf(p))||'') || '<span class="muted">—</span>'}</span><span>${p.post_url && /^https:\/\//i.test(p.post_url) ? `<a href="${esc(p.post_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Open</a>` : '<span class="muted">—</span>'}</span></div>`, false)).join('') + pager('lx', done.length) : ''}</div>` : '';
     return head + top + bottom; }
   const first = new Date(y, m-1, 1), days = new Date(y, m, 0).getDate(), lead = first.getDay();
   let cells = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="dow">${d}</div>`).join('');
@@ -1058,7 +1064,7 @@ function dayClick(e, iso){
   const ps = POSTS.filter(p=>p.step!=='cancelled' && p.post_date===iso).sort((a,b)=>(a.post_time||'').localeCompare(b.post_time||''));
   if(!ps.length){ newTopic(iso); return; }
   const m = document.createElement('div'); m.id = 'dayMenu'; m.className = 'daymenu';
-  m.innerHTML = ps.map(p=>`<button onclick="closeDayMenu();go('post/${p.id}')"><span class="dm-t">${esc(p.title)}</span></button>`).join('')
+  m.innerHTML = ps.map(p=>`<button onclick="closeDayMenu();go('post/${p.id}')"><span class="dm-t">${esc(p.title)}</span><span class="dm-v">View</span></button>`).join('')
     + `<button class="dm-new" onclick="closeDayMenu();newTopic('${iso}')">+ New topic on ${fmtShort(iso)}</button>`;
   document.body.appendChild(m);
   const r = e.currentTarget.getBoundingClientRect(), w = m.offsetWidth;
@@ -1309,11 +1315,12 @@ function daysAgo(d){ const n = Math.round((new Date(new Date().toDateString()) -
 function shareBox(p){
   const list = shareList(p), today = new Date().toLocaleDateString('en-CA');
   if(!list.length) return '';
-  return `<div class="sharebox"><h4>Where to share</h4>${list.map(g=>{ const link = linkOf('groups', g), done = g.last_posted === today;
+  pageFor('share', p.id);
+  return `<div class="sharebox"><h4>Where to share</h4>${pageOf('share', list).map(g=>{ const link = linkOf('groups', g), done = g.last_posted === today;
     return `<div class="sh"><span class="sh-n">${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(g.name)} &#8599;</a>`:esc(g.name)}${g.status!=='Joined'&&g.status!=='Active'?' <span class="rowtag">not joined yet</span>':''}</span>
       <span class="sh-r" title="${esc(g.rules||'')}">${esc(SHARE_RULE[g.promo])}</span>
       <span class="sh-l">${g.last_posted ? 'Last shared ' + daysAgo(g.last_posted) : 'Never shared'}</span>
-      ${canEdit ? (done ? '<span class="sh-d">Shared today</span>' : `<button class="btn-outline sm" onclick="markShared('${g.id}')">Shared</button>`) : '<span></span>'}</div>`; }).join('')}</div>`;
+      ${canEdit ? (done ? '<span class="sh-d">Shared today</span>' : `<button class="btn-outline sm" onclick="markShared('${g.id}')">Shared</button>`) : '<span></span>'}</div>`; }).join('')}${pager('share', list.length, 'redrawPost')}</div>`;
 }
 async function markShared(gid){
   const g = (DATA.groups||[]).find(x=>x.id===gid); if(!g) return;
@@ -1812,7 +1819,7 @@ function renderGroup(el, g){
   const pages = Math.max(1, Math.ceil(rows.length / REF_PER_PAGE));
   const pg = Math.min(REF_PAGE[k] || 0, pages - 1); REF_PAGE[k] = pg;
   const from = pg * REF_PER_PAGE, part = rows.slice(from, from + REF_PER_PAGE);
-  const pager = rows.length > REF_PER_PAGE ? `<div class="refpager"><span class="muted">${from+1} to ${from+part.length} of ${rows.length}</span><button class="btn-outline sm" ${pg===0?'disabled':''} onclick="refPage('${k}',-1)" aria-label="Previous page">&#8249;</button><button class="btn-outline sm" ${pg>=pages-1?'disabled':''} onclick="refPage('${k}',1)" aria-label="Next page">&#8250;</button></div>` : '';
+  const pager = rows.length > REF_PER_PAGE ? `<div class="pager"><button class="cal-nav" ${pg===0?'disabled':''} onclick="refPage('${k}',-1)" aria-label="Previous">&#8249;</button><span>${from+1} to ${from+part.length} of ${rows.length}</span><button class="cal-nav" ${pg>=pages-1?'disabled':''} onclick="refPage('${k}',1)" aria-label="Next">&#8250;</button></div>` : '';
   el.innerHTML = `<section class="ref-sec" id="ref-${k}"><div class="top-bar"><div><h2>${esc(s.t)} <span class="muted" style="font-family:inherit;font-size:14px;font-weight:400">${all}</span></h2><p class="meta" style="font-size:13px">${esc(s.d)}</p></div>
       ${canEdit?`<button class="btn-outline" onclick="editRef('${k}')">Add</button>`:''}</div>
       ${filters}${rows.length ? table(s, part, fv ? [s.filter] : [], true) + pager : '<div class="empty-state">Nothing here yet.</div>'}</section>`;

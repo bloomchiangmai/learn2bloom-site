@@ -366,7 +366,7 @@ function openLevelMenu(ev, staffId, module){
   const cur = ov ? ov.level : def;
   menu.innerHTML = LEVELS.map(l => `<button role="menuitem" class="${l===cur?'on':''}" onclick="pickLevel('${staffId}','${module}','${l}')"><span class="lv lv-${l}">${cap(l)}</span>${LEVEL_TEXT[l]}</button>`).join('')
     + (ov ? `<button role="menuitem" class="lv-def" onclick="pickLevel('${staffId}','${module}','')">Back to role default (${cap(def)})</button>` : '')
-    + (module === 'backoffice' ? `<div class="lv-sep">Finance jobs</div>` + JOBS.map(([k,l]) => { const on = jobsCache.some(x => x.staff_id === staffId && x.job === k); return `<button role="menuitemcheckbox" aria-checked="${on}" class="lv-job${on?' on':''}" onclick="toggleJob('${staffId}','${k}',${!on})"><span class="tick">${on?'✓':''}</span>${l}</button>`; }).join('') : '');
+    + (module === 'backoffice' ? `<div class="lv-sep">Finance jobs</div>` + JOBS.map(([k,l]) => { const on = jobsCache.some(x => x.staff_id === staffId && x.job === k); return `<button role="menuitemcheckbox" aria-checked="${on}" class="lv-job${on?' on':''}" onclick="event.stopPropagation(); toggleJob('${staffId}','${k}',${!on},this)"><span class="tick">${on?'✓':''}</span>${l}</button>`; }).join('') : '');
   const card = btn.closest('.card'), r = btn.getBoundingClientRect(), c = card.getBoundingClientRect();
   card.style.position = 'relative';
   menu.hidden = false;
@@ -375,16 +375,27 @@ function openLevelMenu(ev, staffId, module){
   lvOpen = { btn };
   const first = menu.querySelector('button.on') || menu.querySelector('button'); if(first) first.focus();
 }
-function closeLevelMenu(){ const m = document.getElementById('lvMenu'); if(m) m.hidden = true; if(lvOpen && lvOpen.btn && document.body.contains(lvOpen.btn)) lvOpen.btn.focus(); lvOpen = null; }
+function closeLevelMenu(){ const m = document.getElementById('lvMenu'); if(m) m.hidden = true; if(lvOpen && lvOpen.btn && document.body.contains(lvOpen.btn)) lvOpen.btn.focus(); lvOpen = null;
+  // S25: jobs ticked while the menu was open are saved already; redraw the table once it closes
+  if(jobsDirty){ jobsDirty = false; loadTeamData(); } }
+let jobsDirty = false;
 document.addEventListener('click', e => { if(lvOpen && !e.target.closest('#lvMenu')) closeLevelMenu(); });
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && lvOpen) closeLevelMenu(); });
-async function toggleJob(staffId, job, on){
-  closeLevelMenu();
+// S25: ticking a Finance job keeps the menu open, so several jobs can be set in one go
+async function toggleJob(staffId, job, on, btn){
+  if(btn) btn.disabled = true;
   const q = sb.schema('bo').from('jobs');
   const { error } = on ? await q.insert({ staff_id: staffId, job }) : await q.delete().eq('staff_id', staffId).eq('job', job);
+  if(btn) btn.disabled = false;
   if(error){ showToast('Error: ' + error.message); return; }
+  if(on) jobsCache.push({ staff_id: staffId, job }); else jobsCache = jobsCache.filter(x => !(x.staff_id === staffId && x.job === job));
+  jobsDirty = true;
+  if(btn){
+    btn.classList.toggle('on', on); btn.setAttribute('aria-checked', String(on));
+    btn.querySelector('.tick').textContent = on ? '✓' : '';
+    btn.setAttribute('onclick', `event.stopPropagation(); toggleJob('${staffId}','${job}',${!on},this)`);
+  }
   showToast(on ? 'Job added.' : 'Job removed.');
-  await loadTeamData();
 }
 async function pickLevel(staffId, module, level){
   closeLevelMenu();

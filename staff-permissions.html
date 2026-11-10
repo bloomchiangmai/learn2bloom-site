@@ -64,7 +64,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
 .ra-key{display:flex;align-items:center;gap:8px;font-size:13px;color:#5F5E5A;margin:0 0 12px;}
 .ra-dot{width:8px;height:8px;border-radius:50%;background:#534AB7;display:inline-block;flex:0 0 auto;}
 .ra-wrap{overflow-x:auto;background:#fff;border:1px solid #E8E3D8;border-radius:12px;}
-table.ra{width:100%;min-width:760px;table-layout:fixed;}
+table.ra{width:100%;min-width:700px;table-layout:fixed;}
 table.ra th{vertical-align:top;text-align:center;font-size:11px;letter-spacing:.6px;padding:12px 4px 10px;border-bottom:1px solid #E8E3D8;}
 table.ra th small{display:block;font-size:10px;letter-spacing:0;font-weight:500;text-transform:none;color:#8A877F;margin-top:2px;line-height:1.25;}
 table.ra th.ra-name,table.ra th.ra-role{text-align:left;padding-left:14px;}
@@ -256,7 +256,7 @@ const MODULES = ['families','students','staff','calendar','payments','library','
 const MODULE_NAME = { backoffice:'Back office' };
 // S28: the grid shows the areas in use; Payments and Settings are not used yet (still on each person's profile)
 const GRID_MODULES = ['families','students','staff','calendar','library','marketing','backoffice'];
-const GRID_NAME = { families:'Families', students:'Students', staff:'Staff', calendar:'School calendar', library:'Bloombrary', marketing:'Marketing HQ', backoffice:'Back office' };
+const GRID_NAME = { families:'Families', students:'Students', staff:'Staff', calendar:'School calendar', library:'Bloom\u00ADbrary', marketing:'Marketing HQ', backoffice:'Back office' };
 // S23: finance jobs in the back office, ticked per person (bo.jobs)
 const JOBS = [['data_entry','Data entry'],['accountant','Accountant'],['hr','HR']];
 let jobsCache = [];

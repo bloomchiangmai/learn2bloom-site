@@ -275,7 +275,8 @@ function renderDirectory(){
     return (s.name || '').toLowerCase().includes(query)
       || (s.email || '').toLowerCase().includes(query)
       || (s.staff_id_code || '').toLowerCase().includes(query)
-      || roleLabel(s.role).toLowerCase().includes(query);
+      || roleLabel(s.role).toLowerCase().includes(query)
+      || (s.job_title || '').toLowerCase().includes(query);
   });
 
   if(!filtered.length){
@@ -306,11 +307,17 @@ function renderDirectory(){
   grid.innerHTML = sorted.map(s => personCardHtml(s)).join('');
 }
 
+// "Admin" is an access level, not a job. For admins, show their job title when one is set.
+function shownTitle(s){
+  if(s && s.role === 'admin' && s.job_title && s.job_title !== 'Admin') return s.job_title;
+  return roleLabel(s?.role);
+}
+
 function personCardHtml(s){
   return `
     <div class="person-card" onclick="openStaffProfile('${escHtml(s.id)}')">
       <div class="person-name">${escHtml(s.name)}${s.id === window.currentStaff.id ? '<span class="you-badge">You</span>' : ''}</div>
-      <div class="person-role">${escHtml(roleLabel(s.role))}</div>
+      <div class="person-role">${escHtml(shownTitle(s))}</div>
       <div class="person-detail">${escHtml(s.staff_id_code || '—')}</div>
       <div class="person-detail">${escHtml(s.email)}</div>
       ${s.contact_phone ? `<div class="person-detail">${escHtml(s.contact_phone)}</div>` : ''}
@@ -342,6 +349,8 @@ async function openStaffProfile(staffId){
           <div class="detail-static">${escHtml(roleLabel(s.role))}</div>
         </div>
         ${canEditAdminFields ? '<div class="field-note" style="margin-left:196px;">Change role or access in <a href="staff-permissions.html#roles">Admin › Roles and access</a>.</div>' : ''}
+        ${canEditAdminFields ? `<div class="detail-row"><div class="detail-label">Job title</div><input class="detail-input" id="p-job-title" value="${escHtml(s.job_title || '')}" placeholder="${escHtml(roleLabel(s.role))}"></div>`
+          : `<div class="detail-row"><div class="detail-label">Job title</div><div class="detail-static">${escHtml(s.job_title || '—')}</div></div>`}
         ${canEditAdminFields ? `
         <div class="detail-row"><div class="detail-label">Account email</div>
           <input class="detail-input" id="p-email" type="email" value="${escHtml(s.email || '')}" data-original="${escHtml(s.email || '')}">
@@ -665,6 +674,7 @@ async function saveStaffProfile(staffId){
   };
   if(isAdmin){
     update.notes = v('p-notes') || null;
+    if(document.getElementById('p-job-title')) update.job_title = v('p-job-title') || null;
   }
 
   const { error } = await sb.from('staff').update(update).eq('id', staffId);

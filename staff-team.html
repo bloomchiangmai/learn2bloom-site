@@ -125,6 +125,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:middle;}
           <select id="newStaffRole">
             <option value="admin">Admin</option>
             <option value="director">Director</option>
+            <option value="operations_manager">Operations Manager</option>
             <option value="education_lead">Education Lead</option>
             <option value="education_consultant">Education Consultant</option>
             <option value="lead_teacher">Lead Teacher</option>
@@ -245,7 +246,7 @@ async function loadDirectory(){
 
 function roleLabel(role){
   return {
-    admin:'Admin', director:'Director',
+    admin:'Admin', director:'Director', operations_manager:'Operations Manager',
     education_lead:'Education Lead', education_consultant:'Education Consultant', lead_teacher:'Lead Teacher',
     learning_coach:'Learning Coach', learning_coach_assistant:'Learning Coach Assistant',
     admissions:'Admissions Officer', enrollment:'Enrollment Coordinator', front_desk:'Front Desk / Office Manager',
@@ -254,7 +255,7 @@ function roleLabel(role){
 }
 
 const ROLE_ORDER = [
-  'admin','director',
+  'admin','director','operations_manager',
   'education_lead','education_consultant','lead_teacher',
   'learning_coach','learning_coach_assistant','teaching_assistant',
   'admissions','enrollment','front_desk',

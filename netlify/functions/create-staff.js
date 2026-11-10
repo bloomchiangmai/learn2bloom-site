@@ -4,7 +4,7 @@ const SUPABASE_URL = 'https://ndlcfgkhxjoancdvmgmr.supabase.co';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const VALID_ROLES = [
-  'admin', 'director',
+  'admin', 'director', 'operations_manager',
   'education_lead', 'education_consultant', 'lead_teacher',
   'learning_coach', 'learning_coach_assistant',
   'admissions', 'enrollment', 'front_desk',
@@ -12,7 +12,7 @@ const VALID_ROLES = [
 ];
 
 const ROLE_LABELS = {
-  admin: 'Admin', director: 'Director',
+  admin: 'Admin', director: 'Director', operations_manager: 'Operations Manager',
   education_lead: 'Education Lead', education_consultant: 'Education Consultant', lead_teacher: 'Lead Teacher',
   learning_coach: 'Learning Coach', learning_coach_assistant: 'Learning Coach Assistant',
   admissions: 'Admissions Officer', enrollment: 'Enrollment Coordinator', front_desk: 'Front Desk / Office Manager',

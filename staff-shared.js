@@ -152,7 +152,7 @@ function injectSidebarStyles(){
       padding:22px 12px 18px 24px;white-space:nowrap;text-decoration:none;border-bottom:1px solid #E8E3D8;display:block;}
     .sidebar-nav{flex:1;padding:16px 12px;}
     .sidebar-group{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
-      color:#A8A39A;margin:16px 8px 6px;}
+      color:#A8A39A;margin:16px 12px 6px;}
     .sidebar-group:first-child{margin-top:0;}
     .sidebar-link{display:block;font-size:14px;font-weight:600;color:#5F5E5A;padding:9px 12px;
       border-radius:8px;text-decoration:none;margin-bottom:2px;}

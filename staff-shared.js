@@ -203,7 +203,7 @@ function renderSidebar(activeKey){
     <div class="sidebar-nav">${navHtml}</div>
     <div class="sidebar-footer">
       <div class="name">${window.currentStaff ? escShared(window.currentStaff.name) : ''}</div>
-      <div class="role">${roleLabelShared(window.currentStaffRole)}</div>
+      <div class="role">${escShared((window.currentStaffRole === 'admin' && window.currentStaff?.job_title && window.currentStaff.job_title !== 'Admin') ? window.currentStaff.job_title : roleLabelShared(window.currentStaffRole))}</div>
       <span class="signout" onclick="doLogout()">Sign out</span>
     </div>
   `;

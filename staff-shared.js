@@ -65,7 +65,7 @@ const NAV_ITEMS = [
   { key: 'library', label: 'Bloombrary', href: 'https://bloombrary.learn2bloom.org/admin', module: 'library', external: true },
   { key: 'marketing', label: 'Marketing HQ', href: 'staff-marketing.html', module: 'marketing' },
   { key: 'backoffice', label: 'Back office', href: 'backoffice/', module: 'backoffice' },
-  { key: 'staff', label: 'Staff', href: 'staff-team.html' },
+  { key: 'staff', label: 'Staff', href: 'staff-team.html', sep: true },
   { key: 'admin', label: 'Admin', href: 'staff-permissions.html#roles', adminOnly: true }
 ];
 const SYSTEMS = {
@@ -100,6 +100,14 @@ function sysItemOn(item, page){
 function setSysActive(){
   const page = window.STAFF_PAGE_KEY || '', sys = SYSTEMS[systemOf(page)]; if(!sys) return;
   sys.groups.flatMap(g => g.items).forEach(i => { const a = document.querySelector(`.sys-link[data-k="${i.key}"]`); if(a) a.classList.toggle('active', sysItemOn(i, page)); });
+}
+// S26: counts next to the main links, from the dashboard's "Waiting on you" lines (kept for this browser tab)
+const NAV_TAG_KEY = { 'Admissions':'students', 'Learners':'students', 'Calendar':'calendar', 'Back office':'backoffice', 'Timesheets':'backoffice', 'Marketing HQ':'marketing', 'Admin':'admin' };
+function applyNavCounts(c){ ['students','calendar','marketing','backoffice','admin'].forEach(k => setSysCount(k, c[k] || 0)); }
+function setNavCounts(lines){
+  const c = {}; (lines || []).forEach(l => { const k = NAV_TAG_KEY[l.tag]; if(k) c[k] = (c[k] || 0) + 1; });
+  try{ sessionStorage.setItem('bloomNavCounts', JSON.stringify(c)); }catch(e){}
+  applyNavCounts(c);
 }
 function setSysCount(key, n){
   const el = document.querySelector(`.sys-link[data-k="${key}"] .sys-n`); if(!el) return;
@@ -141,24 +149,25 @@ function injectSidebarStyles(){
     .sidebar{width:220px;flex-shrink:0;background:#F7F3EC;border-right:1px solid #E8E3D8;
       display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:50;}
     .sidebar-logo{font-family:Georgia,serif;font-size:19px;font-weight:700;color:#2C2C2A;
-      padding:22px 20px 18px;text-decoration:none;border-bottom:1px solid #E8E3D8;display:block;}
+      padding:22px 12px 18px 24px;white-space:nowrap;text-decoration:none;border-bottom:1px solid #E8E3D8;display:block;}
     .sidebar-nav{flex:1;padding:16px 12px;}
     .sidebar-group{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
-      color:#A8A39A;margin:16px 8px 6px;}
+      color:#A8A39A;margin:16px 12px 6px;}
     .sidebar-group:first-child{margin-top:0;}
     .sidebar-link{display:block;font-size:14px;font-weight:600;color:#5F5E5A;padding:9px 12px;
       border-radius:8px;text-decoration:none;margin-bottom:2px;}
     .sidebar-link:hover{background:#EFEAE0;}
     .sidebar-link.active{background:#534AB7;color:#fff;}
     .sys-logo{border-bottom:none !important;padding-bottom:4px !important;}
-    .sys-head{padding:0 20px 14px;border-bottom:1px solid #E8E3D8;}
+    .sys-head{padding:0 24px 14px;border-bottom:1px solid #E8E3D8;}
     .sys-app{font-size:13px;font-weight:600;color:#534AB7;margin-bottom:8px;}
     .sys-back{font-size:13px;font-weight:600;color:#534AB7;text-decoration:none;}
     .sys-back:hover{text-decoration:underline;}
     .sys-link{display:flex !important;align-items:center;justify-content:space-between;}
     .sys-n{font-size:11px;font-weight:700;color:#fff;background:#534AB7;border-radius:999px;padding:1px 8px;margin-left:8px;}
     .sidebar-link.active .sys-n{background:#fff;color:#534AB7;}
-    .sidebar-footer{border-top:1px solid #E8E3D8;padding:14px 20px;font-size:12px;}
+    .sidebar-footer{border-top:1px solid #E8E3D8;padding:14px 24px;font-size:12px;}
+    .sidebar-sep{border-top:1px solid #E8E3D8;margin:10px 12px;}
     .sidebar-footer .name{font-weight:700;color:#2C2C2A;font-size:13px;}
     .sidebar-footer .role{color:#888780;margin-bottom:8px;}
     .sidebar-footer .signout{color:#888780;cursor:pointer;text-decoration:underline;}
@@ -168,6 +177,7 @@ function injectSidebarStyles(){
       .sidebar{position:static;width:100%;height:auto;border-right:none;border-bottom:1px solid #E8E3D8;}
       .sidebar-nav{display:flex;flex-wrap:wrap;padding:10px 12px;}
       .sidebar-group{display:none;}
+      .sidebar-sep{display:none;}
       .sidebar-link{margin-right:4px;padding:7px 10px;}
       .page-content{margin-left:0;}
     }
@@ -191,8 +201,10 @@ function renderSidebar(activeKey){
         `<a href="${i.page === activeKey && i.hash ? '#' + i.hash : i.href}" data-k="${i.key}" class="sidebar-link sys-link ${sysItemOn(i, activeKey) ? 'active' : ''}">${i.label}<span class="sys-n" style="display:none"></span></a>`).join('');
     }).join('');
   } else {
+    // S26: a divider before Staff and Admin; counts next to links come from the dashboard (setNavCounts)
     navHtml = NAV_ITEMS.filter(item => !(item.module && !canAccess(item.module, 'view')) && (!item.adminOnly || isAdminOrIt)).map(item =>
-      `<a href="${item.href}" class="sidebar-link ${item.key === activeKey ? 'active' : ''}"${item.external ? ' target="_blank" rel="noopener"' : ''}>${item.label}${item.external ? EXT_MARK : ''}</a>`).join('');
+      (item.sep ? '<div class="sidebar-sep" role="separator"></div>' : '') +
+      `<a href="${item.href}" data-k="${item.key}" class="sidebar-link sys-link ${item.key === activeKey ? 'active' : ''}"${item.external ? ' target="_blank" rel="noopener"' : ''}><span>${item.label}${item.external ? EXT_MARK : ''}</span><span class="sys-n" style="display:none"></span></a>`).join('');
   }
 
   const el = document.createElement('div');
@@ -208,6 +220,7 @@ function renderSidebar(activeKey){
     </div>
   `;
   document.body.insertBefore(el, document.body.firstChild);
+  if(!sys){ try{ applyNavCounts(JSON.parse(sessionStorage.getItem('bloomNavCounts') || '{}')); }catch(e){} }
   if(sys){
     window.addEventListener('hashchange', setSysActive);
     if(sysKey === 'students') loadStudentCounts();

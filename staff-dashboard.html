@@ -20,10 +20,13 @@ h1{font-family:Georgia,serif;font-size:34px;font-weight:700;margin-bottom:6px;}
 .quick{display:flex;flex-wrap:wrap;gap:10px;}
 .quick a{font-size:14px;font-weight:600;text-decoration:none;padding:9px 16px;border-radius:999px;border:1px solid #E8E3D8;background:#fff;color:#2C2C2A;}
 .quick a:hover{border-color:#534AB7;color:#534AB7;}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+.cards{display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:14px;}
+@media (max-width:1300px){.cards{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media (max-width:600px){.cards{grid-template-columns:minmax(0,1fr);}}
 .card{background:#F7F3EC;border:1px solid #E8E3D8;border-radius:12px;padding:14px 18px;display:flex;flex-direction:column;gap:8px;}
 .card-area{font-size:11px;letter-spacing:1.2px;font-weight:700;color:#6B6A64;}
-.card-nums{display:flex;gap:28px;flex-wrap:wrap;}
+.card-nums{display:flex;gap:28px;flex-wrap:nowrap;}
+.card-lbl{white-space:nowrap;}
 .card-nums a,.card-nums div{text-decoration:none;color:inherit;}
 .card-num{font-family:Georgia,serif;font-size:26px;font-weight:700;color:#534AB7;}
 .card-lbl{font-size:13px;color:#5F5E5A;}
@@ -47,7 +50,7 @@ h1{font-family:Georgia,serif;font-size:34px;font-weight:700;margin-bottom:6px;}
 .tblock{margin-top:14px;}
 .tblock-h{font-size:11px;letter-spacing:1.2px;font-weight:700;color:#6B6A64;padding-bottom:4px;}
 .trow{display:flex;gap:12px;padding:8px 0;border-top:1px solid #F0EBE2;font-size:14px;line-height:1.4;}
-.trow .ta{flex:0 0 76px;color:#6B6A64;}
+.trow .ta{flex:0 0 92px;color:#6B6A64;white-space:nowrap;}
 .trow .tb{flex:1;min-width:0;}
 .trow a{color:#2C2C2A;text-decoration:none;}
 .trow a:hover{color:#534AB7;}
@@ -301,6 +304,7 @@ async function loadHome(){
   const all = k => results.flatMap(r => r[k] || []);
   const cards = all('cards').sort((a, b) => a.order - b.order), lines = all('lines'), today = all('today').sort((a, b) => a.order - b.order), quick = all('quick').sort((a, b) => a.order - b.order);
   window._lines = lines;
+  if(typeof setNavCounts === 'function') setNavCounts(lines);
 
   document.getElementById('summary').textContent = lines.length ? `${plural(lines.length, 'thing waits', 'things wait')} for you across Bloom.` : 'Nothing waits for you right now.';
   document.getElementById('quick').innerHTML = quick.map(q => `<a href="${q.href}">+ ${escD(q.label)}</a>`).join('');
@@ -309,6 +313,7 @@ async function loadHome(){
   cEl.innerHTML = cards.map(c => `<div class="card"><div class="card-area">${escD(c.area.toUpperCase())}</div><div class="card-nums">${c.items.map(i =>
     `<${i.href ? `a href="${i.href}"` : 'div'}><div class="card-num">${escD(i.num)}</div><div class="card-lbl">${escD(i.label)}</div></${i.href ? 'a' : 'div'}>`).join('')}</div></div>`).join('');
   cEl.style.display = cards.length ? '' : 'none';
+  cEl.style.setProperty('--n', Math.min(4, Math.max(1, cards.length)));
 
   // Waiting on you, grouped by where it comes from
   const groups = [];

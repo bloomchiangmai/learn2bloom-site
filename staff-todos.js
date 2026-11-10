@@ -25,6 +25,9 @@ SOURCES.push(async () => {
   const e = enq || [], n = notes || [];
   const lines = [];
   if(e.length) lines.push({ tag:'Admissions', html:`${plural(e.length, 'new enquiry', 'new enquiries')} to reply to`, href:'staff-admissions.html', btn:'Open' });
+  // Student absences reported by parents (moved from the School calendar, 10 Nov)
+  const { count: absN } = await sb.from('bloom_absence_reports').select('id', { count: 'exact', head: true }).eq('status', 'new');
+  if(absN) lines.push({ tag:'Learners', html:`${plural(absN, 'new student absence')} reported by parents`, href:'student-absences.html', btn:'Open' });
   if(n.length) lines.push({ tag:'Learners', html:`${plural(n.length, 'parent request')}`, btn:'Show', subOnly:true,
     sub: n.map(x => { const st = x.students || {}; const link = st.student_id_code ? `learners.html?student=${encodeURIComponent(st.student_id_code)}` : 'learners.html';
       return `<a href="${link}"><b>${escD(st.first_name)} ${escD(st.last_name || '')}</b><br><span style="color:#5F5E5A;font-size:13px;">${escD(x.note)}</span></a>`; }).join('') });
@@ -36,7 +39,7 @@ SOURCES.push(async () => {
   if(!window._isAdminOrIt) return null;
   const { count } = await sb.from('approval_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending');
   const c = count || 0;
-  return { lines: c ? [{ tag:'Admin', html:`${plural(c, 'approval')} waiting for you`, href:'staff-permissions.html#approvals', btn:'Review' }] : [] };
+  return { lines: c ? [{ tag:'Access and settings', html:`${plural(c, 'change request')} waiting for you`, href:'staff-permissions.html#approvals', btn:'Review' }] : [] };
 });
 
 // Calendar: changes this person asked for, and what kind of day today is
@@ -56,8 +59,8 @@ SOURCES.push(async () => {
   const seen = new Set();
   (ev || []).filter(e => e.date > t && e.day_type !== 'school').forEach(e => { const k = name(e); if(!seen.has(k) && rows.length < 4){ seen.add(k); rows.push([shortDate(e.date), escD(k)]); } });
   return {
-    lines: c ? [{ tag:'Calendar', html:`${plural(c, 'calendar change')} you asked for ${c === 1 ? 'is' : 'are'} waiting for approval`, href:'staff-calendar.html', btn:'View' }] : [],
-    today: [{ h:'Calendar', order:3, rows: rows.map(([a, b]) => [a, `<a href="staff-calendar.html">${b}</a>`]) }]
+    lines: c ? [{ tag:'School calendar', html:`${plural(c, 'calendar change')} you asked for ${c === 1 ? 'is' : 'are'} waiting for approval`, href:'staff-calendar.html', btn:'View' }] : [],
+    today: [{ h:'School calendar', order:3, rows: rows.map(([a, b]) => [a, `<a href="staff-calendar.html">${b}</a>`]) }]
   };
 });
 

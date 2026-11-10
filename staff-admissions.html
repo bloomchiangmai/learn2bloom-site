@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Staff Admissions — Bloom Chiangmai</title>
+<title>Admissions · Students — Bloom Chiangmai</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- seo -->
 <meta name="robots" content="noindex, nofollow">
@@ -84,7 +84,7 @@ td{padding:10px 12px;border-bottom:1px solid #E8E3D8;vertical-align:top;}
     <div class="top-bar" style="align-items:flex-end;gap:16px;flex-wrap:wrap;">
       <div>
         <div class="eyebrow">Students</div>
-        <h1 id="admTitle">New enquiries</h1>
+        <h1 id="admTitle">Enquiries</h1>
         <p id="admSub" style="font-size:15px;color:#5F5E5A;margin-top:6px;"></p>
       </div>
       <button class="btn-primary" id="addAppBtn" onclick="toggleAddCard()" style="display:none;">+ Add application</button>
@@ -368,7 +368,7 @@ function applyFiltersAndRender(){
 // Tabs: New (enquiries), In progress, Withdrawn here; Enrolled and Archived open their own pages.
 let ADM_TAB = ['new','progress','withdrawn'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'new';
 const tabOf = s => s.status === 'enquiry' ? 'new' : s.status === 'withdrawn' ? 'withdrawn' : 'progress';
-const ADM_HEAD = { new:['New enquiries','Enquiries that have not moved to the next step yet.'], progress:['In progress','Applications between enquiry and enrolled.'], withdrawn:['Withdrawn','Families who stepped back. Move them on again if they return.'] };
+const ADM_HEAD = { new:['Enquiries','Enquiries that have not moved to the next step yet.'], progress:['In progress','Applications between enquiry and enrolled.'], withdrawn:['Withdrawn','Families who stepped back. Move them on again if they return.'] };
 function renderAdmTabs(){
   const n = k => allData.filter(s => tabOf(s) === k).length;
   ['new','progress','withdrawn'].forEach(k => { if(typeof setSysCount === 'function') setSysCount(k, n(k)); });

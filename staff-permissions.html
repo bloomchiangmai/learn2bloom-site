@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Permissions — Bloom Chiangmai</title>
+<title>Access and settings — Bloom Chiangmai</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- seo -->
 <meta name="robots" content="noindex, nofollow">
@@ -139,7 +139,7 @@ table.ra td.ra-role select{width:100%;font-size:12.5px;padding:6px 6px;border:1p
   <div id="authLoading" style="text-align:center;padding:80px 20px;color:#888780;font-size:14px;">Loading…</div>
 
   <div id="deniedView" class="denied-box" style="display:none;">
-    <div class="eyebrow">Admin</div>
+    <div class="eyebrow">Access and settings</div>
     <h1>Restricted</h1>
     <p>This page is only available to Admin and IT staff. Looking for the staff directory? <a href="staff-team.html" style="color:#534AB7;">Go to Team</a>.</p>
   </div>
@@ -147,7 +147,7 @@ table.ra td.ra-role select{width:100%;font-size:12.5px;padding:6px 6px;border:1p
   <div id="pageContent" style="display:none;">
     <div class="top-bar">
       <div>
-        <div class="eyebrow">Admin</div>
+        <div class="eyebrow">Access and settings</div>
         <h1 id="permTitle">Roles and access</h1>
         <p class="sub" id="permSub" style="margin-bottom:0;"></p>
       </div>
@@ -155,7 +155,7 @@ table.ra td.ra-role select{width:100%;font-size:12.5px;padding:6px 6px;border:1p
 
     <div class="ptabs" role="tablist" style="display:none">
       <button class="ptab on" data-tab="roles" onclick="showTab('roles')">Roles and access</button>
-      <button class="ptab" data-tab="approvals" onclick="showTab('approvals')">Approvals <span id="approvalsCount"></span></button>
+      <button class="ptab" data-tab="approvals" onclick="showTab('approvals')">Change requests <span id="approvalsCount"></span></button>
       <button class="ptab" data-tab="features" onclick="showTab('features')">Site features</button>
     </div>
 
@@ -267,7 +267,7 @@ function showTab(t){
   document.querySelectorAll('.ptab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   document.querySelectorAll('[data-panel]').forEach(p => p.style.display = p.dataset.panel === t ? '' : 'none');
   if(location.hash.slice(1) !== t) history.replaceState(null, '', '#' + t);
-  const head = {roles:['Roles and access','Who can open which tool, and how much they can change.'], approvals:['Approvals','Calendar changes waiting for an admin.'], features:['Site features','Turn a tool off for maintenance. People see a short "temporarily unavailable" message instead.']}[t];
+  const head = {roles:['Roles and access','Who can open which tool, and how much they can change.'], approvals:['Change requests','School calendar changes waiting for an admin to say yes.'], features:['Site features','Turn a tool off for maintenance. People see a short "temporarily unavailable" message instead.']}[t];
   document.getElementById('permTitle').textContent = head[0]; document.getElementById('permSub').textContent = head[1];
   if(typeof setSysActive === 'function') setSysActive();
 }

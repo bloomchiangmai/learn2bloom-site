@@ -37,6 +37,9 @@ const isAdmin = () => S.profile?.role === 'admin';
 const isApprover = () => ['admin', 'approver'].includes(S.profile?.role);
 // Access: role = staff / approver (office approver) / admin, plus ticks for accountant and data entry; PICs come from projects
 const isAccountant = () => isAdmin() || !!S.profile?.is_accountant;
+// BCM: who keeps a timesheet is a per-person switch (Settings › Timesheet), not the admin role
+const keepsTS = () => !S.profile?.no_timesheet;
+const seesTime = () => keepsTS() || isAdmin() || isHR() || isAccountant();
 const canPay = () => isAdmin(); // BCM: admins pay
 const isDataEntry = () => !!S.profile?.is_data_entry;
 const isHR = () => !!S.profile?.is_hr;
@@ -361,8 +364,8 @@ function navLinks() {
     <div class="nav-label">Expenses</div>
     ${L('#/forms', 'Expense forms', S.reviewCount, ['#/expenses', '#/report', '#/print'])}
     ${L('#/capture', isTouch() ? 'Snap receipt' : 'Add receipts', S.inboxCount, ['#/inbox', '#/trash'])}
-    ${STAGE < 2 ? '' : `<div class="nav-label">Time</div>
-    ${isAdmin() ? L('#/ot', 'Staff timesheets') : `${isHR() ? `<a href="#/ot" class="${r === '#/ot' && !params().all && !params().u ? 'on' : ''}">Timesheet</a><a href="#/ot?all=1" class="${r === '#/ot' && (params().all || params().u) ? 'on' : ''}">Staff timesheets</a>` : L('#/ot', 'Timesheet')}`}
+    ${STAGE < 2 || !seesTime() ? '' : `<div class="nav-label">Time</div>
+    ${isAdmin() ? `${keepsTS() ? `<a href="#/ot?u=${S.user.id}" class="${r === '#/ot' && params().u === S.user.id ? 'on' : ''}">My timesheet</a>` : ''}<a href="#/ot" class="${r === '#/ot' && params().u !== S.user.id ? 'on' : ''}">Staff timesheets</a>` : !keepsTS() ? '' : `${isHR() ? `<a href="#/ot" class="${r === '#/ot' && !params().all && !params().u ? 'on' : ''}">Timesheet</a><a href="#/ot?all=1" class="${r === '#/ot' && (params().all || params().u) ? 'on' : ''}">Staff timesheets</a>` : L('#/ot', 'Timesheet')}`}
     ${L('#/roster', 'Roster')}${isAdmin() || isHR() || isAccountant() ? L('#/payroll', 'Payroll summary') : ''}`}`;
   if (isReviewer()) h += `<div class="nav-label">Review</div>${L('#/approvals', 'Approvals')}`;
   if (STAGE >= 3 && canFA()) h += `<div class="nav-label">Accounting</div>${L('#/card', 'Card payments')}${L('#/bills', 'Bank transfers')}${L('#/subs', 'Subscriptions')}${canEnterFA() ? L('#/fa-export', 'Month close', 0, ['#/fa/']) : ''}`;
@@ -373,7 +376,7 @@ function navLinks() {
 }
 function phoneNav() {
   // Snap, To check, Forms and Waiting are the bottom tabs; the menu only holds the rest
-  const opts = [...(STAGE >= 2 ? [['#/ot', isAdmin() ? 'Staff timesheets' : 'Timesheet'], ['#/roster', 'Roster']] : []), ['#/messages', `Messages${S.msgCount ? ' (' + S.msgCount + ')' : ''}`], ['#/account', 'My account'], ['/staff-dashboard.html', '‹ Staff dashboard']];
+  const opts = [...(STAGE >= 2 && seesTime() ? [...(isAdmin() && keepsTS() ? [[`#/ot?u=${S.user.id}`, 'My timesheet']] : []), ...(isAdmin() || keepsTS() ? [['#/ot', isAdmin() ? 'Staff timesheets' : 'Timesheet']] : []), ['#/roster', 'Roster']] : []), ['#/messages', `Messages${S.msgCount ? ' (' + S.msgCount + ')' : ''}`], ['#/account', 'My account'], ['/staff-dashboard.html', '‹ Staff dashboard']];
   const cur0 = (location.hash || '').split('?')[0]; if (!opts.some(([h]) => cur0.startsWith(h))) opts.unshift(['', 'Menu']);
   const cur = (location.hash || '').split('?')[0];
   return `<select id="pnav" aria-label="Menu">${opts.map(([h, l]) => `<option value="${h}" ${cur.startsWith(h) ? 'selected' : ''}>${esc(l)}</option>`).join('')}<option value="out">Sign out</option></select>`;
@@ -3183,7 +3186,7 @@ function timesheetPrintHtml({ name, staffNo, per, set, hol, entries, form }) {
 async function pageOTStaff() {
   const per = otPeriod(params().p);
   const [people, forms, bals, sv] = await Promise.all([
-    sb.from('profiles').select('id, full_name, staff_no, role, active').eq('active', true).neq('role', 'admin').order('staff_no').then(must),
+    sb.from('profiles').select('id, full_name, staff_no, role, active').eq('active', true).eq('no_timesheet', false).order('staff_no').then(must),
     sb.from('ot_forms').select('id, staff_id, status').eq('period_end', per.end).then(must),
     sb.from('time_off_balance').select('*').then(must),
     sb.from('saved_days_balance').select('*').then(must),
@@ -3201,12 +3204,13 @@ async function pageOTStaff() {
 }
 async function pageOT() {
   if ((isAdmin() || (isHR() && params().all)) && !params().u) return pageOTStaff();
+  if (!keepsTS() && !params().u && !isHR()) { shell(`<div class="page-head"><div><h1>Timesheet</h1><p>You do not keep a timesheet at BCM. An admin can change this in Settings › Timesheet.</p></div></div>`); return; }
   const per = otPeriod(params().p);
   // Approvers and admins can look at anyone's OT (read only); everyone else sees their own
   const uid = (isAdmin() || isHR() || isAccountant()) && params().u ? params().u : S.user.id;
   const self = uid === S.user.id;
   // Admins are not in the OT loop: the picker and team list show staff and approvers (plus "Me")
-  const people = isAdmin() || isHR() || isAccountant() ? must(await sb.from('profiles').select('id, full_name, staff_no, active, role').eq('active', true).order('staff_no')).filter((x) => x.role !== 'admin' || (x.id === S.user.id && !isAdmin())) : [];
+  const people = isAdmin() || isHR() || isAccountant() ? must(await sb.from('profiles').select('id, full_name, staff_no, active, role, no_timesheet').eq('active', true).order('staff_no')).filter((x) => !x.no_timesheet) : [];
   const who = people.find((x) => x.id === uid);
   let form = (await sb.from('ot_forms').select('*').eq('staff_id', uid).eq('period_end', per.end).maybeSingle()).data;
   const entries = form ? must(await sb.from('ot_entries').select('*').eq('form_id', form.id).order('work_date').order('start_time')) : [];
@@ -3449,7 +3453,7 @@ function bindHol(hols, rerun) {
 // Admin: OT settings per person and the holiday calendar
 async function pageOTSettings() {
   const [staff, sets, hols, hsug, hmeta] = await Promise.all([
-    sb.from('profiles').select('id, full_name, staff_no, active, role').neq('role', 'admin').order('staff_no').then(must),
+    sb.from('profiles').select('id, full_name, staff_no, active, role, no_timesheet').order('no_timesheet').order('staff_no').then(must),
     sb.from('ot_settings').select('*').then(must),
     sb.from('holidays').select('*').order('day').then(must),
     sb.from('holiday_suggestions').select('*').then((r) => r.data || []),
@@ -3462,7 +3466,9 @@ async function pageOTSettings() {
   const RQ = Object.fromEntries(reqs.map((x) => [x.staff_id, x]));
   const LBL = { pay_type: { full_time: 'Full-time', part_time: 'Part-time', freelance: 'Freelance' }, week_pattern: { alt_sat: 'Long/short week', mon_fri: 'Mon to Fri', mon_sat: 'Mon to Sat' } };
   const chg = (c) => Object.entries(c).map(([k, v]) => (LBL[k]?.[v] || (k === 'start_time' ? 'start ' : k === 'end_time' ? 'end ' : k === 'sat_off_anchor' ? 'Saturday off ' : '') + String(v).slice(0, 10))).join(', ');
-  const row = (p) => { const x = { ...(S2[p.id] || {}), ...(RQ[p.id]?.changes || {}) }; const rq = RQ[p.id]; return `<tr data-sid="${p.id}"><td>${esc(p.full_name)}<div class="faint mono">${esc(p.staff_no)}</div>${rq ? `<div class="hr-wait">Waiting for ${esc(p.full_name)} to agree: ${esc(chg(rq.changes))} <a href="#" data-rqx="${rq.id}">cancel</a></div>` : ''}</td>
+  const tsSel = (p) => `<td><select class="input" data-nots="${p.id}" ${isAdmin() ? '' : 'disabled'}><option value="0" ${p.no_timesheet ? '' : 'selected'}>Yes</option><option value="1" ${p.no_timesheet ? 'selected' : ''}>No timesheet</option></select></td>`;
+  const row = (p) => { if (p.no_timesheet) return `<tr data-off="${p.id}" class="faint"><td>${esc(p.full_name)}<div class="faint mono">${esc(p.staff_no)}</div></td>${tsSel(p)}<td colspan="3" class="faint">No timesheet (consultant, or paid elsewhere). Not on the roster, payroll or reminders. Expense forms still work.</td></tr>`;
+    const x = { ...(S2[p.id] || {}), ...(RQ[p.id]?.changes || {}) }; const rq = RQ[p.id]; return `<tr data-sid="${p.id}"><td>${esc(p.full_name)}<div class="faint mono">${esc(p.staff_no)}</div>${rq ? `<div class="hr-wait">Waiting for ${esc(p.full_name)} to agree: ${esc(chg(rq.changes))} <a href="#" data-rqx="${rq.id}">cancel</a></div>` : ''}</td>${tsSel(p)}
     <td><select class="input" data-k="pay_type">${[['full_time', 'Full-time'], ['part_time', 'Part-time'], ['freelance', 'Freelance']].map(([v, l]) => `<option value="${v}" ${(x.pay_type || 'full_time') === v ? 'selected' : ''}>${l}</option>`).join('')}</select></td>
     <td><div class="row" style="gap:6px;flex-wrap:nowrap"><input class="input" type="time" data-k="start_time" value="${hhmm(x.start_time) || '08:00'}" style="width:118px"><span>to</span><input class="input" type="time" data-k="end_time" value="${hhmm(x.end_time) || '16:30'}" style="width:118px"></div></td>
     <td><select class="input" data-k="week_pattern"><option value="alt_sat" ${(x.week_pattern || 'mon_fri') === 'alt_sat' ? 'selected' : ''}>Long/short week</option><option value="mon_fri" ${(x.week_pattern || 'mon_fri') === 'mon_fri' ? 'selected' : ''}>Mon to Fri</option><option value="mon_sat" ${x.week_pattern === 'mon_sat' ? 'selected' : ''}>Mon to Sat</option><option value="one_sat" ${x.week_pattern === 'one_sat' ? 'selected' : ''}>Mon to Sat, 1 Saturday off a month</option></select><div class="faint" style="font-size:11px">A Saturday off: <input class="input" type="date" data-k="sat_off_anchor" value="${esc(x.sat_off_anchor || '2026-10-03')}" style="width:140px;padding:2px 6px"></div></td>
@@ -3470,9 +3476,13 @@ async function pageOTSettings() {
 </tr>`; };
   shell(`<div class="page-head"><div><h1>Timesheet settings</h1><p>Normal hours and work week per person, and the company holiday calendar. ${viaReq ? 'Changes to other people wait until they agree; your own save straight away.' : 'Changes save as you go and the person gets a message.'}</p></div></div>
   <div class="stack">
-    <div class="card"><div class="table-wrap"><table><thead><tr><th>Staff</th><th>Type</th><th>Normal hours (lunch included)</th><th>Work week</th></tr></thead><tbody>${staff.filter((p) => p.active).map(row).join('')}</tbody></table></div></div>
+    <div class="card"><div class="table-wrap"><table><thead><tr><th>Staff</th><th>Timesheet</th><th>Type</th><th>Normal hours (lunch included)</th><th>Work week</th></tr></thead><tbody>${staff.filter((p) => p.active).map(row).join('')}</tbody></table></div></div>
     ${holHtml(hols, hsug, hmeta, pageOTSettings.hy || new Date().getFullYear())}
   </div>`);
+  main().querySelectorAll('[data-nots]').forEach((el) => (el.onchange = async () => {
+    try { await run(async () => must(await sb.from('profiles').update({ no_timesheet: el.value === '1' }).eq('id', el.dataset.nots)), el.value === '1' ? 'Set to no timesheet' : 'Keeps a timesheet now'); } catch { /* shown */ }
+    pageOTSettings();
+  }));
   main().querySelectorAll('tr[data-sid] [data-k]').forEach((el) => (el.onchange = async () => {
     const sid = el.closest('tr').dataset.sid; let v = el.value;
     if (['dayoff_mult', 'holiday_mult', 'freelance_rate'].includes(el.dataset.k)) v = v === '' ? null : Number(v);
@@ -4775,7 +4785,7 @@ async function pageThread(id) {
 async function pagePayroll() {
   const per = otPeriod(params().p);
   const [people, forms, sets, offs] = await Promise.all([
-    sb.from('profiles').select('id, full_name, staff_no, role, active').eq('active', true).neq('role', 'admin').order('staff_no').then(must),
+    sb.from('profiles').select('id, full_name, staff_no, role, active').eq('active', true).eq('no_timesheet', false).order('staff_no').then(must),
     sb.from('ot_forms').select('id, staff_id, status').eq('period_end', per.end).then(must),
     sb.from('ot_settings').select('staff_id, pay_type').then(must),
     sb.from('ot_offday').select('staff_id, day, choice').then(must),

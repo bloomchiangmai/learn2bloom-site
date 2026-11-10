@@ -1,0 +1,3 @@
+-- S30 (10 Nov): bo.profiles.gets_advance (default false), admin-only (guard_profile_admin_fields),
+-- trigger trg_guard_advance on bo.expense_reports: a non-admin cannot add or raise an advance for someone set to No.
+-- Applied as migration s30_cash_advance_switch.

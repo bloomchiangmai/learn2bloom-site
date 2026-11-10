@@ -57,3 +57,7 @@ insert into bo.holiday_meta (id) values (1) on conflict do nothing;
 create policy "ot forms: owner submits" on bo.ot_forms for update to authenticated
   using (staff_id = (select auth.uid()) and status = any (array['draft', 'rejected']))
   with check (staff_id = (select auth.uid()) and status = 'submitted');
+
+-- 10 Nov: per-person "No timesheet" switch (migration s23_no_timesheet_switch). Replaces IGA's "admins do not keep a timesheet".
+-- bo.profiles.no_timesheet; on for Michel, Paul Penfold, Amber, Nisa, Ning, Ronnie, Jean, Paul. Reminders, roster and the
+-- create-timesheet check follow the switch; an admin cannot approve or return their own timesheet; only admins flip the switch.

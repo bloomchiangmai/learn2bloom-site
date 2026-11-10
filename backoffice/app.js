@@ -39,6 +39,9 @@ const isApprover = () => ['admin', 'approver'].includes(S.profile?.role);
 const isAccountant = () => isAdmin() || !!S.profile?.is_accountant;
 // BCM: who keeps a timesheet is a per-person switch (Settings › Timesheet), not the admin role
 const keepsTS = () => !S.profile?.no_timesheet;
+// S30: cash advances only for people an admin set to Yes (admins always); a form that already has one keeps showing it
+const canAdv = (r) => isAdmin() || !!S.profile?.gets_advance || Number(r?.advance_topup || 0) > 0;
+const seg = (attr, id, on, yes = 'Yes', no = 'No', dis = false) => `<span class="yn" role="group">${[[1, yes], [0, no]].map(([v, l]) => `<button type="button" class="${(v === 1) === !!on ? 'on' : ''}" ${attr}="${id}" data-v="${v}" ${dis ? 'disabled' : ''}>${l}</button>`).join('')}</span>`;
 const seesTime = () => keepsTS() || isAdmin() || isHR() || isAccountant();
 // BCM: the Operations Manager (back office role 'approver') gives final approval and pays forms up to MGR_LIMIT, never her own
 const MGR_LIMIT = 10000;
@@ -367,7 +370,7 @@ function bindPinForm(forced) {
 async function signOut() { await sb.auth.signOut(); S.user = null; S.profile = null; location.href = '/staff-login.html'; }
 
 /* ---------- shell and router ---------- */
-const SETTINGS = [['#/admin/access', 'Projects', () => isApprover()], ['#/admin/categories', 'Categories', () => isApprover()], ['#/admin/ot', 'Timesheet', () => STAGE >= 2 && (isAdmin() || isHR())], ['#/fa-lists', 'FlowAccount', () => STAGE >= 3 && canFA()]];
+const SETTINGS = [['#/admin/access', 'Projects', () => isApprover()], ['#/admin/categories', 'Categories', () => isApprover()], ['#/admin/ot', 'Timesheet', () => STAGE >= 2 && (isAdmin() || isHR())], ['#/admin/cash', 'Cash advances', () => isAdmin()], ['#/fa-lists', 'FlowAccount', () => STAGE >= 3 && canFA()]];
 function navLinks() {
   const r = (location.hash || '#/').split('?')[0];
   const L = (href, label, count, also = []) => `<a href="${href}" class="${[href, ...also].some((x) => r.startsWith(x)) ? 'on' : ''}">${label}${count ? `<span class="count">${count}</span>` : ''}</a>`;
@@ -484,6 +487,7 @@ async function route() {
     if (path.startsWith('/ot/review/') && (isAdmin() || isHR())) return await pageOTReview(path.split('/')[3]);
     if (path === '/admin/ot' && (isAdmin() || isHR())) return await pageOTSettings();
     if (path === '/admin/advances' && isAdmin()) return await pageAdvances();
+    if (path === '/admin/cash' && isAdmin()) return await pageCashSettings();
     if (path === '/admin/categories' && isApprover()) return await pageCategories();
     location.replace('#/');
   } catch (e) {
@@ -801,7 +805,7 @@ function statsHtml(report, totals, canEditRef = false) {
   return `<div class="stats">
     <div class="stat" id="refcell"><label>Reference</label><div class="mono" id="refval">${esc(report.ref_no)}${canEditRef ? ' <button class="btn small ghost" id="eref" title="Edit reference" style="font-family:var(--font)">Edit</button>' : ''}</div><small>${pill(report.status)}</small></div>
     <div class="stat"><label>Carried forward</label><div>${money(report.opening_advance)}</div><small>${report.form_type === 'project' ? 'project forms start at 0' : (report.staff_id === S.user.id ? 'from your last personal form' : 'from the last personal form')}</small></div>
-    <div class="stat"><label>Cash advance</label>${canEditRef ? `<div class="advbox"><input class="input num" id="advin" type="number" step="0.01" min="0" inputmode="decimal" value="${Number(report.advance_topup) || ''}" placeholder="0.00"></div><small>cash the company gave you for this form</small>` : `<div>${money(report.advance_topup)}</div><small>for this form</small>`}</div>
+    <div class="stat"><label>Cash advance</label>${canEditRef && !canAdv(report) ? `<div>${money(0)}</div><small>you pay with your own money and are paid back</small>` : canEditRef ? `<div class="advbox"><input class="input num" id="advin" type="number" step="0.01" min="0" inputmode="decimal" value="${Number(report.advance_topup) || ''}" placeholder="0.00"></div><small>cash the company gave you for this form</small>` : `<div>${money(report.advance_topup)}</div><small>for this form</small>`}</div>
     <div class="stat"><label>Spent</label><div>${money(totals.total_spent)}</div><small>THB</small></div>
     <div class="stat"><label>Balance</label><div>${money(totals.balance)}</div><small>${Number(totals.balance) < 0 ? (report.staff_id === S.user.id ? 'company owes you' : 'company owes the staff member') : (report.form_type === 'project' ? 'return to the company' : 'carries to your next personal form')}</small></div>
   </div>`;
@@ -2394,6 +2398,20 @@ async function pageStaff() {
 }
 
 /* ---------- admin: cash advances ---------- */
+async function pageCashSettings() {
+  const staff = must(await sb.from('profiles').select('id, full_name, staff_no, role, active, gets_advance').eq('active', true).order('staff_no'));
+  shell(`<div class="page-head"><div><h1>Who gets cash advances</h1><p>Only people set to Yes see the Cash advance box on their expense forms. Admins always do. Everyone else pays with their own money and is paid back.</p></div></div>
+  <div class="card"><div class="table-wrap"><table><thead><tr><th>Staff</th><th>Gets cash advances</th></tr></thead><tbody>
+  ${staff.map((p) => `<tr><td>${esc(p.full_name)}<div class="faint mono">${esc(p.staff_no || '')}</div></td><td>${p.role === 'admin' ? '<span class="faint">Always (admin)</span>' : seg('data-gadv', p.id, p.gets_advance)}</td></tr>`).join('')}
+  </tbody></table></div></div>
+  <p class="faint" style="font-size:12px">A form that already has an advance keeps it if you switch someone to No.</p>`);
+  main().querySelectorAll('[data-gadv]').forEach((el) => (el.onclick = async () => {
+    if (el.classList.contains('on')) return;
+    const on = el.dataset.v === '1';
+    try { await run(async () => must(await sb.from('profiles').update({ gets_advance: on }).eq('id', el.dataset.gadv)), on ? 'Gets cash advances now' : 'No cash advances'); } catch { /* shown */ }
+    pageCashSettings();
+  }));
+}
 async function pageAdvances() {
   // Totals per staff member across all forms. Staff enter their own advance on each form; admins can correct it here.
   const open = params().s || '';
@@ -2413,22 +2431,23 @@ async function pageAdvances() {
     const toReturn = sum((r) => (r.form_type === 'project' && r.status !== 'paid' ? Math.max(0, Number(T[r.id]?.balance || 0)) : 0));
     const owed = sum((r) => (['submitted', 'approved'].includes(r.status) ? Math.max(0, -Number(T[r.id]?.balance || 0)) : 0));
     return { p, rs, adv, spent, holds, toReturn, owed };
-  }).filter((x) => x.rs.length || x.p.active);
+  }).filter((x) => x.adv > 0 || x.rs.some((r) => Number(r.opening_advance || 0) > 0));
+  const others = staff.filter((p) => p.active).length - per.filter((x) => x.p.active).length;
   const G = per.reduce((a, x) => ({ adv: a.adv + x.adv, holds: a.holds + x.holds, toReturn: a.toReturn + x.toReturn, owed: a.owed + x.owed }), { adv: 0, holds: 0, toReturn: 0, owed: 0 });
   shell(`
-  <div class="page-head"><div><h1>Cash advances</h1><p>Totals per staff member across all their forms. Staff enter the advance on each form; you can correct it here.</p></div></div>
+  <div class="page-head"><div><h1>Cash advances</h1><p>Only people who have an advance. Click a person to see their forms and correct an advance. Who can get one: Settings › Cash advances.</p></div></div>
   <div class="stats" style="margin-bottom:16px">
     <div class="stat"><label>Advances given</label><div>${money(G.adv)}</div><small>all forms</small></div>
     <div class="stat"><label>Staff still hold</label><div>${money(G.holds)}</div><small>personal, carried forward</small></div>
     <div class="stat"><label>To return</label><div>${money(G.toReturn)}</div><small>project leftovers</small></div>
     <div class="stat"><label>Company owes</label><div>${money(G.owed)}</div><small>submitted or approved, not paid</small></div>
   </div>
-  <div class="card"><div class="table-wrap"><table><thead><tr><th>Staff</th><th class="num">Forms</th><th class="num">Advances</th><th class="num">Spent</th><th class="num">Holds now</th><th class="num">To return</th><th class="num">Company owes</th></tr></thead><tbody>
+  ${!per.length ? `<div class="card" style="text-align:center;padding:34px 20px"><h2 style="margin:0 0 6px">No cash advances yet</h2><p class="faint" style="margin:0">They appear here when someone set to Yes in Settings › Cash advances enters one on a form.</p></div>` : `<div class="card"><div class="table-wrap"><table><thead><tr><th>Staff</th><th class="num">Forms</th><th class="num">Advances</th><th class="num">Spent</th><th class="num">Holds now</th><th class="num">To return</th><th class="num">Company owes</th></tr></thead><tbody>
     ${per.map((x) => `<tr class="click" data-s="${x.p.id}"><td>${esc(x.p.full_name)}<div class="faint mono">${esc(x.p.staff_no || '')}</div></td><td class="num">${x.rs.length}</td><td class="num">${money(x.adv)}</td><td class="num">${money(x.spent)}</td><td class="num">${money(x.holds)}</td><td class="num">${money(x.toReturn)}</td><td class="num">${x.owed ? `<b>${money(x.owed)}</b>` : money(0)}</td></tr>
       ${open === x.p.id ? `<tr><td colspan="7" style="background:var(--paper)"><table class="subt"><thead><tr><th>Form</th><th>Status</th><th class="num">Carried forward</th><th class="num">Advance</th><th class="num">Spent</th><th class="num">Balance</th></tr></thead><tbody>
         ${x.rs.map((r) => `<tr><td><a href="#/report/${r.id}?lines=1" class="mono">${esc(r.ref_no)}</a><div class="faint" style="font-size:12px">${esc(monthLabel(r.period_month.slice(0, 7)) + ' · ' + formKind(r))}</div></td><td>${pill(r.status)}</td><td class="num">${money(r.opening_advance)}</td><td class="num"><input class="input num" style="width:120px;display:inline-block" type="number" step="0.01" min="0" data-adv="${r.id}" value="${Number(r.advance_topup)}"></td><td class="num">${money(T[r.id]?.total_spent)}</td><td class="num">${money(T[r.id]?.balance)}</td></tr>`).join('') || '<tr><td colspan="6" class="faint">No forms yet.</td></tr>'}
       </tbody></table></td></tr>` : ''}`).join('')}
-  </tbody></table></div></div>
+  </tbody></table></div>${others > 0 ? `<div class="faint" style="padding:10px 16px;border-top:1px solid var(--line);font-size:13px">${others} other staff ${others === 1 ? 'has' : 'have'} no cash advance.</div>` : ''}</div>`}
   <p class="faint" style="font-size:12px">Click a person to see their forms. Holds now: positive balance on their latest personal form. Company owes: forms with more spent than advanced, not yet paid.</p>`);
   main().querySelectorAll('tr[data-s]').forEach((tr) => (tr.onclick = () => { location.hash = '#/admin/advances' + (open === tr.dataset.s ? '' : '?s=' + tr.dataset.s); }));
   main().querySelectorAll('[data-adv]').forEach((el) => {
@@ -2763,7 +2782,7 @@ async function phoneForms() {
       <div class="spread"><b>${esc(monthLabel(f.period_month.slice(0, 7)))} · ${esc(formKind(f))}</b>${pill(f.status)}</div>
       <div class="faint mono">${esc(f.ref_no)}</div>
       ${f.status === 'rejected' && f.rejection_reason ? `<div class="banner bad" style="font-size:13px">Returned: ${esc(f.rejection_reason)}</div>` : ''}
-      <div class="field" style="gap:4px"><label style="font-size:12px">Cash advance received</label><input class="input num" type="number" step="0.01" min="0" inputmode="decimal" data-padv="${f.id}" value="${Number(f.advance_topup) || ''}" placeholder="0.00" style="text-align:left"></div>
+      ${canAdv(f) ? `<div class="field" style="gap:4px"><label style="font-size:12px">Cash advance received</label><input class="input num" type="number" step="0.01" min="0" inputmode="decimal" data-padv="${f.id}" value="${Number(f.advance_topup) || ''}" placeholder="0.00" style="text-align:left"></div>` : ''}
       <div class="pnums"><div><span>Lines</span><b>${mine.length}</b></div><div><span>Spent</span><b>${money(t.total_spent)}</b></div><div><span>${bal < 0 ? 'Owed to you' : f.form_type === 'project' ? 'To return' : 'Balance'}</span><b>${money(Math.abs(bal))}</b></div></div>
       ${!mine.length ? '<span class="faint">No lines yet.</span>' : noRc ? `<div class="banner bad" style="font-size:13px">${noRc} line${noRc > 1 ? 's have' : ' has'} no receipt photo. Add ${noRc > 1 ? 'them' : 'it'} on a computer.</div>` : todo ? `<a class="btn pbig" href="#/check">${todo} line${todo > 1 ? 's need' : ' needs'} a purpose</a>` : `<div data-pchk="${f.id}">${checkerPicker(f)}</div>${chkChosen(f) ? `<button class="btn primary pbig" data-sub="${f.id}">${f.checker_id ? 'Send to ' + esc(firstName(f.checker_name)) : 'Send to admin'}</button>` : ''}`}
     </div>`;
@@ -3483,7 +3502,7 @@ async function pageOTSettings() {
   const RQ = Object.fromEntries(reqs.map((x) => [x.staff_id, x]));
   const LBL = { pay_type: { full_time: 'Full-time', part_time: 'Part-time', freelance: 'Freelance' }, week_pattern: { alt_sat: 'Long/short week', mon_fri: 'Mon to Fri', mon_sat: 'Mon to Sat' } };
   const chg = (c) => Object.entries(c).map(([k, v]) => (LBL[k]?.[v] || (k === 'start_time' ? 'start ' : k === 'end_time' ? 'end ' : k === 'sat_off_anchor' ? 'Saturday off ' : '') + String(v).slice(0, 10))).join(', ');
-  const tsSel = (p) => `<td><select class="input" data-nots="${p.id}" ${isAdmin() ? '' : 'disabled'}><option value="0" ${p.no_timesheet ? '' : 'selected'}>Yes</option><option value="1" ${p.no_timesheet ? 'selected' : ''}>No timesheet</option></select></td>`;
+  const tsSel = (p) => `<td>${seg('data-nots', p.id, !p.no_timesheet, 'Yes', 'No', !isAdmin())}</td>`;
   const row = (p) => { if (p.no_timesheet) return `<tr data-off="${p.id}" class="faint"><td>${esc(p.full_name)}<div class="faint mono">${esc(p.staff_no)}</div></td>${tsSel(p)}<td colspan="3" class="faint">No timesheet (consultant, or paid elsewhere). Not on the roster, payroll or reminders. Expense forms still work.</td></tr>`;
     const x = { ...(S2[p.id] || {}), ...(RQ[p.id]?.changes || {}) }; const rq = RQ[p.id]; return `<tr data-sid="${p.id}"><td>${esc(p.full_name)}<div class="faint mono">${esc(p.staff_no)}</div>${rq ? `<div class="hr-wait">Waiting for ${esc(p.full_name)} to agree: ${esc(chg(rq.changes))} <a href="#" data-rqx="${rq.id}">cancel</a></div>` : ''}</td>${tsSel(p)}
     <td><select class="input" data-k="pay_type">${[['full_time', 'Full-time'], ['part_time', 'Part-time'], ['freelance', 'Freelance']].map(([v, l]) => `<option value="${v}" ${(x.pay_type || 'full_time') === v ? 'selected' : ''}>${l}</option>`).join('')}</select></td>
@@ -3496,8 +3515,10 @@ async function pageOTSettings() {
     <div class="card"><div class="table-wrap"><table><thead><tr><th>Staff</th><th>Timesheet</th><th>Type</th><th>Normal hours (lunch included)</th><th>Work week</th></tr></thead><tbody>${staff.filter((p) => p.active).map(row).join('')}</tbody></table></div></div>
     ${holHtml(hols, hsug, hmeta, pageOTSettings.hy || new Date().getFullYear())}
   </div>`);
-  main().querySelectorAll('[data-nots]').forEach((el) => (el.onchange = async () => {
-    try { await run(async () => must(await sb.from('profiles').update({ no_timesheet: el.value === '1' }).eq('id', el.dataset.nots)), el.value === '1' ? 'Set to no timesheet' : 'Keeps a timesheet now'); } catch { /* shown */ }
+  main().querySelectorAll('[data-nots]').forEach((el) => (el.onclick = async () => {
+    if (el.classList.contains('on')) return;
+    const off = el.dataset.v === '0';
+    try { await run(async () => must(await sb.from('profiles').update({ no_timesheet: off }).eq('id', el.dataset.nots)), off ? 'Set to no timesheet' : 'Keeps a timesheet now'); } catch { /* shown */ }
     pageOTSettings();
   }));
   main().querySelectorAll('tr[data-sid] [data-k]').forEach((el) => (el.onchange = async () => {

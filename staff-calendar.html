@@ -6,7 +6,7 @@
 <!-- seo -->
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#7B4FBE">
-<title>Bloom Admin — Calendar</title>
+<title>School calendar — Bloom Chiangmai</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="staff-shared.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@400;600&display=swap" rel="stylesheet">
@@ -362,7 +362,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="attention-item" id="attnPending" onclick="switchTab('calendar')" style="display:none">
       <span class="attention-dot"></span><span id="attnPendingTxt"></span>
     </div>
-    <div class="attention-item" id="attnAbsence" onclick="switchTab('absences')" style="display:none">
+    <div class="attention-item" id="attnAbsence" onclick="location.href='student-absences.html'" style="display:none">
       <span class="attention-dot red"></span><span id="attnAbsenceTxt"></span>
     </div>
     <div class="attention-item" id="attnDays" onclick="switchTab('calendar')" style="display:none">
@@ -375,7 +375,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
   <div class="tabs">
     <button class="tab-btn active" id="tab-calendar" onclick="switchTab('calendar')">📅 Calendar</button>
-    <button class="tab-btn" id="tab-absences" onclick="switchTab('absences')">
+    <!-- Student absences moved to Students › Student absences (student-absences.html) -->
+    <button class="tab-btn" id="tab-absences" onclick="switchTab('absences')" style="display:none">
       🙋 Absences<span class="tab-badge" id="absenceBadge"></span>
     </button>
     <button class="tab-btn" id="tab-settings" onclick="switchTab('settings')">⚙️ Settings</button>
@@ -571,7 +572,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <span class="mobile-nav-icon">📅</span>
         Calendar
       </button>
-      <button class="mobile-nav-btn" id="mnav-absences" onclick="switchTab('absences')">
+      <button class="mobile-nav-btn" id="mnav-absences" onclick="switchTab('absences')" style="display:none">
         <span class="mobile-nav-icon">🙋</span>
         Absences
         <span class="mob-badge" id="mAbsenceBadge"></span>
@@ -1409,7 +1410,7 @@ function updateAttention(){
   else ap.style.display='none';
 
   const aa=document.getElementById('attnAbsence');
-  if(newAbs>0){aa.style.display='flex';document.getElementById('attnAbsenceTxt').textContent=`${newAbs} new absence`;hasAny=true;}
+  if(newAbs>0){aa.style.display='flex';document.getElementById('attnAbsenceTxt').textContent=`${newAbs} new student absence${newAbs===1?'':'s'}, open in Students`;hasAny=true;}
   else aa.style.display='none';
 
   const ad=document.getElementById('attnDays');

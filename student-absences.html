@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student absences · Students — Bloom Chiangmai</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="staff-shared.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#FDFAF5;color:#2C2C2A;width:100%;}
+main{max-width:1100px;margin:0 auto;padding:60px 24px 100px;min-height:70vh;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#534AB7;text-transform:uppercase;margin-bottom:14px;}
+h1{font-family:Georgia,serif;font-size:32px;font-weight:700;color:#2C2C2A;margin-bottom:8px;}
+.sub{font-size:15px;color:#5F5E5A;margin-bottom:28px;}
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filters button{font:inherit;font-size:13px;font-weight:600;padding:7px 14px;border-radius:999px;border:1px solid #E8E3D8;background:#fff;color:#5F5E5A;cursor:pointer;}
+.filters button.on{background:#534AB7;border-color:#534AB7;color:#fff;}
+.list{display:flex;flex-direction:column;gap:10px;}
+.abs{background:#fff;border:1px solid #E8E3D8;border-radius:12px;padding:14px 18px;display:flex;gap:14px;align-items:flex-start;}
+.abs.new{border-color:#E9C46A;}
+.av{width:40px;height:40px;border-radius:50%;background:#EEEDFE;color:#3C3489;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-weight:700;flex-shrink:0;}
+.nm{font-weight:700;font-size:15px;}
+.pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;margin-left:8px;}
+.pill.new{background:#FDF1D6;color:#8A6416;}
+.pill.noted{background:#D8F0DE;color:#1F6B36;}
+.meta{font-size:13px;color:#5F5E5A;margin-top:3px;}
+.why{font-size:14px;background:#F7F3EC;border-radius:8px;padding:6px 10px;margin-top:6px;}
+.when{font-size:12px;color:#888780;margin-top:6px;}
+.ack{margin-top:10px;font:inherit;font-size:13px;font-weight:600;padding:7px 14px;border-radius:8px;border:1px solid #534AB7;background:#534AB7;color:#fff;cursor:pointer;}
+.ack:disabled{opacity:.6;cursor:default;}
+.empty{color:#5F5E5A;font-size:15px;padding:20px 0;}
+.toast{position:fixed;bottom:24px;right:24px;background:#2C2C2A;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;display:none;z-index:99;}
+</style>
+</head>
+<body>
+
+<main class="page-content">
+  <div id="authLoading" style="text-align:center;padding:80px 20px;color:#888780;font-size:14px;">Loading…</div>
+  <div id="pageContent" style="display:none;">
+    <div class="eyebrow">Students</div>
+    <h1>Student absences</h1>
+    <p class="sub">Parents report a child absent from the family portal. Mark each one as noted once you have seen it.</p>
+    <div class="filters" role="group" aria-label="Show">
+      <button class="on" data-f="new" onclick="setFilter('new')">New</button>
+      <button data-f="all" onclick="setFilter('all')">All</button>
+    </div>
+    <div class="list" id="list"><p class="empty">Loading…</p></div>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+window.STAFF_PAGE_KEY = 'absences';
+// Moved here from the School calendar's Absences tab (10 Nov): parents' absence reports belong with Students.
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const REASON = { sick:'Sick or fever', appointment:"Doctor's appointment", travel:'Family travel', emergency:'Family emergency', other:'Other' };
+const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' }) : '';
+let ROWS = [], FILTER = 'new';
+
+function showToast(m){ const t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2500); }
+function setFilter(f){ FILTER = f; document.querySelectorAll('.filters button').forEach(b => b.classList.toggle('on', b.dataset.f === f)); render(); }
+
+async function load(){
+  const { data, error } = await sb.from('bloom_absence_reports').select('*').order('created_at', { ascending: false });
+  if(error){ document.getElementById('list').innerHTML = '<p class="empty">Could not load absences.</p>'; return; }
+  ROWS = data || [];
+  const n = ROWS.filter(a => a.status === 'new').length;
+  if(typeof setSysCount === 'function') setSysCount('absences', n);
+  render();
+}
+function render(){
+  const rows = FILTER === 'new' ? ROWS.filter(a => a.status === 'new') : ROWS;
+  const canEdit = canAccess('students', 'edit') || canAccess('calendar', 'edit');
+  document.getElementById('list').innerHTML = rows.length ? rows.map(a => {
+    const dates = a.date_end && a.date_end !== a.date_start ? `${fmt(a.date_start)} to ${fmt(a.date_end)}` : fmt(a.date_start);
+    const why = [REASON[a.reason_type] || a.reason_type, a.reason_note].filter(Boolean).join(': ');
+    return `<div class="abs ${a.status === 'new' ? 'new' : ''}">
+      <div class="av" aria-hidden="true">${esc((a.learner_name || '?')[0])}</div>
+      <div style="flex:1;min-width:0">
+        <div><span class="nm">${esc(a.learner_name)}</span><span class="pill ${a.status === 'new' ? 'new' : 'noted'}">${a.status === 'new' ? 'New' : 'Noted'}</span></div>
+        <div class="meta">${esc(dates)} · reported by ${esc(a.submitted_by_name || a.submitted_by_email)}</div>
+        ${why ? `<div class="why">${esc(why)}</div>` : ''}
+        <div class="when">Sent ${esc(new Date(a.created_at).toLocaleString('en-GB'))}</div>
+        ${a.status === 'new' && canEdit ? `<button class="ack" onclick="ack('${a.id}', this)">Mark as noted</button>` : ''}
+      </div></div>`;
+  }).join('') : `<p class="empty">${FILTER === 'new' ? 'No new absences.' : 'No absences reported yet.'}</p>`;
+}
+async function ack(id, btn){
+  const a = ROWS.find(x => x.id === id); if(!a) return;
+  btn.disabled = true;
+  const { error } = await sb.from('bloom_absence_reports').update({ status: 'acknowledged' }).eq('id', id);
+  if(error){ btn.disabled = false; showToast('Could not save: ' + error.message); return; }
+  // Same log the School calendar kept, so the history stays in one place
+  try{ await sb.from('calendar_audit_log').insert({ staff_id: window.currentStaff?.id || null, staff_name: window.currentStaff?.name || 'Staff', action_text: `Absence acknowledged: ${a.learner_name} on ${a.date_start}` }); }catch(e){}
+  a.status = 'acknowledged';
+  showToast('Marked as noted.');
+  if(typeof setSysCount === 'function') setSysCount('absences', ROWS.filter(x => x.status === 'new').length);
+  render();
+}
+function onStaffReady(){
+  if(!canAccess('students', 'view') && !canAccess('calendar', 'view')){ document.getElementById('list').innerHTML = '<p class="empty">You do not have access to student absences.</p>'; return; }
+  load();
+  if(sb.channel) sb.channel('student-absences').on('postgres_changes', { event:'*', schema:'public', table:'bloom_absence_reports' }, load).subscribe();
+}
+checkStaffAndInit();
+</script>
+</body>
+</html>

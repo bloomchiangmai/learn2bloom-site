@@ -373,12 +373,12 @@ function navLinks() {
   const L = (href, label, count, also = []) => `<a href="${href}" class="${[href, ...also].some((x) => r.startsWith(x)) ? 'on' : ''}">${label}${count ? `<span class="count">${count}</span>` : ''}</a>`;
   const sets = SETTINGS.filter((x) => x[2]());
   let h = `<div class="nav">
-    ${L('#/home', 'Home')}
+    ${L('#/home', 'Overview')}
     <div class="nav-label">Expenses</div>
     ${L('#/forms', 'Expense forms', S.reviewCount, ['#/expenses', '#/report', '#/print'])}
     ${L('#/capture', isTouch() ? 'Snap receipt' : 'Add receipts', S.inboxCount, ['#/inbox', '#/trash'])}
     ${STAGE < 2 || !seesTime() ? '' : `<div class="nav-label">Time</div>
-    ${isAdmin() ? `${keepsTS() ? `<a href="#/ot?u=${S.user.id}" class="${r === '#/ot' && params().u === S.user.id ? 'on' : ''}">My timesheet</a>` : ''}<a href="#/ot" class="${r === '#/ot' && params().u !== S.user.id ? 'on' : ''}">Staff timesheets</a>` : !keepsTS() ? '' : `${isHR() ? `<a href="#/ot" class="${r === '#/ot' && !params().all && !params().u ? 'on' : ''}">Timesheet</a><a href="#/ot?all=1" class="${r === '#/ot' && (params().all || params().u) ? 'on' : ''}">Staff timesheets</a>` : L('#/ot', 'Timesheet')}`}
+    ${isAdmin() ? `${keepsTS() ? `<a href="#/ot?u=${S.user.id}" class="${r === '#/ot' && params().u === S.user.id ? 'on' : ''}">My timesheet</a>` : ''}<a href="#/ot" class="${r === '#/ot' && params().u !== S.user.id ? 'on' : ''}">Staff timesheets</a>` : !keepsTS() ? '' : `${isHR() ? `<a href="#/ot" class="${r === '#/ot' && !params().all && !params().u ? 'on' : ''}">My timesheet</a><a href="#/ot?all=1" class="${r === '#/ot' && (params().all || params().u) ? 'on' : ''}">Staff timesheets</a>` : L('#/ot', 'My timesheet')}`}
     ${L('#/roster', 'Roster')}${isAdmin() || isHR() || isAccountant() ? L('#/payroll', 'Payroll summary') : ''}`}`;
   if (isReviewer()) h += `<div class="nav-label">Review</div>${L('#/approvals', 'Approvals')}`;
   if (STAGE >= 3 && canFA()) h += `<div class="nav-label">Accounting</div>${L('#/card', 'Card payments')}${L('#/bills', 'Bank transfers')}${L('#/subs', 'Subscriptions')}${canEnterFA() ? L('#/fa-export', 'Month close', 0, ['#/fa/']) : ''}`;
@@ -389,7 +389,7 @@ function navLinks() {
 }
 function phoneNav() {
   // Snap, To check, Forms and Waiting are the bottom tabs; the menu only holds the rest
-  const opts = [...(STAGE >= 2 && seesTime() ? [...(isAdmin() && keepsTS() ? [[`#/ot?u=${S.user.id}`, 'My timesheet']] : []), ...(isAdmin() || keepsTS() ? [['#/ot', isAdmin() ? 'Staff timesheets' : 'Timesheet']] : []), ['#/roster', 'Roster']] : []), ['#/messages', `Messages${S.msgCount ? ' (' + S.msgCount + ')' : ''}`], ['#/account', 'My account'], ['/staff-dashboard.html', '‹ Staff dashboard']];
+  const opts = [...(STAGE >= 2 && seesTime() ? [...(isAdmin() && keepsTS() ? [[`#/ot?u=${S.user.id}`, 'My timesheet']] : []), ...(isAdmin() || keepsTS() ? [['#/ot', isAdmin() ? 'Staff timesheets' : 'My timesheet']] : []), ['#/roster', 'Roster']] : []), ['#/messages', `Messages${S.msgCount ? ' (' + S.msgCount + ')' : ''}`], ['#/account', 'My account'], ['/staff-dashboard.html', '‹ Staff dashboard']];
   const cur0 = (location.hash || '').split('?')[0]; if (!opts.some(([h]) => cur0.startsWith(h))) opts.unshift(['', 'Menu']);
   const cur = (location.hash || '').split('?')[0];
   return `<select id="pnav" aria-label="Menu">${opts.map(([h, l]) => `<option value="${h}" ${cur.startsWith(h) ? 'selected' : ''}>${esc(l)}</option>`).join('')}<option value="out">Sign out</option></select>`;

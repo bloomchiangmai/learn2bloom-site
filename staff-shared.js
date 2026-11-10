@@ -59,33 +59,35 @@ function nextStudentIdCode(existingCodes){
 // The staff sidebar is a launcher: one link per system. A system with several sections
 // (Students, Staff) swaps the sidebar for its own menu, with a way back to the dashboard.
 const NAV_ITEMS = [
+  // S27 (10 Nov): three headings, School, Operations and Admin; a heading shows only when someone can open a link under it
   { key: 'dashboard', label: 'Dashboard', href: 'staff-dashboard.html' },
-  { key: 'students', label: 'Students', href: 'staff-admissions.html', module: 'students' },
-  { key: 'calendar', label: 'Calendar', href: 'staff-calendar.html', module: 'calendar' },
-  { key: 'library', label: 'Bloombrary', href: 'https://bloombrary.learn2bloom.org/admin', module: 'library', external: true },
-  { key: 'marketing', label: 'Marketing HQ', href: 'staff-marketing.html', module: 'marketing' },
-  { key: 'backoffice', label: 'Back office', href: 'backoffice/', module: 'backoffice' },
-  { key: 'staff', label: 'Staff', href: 'staff-team.html', sep: true },
-  { key: 'admin', label: 'Admin', href: 'staff-permissions.html#roles', adminOnly: true }
+  { key: 'students', label: 'Students', href: 'staff-admissions.html', module: 'students', group: 'School' },
+  { key: 'calendar', label: 'School calendar', href: 'staff-calendar.html', module: 'calendar', group: 'School' },
+  { key: 'library', label: 'Bloombrary', href: 'https://bloombrary.learn2bloom.org/admin', module: 'library', external: true, group: 'School' },
+  { key: 'marketing', label: 'Marketing HQ', href: 'staff-marketing.html', module: 'marketing', group: 'Operations' },
+  { key: 'backoffice', label: 'Back office', href: 'backoffice/', module: 'backoffice', group: 'Operations' },
+  { key: 'staff', label: 'Staff', href: 'staff-team.html', group: 'Admin' },
+  { key: 'admin', label: 'Access and settings', href: 'staff-permissions.html#roles', adminOnly: true, group: 'Admin' }
 ];
 const SYSTEMS = {
-  students: { label: 'Students', pages: ['admissions','learners','archive'], groups: [
+  students: { label: 'Students', pages: ['admissions','learners','archive','absences'], groups: [
     { name: 'Admissions', items: [
-      { key: 'new', label: 'New', href: 'staff-admissions.html#new', page: 'admissions', hash: 'new', def: true },
+      { key: 'new', label: 'Enquiries', href: 'staff-admissions.html#new', page: 'admissions', hash: 'new', def: true },
       { key: 'progress', label: 'In progress', href: 'staff-admissions.html#progress', page: 'admissions', hash: 'progress' },
       { key: 'withdrawn', label: 'Withdrawn', href: 'staff-admissions.html#withdrawn', page: 'admissions', hash: 'withdrawn' } ] },
     { name: 'Learners', items: [
       { key: 'enrolled', label: 'Enrolled', href: 'learners.html', page: 'learners' },
+      { key: 'absences', label: 'Student absences', href: 'student-absences.html', page: 'absences' },
       { key: 'archived', label: 'Archived', href: 'archive.html', page: 'archive' } ] } ] },
   staff: { label: 'Staff', pages: ['team','staff-archive'], groups: [
-    { name: 'Team', items: [
-      { key: 'directory', label: 'Directory', href: 'staff-team.html', page: 'team' },
+    { name: '', items: [
+      { key: 'directory', label: 'Staff directory', href: 'staff-team.html', page: 'team' },
       { key: 'archived-staff', label: 'Archived staff', href: 'staff-archive.html', page: 'staff-archive', adminOnly: true } ] } ] },
   // S16: admin tools have their own place, for admin, director and IT.
-  admin: { label: 'Admin', pages: ['permissions'], groups: [
+  admin: { label: 'Access and settings', pages: ['permissions'], groups: [
     { name: '', adminOnly: true, items: [
       { key: 'roles', label: 'Roles and access', href: 'staff-permissions.html#roles', page: 'permissions', hash: 'roles', def: true },
-      { key: 'approvals', label: 'Approvals', href: 'staff-permissions.html#approvals', page: 'permissions', hash: 'approvals' },
+      { key: 'approvals', label: 'Change requests', href: 'staff-permissions.html#approvals', page: 'permissions', hash: 'approvals' },
       { key: 'features', label: 'Site features', href: 'staff-permissions.html#features', page: 'permissions', hash: 'features' } ] } ] }
 };
 const systemOf = page => Object.keys(SYSTEMS).find(k => SYSTEMS[k].pages.includes(page));
@@ -102,7 +104,7 @@ function setSysActive(){
   sys.groups.flatMap(g => g.items).forEach(i => { const a = document.querySelector(`.sys-link[data-k="${i.key}"]`); if(a) a.classList.toggle('active', sysItemOn(i, page)); });
 }
 // S26: counts next to the main links, from the dashboard's "Waiting on you" lines (kept for this browser tab)
-const NAV_TAG_KEY = { 'Admissions':'students', 'Learners':'students', 'Calendar':'calendar', 'Back office':'backoffice', 'Timesheets':'backoffice', 'Marketing HQ':'marketing', 'Admin':'admin' };
+const NAV_TAG_KEY = { 'Admissions':'students', 'Learners':'students', 'School calendar':'calendar', 'Calendar':'calendar', 'Back office':'backoffice', 'Timesheets':'backoffice', 'Marketing HQ':'marketing', 'Access and settings':'admin', 'Admin':'admin' };
 function applyNavCounts(c){ ['students','calendar','marketing','backoffice','admin'].forEach(k => setSysCount(k, c[k] || 0)); }
 function setNavCounts(lines){
   const c = {}; (lines || []).forEach(l => { const k = NAV_TAG_KEY[l.tag]; if(k) c[k] = (c[k] || 0) + 1; });
@@ -128,6 +130,8 @@ async function loadStudentCounts(){
     if(!data) return;
     const c = { new: 0, progress: 0, withdrawn: 0, enrolled: 0 };
     data.forEach(s => { if(s.status === 'enquiry') c.new++; else if(s.status === 'withdrawn') c.withdrawn++; else if(s.status === 'enrolled') c.enrolled++; else if(s.status !== 'archived') c.progress++; });
+    const { count: abs } = await sb.from('bloom_absence_reports').select('id', { count: 'exact', head: true }).eq('status', 'new');
+    c.absences = abs || 0;
     Object.entries(c).forEach(([k,n]) => setSysCount(k, n));
   }catch(e){}
 }
@@ -163,6 +167,7 @@ function injectSidebarStyles(){
     .sidebar-group{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
       color:#A8A39A;margin:16px 12px 6px;}
     .sidebar-group:first-child{margin-top:0;}
+    .main-group{margin-top:18px;}
     .sidebar-link{display:block;font-size:14px;font-weight:600;color:#5F5E5A;padding:9px 12px;
       border-radius:8px;text-decoration:none;margin-bottom:2px;}
     .sidebar-link:hover{background:#EFEAE0;}
@@ -210,10 +215,14 @@ function renderSidebar(activeKey){
         `<a href="${i.page === activeKey && i.hash ? '#' + i.hash : i.href}" data-k="${i.key}" class="sidebar-link sys-link ${sysItemOn(i, activeKey) ? 'active' : ''}">${i.label}<span class="sys-n" style="display:none"></span></a>`).join('');
     }).join('');
   } else {
-    // S26: a divider before Staff and Admin; counts next to links come from the dashboard (setNavCounts)
-    navHtml = NAV_ITEMS.filter(item => !(item.module && !canAccess(item.module, 'view')) && (!item.adminOnly || isAdminOrIt)).map(item =>
-      (item.sep ? '<div class="sidebar-sep" role="separator"></div>' : '') +
-      `<a href="${item.href}" data-k="${item.key}" class="sidebar-link sys-link ${item.key === activeKey ? 'active' : ''}"${item.external ? ' target="_blank" rel="noopener"' : ''}><span>${item.label}${item.external ? EXT_MARK : ''}</span><span class="sys-n" style="display:none"></span></a>`).join('');
+    // S27: headings School, Operations, Admin (shown only above links this person can open); counts come from staff-todos.js
+    let lastGroup = null;
+    navHtml = NAV_ITEMS.filter(item => !(item.module && !canAccess(item.module, 'view')) && (!item.adminOnly || isAdminOrIt)).map(item => {
+      const head = item.group && item.group !== lastGroup ? `<div class="sidebar-group main-group">${item.group}</div>` : '';
+      lastGroup = item.group || null;
+      return head +
+      `<a href="${item.href}" data-k="${item.key}" class="sidebar-link sys-link ${item.key === activeKey ? 'active' : ''}"${item.external ? ' target="_blank" rel="noopener"' : ''}><span>${item.label}${item.external ? EXT_MARK : ''}</span><span class="sys-n" style="display:none"></span></a>`;
+    }).join('');
   }
 
   const el = document.createElement('div');

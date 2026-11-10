@@ -109,6 +109,15 @@ function setNavCounts(lines){
   try{ sessionStorage.setItem('bloomNavCounts', JSON.stringify(c)); }catch(e){}
   applyNavCounts(c);
 }
+async function refreshNavCounts(){
+  try{
+    if(typeof collectTodos !== 'function'){
+      await new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'staff-todos.js'; sc.onload = ok; sc.onerror = no; document.head.appendChild(sc); });
+    }
+    const res = await collectTodos();
+    setNavCounts(res.flatMap(r => r.lines || []));
+  }catch(e){ console.log('nav counts failed', e); }
+}
 function setSysCount(key, n){
   const el = document.querySelector(`.sys-link[data-k="${key}"] .sys-n`); if(!el) return;
   el.textContent = n ? n : ''; el.style.display = n ? '' : 'none';
@@ -221,6 +230,8 @@ function renderSidebar(activeKey){
   `;
   document.body.insertBefore(el, document.body.firstChild);
   if(!sys){ try{ applyNavCounts(JSON.parse(sessionStorage.getItem('bloomNavCounts') || '{}')); }catch(e){} }
+  // Other pages with the main menu work the counts out fresh (the dashboard does it itself)
+  if(!sys && !['dashboard','marketing'].includes(activeKey)) refreshNavCounts();
   if(sys){
     window.addEventListener('hashchange', setSysActive);
     if(sysKey === 'students') loadStudentCounts();

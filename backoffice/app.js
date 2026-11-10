@@ -40,7 +40,20 @@ const isAccountant = () => isAdmin() || !!S.profile?.is_accountant;
 // BCM: who keeps a timesheet is a per-person switch (Settings › Timesheet), not the admin role
 const keepsTS = () => !S.profile?.no_timesheet;
 const seesTime = () => keepsTS() || isAdmin() || isHR() || isAccountant();
-const canPay = () => isAdmin(); // BCM: admins pay
+// BCM: the Operations Manager (back office role 'approver') gives final approval and pays forms up to MGR_LIMIT, never her own
+const MGR_LIMIT = 10000;
+const isMgr = () => S.profile?.role === 'approver';
+const withinMgr = (r) => !!r && r.staff_id !== S.user?.id && !(S.overLimit || new Set()).has(r.id);
+const canFinal = (r) => isAdmin() || (isMgr() && (!r || withinMgr(r)));
+const canPay = (r) => isAdmin() || (isMgr() && (!r || withinMgr(r)));
+// Forms over the limit (Operations Manager only)
+async function loadOverLimit() {
+  if (!isMgr()) return;
+  const { data: rs } = await sb.from('expense_reports').select('id').in('status', ['submitted', 'checked', 'approved']);
+  const ids = (rs || []).map((r) => r.id);
+  const { data } = ids.length ? await sb.from('expense_report_totals').select('report_id, total_spent').in('report_id', ids) : { data: [] };
+  S.overLimit = new Set((data || []).filter((t) => Number(t.total_spent) > MGR_LIMIT).map((t) => t.report_id));
+}
 const isDataEntry = () => !!S.profile?.is_data_entry;
 const isHR = () => !!S.profile?.is_hr;
 const canFA = () => isAdmin() || isDataEntry(); // FlowAccount lists (Settings)
@@ -50,10 +63,10 @@ const isReviewer = () => true; // anyone can be picked to check a form
 // Step 1 (check): the person the sender picked (BCM); never the owner
 const canCheck = (r) => r.staff_id !== S.user?.id && r.checker_id === S.user?.id;
 // What needs this person: step 1 / final approval, paying (accountant), entering in FlowAccount (data entry)
-const myTodo = (r) => canActOn(r) || (canPay() && r.status === 'approved') || (isDataEntry() && ['approved', 'paid'].includes(r.status) && !r.fa_entered_at);
-const todoHint = () => ['check forms you are picked for (step 1)', isAdmin() ? 'give final approval' : '', canPay() ? 'pay approved forms' : '', isDataEntry() ? 'enter approved forms in FlowAccount' : ''].filter(Boolean).join(', ').replace(/^./, (c) => c.toUpperCase()) + '.';
+const myTodo = (r) => canActOn(r) || (canPay(r) && r.status === 'approved') || (isDataEntry() && ['approved', 'paid'].includes(r.status) && !r.fa_entered_at);
+const todoHint = () => ['check forms you are picked for (step 1)', isAdmin() ? 'give final approval' : isMgr() ? `give final approval up to ${MGR_LIMIT.toLocaleString('en-US')} THB` : '', isAdmin() ? 'pay approved forms' : isMgr() ? `pay them (not your own)` : '', isDataEntry() ? 'enter approved forms in FlowAccount' : ''].filter(Boolean).join(', ').replace(/^./, (c) => c.toUpperCase()) + '.';
 // Step 1 first, admin included: the PIC (project) or an office approver (Petty Cash). Admin skips it only when nobody else can check
-const canActOn = (r) => r.staff_id !== S.user?.id && ((r.status === 'submitted' && canCheck(r)) || (r.status === 'checked' && isAdmin() && r.checked_by !== S.user?.id));
+const canActOn = (r) => r.staff_id !== S.user?.id && ((r.status === 'submitted' && canCheck(r)) || (r.status === 'checked' && canFinal(r) && r.checked_by !== S.user?.id));
 // BCM: the sender picks who checks each form. "No checker" sends it straight to an admin.
 const noChkKey = (id) => 'bo_nochk_' + id;
 const chkChosen = (r) => !!r.checker_id || (() => { try { return !!sessionStorage.getItem(noChkKey(r.id)); } catch { return false; } })();
@@ -1812,6 +1825,7 @@ async function pageReport(id) {
   const mine = report.staff_id === S.user.id;
   // Your own form that can still be edited opens on the editing page
   if (mine && ['draft', 'rejected'].includes(report.status)) { location.replace('#/expenses?id=' + report.id); return; }
+  await loadOverLimit();
   const canDecide = canActOn(report);
   // Approvers review the whole form as it prints; this page is the "Lines" view
   if (canDecide && !params().lines) { location.replace('#/print/' + report.id); return; }
@@ -1820,7 +1834,7 @@ async function pageReport(id) {
   const approver = report.approved_by_name ? { full_name: report.approved_by_name } : null;
   const x = await reviewExtras(report, items);
   let bank = null;
-  if (isAdmin()) bank = (await sb.from('staff_bank_details').select('*').eq('staff_id', report.staff_id).maybeSingle()).data;
+  if (isAdmin() || isMgr()) bank = (await sb.from('staff_bank_details').select('*').eq('staff_id', report.staff_id).maybeSingle()).data;
   const slip = report.paid_slip_path ? await signedUrl(report.paid_slip_path) : null;
 
   shell(`
@@ -1842,14 +1856,14 @@ async function pageReport(id) {
         ${timelineHtml(x.events)}
         ${report.remarks ? `<div class="muted" style="font-size:13px">Remarks: ${esc(report.remarks)}</div>` : ''}
         ${report.status === 'paid' ? `<div style="font-size:13px"><b>Paid</b> ${dateLabel(report.paid_at)}${report.paid_ref ? ' · ' + esc(report.paid_ref) : ''}${slip ? ` · <a href="#" data-view="${esc(report.paid_slip_path)}" data-mime="image/jpeg">View transfer slip</a>` : ''}</div>` : ''}
-        ${bank ? `<div style="font-size:13px"><b>Pay to</b><br>${esc(bank.bank_name)} · ${esc(bank.account_no)}<br>${esc(bank.account_name)}</div>` : (isAdmin() ? '<div class="faint" style="font-size:13px">No bank details on file.</div>' : '')}
+        ${bank ? `<div style="font-size:13px"><b>Pay to</b><br>${esc(bank.bank_name)} · ${esc(bank.account_no)}<br>${esc(bank.account_name)}</div>` : ((isAdmin() || isMgr()) ? '<div class="faint" style="font-size:13px">No bank details on file.</div>' : '')}
       </div>
     </div>
     ${isApprover() ? `<div class="card card-pad stack"><h2>Approver notes</h2><textarea class="input" id="anote" rows="2" placeholder="Only approvers and admins see this. e.g. Checked the Wi-Fi purchase with Mary by phone.">${esc(x.note?.note || '')}</textarea><span class="faint" style="font-size:12px" id="anotes">${x.note?.updated_by_name ? `Last edited by ${esc(x.note.updated_by_name)}, ${dateLabel(x.note.updated_at)}` : 'Saved when you click outside the box.'}</span></div>` : ''}
     ${canDecide ? `<div class="card card-pad spread"><span class="muted">Approve or return this form in Form view, where you see every receipt.</span><a class="btn primary" href="#/print/${report.id}">Open Form view</a></div>` : ''}
     ${report.checked_at ? `<div class="faint" style="font-size:13px">Step 1: ${esc(report.checked_by_name || '')}${report.checked_by ? ` · ${esc(dateLabel(report.checked_at))}` : ''}</div>` : ''}
     
-    ${canPay() && report.status === 'approved' ? `<div class="card card-pad spread"><span class="muted">${Number(totals.balance) < 0 ? `Company owes ${thb(-totals.balance)}. Mark paid once transferred.` : `Nothing to reimburse. ${thb(totals.balance)} ${report.form_type === 'project' ? 'to be returned to the company' : 'carries to the next personal form'}.`}</span><button class="btn primary" id="paid">Mark as paid</button></div>` : ''}
+    ${canPay(report) && report.status === 'approved' ? `<div class="card card-pad spread"><span class="muted">${Number(totals.balance) < 0 ? `Company owes ${thb(-totals.balance)}. Mark paid once transferred.` : `Nothing to reimburse. ${thb(totals.balance)} ${report.form_type === 'project' ? 'to be returned to the company' : 'carries to the next personal form'}.`}</span><button class="btn primary" id="paid">Mark as paid</button></div>` : ''}
     ${isAdmin() && report.status !== 'draft' ? `<div class="row"><button class="btn ghost small" id="reopen">Reopen as draft</button></div>` : ''}
   </div>`);
   wireLines();
@@ -2073,6 +2087,7 @@ async function pagePrint(id) {
   // Approvers review the form here: Form / Lines switch, flags, Return and Approve stay in the bar
   const mineF = report.staff_id === S.user.id;
   const reviewing = isReviewer() && !mineF && !['draft', 'rejected'].includes(report.status);
+  await loadOverLimit();
   const canDecide = reviewing && canActOn(report);
   if (canDecide) sb.rpc('mark_seen', { p_report: report.id }).then(pollPending);
   const x = reviewing ? await reviewExtras(report, items) : null;
@@ -2190,6 +2205,7 @@ async function pageFA(id) {
   draw();
 }
 async function pageApprovals() {
+  await loadOverLimit();
   const p = params();
   const status = p.s || 'todo';
   const key = p.m || '';
@@ -3049,6 +3065,7 @@ async function pollPending() {
   if (!S.user || document.hidden) return;
   pollMessages();
   if (!isReviewer()) return;
+  await loadOverLimit();
   const { data: subs } = await sb.from('expense_reports').select('id, staff_id, submitted_at, status, form_type, project_id, fa_entered_at').in('status', ['submitted', 'checked', 'approved', 'paid']);
   const waiting = (subs || []).filter(myTodo);
   const { data: ots } = isAdmin() || isHR() ? await sb.from('ot_forms').select('id, staff_id, submitted_at, seen_at').eq('status', isAdmin() && !isHR() ? 'checked' : 'submitted').neq('staff_id', S.user.id) : { data: [] };

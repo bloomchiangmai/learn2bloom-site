@@ -217,7 +217,7 @@ function escShared(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&a
 
 function roleLabelShared(role){
   return {
-    admin:'Admin', admissions:'Admissions', education_lead:'Education Lead',
+    admin:'Admin', director:'Director', operations_manager:'Operations Manager', admissions:'Admissions', education_lead:'Education Lead',
     learning_coach:'Learning Coach', it:'IT', enrollment:'Enrollment', marketing:'Marketing'
   }[role] || role;
 }

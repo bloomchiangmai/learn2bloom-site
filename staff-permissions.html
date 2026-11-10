@@ -209,6 +209,7 @@ table.ra td.ra-role select{width:100%;font-size:12.5px;padding:6px 6px;border:1p
           <select class="detail-input" id="p-role">
             <option value="admin">Admin</option>
             <option value="director">Director</option>
+            <option value="operations_manager">Operations Manager</option>
             <option value="education_lead">Education Lead</option>
             <option value="education_consultant">Education Consultant</option>
             <option value="lead_teacher">Lead Teacher</option>
@@ -308,7 +309,7 @@ async function loadTeamData(){
 
 function roleLabel(role){
   return {
-    admin:'Admin', director:'Director',
+    admin:'Admin', director:'Director', operations_manager:'Operations Manager',
     education_lead:'Education Lead', education_consultant:'Education Consultant', lead_teacher:'Lead Teacher',
     learning_coach:'Learning Coach', learning_coach_assistant:'Learning Coach Assistant',
     admissions:'Admissions Officer', enrollment:'Enrollment Coordinator', front_desk:'Front Desk / Office Manager',
@@ -337,7 +338,7 @@ const MODULE_INFO = { families:'parent records', students:'admissions, learners'
 const LEVELS = ['none','view','edit','full'];
 const LEVEL_TEXT = { none:'No access', view:'Look only', edit:'Do the work', full:'Manage everything' };
 const cap = v => v.charAt(0).toUpperCase() + v.slice(1);
-const ROLE_KEYS = ['admin','director','education_lead','education_consultant','lead_teacher','learning_coach','learning_coach_assistant','admissions','enrollment','front_desk','it','teaching_assistant','marketing','accountant'];
+const ROLE_KEYS = ['admin','director','operations_manager','education_lead','education_consultant','lead_teacher','learning_coach','learning_coach_assistant','admissions','enrollment','front_desk','it','teaching_assistant','marketing','accountant'];
 
 function renderStaffTable(){
   document.getElementById('raHead').innerHTML = `<tr><th class="ra-name" style="width:18%">Name</th><th class="ra-role" style="width:16%">Role</th>${MODULES.map(m=>`<th>${escShared(MODULE_NAME[m] || m)}<small>${MODULE_INFO[m]||''}</small></th>`).join('')}</tr>`;

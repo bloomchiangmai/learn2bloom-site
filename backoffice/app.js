@@ -286,6 +286,7 @@ async function loadMe() {
   const { data: p } = await sb.from('profiles').select('*').eq('id', S.user.id).maybeSingle();
   S.profile = p;
   if (!p || !p.active) { S.noAccess = true; S.profile = null; return; }
+  try { S.hubId = (await sb.schema('public').from('staff').select('hub_id').eq('auth_user_id', S.user.id).maybeSingle()).data?.hub_id || null; } catch { S.hubId = null; }
   S.categories = must(await sb.from('expense_categories').select('*').order('sort_order'));
   loadFAVendors();
   S.myPics = ((await sb.from('project_pics').select('project_id').eq('staff_id', S.user.id)).data || []).map((x) => x.project_id);
@@ -396,7 +397,7 @@ function navLinks() {
 const CO_HERE = { name: 'Bloom Chiangmai', color: '#7F77DD' };
 const CO_OTHER = { name: 'INGROUP ASIA', color: '#1D9E75', url: 'https://iga-backoffice.netlify.app/' };
 const CO_MEMBERS = ['ADMIN', 'BMSSTF01', 'BMSSTF08', 'BMSSTF09', 'BMSSTF10', 'IGASTF001'];
-const inBoth = () => CO_MEMBERS.includes(String(S.profile?.staff_no || '').toUpperCase());
+const inBoth = () => !!S.hubId || CO_MEMBERS.includes(String(S.profile?.staff_no || '').toUpperCase());
 // Group login: a one-time 60-second pass opens INGROUP ASIA without typing a password
 async function coGo() {
   let pass = '';

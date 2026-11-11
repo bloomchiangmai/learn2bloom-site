@@ -2534,10 +2534,8 @@ async function hubArrive() {
     const out = await r.json(); clearTimeout(tm);
     if (r.ok && out.access_token) {
       await sb.auth.setSession({ access_token: out.access_token, refresh_token: out.refresh_token });
-      // Switching from INGROUP ASIA's Home lands on the staff dashboard (Marketing HQ, to-dos), where Bloom staff start their day.
-      // A deep link (timesheet, approvals...) still opens that page here in the back office.
-      const to = (location.hash || '').replace(/^#\/?/, '').split('?')[0];
-      if (!to || to === 'home') { location.replace('/staff-dashboard.html'); return true; }
+      // Switching from INGROUP ASIA always lands on the staff dashboard (Marketing HQ, to-dos), whatever page they came from.
+      location.replace('/staff-dashboard.html'); return true;
     }
   } catch { /* they sign in as usual */ }
   return false;

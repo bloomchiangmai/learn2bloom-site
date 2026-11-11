@@ -161,6 +161,9 @@ function injectSidebarStyles(){
     body.has-sidebar{display:flex;min-height:100vh;}
     .sidebar{width:220px;flex-shrink:0;background:#F7F3EC;border-right:1px solid #E8E3D8;
       display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:50;}
+    .co-switch{display:flex;align-items:center;gap:8px;margin:12px 16px 0;padding:6px 10px;border:1px solid #e5e2da;border-radius:8px;font-size:12px;font-weight:600;color:#2C2C2A;text-decoration:none;background:#fff}
+    .co-switch:hover{border-color:#b4b2a9}
+    .co-dot{width:9px;height:9px;border-radius:50%;background:#1D9E75;flex:0 0 auto}
     .sidebar-logo{font-family:Georgia,serif;font-size:19px;font-weight:700;color:#2C2C2A;
       padding:22px 12px 18px 24px;white-space:nowrap;text-decoration:none;border-bottom:1px solid #E8E3D8;display:block;}
     .sidebar-nav{flex:1;padding:16px 12px;}
@@ -199,6 +202,12 @@ function injectSidebarStyles(){
   document.head.appendChild(style);
 }
 
+// Group login: linked staff open the INGROUP ASIA back office with a one-time 60-second pass
+async function goIGA(){
+  let pass = '';
+  try { const { data } = await sb.rpc('hub_pass_create'); if (typeof data === 'string') pass = data; } catch(e) {}
+  location.href = 'https://iga-backoffice.netlify.app/#/home' + (pass ? '?hub=' + pass : '');
+}
 function renderSidebar(activeKey){
   injectSidebarStyles();
   document.body.classList.add('has-sidebar');
@@ -229,6 +238,7 @@ function renderSidebar(activeKey){
   el.className = 'sidebar';
   el.innerHTML = `
     <a href="staff-dashboard.html" class="sidebar-logo${sys ? ' sys-logo' : ''}">Bloom Chiangmai</a>
+    ${window.currentStaff?.hub_id ? `<a href="https://iga-backoffice.netlify.app/" class="co-switch" onclick="event.preventDefault(); goIGA()"><span class="co-dot"></span>Switch to INGROUP ASIA</a>` : ''}
     ${head}
     <div class="sidebar-nav">${navHtml}</div>
     <div class="sidebar-footer">

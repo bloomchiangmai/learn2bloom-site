@@ -397,6 +397,12 @@ const CO_HERE = { name: 'Bloom Chiangmai', color: '#7F77DD' };
 const CO_OTHER = { name: 'INGROUP ASIA', color: '#1D9E75', url: 'https://iga-backoffice.netlify.app/' };
 const CO_MEMBERS = ['ADMIN', 'BMSSTF01', 'BMSSTF08', 'BMSSTF09', 'BMSSTF10', 'IGASTF001'];
 const inBoth = () => CO_MEMBERS.includes(String(S.profile?.staff_no || '').toUpperCase());
+// Group login: a one-time 60-second pass opens INGROUP ASIA without typing a password
+async function coGo() {
+  let pass = '';
+  try { const { data } = await sb.schema('public').rpc('hub_pass_create'); if (typeof data === 'string') pass = data; } catch { /* fall back to their sign-in page */ }
+  location.href = coTarget() + (pass ? '?hub=' + pass : '');
+}
 const coTarget = () => CO_OTHER.url + '#/' + (((location.hash || '').split('/')[1] || 'home').split('?')[0] || 'home');
 function coSwitch() {
   if (!inBoth()) return '';
@@ -404,7 +410,7 @@ function coSwitch() {
   return `<details class="cosw"><summary>${dot(CO_HERE.color)}<span class="cosw-n">${CO_HERE.name}</span><span class="cosw-c" aria-hidden="true">&#9662;</span></summary><div class="cosw-menu"><div class="cosw-h">Your companies</div><a class="cosw-i on" href="#/home">${dot(CO_HERE.color)}${CO_HERE.name}<span class="cosw-k">&#10003;</span></a><a class="cosw-i" href="${CO_OTHER.url}" data-cosw>${dot(CO_OTHER.color)}${CO_OTHER.name}</a></div></details>`;
 }
 document.addEventListener('click', (e) => {
-  const a = e.target.closest && e.target.closest('a[data-cosw]'); if (a) { e.preventDefault(); location.href = coTarget(); return; }
+  const a = e.target.closest && e.target.closest('a[data-cosw]'); if (a) { e.preventDefault(); coGo(); return; }
   const open = document.querySelector('details.cosw[open]'); if (open && !open.contains(e.target)) open.removeAttribute('open');
 });
 function phoneNav() {
@@ -429,7 +435,7 @@ function shell(content) {
     </div>
   </div>`;
   document.getElementById('so').onclick = (e) => { e.preventDefault(); signOut(); };
-  const pn = document.getElementById('pnav'); if (pn) pn.onchange = (e) => { const v = e.target.value; if (v === 'out') signOut(); else if (v === 'cosw') location.href = coTarget(); else if (v.startsWith('/')) location.href = v; else if (v) location.hash = v; };
+  const pn = document.getElementById('pnav'); if (pn) pn.onchange = (e) => { const v = e.target.value; if (v === 'out') signOut(); else if (v === 'cosw') coGo(); else if (v.startsWith('/')) location.href = v; else if (v) location.hash = v; };
   if (S.pendingUnseen != null) applyApprovalBadge();
 }
 const main = () => document.getElementById('main');

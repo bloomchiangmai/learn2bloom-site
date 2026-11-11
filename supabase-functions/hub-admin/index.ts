@@ -30,15 +30,18 @@ function reply(req: Request, body: unknown, status = 200) {
   });
 }
 
-// Is the caller an active IGA admin? Checked with IGA using the caller's own session.
+// Is the caller an active IGA admin who manages companies? Checked with IGA using the caller's own session.
 async function igaAdmin(token: string): Promise<string | null> {
   if (!token) return null;
   const u = await fetch(`${HUB_URL}/auth/v1/user`, { headers: { apikey: HUB_KEY, Authorization: `Bearer ${token}` } });
   if (!u.ok) return null;
   const user = await u.json();
-  const p = await fetch(`${HUB_URL}/rest/v1/profiles?select=role,active,staff_no&id=eq.${user.id}`, { headers: { apikey: HUB_KEY, Authorization: `Bearer ${token}` } });
+  const p = await fetch(`${HUB_URL}/rest/v1/profiles?select=role,active,staff_no,is_super&id=eq.${user.id}`, { headers: { apikey: HUB_KEY, Authorization: `Bearer ${token}` } });
   const rows = p.ok ? await p.json() : [];
-  return rows?.[0]?.active && rows[0].role === "admin" ? rows[0].staff_no : null;
+  const r = rows?.[0];
+  // Only Ronnie, Jean and the super admin manage who is in which company
+  const founder = r?.is_super === true || ["IGAADM001", "IGAADM002"].includes(String(r?.staff_no || "").toUpperCase());
+  return r?.active && r.role === "admin" && founder ? r.staff_no : null;
 }
 
 async function linked() {
@@ -57,7 +60,7 @@ Deno.serve(async (req) => {
   let b: any;
   try { b = await req.json(); } catch { return reply(req, { error: "Invalid request" }, 400); }
   const by = await igaAdmin(String(b.token || ""));
-  if (!by) return reply(req, { error: "Only an INGROUP ASIA admin can do this." }, 403);
+  if (!by) return reply(req, { error: "Only Ronnie, Jean or the super admin can do this." }, 403);
 
   if (b.action === "list") return reply(req, { people: await linked(), roles: ROLES });
 

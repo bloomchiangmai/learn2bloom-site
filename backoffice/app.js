@@ -2527,8 +2527,10 @@ async function hubArrive() {
   if (!m) return;
   history.replaceState(null, '', location.pathname + location.hash.replace(/[?&]hub=[a-f0-9]{64}/, '').replace(/\?$/, ''));
   try {
-    const r = await fetch(SUPABASE_URL + '/functions/v1/id-sign-in', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'hub', pass: m[1] }) });
-    const out = await r.json();
+    // Never leave the page on Loading: give up after 8 seconds and show the normal sign-in
+    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 8000);
+    const r = await fetch(SUPABASE_URL + '/functions/v1/id-sign-in', { signal: ctl.signal, method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'hub', pass: m[1] }) });
+    const out = await r.json(); clearTimeout(tm);
     if (r.ok && out.access_token) await sb.auth.setSession({ access_token: out.access_token, refresh_token: out.refresh_token });
   } catch { /* they sign in as usual */ }
 }

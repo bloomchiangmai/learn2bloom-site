@@ -30,7 +30,7 @@ button:hover{background:#443c99;}
   <div class="eyebrow">Staff Access</div>
   <h1>Sign in</h1>
   <p class="sub">Sign in with your Staff ID.</p>
-  <input type="text" id="loginStaffId" placeholder="Staff ID (e.g. BMSSTF01)" autocapitalize="characters">
+  <input type="text" id="loginStaffId" placeholder="Staff ID (e.g. BMSSTF01 or IGASTF002)" autocapitalize="characters">
   <input type="password" id="loginPassword" placeholder="Password">
   <button onclick="doLogin()">Sign in</button>
   <div class="error-msg" id="loginError"></div>
@@ -89,6 +89,8 @@ async function submitForgotPassword(){
       body: JSON.stringify({ kind: 'staff', action: 'reset', id: staffIdCode })
     });
     if(!res.ok){ const o = await res.json().catch(()=>({})); errEl.textContent = o.error || 'Could not send the link. Please try again.'; return; }
+    const o2 = await res.clone().json().catch(()=>({}));
+    if(o2.hub){ successEl.textContent = 'This is an INGROUP ASIA ID. It uses your INGROUP ASIA password, so please ask the INGROUP ASIA office to reset it.'; return; }
   } catch (e) {
     errEl.textContent = 'Network error: ' + e.message;
     return;

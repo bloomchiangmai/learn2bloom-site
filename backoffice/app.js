@@ -396,8 +396,8 @@ function navLinks() {
 // Interim list by staff number; the People and companies page replaces it later.
 const CO_HERE = { name: 'Bloom Chiangmai', color: '#7F77DD' };
 const CO_OTHER = { name: 'INGROUP ASIA', color: '#1D9E75', url: 'https://iga-backoffice.netlify.app/' };
-const CO_MEMBERS = ['ADMIN', 'BMSSTF01', 'BMSSTF08', 'BMSSTF09', 'BMSSTF10', 'IGASTF001'];
-const inBoth = () => !!S.hubId || CO_MEMBERS.includes(String(S.profile?.staff_no || '').toUpperCase());
+// Linked to an INGROUP ASIA login (staff.hub_id), set on the IGA People and companies page
+const inBoth = () => !!S.hubId;
 // Group login: a one-time 60-second pass opens INGROUP ASIA without typing a password
 async function coGo() {
   let pass = '';

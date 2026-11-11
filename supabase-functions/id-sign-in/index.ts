@@ -16,6 +16,8 @@ const publicClient = () => createClient(URL_, Deno.env.get("SUPABASE_ANON_KEY")!
 const HUB_URL = "https://yuwkaauznyypytjmbrez.supabase.co";
 const HUB_KEY = "sb_publishable_Dy28xtg2buG-5ILIfLQ5jA_1DndPC3b";
 const HUB_ID = /^IGA[A-Z]{3}\d{3}$/i;
+// Bloom IDs retired on 11 Nov 2026: these people now sign in with their IGA ID.
+const RETIRED: Record<string, string> = { BMSSTF01: "IGAADM001", BMSSTF08: "IGASTF004", BMSSTF09: "IGASTF002", BMSSTF10: "IGASTF003" };
 
 const ALLOWED_ORIGINS = ["https://learn2bloom.org", "https://www.learn2bloom.org", "https://portal.learn2bloom.org", "https://learn2bloom-staging.netlify.app"];
 const RESET_TO = { parent: "https://portal.learn2bloom.org/reset-password.html", staff: "https://learn2bloom.org/staff-reset-password.html" };
@@ -127,7 +129,12 @@ Deno.serve(async (req) => {
   const kind = b.kind === "staff" ? "staff" : b.kind === "parent" ? "parent" : "";
   const id = String(b.id || "").trim();
   if (!kind || !id) return cors(req, { error: kind === "staff" ? "Please enter your Staff ID." : "Please enter your Student ID." }, 400);
-  const isHub = kind === "staff" && HUB_ID.test(id);
+  if (kind === "staff" && RETIRED[id.toUpperCase()]) {
+    return cors(req, { error: `Your Staff ID is now ${RETIRED[id.toUpperCase()]}. Sign in with it and your INGROUP ASIA password.` }, 401);
+  }
+  // A Bloom account linked to an INGROUP ASIA login (any ID, e.g. IGASTF002 or ADMIN) uses the IGA password.
+  const hubEmail = kind === "staff" ? await emailForHub(id) : null;
+  const isHub = !!hubEmail || (kind === "staff" && HUB_ID.test(id));
 
   if (b.action === "reset") {
     // IGA IDs use their INGROUP ASIA password, so the reset happens there.
@@ -143,7 +150,7 @@ Deno.serve(async (req) => {
   if (!password) return cors(req, { error: wrong }, 401);
 
   if (isHub) {
-    const email = await emailForHub(id);
+    const email = hubEmail;
     if (!email) return cors(req, { error: wrong }, 401);
     const check = await hubPasswordOk(id, password);
     if (check === "rate") return cors(req, { error: "Too many attempts. Please wait a few minutes and try again." }, 429);

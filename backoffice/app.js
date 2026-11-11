@@ -2532,11 +2532,18 @@ async function hubArrive() {
     const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 8000);
     const r = await fetch(SUPABASE_URL + '/functions/v1/id-sign-in', { signal: ctl.signal, method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'hub', pass: m[1] }) });
     const out = await r.json(); clearTimeout(tm);
-    if (r.ok && out.access_token) await sb.auth.setSession({ access_token: out.access_token, refresh_token: out.refresh_token });
+    if (r.ok && out.access_token) {
+      await sb.auth.setSession({ access_token: out.access_token, refresh_token: out.refresh_token });
+      // Switching from INGROUP ASIA's Home lands on the staff dashboard (Marketing HQ, to-dos), where Bloom staff start their day.
+      // A deep link (timesheet, approvals...) still opens that page here in the back office.
+      const to = (location.hash || '').replace(/^#\/?/, '').split('?')[0];
+      if (!to || to === 'home') { location.replace('/staff-dashboard.html'); return true; }
+    }
   } catch { /* they sign in as usual */ }
+  return false;
 }
 async function start() {
-  await hubArrive();
+  if (await hubArrive()) return;
   await loadMe(); route(); setTimeout(pollPending, 800);
   let later = false; try { later = !!sessionStorage.getItem('bo_sig_later'); } catch { /* ignore */ }
   if (S.profile && !S.profile.signature && !later && !S.user.user_metadata?.must_change_pin) setTimeout(() => signatureDialog({ first: true }), 600);

@@ -390,18 +390,35 @@ function navLinks() {
   h += `<div class="nav-sep"></div>${L('#/messages', 'Messages', S.msgCount)}`;
   return h + '</div>';
 }
+
+// Company switcher: people who work in more than one company move between back offices in 1 click.
+// Interim list by staff number; the People and companies page replaces it later.
+const CO_HERE = { name: 'Bloom Chiangmai', color: '#7F77DD' };
+const CO_OTHER = { name: 'INGROUP ASIA', color: '#1D9E75', url: 'https://iga-backoffice.netlify.app/' };
+const CO_MEMBERS = ['ADMIN', 'BMSSTF01', 'BMSSTF08', 'BMSSTF09', 'BMSSTF10'];
+const inBoth = () => CO_MEMBERS.includes(String(S.profile?.staff_no || '').toUpperCase());
+const coTarget = () => CO_OTHER.url + '#/' + (((location.hash || '').split('/')[1] || 'home').split('?')[0] || 'home');
+function coSwitch() {
+  if (!inBoth()) return '';
+  const dot = (c) => `<span class="cosw-dot" style="background:${c}"></span>`;
+  return `<details class="cosw"><summary>${dot(CO_HERE.color)}<span class="cosw-n">${CO_HERE.name}</span><span class="cosw-c" aria-hidden="true">&#9662;</span></summary><div class="cosw-menu"><div class="cosw-h">Your companies</div><a class="cosw-i on" href="#/home">${dot(CO_HERE.color)}${CO_HERE.name}<span class="cosw-k">&#10003;</span></a><a class="cosw-i" href="${CO_OTHER.url}" data-cosw>${dot(CO_OTHER.color)}${CO_OTHER.name}</a></div></details>`;
+}
+document.addEventListener('click', (e) => {
+  const a = e.target.closest && e.target.closest('a[data-cosw]'); if (a) { e.preventDefault(); location.href = coTarget(); return; }
+  const open = document.querySelector('details.cosw[open]'); if (open && !open.contains(e.target)) open.removeAttribute('open');
+});
 function phoneNav() {
   // Snap, To check, Forms and Waiting are the bottom tabs; the menu only holds the rest
   const opts = [...(STAGE >= 2 && seesTime() ? [...(isAdmin() && keepsTS() ? [[`#/ot?u=${S.user.id}`, 'My timesheet']] : []), ...(isAdmin() || keepsTS() ? [['#/ot', isAdmin() ? 'Staff timesheets' : 'My timesheet']] : []), ['#/roster', 'Roster']] : []), ['#/messages', `Messages${S.msgCount ? ' (' + S.msgCount + ')' : ''}`], ['#/account', 'My account'], ['/staff-dashboard.html', '‹ Staff dashboard']];
   const cur0 = (location.hash || '').split('?')[0]; if (!opts.some(([h]) => cur0.startsWith(h))) opts.unshift(['', 'Menu']);
   const cur = (location.hash || '').split('?')[0];
-  return `<select id="pnav" aria-label="Menu">${opts.map(([h, l]) => `<option value="${h}" ${cur.startsWith(h) ? 'selected' : ''}>${esc(l)}</option>`).join('')}<option value="out">Sign out</option></select>`;
+  return `<select id="pnav" aria-label="Menu">${opts.map(([h, l]) => `<option value="${h}" ${cur.startsWith(h) ? 'selected' : ''}>${esc(l)}</option>`).join('')}${inBoth() ? `<option value="cosw">Switch to ${CO_OTHER.name}</option>` : ''}<option value="out">Sign out</option></select>`;
 }
 function shell(content) {
   app.innerHTML = `
   <div class="shell">
     <aside class="side">
-      <div class="brand"><b>${ORG}</b><span>Back office</span><a class="brand-back" href="/staff-dashboard.html">‹ Staff dashboard</a></div>
+      <div class="brand"><b>${ORG}</b><span>Back office</span><a class="brand-back" href="/staff-dashboard.html">‹ Staff dashboard</a></div>${coSwitch()}
       ${navLinks()}
       <div class="side-foot"><a href="#/account" class="side-me" title="My account"><b>${esc(S.profile.full_name || S.profile.staff_no)}</b>My account</a><a href="#" id="so">Sign out</a></div>
     </aside>
@@ -412,7 +429,7 @@ function shell(content) {
     </div>
   </div>`;
   document.getElementById('so').onclick = (e) => { e.preventDefault(); signOut(); };
-  const pn = document.getElementById('pnav'); if (pn) pn.onchange = (e) => { const v = e.target.value; if (v === 'out') signOut(); else if (v.startsWith('/')) location.href = v; else if (v) location.hash = v; };
+  const pn = document.getElementById('pnav'); if (pn) pn.onchange = (e) => { const v = e.target.value; if (v === 'out') signOut(); else if (v === 'cosw') location.href = coTarget(); else if (v.startsWith('/')) location.href = v; else if (v) location.hash = v; };
   if (S.pendingUnseen != null) applyApprovalBadge();
 }
 const main = () => document.getElementById('main');

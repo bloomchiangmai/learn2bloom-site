@@ -395,7 +395,7 @@ function navLinks() {
 // Interim list by staff number; the People and companies page replaces it later.
 const CO_HERE = { name: 'Bloom Chiangmai', color: '#7F77DD' };
 const CO_OTHER = { name: 'INGROUP ASIA', color: '#1D9E75', url: 'https://iga-backoffice.netlify.app/' };
-const CO_MEMBERS = ['ADMIN', 'BMSSTF01', 'BMSSTF08', 'BMSSTF09', 'BMSSTF10'];
+const CO_MEMBERS = ['ADMIN', 'BMSSTF01', 'BMSSTF08', 'BMSSTF09', 'BMSSTF10', 'IGASTF001'];
 const inBoth = () => CO_MEMBERS.includes(String(S.profile?.staff_no || '').toUpperCase());
 const coTarget = () => CO_OTHER.url + '#/' + (((location.hash || '').split('/')[1] || 'home').split('?')[0] || 'home');
 function coSwitch() {
@@ -2515,7 +2515,19 @@ async function pageCategories() {
 }
 
 /* ---------- start ---------- */
+// Group login: arriving from the INGROUP ASIA back office with a one-time pass signs the person in here
+async function hubArrive() {
+  const m = (location.hash || '').match(/[?&]hub=([a-f0-9]{64})/);
+  if (!m) return;
+  history.replaceState(null, '', location.pathname + location.hash.replace(/[?&]hub=[a-f0-9]{64}/, '').replace(/\?$/, ''));
+  try {
+    const r = await fetch(SUPABASE_URL + '/functions/v1/id-sign-in', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'hub', pass: m[1] }) });
+    const out = await r.json();
+    if (r.ok && out.access_token) await sb.auth.setSession({ access_token: out.access_token, refresh_token: out.refresh_token });
+  } catch { /* they sign in as usual */ }
+}
 async function start() {
+  await hubArrive();
   await loadMe(); route(); setTimeout(pollPending, 800);
   let later = false; try { later = !!sessionStorage.getItem('bo_sig_later'); } catch { /* ignore */ }
   if (S.profile && !S.profile.signature && !later && !S.user.user_metadata?.must_change_pin) setTimeout(() => signatureDialog({ first: true }), 600);

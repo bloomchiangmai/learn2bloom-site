@@ -8,7 +8,7 @@ const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE
 const HUB_URL = "https://yuwkaauznyypytjmbrez.supabase.co";
 const HUB_KEY = "sb_publishable_Dy28xtg2buG-5ILIfLQ5jA_1DndPC3b";
 const ALLOWED = ["https://iga-backoffice.netlify.app"];
-const HUB_ID = /^IGA[A-Z]{3}\d{3}$/;
+const HUB_ID = /^(IGA[A-Z]{3}\d{3}|ADMIN)$/;
 const ROLES: Record<string, string> = {
   admin: "Admin", director: "Director", operations_manager: "Operations Manager",
   education_lead: "Education Lead", education_consultant: "Education Consultant", lead_teacher: "Lead Teacher",
@@ -63,10 +63,20 @@ Deno.serve(async (req) => {
 
   const hub = String(b.hub_id || "").toUpperCase();
   if (!HUB_ID.test(hub)) return reply(req, { error: "Not a valid IGA ID." }, 400);
-  const { data: rows } = await admin.from("staff").select("id, auth_user_id, status, role, hub_id").not("hub_id", "is", null);
+  const { data: rows } = await admin.from("staff").select("id, auth_user_id, status, role, hub_id, staff_id_code").not("hub_id", "is", null);
   const row: any = (rows || []).find((r: any) => String(r.hub_id).toUpperCase() === hub);
 
+  // The super admin login (ADMIN) is the same person in every company: it takes over Bloom's own
+  // ADMIN account and is never removed or given another role from this page.
+  if ((hub === "ADMIN" || row?.staff_id_code === "ADMIN") && b.action !== "link") return reply(req, { error: "The super admin stays in every company." }, 400);
+
   if (b.action === "link") {
+    if (hub === "ADMIN") {
+      if (row) return reply(req, { ok: true, people: await linked() });
+      const { error } = await admin.from("staff").update({ hub_id: "ADMIN", status: "active", archived_at: null }).eq("staff_id_code", "ADMIN");
+      if (error) return reply(req, { error: error.message }, 400);
+      return reply(req, { ok: true, people: await linked() });
+    }
     const role = String(b.role || "");
     if (!ROLES[role]) return reply(req, { error: "Choose a Bloom role." }, 400);
     if (row) {

@@ -93,6 +93,8 @@ exports.handler = async (event) => {
     const match = (s.staff_id_code || '').match(/^BMSSTF(\d+)$/);
     if (match) maxN = Math.max(maxN, parseInt(match[1], 10));
   });
+  // BMSSTF01 to 12 were used before people moved to their IGA IDs; never hand those out again.
+  maxN = Math.max(maxN, 12);
   const staffIdCode = 'BMSSTF' + String(maxN + 1).padStart(2, '0');
 
   // Create the staff row linked to the new auth user.

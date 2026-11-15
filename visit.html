@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QH3NWGK088"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-QH3NWGK088');
+// Contact click events (line_click, whatsapp_click, wechat_click): fire on clicks on any
+// LINE, WhatsApp or WeChat link, and on taps on the QR image of the matching page.
+var bcmChannels = [
+  ['line_click', /line\.me|lin\.ee|116mdcau/, /\/line(\.html)?([?#]|$)/],
+  ['whatsapp_click', /wa\.me|api\.whatsapp\.com|whatsapp:\/\//, /\/whatsapp(\.html)?([?#]|$)/],
+  ['wechat_click', /weixin:\/\/|u\.wechat\.com|wechat\.com/, /\/wechat(\.html)?([?#]|$)/]
+];
+document.addEventListener('click', function (e) {
+  var t = e.target;
+  if (!t || !t.closest) return;
+  var a = t.closest('a[href]');
+  var url = a ? a.href.toLowerCase() : null, label = a ? (a.textContent || '').trim().slice(0, 100) : 'qr image';
+  if (!a) {
+    if (!t.closest('img.qr')) return;
+    url = location.href.toLowerCase();
+  }
+  for (var i = 0; i < bcmChannels.length; i++) {
+    var c = bcmChannels[i];
+    if (c[1].test(url) || c[2].test(url)) {
+      gtag('event', c[0], { link_url: a ? a.href : location.href, link_text: label });
+      return;
+    }
+  }
+}, true);
+</script>
+<meta charset="UTF-8">
+<title>Visit | Bloom Chiangmai, Hang Dong</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- seo -->
+<meta name="description" content="Visit Bloom Chiangmai, a learning hub in Hang Dong for learners aged 5 to 18. See a normal learning day, find us at 310 Nong Kwai and book a visit on LINE.">
+<link rel="canonical" href="https://learn2bloom.org/visit.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Bloom Chiangmai">
+<meta property="og:title" content="Visit | Bloom Chiangmai, Hang Dong">
+<meta property="og:description" content="Visit Bloom Chiangmai, a learning hub in Hang Dong for learners aged 5 to 18. See a normal learning day, find us at 310 Nong Kwai and book a visit on LINE.">
+<meta property="og:url" content="https://learn2bloom.org/visit.html">
+<meta property="og:image" content="https://learn2bloom.org/images/admissions-hero_1200x520.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#FDFAF5;color:#2C2C2A;width:100%;;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:10px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.logo{font-family:Georgia,serif;font-size:22px;font-weight:700;color:#2C2C2A;}
+.nav-links{display:flex;gap:28px;list-style:none;align-items:center;}
+.nav-links a{font-size:14px;color:#5F5E5A;text-decoration:none;}
+.nav-active{color:#2C2C2A!important;font-weight:600;}
+.nav-cta{background:#F5C842;color:#534AB7!important;padding:9px 22px;border-radius:20px;font-weight:700!important;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#2C2C2A;text-transform:uppercase;margin-bottom:14px;}
+h2{font-family:Georgia,serif;font-size:28px;font-weight:700;color:#2C2C2A;margin-bottom:8px;line-height:1.25;}
+
+.page-hero{position:relative;width:100%;height:460px;overflow:hidden;display:flex;align-items:flex-end;}
+.page-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.page-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(253,250,245,0.97) 0%,rgba(253,250,245,0.5) 45%,rgba(253,250,245,0.0) 100%);}
+.page-hero-content{position:relative;z-index:2;padding:0 max(48px, calc((100% - 1200px) / 2 + 48px)) 44px;width:100%;display:grid;grid-template-columns:1fr auto;gap:40px;align-items:flex-end;}
+.page-hero-content h1{font-family:Georgia,serif;font-size:44px;font-weight:700;color:#2C2C2A;line-height:1.18;letter-spacing:-0.5px;margin-bottom:10px;}
+.page-hero-content h1 em{font-style:italic;color:#534AB7;}
+.page-hero-content p{font-size:15px;`0;line-height:1.7;max-width:480px;}
+.founding-hero-card{background:#F5C842;border-radius:12px;padding:22px 28px;flex-shrink:0;min-width:260px;}
+.founding-hero-spots{font-size:13px;font-weight:700;color:#993C1D;margin-bottom:6px;}
+.founding-hero-title{font-family:Georgia,serif;font-size:17px;font-weight:700;color:#3C3489;margin-bottom:6px;}
+.founding-hero-desc{font-size:12px;color:#5a4e20;font-weight:300;line-height:1.5;}
+
+.founding-section{padding:56px max(48px, calc((100% - 1200px) / 2 + 48px));background:#EEEDFE;border-bottom:1px solid #AFA9EC;}
+.founding-inner{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;}
+.founding-title{font-family:Georgia,serif;font-size:28px;font-weight:700;color:#26215C;margin-bottom:12px;line-height:1.25;}
+.founding-p{font-size:14px;color:#534AB7;font-weight:300;line-height:1.8;margin-bottom:16px;}
+.founding-items{display:flex;flex-direction:column;gap:10px;}
+.founding-item{display:flex;align-items:flex-start;gap:10px;}
+.founding-dot{width:6px;height:6px;border-radius:50%;background:#534AB7;flex-shrink:0;margin-top:6px;}
+.founding-text{font-size:13px;color:#534AB7;font-weight:300;line-height:1.6;}
+.founding-text strong{font-weight:600;color:#26215C;}
+.founding-urgency{background:#FDFAF5;border:1px solid #AFA9EC;border-radius:12px;padding:28px;}
+.founding-spots-big{font-family:Georgia,serif;font-size:48px;font-weight:700;color:#D85A30;line-height:1;margin-bottom:4px;}
+.founding-spots-label{font-size:13px;color:#888780;font-weight:400;margin-bottom:20px;}
+.founding-deadline{background:#F7F3EC;border-radius:8px;padding:14px 16px;margin-bottom:20px;}
+.founding-deadline-label{font-size:11px;color:#888780;font-weight:300;margin-bottom:3px;letter-spacing:0.5px;text-transform:uppercase;}
+.founding-deadline-val{font-size:14px;color:#2C2C2A;font-weight:600;font-family:Georgia,serif;}
+.btn-apply-big{background:#3C3489;color:#EEEDFE;border:none;padding:15px 32px;border-radius:20px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;width:100%;margin-bottom:10px;}
+.btn-visit-big{background:transparent;color:#3C3489;border:2px solid #3C3489;padding:14px 32px;border-radius:20px;font-size:14px;font-family:inherit;font-weight:600;cursor:pointer;width:100%;}
+
+.process-section{padding:60px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.process-section h2{margin-bottom:8px;}
+.process-intro{font-size:14px;`0;line-height:1.7;margin-bottom:36px;max-width:580px;}
+.process-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;position:relative;}
+.process-steps::before{content:'';position:absolute;top:20px;left:10%;right:10%;height:1px;background:#E8E3D8;z-index:0;}
+.step{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 12px;position:relative;z-index:1;}
+.step-num{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;margin-bottom:14px;flex-shrink:0;}
+.step-title{font-family:Georgia,serif;font-size:14px;font-weight:700;color:#2C2C2A;margin-bottom:6px;}
+.step-desc{font-size:13px;`0;line-height:1.6;}
+
+.fees-section{padding:60px max(48px, calc((100% - 1200px) / 2 + 48px));background:#F7F3EC;border-bottom:1px solid #E8E3D8;}
+.fees-section h2{margin-bottom:8px;}
+.fees-intro{font-size:14px;`0;line-height:1.7;margin-bottom:8px;max-width:680px;}
+.fees-context{font-size:13px;color:#888780;font-weight:400;font-style:italic;margin-bottom:32px;}
+.fees-table{width:100%;border-collapse:collapse;background:#FDFAF5;border-radius:12px;overflow:hidden;border:1px solid #E8E3D8;margin-bottom:24px;}
+.fees-table th{padding:14px 20px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#888780;background:#F7F3EC;border-bottom:1px solid #E8E3D8;}
+.fees-table td{padding:16px 20px;font-size:14px;color:#2C2C2A;border-bottom:1px solid #E8E3D8;}
+.fees-table tr:last-child td{border-bottom:none;}
+.fees-table .zone-name{font-family:Georgia,serif;font-weight:700;}
+.fees-table .zone-age{font-size:12px;color:#888780;font-weight:400;margin-top:2px;}
+.zone-bar-cell{width:4px;padding:0!important;}
+.fees-note{font-size:12px;color:#888780;font-weight:400;font-style:italic;}
+.extra-fees{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;}
+.extra-card{background:#FDFAF5;border:1px solid #E8E3D8;border-radius:10px;padding:18px 20px;}
+.extra-title{font-size:13px;font-weight:700;color:#2C2C2A;margin-bottom:4px;font-family:Georgia,serif;}
+.extra-amount{font-size:16px;font-weight:700;color:#534AB7;font-family:Georgia,serif;margin-bottom:4px;}
+.extra-desc{font-size:12px;color:#888780;font-weight:400;line-height:1.5;}
+
+.calendar-section{padding:56px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.calendar-section h2{margin-bottom:8px;}
+.cal-intro{font-size:14px;`0;line-height:1.7;margin-bottom:32px;max-width:580px;}
+
+
+
+
+
+
+
+
+
+
+
+.visit-section{padding:60px max(48px, calc((100% - 1200px) / 2 + 48px));display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;background:#F7F3EC;border-bottom:1px solid #E8E3D8;}
+.visit-p{font-size:14px;`0;line-height:1.85;margin-bottom:16px;}
+.visit-points{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.visit-point{display:flex;align-items:flex-start;gap:10px;}
+.vp-dot{width:6px;height:6px;border-radius:50%;background:#534AB7;flex-shrink:0;margin-top:6px;}
+.vp-text{font-size:13px;`0;line-height:1.6;}
+.visit-photo{border-radius:12px;overflow:hidden;height:380px;}
+.visit-photo img{width:100%;height:100%;object-fit:cover;}
+.btn-purple{background:#3C3489;color:#EEEDFE;border:none;padding:13px 28px;border-radius:20px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;}
+
+.faq-section{padding:60px max(48px, calc((100% - 1200px) / 2 + 48px));background:#FDFAF5;border-bottom:1px solid #E8E3D8;}
+.faq-section h2{margin-bottom:8px;}
+.faq-intro{font-size:14px;`0;line-height:1.7;margin-bottom:32px;max-width:580px;}
+.faq-list{display:flex;flex-direction:column;gap:0;max-width:780px;}
+.faq-item{padding:20px 0;border-bottom:1px solid #E8E3D8;}
+.faq-item:last-child{border-bottom:none;}
+.faq-q{font-family:Georgia,serif;font-size:15px;font-weight:700;color:#2C2C2A;margin-bottom:10px;}
+.faq-a{font-size:14px;`0;line-height:1.75;}
+
+.cta-band{background:#F5C842;padding:52px max(48px, calc((100% - 1200px) / 2 + 48px));display:flex;justify-content:space-between;align-items:center;gap:40px;}
+.cta-band h2{color:#3C3489;margin-bottom:8px;}
+.cta-band p{font-size:14px;color:#5a4e20;}
+.cta-btns{display:flex;gap:12px;flex-shrink:0;}
+.btn-cta-purple{background:#3C3489;color:#EEEDFE;border:none;padding:13px 28px;border-radius:20px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;}
+.btn-cta-outline{background:transparent;color:#3C3489;border:2px solid #3C3489;padding:13px 28px;border-radius:20px;font-size:14px;font-family:inherit;font-weight:600;cursor:pointer;}
+
+footer{background:#F7F3EC;padding:22px max(48px, calc((100% - 1200px) / 2 + 48px));display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;border-top:1px solid #E8E3D8;}.footer-copy{width:100%;text-align:center;border-top:1px solid #E8E3D8;margin-top:16px;padding-top:14px;}
+.footer-logo{font-family:Georgia,serif;font-size:17px;font-weight:700;color:#2C2C2A;}
+.footer-links{display:flex;gap:24px;list-style:none;}
+.footer-links a{font-size:14px;color:#5F5E5A;text-decoration:none;font-weight:400;}
+</style>
+
+<style>
+@media (max-width: 768px) {
+  body { width: 100% !important; overflow-x: hidden; }
+  
+  /* NAV */
+  nav { padding: 14px 20px; flex-wrap: wrap; gap: 10px; }
+  .nav-links { display: none; }
+  .nav-cta { display: block; padding: 8px 16px; font-size: 13px; }
+  .logo, .footer-logo { font-size: 18px; }
+
+  /* HERO */
+  .page-hero { height: 380px; }
+  .page-hero-content { padding: 0 20px 32px; }
+  .page-hero-content h1 { font-size: 28px; }
+  .page-hero-content p { font-size: 13px; }
+  .lp-hero-content, .hero-content { padding: 0 20px 32px; }
+
+  /* GRIDS, stack to single column */
+  .page-hero, .what, .zone-inner, .zone-inner.flip,
+  .day-section, .inner-section, .ai-section,
+  .coaches-grid, .pathways-grid, .extra-fees,
+  .founding-inner, .contact-grid, .register-section,
+  .community-section, .parent-prog, .visit-section,
+  .about-section, .location-section, .coming-pair,
+  .levels-split, .intro-section { 
+    grid-template-columns: 1fr !important; 
+    direction: ltr !important;
+  }
+
+  /* ZONE STRIP */
+  .zone-nav, .zone-strip, .lp-zones { 
+    overflow-x: auto; 
+    flex-wrap: nowrap;
+  }
+  .ztab, .zone-tab, .lp-zone-tab { min-width: 140px; }
+
+  /* TRUST BAR */
+  .lp-trust, .trust { 
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 10px 20px;
+    gap: 20px;
+  }
+
+  /* STATS */
+  .lp-stats, .stats, .about-stats { 
+    grid-template-columns: 1fr 1fr !important; 
+  }
+  .lp-stat, .stat { padding: 16px 10px; }
+  .lp-stat-n, .stat-n { font-size: 24px; }
+
+  /* SECTIONS, padding */
+  .page-hero-left, .about-section, .location-section,
+  .coaches-section, .day-section, .inner-section,
+  .ai-section, .pathways-section, .events-section,
+  .faq-section, .community-section, .parent-prog,
+  .comms-section, .coming-pair, .levels-section,
+  .practical-section, .calendar-section, .gallery-section,
+  .intro-section, .register-section, .programmes-section,
+  .camps-section, .messaging-section, .visit-section { 
+    padding: 36px 20px !important; 
+  }
+
+  /* HEADINGS */
+  h1 { font-size: 28px !important; letter-spacing: -0.3px !important; }
+  h2 { font-size: 22px !important; }
+  .founding-title { font-size: 24px !important; }
+
+  /* PHOTOS */
+  .parent-photo, .inner-photo, .ai-photo, .visit-photo,
+  .community-photo, .intro-photo, .zone-photo,
+  .page-hero-right, .photo-right { 
+    height: 260px !important; 
+    border-radius: 10px;
+  }
+
+  /* PROCESS STEPS */
+  .process-steps { 
+    grid-template-columns: 1fr 1fr !important;
+    gap: 20px !important;
+  }
+  .process-steps::before { display: none; }
+
+  /* FEES TABLE */
+  .fees-table th:last-child, .fees-table td:last-child { display: none; }
+  .fees-table th:nth-child(4), .fees-table td:nth-child(4) { display: none; }
+  .fees-table td, .fees-table th { padding: 12px 10px; font-size: 12px; }
+
+  /* EVENTS & COMMS GRIDS */
+  .events-grid, .comms-grid, .practical-grid,
+  .camps-grid, .pathways-grid, .messaging-buttons { 
+    grid-template-columns: 1fr !important; 
+  }
+
+  /* EXTRA FEES */
+  .extra-fees { grid-template-columns: 1fr 1fr !important; }
+
+  /* GALLERY */
+  .photo-grid, .gallery-grid { 
+    grid-template-columns: 1fr !important; 
+    height: auto !important;
+  }
+  .gallery-main, .gallery-tall { 
+    height: 220px !important; 
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+  .gallery-sm { height: 180px !important; }
+
+  /* CTA BANDS */
+  .cta-band, .cta, .visit-band, .founding-section { 
+    flex-direction: column !important; 
+    padding: 32px 20px !important;
+    gap: 20px !important;
+  }
+  .cta-btns { flex-direction: column; width: 100%; }
+  .btn-purple, .btn-outline, .btn-cta-purple, .btn-cta-outline,
+  .btn-apply-big, .btn-visit-big, .btn-submit, .btn-register,
+  .btn-notify, .btn-visit { 
+    width: 100% !important; 
+    text-align: center;
+  }
+
+  /* FOUNDING URGENCY */
+  .founding-urgency { padding: 20px !important; }
+  .founding-spots-big { font-size: 36px !important; }
+
+  /* CALENDAR */
+  .cal-grid { grid-template-columns: 1fr !important; }
+  .band-milestones { grid-template-columns: 1fr 1fr !important; }
+
+  /* COMING ITEMS */
+  .coming-item, .coming-section { 
+    grid-template-columns: auto 1fr !important; 
+    padding: 24px 20px !important;
+  }
+
+  /* PORTABILITY BANNER */
+  div[style*="grid-template-columns:4px 1fr auto"] {
+    grid-template-columns: 4px 1fr !important;
+  }
+  div[style*="grid-template-columns:4px 1fr auto"] a {
+    grid-column: 2;
+    margin-top: 10px;
+  }
+
+  /* FOOTER */
+  footer { 
+    flex-direction: column !important; 
+    gap: 16px !important;
+    padding: 24px 20px !important;
+    text-align: center;
+  }
+  .footer-links { flex-wrap: wrap; justify-content: center; gap: 12px !important; }
+
+  /* HOURS */
+  .hours-grid { grid-template-columns: 1fr !important; }
+
+  /* PROG STRIP */
+  div[style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ZONE NAV BAR */
+  .zone-nav { overflow-x: scroll; }
+
+  /* MAP */
+  .location-map, .map-placeholder { height: 220px !important; }
+
+  /* ABOUT STATS */
+  .about-stats { gap: 10px; }
+  .about-stat-row { padding: 14px 16px; }
+
+  /* FORM */
+  .form-input, .form-select, .form-textarea { font-size: 16px; }
+
+  /* WHATSAPP FLOAT */
+  .lp-wa-float, .lp-wa { 
+    bottom: 20px !important; 
+    right: 16px !important;
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  /* HERO VIDEO */
+  video { object-position: center; width:100%; }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 24px !important; }
+  h2 { font-size: 20px !important; }
+  .lp-stat-n, .stat-n { font-size: 22px !important; }
+  .process-steps { grid-template-columns: 1fr !important; }
+  .extra-fees { grid-template-columns: 1fr !important; }
+  .band-milestones { grid-template-columns: 1fr !important; }
+  .about-stats { grid-template-columns: 1fr !important; }
+}
+</style>
+
+<style>
+/* ============ MOBILE FIXES ============ */
+@media (max-width: 768px) {
+  nav { padding: 14px 20px; }
+  .nav-links { display: none; }
+  .hero { height: 480px !important; }
+  .hero video, .hero img { object-position: center top !important; }
+  .hero-content { padding: 0 20px 32px !important; }
+  .hero-content h1 { font-size: 26px !important; line-height: 1.2 !important; }
+  .page-hero { height: 360px !important; }
+  .page-hero-content { padding: 0 20px 28px !important; }
+  .page-hero-content h1 { font-size: 28px !important; }
+  .zones, .zone-nav { overflow-x: auto !important; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; }
+  .ztab { min-width: 140px !important; padding: 14px 16px !important; flex-shrink: 0 !important; }
+  .zname { font-size: 13px !important; white-space: nowrap !important; }
+  .zage { white-space: nowrap !important; }
+  .lp-trust, .trust-bar { overflow-x: auto !important; flex-wrap: nowrap !important; gap: 20px !important; padding: 12px 20px !important; }
+  .lp-trust-item { flex-shrink: 0 !important; white-space: nowrap !important; }
+  .lp-what, .lp-coaches, .about-section, .location-section, .visit-section, .community-section, .parent-prog, .intro-section, .register-section, .contact-grid, .founding-inner { grid-template-columns: 1fr !important; gap: 24px !important; }
+  .calendar-section, .coaches-section, .pathways-section, .practical-section, .about-section, .location-section, .gallery-section, .events-section, .faq-section, .community-section, .parent-prog, .comms-section, .intro-section, .programmes-section, .camps-section, .messaging-section, .coming-pair, .register-section, .founding-section, .process-section, .fees-section, .visit-section { padding: 32px 20px !important; }
+  h1 { font-size: 26px !important; }
+  h2 { font-size: 22px !important; }
+  .cal-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .process-steps { grid-template-columns: 1fr 1fr !important; gap: 16px !important; }
+  .process-steps::before { display: none !important; }
+  .fees-table th, .fees-table td { padding: 10px 8px !important; font-size: 11px !important; }
+  .fees-table th:nth-child(5), .fees-table td:nth-child(5) { display: none !important; }
+  .extra-fees { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+  .events-grid, .comms-grid, .practical-grid, .camps-grid, .messaging-buttons { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .pathways-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .gallery-grid { grid-template-columns: 1fr !important; }
+  .gallery-main, .gallery-tall { grid-column: 1 !important; grid-row: auto !important; height: 220px !important; }
+  .gallery-sm { height: 180px !important; }
+  .parent-photo, .intro-photo, .visit-photo, .community-photo { height: 240px !important; }
+  .cta-band, .visit-band { flex-direction: column !important; padding: 28px 20px !important; gap: 16px !important; }
+  .cta-btns { flex-direction: column !important; width: 100% !important; gap: 10px !important; }
+  .btn-purple, .btn-outline, .btn-cta-purple, .btn-cta-outline, .btn-apply-big, .btn-visit-big, .btn-submit, .btn-register, .btn-notify, .btn-visit, .btn-y, .btn-o { width: 100% !important; text-align: center !important; padding: 14px 20px !important; }
+  .founding-inner { grid-template-columns: 1fr !important; }
+  .founding-spots-big { font-size: 40px !important; }
+  .coach-footer { white-space: normal !important; font-size: 12px !important; }
+  footer { flex-direction: column !important; gap: 14px !important; padding: 20px !important; text-align: center !important; }
+  .footer-links { flex-wrap: wrap !important; justify-content: center !important; gap: 12px !important; }
+  .form-input, .form-select, .form-textarea { font-size: 16px !important; }
+}
+@media (max-width: 480px) {
+  h1 { font-size: 22px !important; }
+  h2 { font-size: 19px !important; }
+  .process-steps { grid-template-columns: 1fr !important; }
+  .extra-fees { grid-template-columns: 1fr !important; }
+  .messaging-buttons { grid-template-columns: 1fr !important; }
+}
+</style>
+<style>
+/* Full bleed layout */
+body { width: 100% !important; margin: 0; padding: 0; }
+nav { max-width: 100%; }
+.content-wrap { max-width: 1200px; margin: 0 auto; }
+
+/* Each section stretches full width, content inside is centered */
+.hero, .zones, .trust, .what, .space-section, .stats, .day, .cta,
+.page-hero, .gallery-section, .about-section, .calendar-section,
+.location-section, .practical-section, .community-section,
+.coaches-section, .pathways-section, .day-section, .inner-section,
+.ai-section, .process-section, .fees-section, .founding-section,
+.visit-section, .faq-section, .events-section, .comms-section,
+.parent-prog, .coming-pair, .messaging-section, .contact-grid,
+.register-section, .intro-section, .programmes-section,
+.camps-section, .coming-section, .map-section, .visit-band,
+.cta-band, footer { width: 100% !important; }
+
+/* Nav inner content centered */
+nav { padding: 10px calc((100% - 1200px) / 2 + 48px) !important; }
+
+/* Section content centered via padding */
+.trust { padding-left: calc((100% - 1104px) / 2) !important; padding-right: calc((100% - 1104px) / 2) !important; }
+.what, .space-section, .day, .cta, .about-section, .calendar-section,
+.location-section, .practical-section, .community-section,
+.coaches-section, .pathways-section, .day-section, .inner-section,
+.ai-section, .process-section, .fees-section, .founding-section,
+.visit-section, .faq-section, .events-section, .comms-section,
+.parent-prog, .coming-pair, .messaging-section,
+.register-section, .intro-section, .programmes-section,
+.camps-section, .map-section, .visit-band, .cta-band,
+.gallery-section { 
+    padding-left: max(48px, calc((100% - 1104px) / 2)) !important; 
+    padding-right: max(48px, calc((100% - 1104px) / 2)) !important; 
+}
+footer { 
+    padding-left: max(48px, calc((100% - 1104px) / 2)) !important; 
+    padding-right: max(48px, calc((100% - 1104px) / 2)) !important; 
+}
+
+.hamburger{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:#2C2C2A;padding:4px 8px;}
+.mobile-menu{display:none;position:fixed;top:57px;left:0;right:0;background:#FDFAF5;border-bottom:1px solid #E8E3D8;z-index:999;flex-direction:column;padding:16px 24px;gap:4px;}
+.mobile-menu a{font-size:15px;color:#5F5E5A;text-decoration:none;padding:12px 0;border-bottom:0.5px solid #E8E3D8;display:block;}
+.mobile-menu a:last-child{border-bottom:none;}
+.mobile-menu .mobile-cta{color:#534AB7;font-weight:700;border-bottom:none;}
+.mobile-menu.open{display:flex;}
+@media(max-width:768px){.hamburger{display:block;}.nav-links{display:none!important;}}
+
+@media(max-width:768px){
+  .what,.space-section,.day,.cta,.about-section,.calendar-section,.location-section,.practical-section,.community-section,.coaches-section,.pathways-section,.day-section,.inner-section,.ai-section,.process-section,.fees-section,.founding-section,.visit-section,.faq-section,.events-section,.comms-section,.parent-prog,.coming-pair,.messaging-section,.register-section,.intro-section,.programmes-section,.camps-section,.map-section,.visit-band,.cta-band,.gallery-section,footer{padding-left:20px!important;padding-right:20px!important;}
+  .photo-grid{height:auto!important;}
+  .day-cards{flex-direction:column!important;width:100%!important;}
+  .day-card{width:100%!important;min-width:unset!important;}
+  .page-hero{min-width:unset!important;min-height:unset!important;}
+  .page-hero-left{min-height:300px!important;}
+  nav{padding-left:20px!important;padding-right:20px!important;}
+}
+
+@media(max-width:768px){
+  /* OVERFLOW PREVENTION */
+  *{box-sizing:border-box;}
+  body{overflow-x:hidden!important;width:100%!important;}
+  
+  /* ZONE TABS - horizontal scroll contained */
+  .zones,.zone-nav,.lp-zones{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;flex-wrap:nowrap!important;padding-left:0!important;padding-right:0!important;}
+  .zones{background:#FDFAF5!important;}
+  .ztab,.lp-zone-tab,.zone-tab{flex-shrink:0!important;min-width:140px!important;padding:14px 16px!important;}
+
+  /* TRUST BAR */
+  .trust,.lp-trust,.trust-bar{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;flex-wrap:nowrap!important;}
+  .lp-trust-item,.trust-item{flex-shrink:0!important;white-space:nowrap!important;}
+
+  /* DAY CARDS - stack vertically */
+  .day-cards{display:flex!important;flex-direction:column!important;width:100%!important;gap:12px!important;}
+  .day-card{width:100%!important;min-width:unset!important;flex-shrink:unset!important;}
+
+  /* HERO SPLIT - stack properly */
+  .page-hero{display:block!important;min-width:unset!important;}
+  .page-hero-left{padding:36px 20px!important;}
+  .page-hero-right{height:240px!important;overflow:hidden!important;}
+  .page-hero-right img{width:100%!important;height:100%!important;object-fit:cover!important;}
+
+  /* PULLQUOTE - fix z-index overlap */
+  .pullquote{position:relative!important;z-index:2!important;}
+
+  /* FOUNDER SECTION */
+  .founder-section{display:block!important;padding:36px 20px!important;}
+  .founder-photo{margin:0 auto 20px!important;}
+  .founder-bio{max-width:100%!important;}
+
+  /* ADMISSIONS HERO CARD - stack below text */
+  .page-hero-content{display:block!important;padding:20px!important;}
+  .founding-hero-card{margin-top:16px!important;width:100%!important;min-width:unset!important;}
+
+  /* CALENDAR MILESTONE CARDS */
+  .cal-grid,.milestone-row,.cal-milestones{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important;}
+  .cal-milestone,.milestone-card{flex-shrink:0!important;min-width:160px!important;}
+  div[style*="grid-template-columns:repeat(4,1fr)"]{grid-template-columns:1fr!important;gap:16px!important;}
+  div[style*="grid-template-columns:repeat(4, 1fr)"]{grid-template-columns:1fr!important;gap:16px!important;}
+  div[style*="grid-template-columns:repeat(12,1fr)"]{gap:4px!important;}
+  div[style*="grid-template-columns:repeat(12, 1fr)"]{gap:4px!important;}
+
+  /* LEFT BORDER BARS - fix detached on mobile */
+  .comms-item,.prog-item,.comm-card{padding-left:16px!important;border-left-width:3px!important;}
+
+  /* GENERAL GRID FIXES */
+  .day-section,.inner-section,.ai-section{display:block!important;padding:36px 20px!important;}
+  
+  /* PHOTO GRID */
+  .photo-grid{height:auto!important;grid-template-columns:1fr!important;}
+  
+  /* MESSAGING CARDS - stack */
+  .messaging-buttons{grid-template-columns:1fr!important;}
+  /* PROCESS STEPS */
+  .process-steps{grid-template-columns:1fr!important;gap:24px!important;}
+  .process-steps::before{display:none!important;}
+  /* FOUNDING SECTION */
+  .founding-inner{grid-template-columns:1fr!important;}
+  /* STATS 2x2 */
+  .stats{display:grid!important;grid-template-columns:1fr 1fr!important;}
+  .stat{padding:20px 16px!important;}
+  /* LEADER CARDS - fix inline grid on mobile */
+  div[style*="grid-template-columns:100px 1fr"]{grid-template-columns:1fr!important;gap:16px!important;}
+  div[style*="grid-template-columns:100px 1fr"] img{margin:0 auto!important;display:block!important;}
+
+  /* ABOUT SECTION - prevent overflow */
+  .about-section{overflow:hidden!important;}
+  div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;gap:24px!important;}
+  div[style*="grid-template-columns:4px 1fr auto"]{grid-template-columns:4px 1fr!important;}
+  div[style*="grid-template-columns:4px 1fr auto"] a{display:none!important;}
+
+  /* TIMELINE - horizontal scroll */
+  .cal-grid,.milestone-row,.timeline-row{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;}
+  .milestone-card,.cal-milestone{min-width:160px!important;flex-shrink:0!important;}
+
+  /* DAY SECTION label */
+  .day-eyebrow,.eyebrow{font-size:10px!important;}
+
+  /* HERO HEIGHT - reduce on mobile */
+  .page-hero{height:320px!important;}
+  /* HERO OVERLAY - stronger on mobile */
+  .page-hero-overlay,.hero-overlay{background:linear-gradient(to top,rgba(253,250,245,1.0) 0%,rgba(253,250,245,0.97) 40%,rgba(253,250,245,0.7) 65%,rgba(253,250,245,0.1) 100%)!important;}
+  /* ALL SECTIONS PADDING */
+  .what,.space-section,.day,.cta,.about-section,.calendar-section,.location-section,.practical-section,.community-section,.coaches-section,.pathways-section,.day-section,.inner-section,.ai-section,.process-section,.fees-section,.founding-section,.visit-section,.faq-section,.events-section,.comms-section,.parent-prog,.coming-pair,.messaging-section,.register-section,.intro-section,.programmes-section,.camps-section,.map-section,.visit-band,.cta-band,.gallery-section,footer,nav{padding-left:20px!important;padding-right:20px!important;}
+}
+@media(max-width:480px){
+  .page-hero-right{height:200px!important;}
+  .founder-photo{width:90px!important;height:90px!important;}
+}
+
+@media(max-width:768px){
+  .page-hero-content{grid-template-columns:1fr!important;gap:16px!important;padding:20px 20px 28px!important;}
+  .founding-hero-card{min-width:unset!important;width:100%!important;}
+  .page-hero-content h1{font-size:28px!important;}
+}
+</style>
+<style>
+.visit-hero{padding:72px max(48px, calc((100% - 1200px) / 2 + 48px)) 56px;background:#F7F3EC;border-bottom:1px solid #E8E3D8;}
+.visit-hero h1{font-family:'Lora',serif;font-size:40px;line-height:1.2;color:#2C2C2A;margin-bottom:14px;}
+.visit-hero h1 em{color:#534AB7;}
+.visit-hero p{font-size:16px;color:#5F5E5A;max-width:620px;line-height:1.7;margin-bottom:22px;}
+.visit-btns{display:flex;gap:12px;flex-wrap:wrap;}
+.btn-line{background:#06C755;color:#fff;padding:13px 28px;border-radius:20px;font-size:14px;font-weight:700;text-decoration:none;}
+.btn-wa{background:#fff;color:#2C2C2A;border:1px solid #E8E3D8;padding:13px 28px;border-radius:20px;font-size:14px;font-weight:700;text-decoration:none;}
+.visit-info{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.visit-card{background:#fff;border:1px solid #E8E3D8;border-radius:12px;padding:22px;}
+.visit-card h3{font-family:'Lora',serif;font-size:17px;color:#2C2C2A;margin-bottom:8px;}
+.visit-card p{font-size:14px;color:#5F5E5A;line-height:1.7;}
+.visit-map{margin-top:20px;border-radius:12px;overflow:hidden;}
+.process-steps.four{grid-template-columns:repeat(4,1fr);}
+@media(max-width:768px){.visit-hero h1{font-size:28px;}.visit-info{grid-template-columns:1fr;}.process-steps.four{grid-template-columns:1fr;gap:24px;}.process-steps.four::before{display:none;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" style="text-decoration:none;"><img src="images/bcm-logo.png" alt="Bloom Chiangmai" style="height:80px;width:auto;display:block;"></a>
+  <ul class="nav-links">
+    <li><a href="our-approach.html">Our approach</a></li>
+    <li><a href="how-we-learn.html">How we learn</a></li>
+    <li><a href="our-hub.html">Our hub</a></li>
+    <li><a href="for-families.html">For families</a></li>
+    <li><a href="admissions.html">Admissions</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="line.html" class="nav-cta">Book a visit</a></li>
+  </ul>
+  <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">&#9776;</button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="our-approach.html">Our approach</a>
+  <a href="how-we-learn.html">How we learn</a>
+  <a href="our-hub.html">Our hub</a>
+  <a href="for-families.html">For families</a>
+  <a href="admissions.html">Admissions</a>
+  <a href="contact.html">Contact</a>
+  <a href="line.html" class="mobile-cta">Book a visit</a>
+</div>
+
+
+<div class="visit-hero">
+  <p class="eyebrow">Book a visit</p>
+  <h1>Come and see a <em>normal</em> learning day.</h1>
+  <p>Applications are open for Term 2, starting 4 January 2027. Visits are by appointment on weekdays, while learners are at work. Message us on LINE and we will reply within 24 hours on weekdays.</p>
+  <div class="visit-btns">
+    <a href="https://learn2bloom.org/line" class="btn-line">Book a visit on LINE</a>
+    <a href="whatsapp.html" class="btn-wa">Or message us on WhatsApp</a>
+  </div>
+</div>
+
+<div class="visit-section">
+  <div>
+    <p class="eyebrow">What a visit looks like</p>
+    <h2>Relaxed, informal, no obligation.</h2>
+    <p class="visit-p">Bloom Chiangmai is a learning hub in Hang Dong for learners aged 5 to 18. On a visit you see the hub as it really is, on an ordinary day.</p>
+    <div class="visit-points">
+      <div class="visit-point"><div class="vp-dot"></div><p class="vp-text">Walk the learning zones and outdoor spaces, 3,000 sqm indoors and outdoors</p></div>
+      <div class="visit-point"><div class="vp-dot"></div><p class="vp-text">See Early Explorers (5 to 8), Builders (9 to 11) and Navigators (12 to 18) at work</p></div>
+      <div class="visit-point"><div class="vp-dot"></div><p class="vp-text">Meet the learning coaches and ask everything you want to know</p></div>
+      <div class="visit-point"><div class="vp-dot"></div><p class="vp-text">Bring your child if you would like</p></div>
+    </div>
+  </div>
+  <div>
+    <p class="eyebrow">How learning works here</p>
+    <p class="visit-p">Early Explorers and Builders follow progressive learning: hands-on projects, mixed-age groups, and nature-based and outdoor learning, guided by learning coaches.</p>
+    <p class="visit-p">From age 12, Navigators follow UK and US pathways: Pearson Edexcel IGCSE and A Level, the American High School Diploma, or Brave Generation Academy.</p>
+    <p class="visit-p">Heart-Mind Education runs through it all, with support for parents too.</p>
+  </div>
+</div>
+
+<div class="faq-section">
+  <p class="eyebrow">Getting here</p>
+  <h2>Find us in Hang Dong.</h2>
+  <div class="visit-info" style="margin-top:20px;">
+    <div class="visit-card">
+      <h3>Address</h3>
+      <p>Bloom Chiangmai<br>310 Nong Kwai, Hang Dong District<br>Chiang Mai 50230, Thailand<br><a href="https://maps.app.goo.gl/rt8HpEGDi3Gk43fr6" target="_blank" rel="noopener">Open in Google Maps</a></p>
+    </div>
+    <div class="visit-card">
+      <h3>Arriving</h3>
+      <p>On-site parking is available. There is no bus service, so plan to come by car, taxi or Grab.</p>
+      <p style="margin-top:10px;"><strong>Office hours</strong><br>Mon, Tue, Thu, Fri: 08:00 to 16:00<br>Wednesday: 08:00 to 13:30</p>
+    </div>
+  </div>
+  <div class="visit-map">
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3778.4961708494143!2d98.93922475!3d18.731361699999997!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30da3176dd70aebf%3A0xb08b5cf8eb834e31!2sBloom%20Chiangmai!5e0!3m2!1sen!2sth!4v1794543836024!5m2!1sen!2sth" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" title="Map of Bloom Chiangmai, Hang Dong, Chiang Mai"></iframe>
+  </div>
+</div>
+
+<div class="process-section">
+  <p class="eyebrow">After your visit</p>
+  <h2>Four steps to joining.</h2>
+  <div class="process-steps four" style="margin-top:28px;">
+    <div class="step"><div class="step-num" style="background:#06C755;">01</div><p class="step-title">Message us</p><p class="step-desc">Tell us your learner's age, where you live and the best days for a visit.</p></div>
+    <div class="step"><div class="step-num" style="background:#534AB7;">02</div><p class="step-title">Visit</p><p class="step-desc">Come and see a normal learning day and meet the coaches.</p></div>
+    <div class="step"><div class="step-num" style="background:#D85A30;">03</div><p class="step-title">Family meeting</p><p class="step-desc">A relaxed conversation, not a test, so we can get to know your learner and your family.</p></div>
+    <div class="step"><div class="step-num" style="background:#5DCAA5;">04</div><p class="step-title">Start date</p><p class="step-desc">We agree a start date together. Term 2 starts 4 January 2027.</p></div>
+  </div>
+</div>
+
+<div class="faq-section">
+  <p class="eyebrow">Questions</p>
+  <h2>Before you visit.</h2>
+  <div class="faq-list">
+    <div class="faq-item"><p class="faq-q">Can I bring my child?</p><p class="faq-a">Yes. It helps your child see the space before you decide together.</p></div>
+    <div class="faq-item"><p class="faq-q">Do we have to decide on the day?</p><p class="faq-a">No. A visit comes with no obligation. Take your time, and message us on LINE with any questions afterwards.</p></div>
+    <div class="faq-item"><p class="faq-q">Can we join mid-year?</p><p class="faq-a">Mid-year enrollment is considered on a case-by-case basis. Message us to talk about your situation.</p></div>
+    <div class="faq-item"><p class="faq-q">Where can I see fees and the application steps?</p><p class="faq-a">On our <a href="admissions.html">Admissions page</a>.</p></div>
+  </div>
+</div>
+
+<div class="cta-band">
+  <div>
+    <h2>Come and see it for yourself.</h2>
+    <p>Applications are open for Term 2, starting 4 January 2027.</p>
+  </div>
+  <div class="cta-btns">
+    <button class="btn-cta-purple" onclick="window.location.href='https://learn2bloom.org/line'">Book a visit on LINE</button>
+    <button class="btn-cta-outline" onclick="window.location.href='contact.html'">All contact options</button>
+  </div>
+</div>
+
+<footer>
+  <a href="index.html" style="text-decoration:none;"><img src="images/bcm-logo.png" alt="Bloom Chiangmai" style="height:60px;width:auto;display:block;"></a>
+  <ul class="footer-links">
+    <li><a href="how-we-learn.html">How we learn</a></li>
+    <li><a href="admissions.html">Admissions</a></li>
+    <li><a href="for-families.html">For families</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="https://portal.learn2bloom.org/login.html">Parent Login</a></li>
+    <li class="footer-icon"><a href="https://www.facebook.com/BLOOM.chiangmai" target="_blank" rel="noopener" aria-label="Bloom Chiangmai on Facebook" title="Bloom Chiangmai on Facebook"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg></a></li>
+    <li class="footer-icon"><a href="https://www.instagram.com/bloom.chiangmai/" target="_blank" rel="noopener" aria-label="Bloom Chiangmai on Instagram" title="Bloom Chiangmai on Instagram"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077"/></svg></a></li>
+    <style>.footer-links{align-items:center;}.footer-icon a{display:inline-flex;color:#888780 !important;transition:color .15s;}.footer-icon a:hover{color:#534AB7 !important;}.footer-icon svg{position:relative;top:2px;}</style>
+  </ul>
+
+  <p class="footer-copy" style="font-size:12px;color:#888780;">© 2026 Bloom Chiangmai Learning Hub. All rights reserved.</p>
+  <a href="staff-login.html" style="display:block;width:100%;margin-top:6px;text-align:center;font-size:11px;color:#b5b0a8;text-decoration:none;text-transform:uppercase;letter-spacing:0.04em;">Staff Access</a>
+</footer>
+
+
+
+<script>function toggleMenu(){var m=document.getElementById("mobileMenu");m.classList.toggle("open");}</script>
+</body>
+</html>

@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Meta Pixel -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','4486751754911109');fbq('track','PageView');
+</script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-QH3NWGK088"></script>
 <script>
@@ -29,6 +37,7 @@ document.addEventListener('click', function (e) {
     var c = bcmChannels[i];
     if (c[1].test(url) || c[2].test(url)) {
       gtag('event', c[0], { link_url: a ? a.href : location.href, link_text: label });
+      if (window.fbq) fbq('track', 'Contact', { content_name: c[0] });
       return;
     }
   }
@@ -50,7 +59,7 @@ p{font-size:14px;color:#5F5E5A;line-height:1.7;margin-bottom:16px;}
 .btn{display:inline-block;background:#06C755;color:#fff;font-weight:700;font-size:14px;text-decoration:none;padding:12px 28px;border-radius:999px;margin:4px;}
 .btn.alt{background:#fff;color:#2C2C2A;border:1px solid #E8E3D8;}
 </style>
-<script>gtag('event', 'form_submit', { form_name: 'contact' });</script>
+<script>gtag('event', 'form_submit', { form_name: 'contact' }); if (window.fbq) fbq('track', 'Lead', { content_name: 'form_submit' });</script>
 </head>
 <body>
 <div class="logo"><a href="index.html"><img src="images/bcm-logo.png" alt="Bloom Chiangmai"></a></div>

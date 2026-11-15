@@ -13,7 +13,8 @@ gtag('config', 'G-QH3NWGK088');
 var bcmChannels = [
   ['line_click', /line\.me|lin\.ee|116mdcau/, /\/line(\.html)?([?#]|$)/],
   ['whatsapp_click', /wa\.me|api\.whatsapp\.com|whatsapp:\/\//, /\/whatsapp(\.html)?([?#]|$)/],
-  ['wechat_click', /weixin:\/\/|u\.wechat\.com|wechat\.com/, /\/wechat(\.html)?([?#]|$)/]
+  ['wechat_click', /weixin:\/\/|u\.wechat\.com|wechat\.com/, /\/wechat(\.html)?([?#]|$)/],
+  ['email_click', /^mailto:/, /^mailto:/]
 ];
 document.addEventListener('click', function (e) {
   var t = e.target;
@@ -615,10 +616,11 @@ footer {
 <div class="visit-hero">
   <p class="eyebrow">Book a visit</p>
   <h1>Come and see a <em>normal</em> learning day.</h1>
-  <p>Applications are open for Term 2, starting 4 January 2027. Visits are by appointment on weekdays, while learners are at work. Message us on LINE and we will reply within 24 hours on weekdays.</p>
+  <p>Applications are open for Term 2, starting 4 January 2027. Visits are by appointment on weekdays, while learners are at work. Message us on LINE, WhatsApp or email and we will reply within 24 hours on weekdays.</p>
   <div class="visit-btns">
     <a href="https://learn2bloom.org/line" class="btn-line">Book a visit on LINE</a>
     <a href="whatsapp.html" class="btn-wa">Or message us on WhatsApp</a>
+    <a href="mailto:hello@learn2bloom.org?subject=Visit%20to%20Bloom%20Chiangmai" class="btn-wa">Or email hello@learn2bloom.org</a>
   </div>
 </div>
 

@@ -13,7 +13,8 @@ gtag('config', 'G-QH3NWGK088');
 var bcmChannels = [
   ['line_click', /line\.me|lin\.ee|116mdcau/, /\/line(\.html)?([?#]|$)/],
   ['whatsapp_click', /wa\.me|api\.whatsapp\.com|whatsapp:\/\//, /\/whatsapp(\.html)?([?#]|$)/],
-  ['wechat_click', /weixin:\/\/|u\.wechat\.com|wechat\.com/, /\/wechat(\.html)?([?#]|$)/]
+  ['wechat_click', /weixin:\/\/|u\.wechat\.com|wechat\.com/, /\/wechat(\.html)?([?#]|$)/],
+  ['email_click', /^mailto:/, /^mailto:/]
 ];
 document.addEventListener('click', function (e) {
   var t = e.target;

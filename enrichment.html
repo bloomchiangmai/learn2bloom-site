@@ -8,13 +8,28 @@ window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', 'G-QH3NWGK088');
-// line_click: fires on any click on a LINE link (learn2bloom.org/line, line.html, line.me, lin.ee, @116mdcau)
+// Contact click events (line_click, whatsapp_click, wechat_click): fire on clicks on any
+// LINE, WhatsApp or WeChat link, and on taps on the QR image of the matching page.
+var bcmChannels = [
+  ['line_click', /line\.me|lin\.ee|116mdcau/, /\/line(\.html)?([?#]|$)/],
+  ['whatsapp_click', /wa\.me|api\.whatsapp\.com|whatsapp:\/\//, /\/whatsapp(\.html)?([?#]|$)/],
+  ['wechat_click', /weixin:\/\/|u\.wechat\.com|wechat\.com/, /\/wechat(\.html)?([?#]|$)/]
+];
 document.addEventListener('click', function (e) {
-  var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
-  if (!a) return;
-  var h = a.href.toLowerCase();
-  if (/line\.me|lin\.ee|116mdcau/.test(h) || /\/line(\.html)?([?#]|$)/.test(h)) {
-    gtag('event', 'line_click', { link_url: a.href, link_text: (a.textContent || '').trim().slice(0, 100) });
+  var t = e.target;
+  if (!t || !t.closest) return;
+  var a = t.closest('a[href]');
+  var url = a ? a.href.toLowerCase() : null, label = a ? (a.textContent || '').trim().slice(0, 100) : 'qr image';
+  if (!a) {
+    if (!t.closest('img.qr')) return;
+    url = location.href.toLowerCase();
+  }
+  for (var i = 0; i < bcmChannels.length; i++) {
+    var c = bcmChannels[i];
+    if (c[1].test(url) || c[2].test(url)) {
+      gtag('event', c[0], { link_url: a ? a.href : location.href, link_text: label });
+      return;
+    }
   }
 }, true);
 </script>

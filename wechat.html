@@ -1,6 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QH3NWGK088"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-QH3NWGK088');
+// line_click: fires on any click on a LINE link (learn2bloom.org/line, line.html, line.me, lin.ee, @116mdcau)
+document.addEventListener('click', function (e) {
+  var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+  if (!a) return;
+  var h = a.href.toLowerCase();
+  if (/line\.me|lin\.ee|116mdcau/.test(h) || /\/line(\.html)?([?#]|$)/.test(h)) {
+    gtag('event', 'line_click', { link_url: a.href, link_text: (a.textContent || '').trim().slice(0, 100) });
+  }
+}, true);
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- seo -->

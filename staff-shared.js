@@ -107,7 +107,7 @@ function setSysActive(){
 const NAV_TAG_KEY = { 'Admissions':'students', 'Learners':'students', 'School calendar':'calendar', 'Calendar':'calendar', 'Back office':'backoffice', 'Timesheets':'backoffice', 'Marketing HQ':'marketing', 'Access and settings':'admin', 'Admin':'admin' };
 function applyNavCounts(c){ ['students','calendar','marketing','backoffice','admin'].forEach(k => setSysCount(k, c[k] || 0)); }
 function setNavCounts(lines){
-  const c = {}; (lines || []).forEach(l => { const k = NAV_TAG_KEY[l.tag]; if(k) c[k] = (c[k] || 0) + 1; });
+  const c = {}; (lines || []).filter(l => !l.watch).forEach(l => { const k = NAV_TAG_KEY[l.tag]; if(k) c[k] = (c[k] || 0) + 1; });
   try{ sessionStorage.setItem('bloomNavCounts', JSON.stringify(c)); }catch(e){}
   applyNavCounts(c);
 }
@@ -121,8 +121,7 @@ async function refreshNavCounts(){
   }catch(e){ console.log('nav counts failed', e); }
 }
 function setSysCount(key, n){
-  const el = document.querySelector(`.sys-link[data-k="${key}"] .sys-n`); if(!el) return;
-  el.textContent = n ? n : ''; el.style.display = n ? '' : 'none';
+  document.querySelectorAll(`.sys-link[data-k="${key}"] .sys-n, .mtab[data-k="${key}"] .mt-n`).forEach(el => { el.textContent = n ? n : ''; el.style.display = n ? '' : 'none'; });
 }
 async function loadStudentCounts(){
   try{
@@ -161,7 +160,7 @@ function injectSidebarStyles(){
     body.has-sidebar{display:flex;min-height:100vh;}
     .sidebar{width:220px;flex-shrink:0;background:#F7F3EC;border-right:1px solid #E8E3D8;
       display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:50;}
-    .co-switch{display:flex;align-items:center;gap:8px;margin:12px 16px 0;padding:6px 10px;border:1px solid #e5e2da;border-radius:8px;font-size:12px;font-weight:600;color:#2C2C2A;text-decoration:none;background:#fff}
+    .co-switch{display:flex;align-items:center;gap:8px;margin:12px 16px 0;padding:6px 10px;border:0;border-radius:8px;font-size:12px;font-weight:600;color:#2C2C2A;text-decoration:none;background:#fff}
     .co-switch:hover{border-color:#b4b2a9}
     .co-dot{width:9px;height:9px;border-radius:50%;background:#1D9E75;flex:0 0 auto}
     .sidebar-logo{font-family:Georgia,serif;font-size:19px;font-weight:700;color:#2C2C2A;
@@ -189,14 +188,52 @@ function injectSidebarStyles(){
     .sidebar-footer .role{color:#888780;margin-bottom:8px;}
     .sidebar-footer .signout{color:#888780;cursor:pointer;text-decoration:underline;}
     .page-content{margin-left:220px;flex:1;min-width:0;}
+    /* 15 Nov: no outlines on staff pages. Cards keep their fill, outline buttons become soft filled buttons. Form fields keep their edge. */
+    body.has-sidebar .card, body.has-sidebar .person-card, body.has-sidebar .term-card, body.has-sidebar .ob-card, body.has-sidebar .approval-card,
+    body.has-sidebar .absence-card, body.has-sidebar .abs, body.has-sidebar .tile, body.has-sidebar .gtile, body.has-sidebar .pcard, body.has-sidebar .entry,
+    body.has-sidebar .box, body.has-sidebar .ovlist, body.has-sidebar .ra-wrap, body.has-sidebar .settings-row, body.has-sidebar .tbl, body.has-sidebar .cal-wrap{border-color:transparent !important;}
+    body.has-sidebar .btn-small-outline, body.has-sidebar .btn-outline, body.has-sidebar .ack, body.has-sidebar .filters button:not(.on):not(.active), body.has-sidebar .nchip,
+    body.has-sidebar .pill:not(.on):not(.active), body.has-sidebar .ptab:not(.on):not(.active){border-color:transparent !important;background:#EEEDFE;color:#534AB7;}
+    body.has-sidebar .co-switch{border:0;}
+    body.has-sidebar .empty-state, body.has-sidebar .emptyweeks{border-color:transparent !important;background:#F5F1E9;}
+    /* 15 Nov phone: slim top bar, bottom tabs, menu in a sheet. Page text starts 16px from the edge. */
+    .mtop,.mtabs,.msheet,.mdim{display:none;}
     @media (max-width: 768px) {
-      body.has-sidebar{display:block;}
-      .sidebar{position:static;width:100%;height:auto;border-right:none;border-bottom:1px solid #E8E3D8;}
-      .sidebar-nav{display:flex;flex-wrap:wrap;padding:10px 12px;}
-      .sidebar-group{display:none;}
-      .sidebar-sep{display:none;}
-      .sidebar-link{margin-right:4px;padding:7px 10px;}
+      body.has-sidebar{display:block;padding-bottom:78px;}
+      .sidebar{display:none !important;}
       .page-content{margin-left:0;}
+      .mtop{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(10px + env(safe-area-inset-top)) 16px 8px 16px;background:#FDFAF5;position:sticky;top:0;z-index:60;}
+      .mtop .mlogo{font-family:Georgia,serif;font-size:19px;font-weight:700;color:#534AB7;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .mtop .mlogo i{font-style:normal;color:#E8833A;}
+      .mtop .msys{font-size:13px;font-weight:600;color:#6B6A64;margin-left:8px;}
+      .mme{width:36px;height:36px;border-radius:50%;background:#EEEDFE;color:#534AB7;font-weight:700;font-size:12.5px;border:0;display:grid;place-items:center;flex:none;font-family:inherit;cursor:pointer;}
+      .mtabs{display:grid;position:fixed;left:0;right:0;bottom:0;z-index:70;background:#fff;box-shadow:0 -1px 0 #ECE7DD;padding:6px 4px calc(8px + env(safe-area-inset-bottom));grid-template-columns:repeat(var(--tn,5),1fr);}
+      .mtab{text-decoration:none;color:#6B6A64;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:48px;justify-content:center;position:relative;background:none;border:0;font-family:inherit;cursor:pointer;}
+      .mtab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+      .mtab.on{color:#534AB7;}
+      .mtab .mt-n{position:absolute;top:2px;left:calc(50% + 6px);background:#534AB7;color:#fff;font-size:10px;font-weight:700;border-radius:999px;padding:1px 6px;}
+      .mtab.mplus span.p{width:46px;height:46px;border-radius:14px;background:#534AB7;color:#fff;display:grid;place-items:center;font-size:26px;font-weight:400;line-height:1;}
+      .mdim.open{display:block;position:fixed;inset:0;background:rgba(30,28,25,.35);z-index:80;}
+      .msheet.open{display:block;position:fixed;left:0;right:0;bottom:0;z-index:90;background:#fff;border-radius:20px 20px 0 0;padding:10px 16px calc(18px + env(safe-area-inset-bottom));max-height:86vh;overflow:auto;}
+      .msheet .grab{width:36px;height:4px;border-radius:2px;background:#DDD8CE;margin:0 auto 10px;}
+      .msheet h3{font-family:Georgia,serif;font-size:18px;padding:0 14px 4px;}
+      .msheet .who{padding:0 14px 8px;font-size:13px;color:#6B6A64;}
+      .msheet .mgrp{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#6B6A64;font-weight:700;padding:12px 14px 4px;}
+      .msheet a,.msheet button.ml{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:48px;padding:10px 14px;border-radius:12px;text-decoration:none;color:#2C2C2A;font-size:15px;font-weight:600;background:none;border:0;font-family:inherit;text-align:left;cursor:pointer;}
+      .msheet a.on{background:#EEEDFE;color:#534AB7;}
+      .msheet a small{display:block;font-weight:400;font-size:12.5px;color:#6B6A64;}
+      .msheet .add a{background:#F5F1E9;margin-top:8px;display:block;}
+      .msheet .add a:active{background:#EEE9DE;}
+      .msheet .sys-n{background:#534AB7;color:#fff;font-size:11px;border-radius:999px;padding:1px 8px;}
+      .msheet .co{color:#1D7A5C;}
+      .msheet .so{color:#6B6A64;font-weight:500;}
+      [data-page-tabs]{overflow-x:auto;flex-wrap:nowrap !important;}
+      body.has-sidebar main{padding:8px 16px 40px !important;max-width:none !important;}
+      body.has-sidebar .page-content table{display:block;overflow-x:auto;max-width:100%;}
+      body.has-sidebar .btn-small-outline, body.has-sidebar .btn-small, body.has-sidebar .btn-small-danger{min-height:40px;}
+      body.has-sidebar .page-content{overflow-x:hidden;}
+      body.is-home .mtop{padding-left:30px;}
+      .mtop{padding-left:16px;}
     }
   `;
   document.head.appendChild(style);
@@ -248,6 +285,7 @@ function renderSidebar(activeKey){
     </div>
   `;
   document.body.insertBefore(el, document.body.firstChild);
+  renderPhoneChrome(activeKey, sys, isAdminOrIt);
   if(!sys){ try{ applyNavCounts(JSON.parse(sessionStorage.getItem('bloomNavCounts') || '{}')); }catch(e){} }
   // Other pages with the main menu work the counts out fresh (the dashboard does it itself)
   if(!sys && !['dashboard','marketing'].includes(activeKey)) refreshNavCounts();
@@ -256,6 +294,76 @@ function renderSidebar(activeKey){
     if(sysKey === 'students') loadStudentCounts();
   }
 }
+// ---- Phone: top bar, bottom tabs, menu and Add sheets ----
+const MT_ICON = {
+  home:'<path d="M3 11l9-7 9 7v9h-6v-6H9v6H3z"/>',
+  students:'<path d="M4 5h16v11H8l-4 4z"/>',
+  marketing:'<path d="M4 18V6l8 6 8-6v12"/>',
+  backoffice:'<path d="M5 4h14v16H5zM9 9h6M9 13h6"/>',
+  calendar:'<path d="M4 6h16v14H4zM4 10h16M9 3v4M15 3v4"/>',
+  more:'<path d="M4 7h16M4 12h16M4 17h16"/>'
+};
+const mtSvg = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${MT_ICON[k]}</svg>`;
+function renderPhoneChrome(activeKey, sys, isAdminOrIt){
+  if(document.querySelector('.mtop')) return;
+  const st = window.currentStaff || {};
+  const initials = String(st.name || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  // The 2 daily areas: the first two this person can open, in this order
+  const AREAS = [
+    { k:'students', label:'Admissions', href:'staff-admissions.html', ok: canAccess('students', 'view') },
+    { k:'marketing', label:'Marketing', href:'staff-marketing.html', ok: canAccess('marketing', 'view') },
+    { k:'backoffice', label:'Back office', href:'backoffice/', ok: canAccess('backoffice', 'edit') },
+    { k:'calendar', label:'Calendar', href:'staff-calendar.html', ok: canAccess('calendar', 'view') }
+  ].filter(a => a.ok).slice(0, 2);
+  const ADD = [
+    canAccess('backoffice', 'edit') && { label:'Receipt', sub:'Photo of a receipt for an expense form', href:'backoffice/#/capture' },
+    canAccess('marketing', 'edit') && { label:'New post', sub:'A topic for Marketing HQ', href:'staff-marketing.html#new' },
+    canAccess('backoffice', 'edit') && { label:'Time or time off', sub:'Your timesheet for this period', href:'backoffice/#/ot' }
+  ].filter(Boolean);
+  const onKey = sys ? systemOf(activeKey) : activeKey;
+  if(activeKey === 'dashboard') document.body.classList.add('is-home');
+  const top = document.createElement('div');
+  top.className = 'mtop';
+  top.innerHTML = `<span style="display:flex;align-items:baseline;min-width:0"><a class="mlogo" href="staff-dashboard.html">bloom<i>.</i></a></span><button class="mme" aria-label="Menu" onclick="openMSheet('menu')">${escShared(initials)}</button>`;
+  const tabs = document.createElement('nav');
+  tabs.className = 'mtabs';
+  const tabList = [
+    `<a class="mtab ${onKey === 'dashboard' ? 'on' : ''}" href="staff-dashboard.html">${mtSvg('home')}Home</a>`,
+    ...AREAS.slice(0, 1).map(a => `<a class="mtab ${onKey === a.k ? 'on' : ''}" data-k="${a.k}" href="${a.href}">${mtSvg(a.k)}${a.label}<span class="mt-n" style="display:none"></span></a>`),
+    ...(ADD.length ? [`<button class="mtab mplus" aria-label="Add" onclick="openMSheet('add')"><span class="p">+</span></button>`] : []),
+    ...AREAS.slice(1).map(a => `<a class="mtab ${onKey === a.k ? 'on' : ''}" data-k="${a.k}" href="${a.href}">${mtSvg(a.k)}${a.label}<span class="mt-n" style="display:none"></span></a>`),
+    `<button class="mtab" onclick="openMSheet('menu')">${mtSvg('more')}More</button>`
+  ];
+  tabs.innerHTML = tabList.join('');
+  tabs.style.setProperty('--tn', tabList.length);
+  const dim = document.createElement('div'); dim.className = 'mdim'; dim.onclick = closeMSheet;
+  const sheet = document.createElement('div'); sheet.className = 'msheet'; sheet.setAttribute('role', 'dialog');
+  // Menu: this system's pages first, then every tool this person can open, then company switch and sign out
+  const sysLinks = sys ? sys.groups.filter(g => !g.adminOnly || isAdminOrIt).map(g => {
+    const items = g.items.filter(i => !i.adminOnly || isAdminOrIt); if(!items.length) return '';
+    return `<div class="mgrp">${escShared(g.name || sys.label)}</div>` + items.map(i => `<a href="${i.page === activeKey && i.hash ? '#' + i.hash : i.href}" class="${sysItemOn(i, activeKey) ? 'on' : ''}" onclick="closeMSheet()">${escShared(i.label)}</a>`).join('');
+  }).join('') : '';
+  let lastG = null;
+  const mainLinks = NAV_ITEMS.filter(item => !(item.module && !canAccess(item.module, 'view')) && (!item.adminOnly || isAdminOrIt)).map(item => {
+    const g = item.group && item.group !== lastG ? `<div class="mgrp">${item.group}</div>` : ''; lastG = item.group || lastG;
+    return g + `<a href="${item.href}" class="sys-link ${item.key === activeKey ? 'on' : ''}" data-k="${item.key}"${item.external ? ' target="_blank" rel="noopener"' : ''}><span>${item.key === 'dashboard' ? 'Home' : item.label}</span><span class="sys-n" style="display:none"></span></a>`;
+  }).join('');
+  window._mSheets = {
+    menu: `<div class="grab"></div><h3>${escShared(st.name || '')}</h3><div class="who">${escShared(roleLabelShared(window.currentStaffRole))}</div>${sysLinks}${mainLinks}
+      <div class="mgrp">Account</div>${st.hub_id ? `<a href="https://iga-backoffice.netlify.app/" class="co" onclick="event.preventDefault(); goIGA()">Switch to INGROUP ASIA</a>` : ''}<button class="ml so" onclick="doLogout()">Sign out</button>`,
+    add: `<div class="grab"></div><h3>Add</h3><div class="add">${ADD.map(a => `<a href="${a.href}" onclick="closeMSheet()">${a.label}<small>${a.sub}</small></a>`).join('')}</div>`
+  };
+  const pc = document.getElementById('pageContent');
+  (pc || document.body).insertBefore(top, (pc || document.body).firstChild);
+  document.body.appendChild(tabs); document.body.appendChild(dim); document.body.appendChild(sheet);
+}
+function openMSheet(which){
+  const sh = document.querySelector('.msheet'), dim = document.querySelector('.mdim'); if(!sh) return;
+  sh.innerHTML = window._mSheets[which] || ''; sh.classList.add('open'); dim.classList.add('open');
+  try{ applyNavCounts(JSON.parse(sessionStorage.getItem('bloomNavCounts') || '{}')); }catch(e){}
+}
+function closeMSheet(){ document.querySelector('.msheet')?.classList.remove('open'); document.querySelector('.mdim')?.classList.remove('open'); }
+
 function escShared(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 function roleLabelShared(role){

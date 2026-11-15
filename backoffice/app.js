@@ -2280,6 +2280,15 @@ async function pageApprovals() {
   `);
   document.getElementById('m').onchange = (e) => { location.hash = `#/approvals?s=${status}${e.target.value ? '&m=' + e.target.value : ''}${kq}`; };
   document.getElementById('amore').onchange = (e) => { if (e.target.value) location.hash = `#/approvals?s=${e.target.value}${key ? '&m=' + key : ''}${kq}`; };
+  const oa = document.getElementById('otall');
+  if (oa) oa.onclick = async (e) => {
+    if (!(await ensureSignature('approve'))) return;
+    if (!confirmInline(e.target, `Click again to approve all ${window._otAll.length}`)) return;
+    try {
+      await run(async () => { for (const f of window._otAll) { must(await sb.from('ot_forms').update({ status: 'approved' }).eq('id', f.id)); if (f.allOff) must(await sb.from('ot_forms').update({ status: 'paid' }).eq('id', f.id)); } }, `${window._otAll.length} timesheets approved`);
+    } catch { return; }
+    await pollPending(); pageApprovals();
+  };
   bindRowLinks();
 }
 
@@ -3590,7 +3599,18 @@ async function otApprovalsHtml(status) {
   ]);
   const P = Object.fromEntries(staff.map((x) => [x.id, x]));
   const sum = (id, k) => ents.filter((e) => e.form_id === id).reduce((a, e) => a + Number(e[k]), 0);
-  return `<div class="card" style="margin-top:16px"><div class="card-head"><h2>Timesheets</h2></div><div class="table-wrap"><table><thead><tr><th>Staff</th><th>Period</th><th>Status</th><th>Submitted</th><th>Taken as</th><th class="num">OT counted</th></tr></thead><tbody>
+  // Approve all: the admin's final approval for every timesheet waiting on them, after one look at the totals
+  let allBtn = '';
+  if (isAdmin()) {
+    const hrIds = ((await sb.from('profiles').select('id').eq('is_hr', true).eq('active', true)).data || []).map((x) => x.id);
+    const ready = forms.filter((f) => f.staff_id !== S.user.id && (f.status === 'checked' || (f.status === 'submitted' && !hrIds.some((h) => h !== f.staff_id))));
+    if (ready.length > 1) {
+      window._otAll = ready.map((f) => ({ id: f.id, allOff: Number(f.time_off_hours || 0) >= sum(f.id, 'counted') }));
+      const hrs = ready.reduce((a, f) => a + sum(f.id, 'counted'), 0);
+      allBtn = `<div class="card card-pad spread" style="margin-top:16px"><span>${ready.length} timesheets wait for your final approval · ${hrs} h overtime counted in total. Open any of them below to check first.</span><button class="btn primary" id="otall">Approve all ${ready.length}</button></div>`;
+    }
+  }
+  return `${allBtn}<div class="card" style="margin-top:16px"><div class="card-head"><h2>Timesheets</h2></div><div class="table-wrap"><table><thead><tr><th>Staff</th><th>Period</th><th>Status</th><th>Submitted</th><th>Taken as</th><th class="num">OT counted</th></tr></thead><tbody>
     ${forms.map((f) => `<tr class="click" data-href="#/ot/review/${f.id}"><td>${f.status === 'submitted' && (!f.seen_at || f.seen_at < f.submitted_at) ? '<span class="newdot"></span>' : ''}${esc(P[f.staff_id]?.full_name || '')}<div class="faint mono">${esc(P[f.staff_id]?.staff_no || '')}</div></td><td>${esc(otPeriod(f.period_end).label)}</td><td>${pill(f.status)}</td><td>${dateLabel(f.submitted_at)}</td><td>${f.expiry_action === 'paid' ? 'Paid out' : f.expiry_action === 'extended' ? 'Kept longer' : ''}</td><td class="num">${Math.round(sum(f.id, 'counted') * 100) / 100} h</td></tr>`).join('')}
   </tbody></table></div></div>`;
 }

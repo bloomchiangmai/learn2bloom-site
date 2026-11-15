@@ -1,0 +1,13 @@
+{
+  "name": "Bloom Chiangmai staff",
+  "short_name": "Bloom staff",
+  "start_url": "/staff-dashboard.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FDFAF5",
+  "theme_color": "#FDFAF5",
+  "icons": [
+    { "src": "/images/staff-icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/images/staff-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -28,6 +28,10 @@ document.addEventListener('click', function (e) {
   var t = e.target;
   if (!t || !t.closest) return;
   var a = t.closest('a[href]');
+  // Buttons that navigate with onclick="window.location.href='...'" count like links
+  var btn = !a && t.closest('button[onclick]');
+  var bm = btn && /location\.href\s*=\s*'([^']+)'/.exec(btn.getAttribute('onclick') || '');
+  if (bm) a = { href: new URL(bm[1], location.href).href, target: '', textContent: btn.textContent, isButton: true };
   var url = a ? a.href.toLowerCase() : null, label = a ? (a.textContent || '').trim().slice(0, 100) : 'qr image';
   if (!a) {
     if (!t.closest('img.qr')) return;
@@ -38,6 +42,15 @@ document.addEventListener('click', function (e) {
     if (c[1].test(url) || c[2].test(url)) {
       gtag('event', c[0], { link_url: a ? a.href : location.href, link_text: label });
       if (window.fbq) fbq('track', 'Contact', { content_name: c[0] });
+      // Same-tab links (e.g. /line, whatsapp.html) unload the page before Meta's request is sent:
+      // hold the navigation briefly so the event gets out. New-tab and mailto links are left alone.
+      if (a && window.fbq && !/^mailto:/i.test(a.href) && (a.target || '').toLowerCase() !== '_blank'
+          && !e.defaultPrevented && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        if (a.isButton) e.stopPropagation();
+        var dest = a.href;
+        setTimeout(function () { window.location.href = dest; }, 400);
+      }
       return;
     }
   }

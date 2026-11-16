@@ -1049,3 +1049,5 @@ table.acc input[type=checkbox] { width: 22px; height: 22px; }
 /* One way to remove things: an X on the row, then Undo */
 .x-del{background:none;border:0;color:var(--ink-2,#8A877F);font-size:20px;line-height:1;width:30px;height:30px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;font-family:inherit;}
 .x-del:hover,.x-del:focus-visible{background:#FAECE7;color:var(--bad,#A23F1C);}
+/* The X shows when you point at the row; on touch screens it always shows */
+@media (hover:hover) and (pointer:fine){ .x-del{opacity:0;transition:opacity .12s;} :is(div,tr,li):hover > .x-del, :is(div,tr,li):hover > :is(span,td,div) > .x-del, .x-del:focus-visible{opacity:1;} }

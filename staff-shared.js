@@ -627,7 +627,7 @@ async function confirmDelete(){
     + '.x-del:hover,.x-del:focus-visible{background:#FAECE7;color:#A23F1C;}'
     + '.x-undo{position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:#2C2C2A;color:#fff;border-radius:12px;padding:10px 12px 10px 18px;gap:16px;align-items:center;font-size:14px;z-index:400;display:none;box-shadow:0 8px 24px rgba(0,0,0,.2);white-space:nowrap;}'
     + '.x-undo button{background:#fff;color:#2C2C2A;border:0;border-radius:8px;padding:7px 14px;font:inherit;font-weight:700;cursor:pointer;}'
-    + '@media (max-width:700px){.x-undo{bottom:96px;}}';
+    + '@media (max-width:700px){.x-undo{bottom:96px;}}' + '@media (hover:hover) and (pointer:fine){ .x-del{opacity:0;transition:opacity .12s;} :is(div,tr,li):hover > .x-del, :is(div,tr,li):hover > :is(span,td,div) > .x-del, .x-del:focus-visible{opacity:1;} }';
   (document.head || document.documentElement).appendChild(st);
 })();
 // Hide now, delete after 8 seconds unless Undo is pressed. Leaving the page finishes the delete.

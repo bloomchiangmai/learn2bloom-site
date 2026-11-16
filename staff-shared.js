@@ -617,3 +617,28 @@ async function confirmDelete(){
   closeDeleteModal();
   loadStudents();
 }
+
+
+/* One way to remove things across the staff site: an X on the row, then Undo for 8 seconds. */
+(function(){
+  if(document.getElementById('xDelCss')) return;
+  const st = document.createElement('style'); st.id = 'xDelCss';
+  st.textContent = '.x-del{background:none;border:0;color:#8A877F;font-size:20px;line-height:1;width:30px;height:30px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;font-family:inherit;}'
+    + '.x-del:hover,.x-del:focus-visible{background:#FAECE7;color:#A23F1C;}'
+    + '.x-undo{position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:#2C2C2A;color:#fff;border-radius:12px;padding:10px 12px 10px 18px;gap:16px;align-items:center;font-size:14px;z-index:400;display:none;box-shadow:0 8px 24px rgba(0,0,0,.2);white-space:nowrap;}'
+    + '.x-undo button{background:#fff;color:#2C2C2A;border:0;border-radius:8px;padding:7px 14px;font:inherit;font-weight:700;cursor:pointer;}'
+    + '@media (max-width:700px){.x-undo{bottom:96px;}}';
+  (document.head || document.documentElement).appendChild(st);
+})();
+// Hide now, delete after 8 seconds unless Undo is pressed. Leaving the page finishes the delete.
+function undoLater(msg, doIt, undo){
+  let t = document.getElementById('xUndo');
+  if(!t){ t = document.createElement('div'); t.id = 'xUndo'; t.className = 'x-undo'; document.body.appendChild(t); }
+  if(t._go) t._go();
+  let done = false;
+  const go = async () => { if(done) return; done = true; t.style.display = 'none'; clearTimeout(t._h); window.removeEventListener('pagehide', go); t._go = null; try { await doIt(); } catch(e){ (window.showToast||alert)('Could not delete: ' + (e.message||e)); } };
+  t.innerHTML = '<span></span><button type="button">Undo</button>'; t.firstChild.textContent = msg;
+  t.style.display = 'flex'; t._go = go; clearTimeout(t._h); t._h = setTimeout(go, 8000);
+  window.addEventListener('pagehide', go);
+  t.querySelector('button').onclick = () => { if(done) return; done = true; clearTimeout(t._h); window.removeEventListener('pagehide', go); t._go = null; t.style.display = 'none'; undo(); };
+}

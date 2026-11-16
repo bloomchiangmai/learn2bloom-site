@@ -454,7 +454,7 @@ async function loadStaffDocuments(staffId, isAdmin){
       <span>${escHtml(d.file_name)}</span>
       <span>
         <button class="btn-small-outline" data-path="${escHtml(d.file_path)}" onclick="downloadStaffDocument(this.dataset.path)">Download</button>
-        ${isAdmin ? `<button class="btn-small-danger" data-path="${escHtml(d.file_path)}" onclick="deleteStaffDocument('${escHtml(d.id)}', this.dataset.path, '${escHtml(staffId)}')">Delete</button>` : ''}
+        ${isAdmin ? `<button class="x-del" title="Delete" aria-label="Delete ${escHtml(d.file_name)}" data-path="${escHtml(d.file_path)}" onclick="deleteStaffDocument('${escHtml(d.id)}', this.dataset.path, '${escHtml(staffId)}', this)">&times;</button>` : ''}
       </span>
     </div>
   `).join('');
@@ -486,14 +486,14 @@ async function downloadStaffDocument(filePath){
   window.open(data.signedUrl, '_blank');
 }
 
-async function deleteStaffDocument(docId, filePath, staffId){
-  const ok = confirm('Delete this document? This cannot be undone.');
-  if(!ok) return;
-  await sb.storage.from('staff-documents').remove([filePath]);
-  const { error } = await sb.from('staff_documents').delete().eq('id', docId);
-  if(error){ showToast('Error: ' + error.message); return; }
-  showToast('Document deleted.');
-  loadStaffDocuments(staffId, true);
+async function deleteStaffDocument(docId, filePath, staffId, btn){
+  const row = btn && btn.closest('div'); if(row) row.style.display = 'none';
+  undoLater('Document deleted.', async () => {
+    const { error } = await sb.from('staff_documents').delete().eq('id', docId);
+    if(error){ showToast('Error: ' + error.message); if(row) row.style.display = ''; return; }
+    await sb.storage.from('staff-documents').remove([filePath]);
+    loadStaffDocuments(staffId, true);
+  }, () => { if(row) row.style.display = ''; });
 }
 
 function closeStaffProfile(){

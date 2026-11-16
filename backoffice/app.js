@@ -999,7 +999,7 @@ async function pageExpenses() {
     if (h === 'currency') return `<span class="pill submitted">${esc(d.currency || 'Foreign')} receipt</span><div style="font-size:11px" class="faint">Enter the THB you paid</div>`;
     return isDupRc(r, 0) ? '<span class="pill rejected">Possible duplicate</span><br>' : '';
   };
-  const inboxCards = await Promise.all(inbox.map(async (r, idx) => `<div style="position:relative"><button class="inbox-item" data-id="${r.id}" style="width:100%">${await thumbHtml(r)}<div style="font-size:12px">${heldLabel(r)}<div>${aiLine(r)}</div><div class="faint">${dateLabel(r.created_at)}</div></div></button><button class="btn small ghost danger" data-rdel="${r.id}" data-path="${esc(r.storage_path)}" style="position:absolute;bottom:6px;right:6px" title="Delete this receipt">Delete</button></div>`));
+  const inboxCards = await Promise.all(inbox.map(async (r, idx) => `<div style="position:relative"><button class="inbox-item" data-id="${r.id}" style="width:100%">${await thumbHtml(r)}<div style="font-size:12px">${heldLabel(r)}<div>${aiLine(r)}</div><div class="faint">${dateLabel(r.created_at)}</div></div></button><button class="x-del" data-rdel="${r.id}" data-path="${esc(r.storage_path)}" style="position:absolute;bottom:6px;right:6px;background:#fff" title="Delete this receipt" aria-label="Delete this receipt">&times;</button></div>`));
   const unread = inbox.filter((r) => r.ai_status === 'pending' || r.ai_status === 'failed');
   const missing = items.filter((i) => !(i.receipts || []).length).length;
   const blockers = [];
@@ -1085,7 +1085,6 @@ async function pageExpenses() {
   main().querySelectorAll('.inbox-item').forEach((b) => b.onclick = () => openEditor({ report, receiptIds: [b.dataset.id], onDone: reload }));
   main().querySelectorAll('[data-rdel]').forEach((b) => b.onclick = async (e) => {
     e.stopPropagation();
-    if (!confirmInline(b, 'Sure?')) return;
     try { await run(async () => must(await sb.from('receipts').delete().eq('id', b.dataset.rdel))); } catch { return; }
     toastUndo('Receipt deleted.', [b.dataset.rdel], reload);
     reload();
@@ -4767,7 +4766,7 @@ async function pageBills() {
     ${lnForm({ list: 'sbv', cats, wht: true, merchant: p.merchant || guessVendor((doc(p, 'bill') || doc(p, 'slip'))?.party) || doc(p, 'bill')?.party, category_id: p.category_id, purpose: p.purpose, vat_amount: p.vat_amount, wht_rate: p.wht_rate, wht_on_top: p.wht_on_top })}
     <div class="ln-chk" data-chk="${p.id}"></div>
     <div class="ln-foot"><button class="btn ghost small ln-del" data-delpay="${p.id}">Delete line</button><button class="btn primary small" data-savepay="${p.id}">Save</button></div></div>`;
-  const badDocs = (p) => (p.kbiz_docs || []).filter((d) => d.status === 'failed' || d.status === 'duplicate').map((d) => `<div class="cc-tag bad" style="display:flex;gap:8px;align-items:center">${esc(d.file_name || 'File')}: ${esc(d.status === 'duplicate' ? 'same slip already saved' : d.error || 'could not be read')} <button class="btn ghost small" data-deldoc2="${d.id}">Remove</button></div>`).join('');
+  const badDocs = (p) => (p.kbiz_docs || []).filter((d) => d.status === 'failed' || d.status === 'duplicate').map((d) => `<div class="cc-tag bad" style="display:flex;gap:8px;align-items:center">${esc(d.file_name || 'File')}: ${esc(d.status === 'duplicate' ? 'same slip already saved' : d.error || 'could not be read')} <button class="x-del" data-deldoc2="${d.id}" title="Remove" aria-label="Remove ${esc(d.file_name || 'file')}">&times;</button></div>`).join('');
   const fileTicks = (p) => `<span class="ln-ft ${doc(p, 'bill') || p.no_doc ? 'ok' : ''}">${p.no_doc && !doc(p, 'bill') ? 'No invoice' : 'Bill'}</span><span class="ln-ft ${doc(p, 'slip') ? 'ok' : ''}">Slip</span>`;
   const line = (p) => `<div class="cc-r ln-row" style="display:block" data-drop="${p.id}"><button type="button" class="ln-sum" data-tog><span class="ln-d">${esc(when(doc(p, 'slip')?.doc_date || doc(p, 'bill')?.doc_date))}</span><span class="ln-t"><b>${esc(title(p))}</b><small>${p.fa_ref ? `<b class="ln-ref">${esc(p.fa_ref)}</b> · ` : ''}${esc(p.purpose || doc(p, 'slip')?.memo || doc(p, 'bill')?.item || '')}</small></span><span class="ln-fs">${fileTicks(p)}</span><span class="cc-n">${money(amt(p))}</span><span>${(p.kbiz_docs || []).some((d) => d.status === 'failed' || d.status === 'duplicate') ? lnPill('File problem', 'warn') : state(p)}</span><span class="ln-chev">›</span></button><div class="ln-body" hidden>${badDocs(p)}${form(p)}</div></div>`;
   const doneRow = (p) => `<div class="cc-r cc-ok"><div class="cc-m"><b>${esc(title(p))}</b><small>${sub(p)} · ${files(p)}${p.fa_done ? ' · in FlowAccount' : ''}</small></div><div class="cc-a"><span class="cc-n">${money(amt(p))}</span>${!p.fa_done ? `<button class="btn ghost small" data-reopen="${p.id}">Edit</button>` : ''}</div></div>`;
@@ -4775,11 +4774,11 @@ async function pageBills() {
     <div class="row">${sup.length ? `<a class="btn" href="#/sheet/bills?m=${mk}" title="${open.length ? 'Finish every line first' : 'Cover sheet plus slips, in FlowAccount order'}">Print for PPP</a>` : ''}<a class="btn ghost" href="#/bills">‹ All months</a></div></div>
     <label class="sb-drop" id="sbdrop"><input type="file" hidden multiple accept="image/*,application/pdf" id="sbin"><b>Drop bills and payment slips here</b><span>PDF or photo, many at once. Each bill is paired with its slip by amount and name. Do not drop salary slips here.</span></label>
     <div id="sbprog"></div>
-    ${loose.length ? `<div class="banner warn" style="margin:10px 0">${loose.map((d) => `<div class="row" style="justify-content:space-between;gap:8px"><span>${esc(d.file_name || 'File')}: ${d.status === 'duplicate' ? `same slip already saved (${esc(d.error || '')})` : d.status === 'reading' ? 'still reading…' : esc(d.error || 'could not be read')}</span><span class="row" style="gap:6px">${d.status !== 'duplicate' ? `<button class="btn small" data-retry="${d.id}">Try again</button>` : ''}<button class="btn ghost small" data-deldoc="${d.id}">Remove</button></span></div>`).join('')}</div>` : ''}
+    ${loose.length ? `<div class="banner warn" style="margin:10px 0">${loose.map((d) => `<div class="row" style="justify-content:space-between;gap:8px"><span>${esc(d.file_name || 'File')}: ${d.status === 'duplicate' ? `same slip already saved (${esc(d.error || '')})` : d.status === 'reading' ? 'still reading…' : esc(d.error || 'could not be read')}</span><span class="row" style="gap:6px">${d.status !== 'duplicate' ? `<button class="btn small" data-retry="${d.id}">Try again</button>` : ''}<button class="x-del" data-deldoc="${d.id}" title="Remove" aria-label="Remove ${esc(d.file_name || 'file')}">&times;</button></span></div>`).join('')}</div>` : ''}
     <datalist id="sbv">${(S.faVendors || []).map((v) => `<option value="${esc(v)}">`).join('')}</datalist>
     ${sup.length ? `<div class="cc-bar"><div style="width:${Math.round((done.length / sup.length) * 100)}%"></div></div><div class="card"><div class="card-pad" style="padding-top:4px">${open.length ? '<div class="ln-head"><span>Paid</span><span>Supplier · for</span><span>Files</span><span style="text-align:right">Amount</span><span>Status</span><span></span></div>' : ''}${pageOf(open, bpg).map(line).join('') || '<div class="faint" style="padding:12px 0">Every payment has its bill, slip and details.</div>'}${pager(open.length, bpg, '#/bills?m=' + mk)}
       ${done.length ? `<details class="cc-done"><summary>${done.length} ready</summary>${done.map(doneRow).join('')}</details>` : ''}</div></div>` : ''}
-    ${isAdmin() && staffPay.length ? `<div class="card" style="margin-top:14px"><div class="card-head"><div><h2>${staffPay.length} payment${staffPay.length > 1 ? 's' : ''} to staff · admin only</h2><div class="faint" style="font-size:12px">Slips paid to a staff member (salary or expense payout). Data entry does not see these. They are not supplier bills.</div></div></div><div class="card-pad" style="padding-top:4px">${staffPay.map((p) => `<div class="cc-r"><div class="cc-m"><b>${esc(title(p))}</b><small>${sub(p)}</small></div><div class="cc-a"><span class="cc-n">${money(amt(p))}</span><button class="btn ghost small" data-delpay="${p.id}">Delete</button></div></div>`).join('')}</div></div>` : ''}
+    ${isAdmin() && staffPay.length ? `<div class="card" style="margin-top:14px"><div class="card-head"><div><h2>${staffPay.length} payment${staffPay.length > 1 ? 's' : ''} to staff · admin only</h2><div class="faint" style="font-size:12px">Slips paid to a staff member (salary or expense payout). Data entry does not see these. They are not supplier bills.</div></div></div><div class="card-pad" style="padding-top:4px">${staffPay.map((p) => `<div class="cc-r"><div class="cc-m"><b>${esc(title(p))}</b><small>${sub(p)}</small></div><div class="cc-a"><span class="cc-n">${money(amt(p))}</span><button class="x-del" data-delpay="${p.id}" title="Delete" aria-label="Delete this payment">&times;</button></div></div>`).join('')}</div></div>` : ''}
     <p class="faint" style="font-size:12px">Ready lines go into Accounting › Month close for this month, paid by KBIZ. A slip that is already saved is refused.</p>`);
   const ms = document.getElementById('sbm'); if (ms) ms.onchange = (e) => { location.hash = '#/bills?m=' + e.target.value; };
   const readOne = async (f, paymentId = null) => {
@@ -4841,7 +4840,6 @@ async function pageBills() {
   main().querySelectorAll('[data-inv]').forEach((b) => (b.onclick = async () => { try { await run(async () => await lineUpd('kbiz_payments', b.dataset.inv, { no_doc: false, no_doc_reason: null }, pageBills), 'Add the bill'); } catch { return; } pageBills(); }));
   main().querySelectorAll('[data-reopen]').forEach((b) => (b.onclick = async () => { try { await run(async () => await lineUpd('kbiz_payments', b.dataset.reopen, { category_id: null, account_code: null }, pageBills), 'Edit the details'); } catch { return; } pageBills(); }));
   main().querySelectorAll('[data-delpay]').forEach((b) => (b.onclick = async (e) => {
-    if (!confirmInline(e.target, 'Delete this line and its files?')) return;
     const p = all.find((x) => x.id === b.dataset.delpay);
     const el = b.closest('.cc-r'); if (el) el.hidden = true;
     laterDelete(`${p.fa_ref ? p.fa_ref + ' ' : ''}deleted.`, async () => { must(await sb.from('kbiz_payments').delete().eq('id', p.id)); await sb.storage.from(BUCKET).remove((p.kbiz_docs || []).map((d) => d.file_path)); if (location.hash.startsWith('#/bills')) pageBills(); }, () => { if (el) el.hidden = false; });
@@ -4852,13 +4850,13 @@ async function pageBills() {
   }));
   main().querySelectorAll('[data-deldoc2]').forEach((b) => (b.onclick = async () => {
     const d = all.flatMap((p) => p.kbiz_docs || []).find((x) => x.id === b.dataset.deldoc2);
-    try { await run(async () => must(await sb.from('kbiz_docs').delete().eq('id', d.id)), 'Removed'); } catch { return; }
-    await sb.storage.from(BUCKET).remove([d.file_path]); pageBills();
+    const el = b.closest('.cc-tag'); if (el) el.hidden = true;
+    laterDelete(`${d.file_name || 'File'} removed.`, async () => { must(await sb.from('kbiz_docs').delete().eq('id', d.id)); await sb.storage.from(BUCKET).remove([d.file_path]); if (location.hash.startsWith('#/bills')) pageBills(); }, () => { if (el) el.hidden = false; });
   }));
   main().querySelectorAll('[data-deldoc]').forEach((b) => (b.onclick = async () => {
     const d = loose.find((x) => x.id === b.dataset.deldoc);
-    try { await run(async () => must(await sb.from('kbiz_docs').delete().eq('id', d.id)), 'Removed'); } catch { return; }
-    await sb.storage.from(BUCKET).remove([d.file_path]); pageBills();
+    const el = b.closest('.row'); if (el) el.hidden = true;
+    laterDelete(`${d.file_name || 'File'} removed.`, async () => { must(await sb.from('kbiz_docs').delete().eq('id', d.id)); await sb.storage.from(BUCKET).remove([d.file_path]); if (location.hash.startsWith('#/bills')) pageBills(); }, () => { if (el) el.hidden = false; });
   }));
 }
 async function pageMessages() {

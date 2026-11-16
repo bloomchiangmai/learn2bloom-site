@@ -2113,7 +2113,7 @@ function teamView(){
     return `<div class="tt-r"><b>${esc(STAFF[id].name)}</b>
       <span class="tt-c">${badge}</span>
       ${inf}<span></span>
-      <span class="tt-c" style="justify-content:flex-end">${canDelete?`<button class="link-btn" style="color:#A23F1C" onclick="removeMember('${id}')">Remove</button>`:''}</span></div>`;
+      <span class="tt-c" style="justify-content:flex-end">${canDelete?`<button class="x-del" title="Remove from the team" aria-label="Remove ${esc(STAFF[id]?STAFF[id].name:'')}" onclick="removeMember('${id}')">&times;</button>`:''}</span></div>`;
   };
   const team = `<div class="box"><h3 class="bh">Marketing team</h3>
     <div class="tt-wrap"><div class="tt">
@@ -2126,7 +2126,7 @@ function teamView(){
     <div class="lb-top"></div>
     ${LABELS.map(l=>`<div class="lb-r"><b>${esc(l.name)}</b>
       <span class="muted">${(n=>n+' post'+(n===1?'':'s'))(POSTS.filter(p=>p.label===l.name).length)}</span><span></span>
-      ${canDelete?`<button class="link-btn" style="color:#A23F1C" data-name="${esc(l.name)}" onclick="removeLabel(this.dataset.name)">Remove</button>`:'<span></span>'}</div>`).join('')}
+      ${canDelete?`<button class="x-del" title="Remove label" aria-label="Remove ${esc(l.name)}" data-name="${esc(l.name)}" onclick="removeLabel(this.dataset.name)">&times;</button>`:'<span></span>'}</div>`).join('')}
     ${canDelete?`<div class="lb-r"><input id="newLabel" placeholder="New label" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px"><span></span><span></span><button class="btn-primary sm" onclick="addLabel()">Add</button></div>`:''}
   </div>`;
   return team + labels + `
@@ -2134,7 +2134,7 @@ function teamView(){
     <div class="sd-r lb-head"><span>NAME</span><span>DATE</span><span>STATUS <small>moving dates stay "to confirm" until checked</small></span><span></span></div>
     ${SPECIAL.map(x=>`<div class="sd-r"><b>${esc(x.name)}</b><span>${fmtDate(x.date)}</span>
       <span>${x.confirmed?'<span class="muted">Confirmed</span>':`${canDelete?`<button class="link-btn" onclick="confirmSpecial('${x.id}')">Mark confirmed</button>`:'<span class="muted">To confirm</span>'}`}${x.note?` <span class="meta">${esc(x.note)}</span>`:''}</span>
-      ${canDelete?`<button class="link-btn" style="color:#A23F1C" onclick="removeSpecial('${x.id}')">Remove</button>`:'<span></span>'}</div>`).join('')}
+      ${canDelete?`<button class="x-del" title="Remove date" aria-label="Remove ${esc(x.name||'')}" onclick="removeSpecial('${x.id}')">&times;</button>`:'<span></span>'}</div>`).join('')}
     ${canDelete?`<div class="sd-r"><input id="spName" placeholder="Name, e.g. Loy Krathong" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
       <input id="spDate" type="date" style="border:1px solid #DCD5C6;border-radius:8px;padding:7px 9px">
       <label style="font-size:13px;display:flex;gap:6px;align-items:center"><input id="spConf" type="checkbox" checked> Date confirmed</label>
@@ -2154,10 +2154,11 @@ async function confirmSpecial(id){
   showToast('Marked confirmed.'); loadAll();
 }
 async function removeSpecial(id){
-  if(!confirm('Remove this special date?')) return;
+  const { data: row } = await sb.from('marketing_special_dates').select('*').eq('id', id).maybeSingle();
   const { error } = await sb.from('marketing_special_dates').delete().eq('id', id);
   if(error){ showToast('Could not remove: ' + error.message); return; }
-  showToast('Removed.'); loadAll();
+  await loadAll();
+  undoToast(`Removed ${(row && row.name) || 'the date'}.`, async () => { const r = await sb.from('marketing_special_dates').insert(row); if(r.error){ showToast('Could not undo: ' + r.error.message); return; } showToast('Put back.'); loadAll(); });
 }
 const firstName = n => String(n||'').split(' ')[0];
 // Item 84: admin, director and IT can change someone's Marketing level here. Same data as Roles and access.
@@ -2217,11 +2218,14 @@ async function setLangs(id, langs){
   LANGS[id] = langs.trim();
 }
 async function removeMember(id){
-  const open = POSTS.filter(p=>openStep(p) && [p.pic, p.writer, p.translator, p.poster].includes(id)).length;
-  if(!confirm(`Remove ${STAFF[id].name} from the marketing team?` + (open ? ` They are named on ${open} post${open>1?'s':''} in progress, which will need someone else.` : ''))) return;
+  const { data: row } = await sb.from('marketing_team').select('*').eq('staff_id', id).maybeSingle();
   const { error } = await sb.from('marketing_team').delete().eq('staff_id', id);
   if(error){ showToast('Could not remove: ' + error.message); return; }
-  delete TEAM[id]; showToast('Removed.'); render();
+  const name = STAFF[id] ? STAFF[id].name : 'them', open = POSTS.filter(p=>openStep(p) && [p.pic, p.writer, p.translator, p.poster].includes(id)).length;
+  delete TEAM[id]; render();
+  undoToast(`Removed ${name}.` + (open ? ` ${open} post${open>1?'s':''} in progress need someone else.` : ''), async () => {
+    const r = await sb.from('marketing_team').insert(row || { staff_id: id }); if(r.error){ showToast('Could not undo: ' + r.error.message); return; }
+    showToast('Put back ' + name + '.'); loadAll(); });
 }
 async function addLabel(){
   const name = ($('#newLabel').value||'').trim();
@@ -2234,10 +2238,13 @@ async function addLabel(){
 }
 async function removeLabel(name){
   const n = POSTS.filter(p=>p.label===name).length;
-  if(!confirm(`Remove the label "${name}"?` + (n ? ` ${n} post${n>1?'s':''} will lose this label.` : ''))) return;
+  // A label in use can't be put back on its posts afterwards, so that one case still asks first.
+  if(n && !(await askConfirm(`Remove "${name}"?`, `${n} post${n>1?'s':''} use this label and will lose it. This can't be undone.`, 'Remove label'))) return;
+  const { data: row } = await sb.from('marketing_labels').select('*').eq('name', name).maybeSingle();
   const { error } = await sb.from('marketing_labels').delete().eq('name', name);
+  if(!error && !n) undoToast(`Removed ${name}.`, async () => { const r = await sb.from('marketing_labels').insert(row); if(r.error){ showToast('Could not undo: ' + r.error.message); return; } showToast('Put back ' + name + '.'); loadAll(); });
   if(error){ showToast('Could not remove: ' + error.message); return; }
-  LABELS = LABELS.filter(l=>l.name!==name); POSTS.forEach(p=>{ if(p.label===name) p.label = null; }); showToast('Removed.'); render();
+  LABELS = LABELS.filter(l=>l.name!==name); POSTS.forEach(p=>{ if(p.label===name) p.label = null; }); if(n) showToast('Removed.'); render();
 }
 
 // ---------- Reference (edited here) ----------
@@ -2316,7 +2323,7 @@ function table(s,rows,hide=[],sortable=false){
   // Admins delete straight from the list, with Undo in the message that follows.
   return `<div class="tbl"><table><thead><tr>${th(s.title)}${cols.map(th).join('')}${canDelete?'<th class="del-c"></th>':''}</tr></thead><tbody>
   ${rows.map(r=>`<tr onclick="viewRef('${s.k}','${r.id}')"><td class="main">${esc(r[s.title])}${tag(r)}</td>
-  ${cols.map(c=>`<td>${cell(s,c,r[c])}</td>`).join('')}${canDelete?`<td class="del-c"><button class="row-del" title="Delete" aria-label="Delete ${esc(r[s.title]||'')}" onclick="event.stopPropagation();quickDelete('${r.id}')">&times;</button></td>`:''}</tr>`).join('')}</tbody></table></div>`;
+  ${cols.map(c=>`<td>${cell(s,c,r[c])}</td>`).join('')}${canDelete?`<td class="del-c"><button class="row-del x-del" title="Delete" aria-label="Delete ${esc(r[s.title]||'')}" onclick="event.stopPropagation();quickDelete('${r.id}')">&times;</button></td>`:''}</tr>`).join('')}</tbody></table></div>`;
 }
 async function quickDelete(id){
   const { data: row, error: e1 } = await sb.from('marketing_entries').select('id,collection,data,created_at').eq('id', id).single();

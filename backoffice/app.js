@@ -383,7 +383,7 @@ function navLinks() {
     ${L('#/capture', isTouch() ? 'Snap receipt' : 'Add receipts', S.inboxCount, ['#/inbox', '#/trash'])}
     ${STAGE < 2 || !seesTime() ? '' : `<div class="nav-label">Time</div>
     ${isAdmin() ? `${keepsTS() ? `<a href="#/ot?u=${S.user.id}" class="${r === '#/ot' && params().u === S.user.id ? 'on' : ''}">My timesheet</a>` : ''}<a href="#/ot" class="${r === '#/ot' && params().u !== S.user.id ? 'on' : ''}">Staff timesheets</a>` : !keepsTS() ? '' : `${isHR() ? `<a href="#/ot" class="${r === '#/ot' && !params().all && !params().u ? 'on' : ''}">My timesheet</a><a href="#/ot?all=1" class="${r === '#/ot' && (params().all || params().u) ? 'on' : ''}">Staff timesheets</a>` : L('#/ot', 'My timesheet')}`}
-    ${L('#/roster', 'Roster')}${isAdmin() || isHR() || isAccountant() ? L('#/payroll', 'Payroll summary') : ''}`}`;
+    ${L('#/roster', 'Roster')}${isAdmin() || isHR() || isAccountant() ? L('#/payroll', 'Timesheet summary') : ''}`}`;
   if (isReviewer()) h += `<div class="nav-label">Review</div>${L('#/approvals', 'Approvals')}`;
   if (STAGE >= 3 && canFA()) h += `<div class="nav-label">Accounting</div>${L('#/card', 'Card payments')}${L('#/bills', 'Bank transfers')}${L('#/subs', 'Subscriptions')}${canEnterFA() ? L('#/fa-export', 'Month close', 0, ['#/fa/']) : ''}`;
   if (isAdmin()) h += `<div class="nav-label">Admin</div>${L('#/admin/advances', 'Cash advances')}`;
@@ -2274,9 +2274,7 @@ async function pageApprovals() {
   ${tsOK ? `<div class="seg" style="margin-bottom:12px"><a href="#/approvals?s=${status}${key ? '&m=' + key : ''}&k=exp" class="${kind === 'exp' ? 'on' : ''}">Expenses</a><a href="#/approvals?s=${status}${key ? '&m=' + key : ''}&k=ts" class="${kind === 'ts' ? 'on' : ''}">Timesheets</a></div>` : ''}
   <div class="row" style="margin-bottom:12px">${['todo', 'all'].map((t) => `<a class="btn small ${t === status ? 'primary' : ''}" href="#/approvals?s=${t}${key ? '&m=' + key : ''}${kq}">${TABL(t)}</a>`).join('')}<select class="input" id="amore" style="width:auto;height:32px;font-size:13px"><option value="">More…</option>${tabs.filter((t) => !['todo', 'all'].includes(t)).map((t) => `<option value="${t}" ${t === status ? 'selected' : ''}>${TABL(t)}</option>`).join('')}</select></div>
   ${kind === 'ts' ? await otApprovalsHtml(tsStatus) : ''}
-  <div class="card"${kind === 'ts' ? ' hidden' : ''}>${reports.length ? `<div class="table-wrap"><table><thead><tr><th>Staff</th><th>Month</th><th>Reference</th><th>Status</th><th>Submitted</th><th class="num">Spent</th><th class="num">Balance</th></tr></thead><tbody>
-    ${reports.map((r) => `<tr class="click" data-href="#/report/${r.id}"><td>${NEW.has(r.id) ? '<span class="newdot" title="New, not opened yet"></span>' : ''}${esc(P[r.staff_id]?.full_name)}<div class="faint mono">${esc(P[r.staff_id]?.staff_no || '')}</div></td><td>${monthLabel(r.period_month.slice(0, 7))}<div class="faint" style="font-size:12px">${esc(formKind(r))}</div></td><td class="mono">${esc(r.ref_no)}</td><td>${pill(r.status)}</td><td>${dateLabel(r.submitted_at)}</td><td class="num">${money(T[r.id]?.total_spent)}</td><td class="num">${money(T[r.id]?.balance)}</td></tr>`).join('')}
-  </tbody></table></div>` : '<div class="empty">Nothing here.</div>'}</div>
+  <div class="apl"${kind === 'ts' ? ' hidden' : ''}>${reports.length ? reports.map((r) => apCard({ href: `#/report/${r.id}`, isNew: NEW.has(r.id), who: P[r.staff_id], status: r.status, what: `${formKind(r)} · ${monthLabel(r.period_month.slice(0, 7))}`, sub: `${r.ref_no || ''}${r.submitted_at ? ' · sent ' + dateLabel(r.submitted_at) : ''}`, amt: `THB ${money(T[r.id]?.total_spent)}`, amt2: T[r.id]?.balance != null ? `balance ${money(T[r.id]?.balance)}` : '' })).join('') : '<div class="card"><div class="empty">Nothing here.</div></div>'}</div>
   `);
   document.getElementById('m').onchange = (e) => { location.hash = `#/approvals?s=${status}${e.target.value ? '&m=' + e.target.value : ''}${kq}`; };
   document.getElementById('amore').onchange = (e) => { if (e.target.value) location.hash = `#/approvals?s=${e.target.value}${key ? '&m=' + key : ''}${kq}`; };
@@ -3588,6 +3586,18 @@ async function pageOTSettings() {
   if (!pageOTSettings.synced && (!hmeta?.checked_at || Date.now() - new Date(hmeta.checked_at) > 25 * 86400000)) { pageOTSettings.synced = true; sb.functions.invoke('bo-sync-holidays', { body: {} }).then(({ data }) => { if (data?.changed && location.hash.startsWith('#/admin/ot')) pageOTSettings(); }); }
 }
 
+// Approvals as a list of cards (same as IGA): colour strip by step, person circle, what, step, amount
+const AP_COL = { submitted: '#f2c98a', checked: '#9fc0ea', approved: '#9fd8bd', rejected: '#f0a9a4', paid: '#d8d4ca', draft: '#e4e1d9' };
+const PERSON_COL = [['#e1ecfb', '#1f5a9e'], ['#ede4fb', '#5b3aa6'], ['#fbe3ec', '#a3325f'], ['#e0f3ec', '#1d7253'], ['#fdeacd', '#91550a'], ['#fde6dc', '#a8461f'], ['#e6f0d9', '#4c6e1d'], ['#dff0f4', '#1d6476']];
+const hashN = (s) => { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
+function apCard({ href, isNew, who, status, what, sub, amt, amt2 }) {
+  const nm = who?.full_name || '?'; const fn = firstName(nm);
+  const c = PERSON_COL[hashN(who?.id || nm) % PERSON_COL.length];
+  return `<a class="apc" href="${href}"><span class="apc-s" style="background:${AP_COL[status] || '#e4e1d9'}"></span>
+    <span class="av" style="background:${c[0]};color:${c[1]}">${esc(fn.slice(0, 2).toUpperCase())}</span>
+    <span class="apc-m"><span class="apc-n">${isNew ? '<span class="newdot" title="New, not opened yet"></span>' : ''}${esc(nm)} <span class="faint">· ${esc(what)}</span></span><span class="apc-r faint">${esc(sub)}</span></span>
+    ${pill(status)}<span class="apc-a"><b>${esc(amt)}</b>${amt2 ? `<span class="faint">${esc(amt2)}</span>` : ''}</span></a>`;
+}
 async function otApprovalsHtml(status) {
   let q = sb.from('ot_forms').select('*').order('period_end', { ascending: false });
   if (Array.isArray(status)) q = q.in('status', status); else if (status !== 'all') q = q.eq('status', status);
@@ -3610,9 +3620,7 @@ async function otApprovalsHtml(status) {
       allBtn = `<div class="card card-pad spread" style="margin-top:16px"><span>${ready.length} timesheets wait for your final approval · ${hrs} h overtime counted in total. Open any of them below to check first.</span><button class="btn primary" id="otall">Approve all ${ready.length}</button></div>`;
     }
   }
-  return `${allBtn}<div class="card" style="margin-top:16px"><div class="card-head"><h2>Timesheets</h2></div><div class="table-wrap"><table><thead><tr><th>Staff</th><th>Period</th><th>Status</th><th>Submitted</th><th>Taken as</th><th class="num">OT counted</th></tr></thead><tbody>
-    ${forms.map((f) => `<tr class="click" data-href="#/ot/review/${f.id}"><td>${f.status === 'submitted' && (!f.seen_at || f.seen_at < f.submitted_at) ? '<span class="newdot"></span>' : ''}${esc(P[f.staff_id]?.full_name || '')}<div class="faint mono">${esc(P[f.staff_id]?.staff_no || '')}</div></td><td>${esc(otPeriod(f.period_end).label)}</td><td>${pill(f.status)}</td><td>${dateLabel(f.submitted_at)}</td><td>${f.expiry_action === 'paid' ? 'Paid out' : f.expiry_action === 'extended' ? 'Kept longer' : ''}</td><td class="num">${Math.round(sum(f.id, 'counted') * 100) / 100} h</td></tr>`).join('')}
-  </tbody></table></div></div>`;
+  return `${allBtn}<div class="apl" style="margin-top:16px">${forms.map((f) => apCard({ href: `#/ot/review/${f.id}`, isNew: f.status === 'submitted' && (!f.seen_at || f.seen_at < f.submitted_at), who: P[f.staff_id], status: f.status, what: `Timesheet · ${otPeriod(f.period_end).label}`, sub: `${f.submitted_at ? 'sent ' + dateLabel(f.submitted_at) : ''}${f.expiry_action === 'paid' ? ' · paid out' : f.expiry_action === 'extended' ? ' · kept longer' : ''}`, amt: `${Math.round(sum(f.id, 'counted') * 100) / 100} h OT`, amt2: '' })).join('')}</div>`;
 }
 
 /* ---------- timesheet week view ---------- */
@@ -3839,7 +3847,8 @@ function calHtml(per, entries, set, hol, { editable }) {
       const off = (x.type !== 'workday' || !!x.lv) && set.pay_type !== 'freelance';
       // a scheduled workday taken off (leave or "other"): grey like a day off, plus its type
       const takenOff = set.ovr?.[date] === 'day_off' && baseTypeOf(date, set, hol) === 'workday';
-      cells.push(`<button type="button" class="cal-c${off ? ' cal-off' : ''}" data-day="${date}">
+      const tdy = iso(new Date());
+      cells.push(`<button type="button" class="cal-c${off ? ' cal-off' : ''}${x.lv ? ' cal-islv' : x.ot ? ' cal-isot' : ''}${date === tdy ? ' cal-today' : date > tdy ? ' cal-future' : ''}" data-day="${date}">
         <span class="cal-d">${d.getDate()}${d.getDate() === 1 || date === days[0] && days === weeks[0] ? ` <span class="cal-m">${d.toLocaleDateString('en-GB', { month: 'short' })}</span>` : ''} <span class="cal-wd">${d.toLocaleDateString('en-GB', { weekday: 'short' })}</span></span>
         <span class="cal-b">${set.ovr?.[date] ? '' : x.type === 'holiday' ? `<span class="cal-hol">${esc(HOLNAME[date] || 'Holiday')}</span>` : ''}
         ${x.lv ? `<span class="cal-lv" title="${LEAVE[x.lv.leave_type]}">${{ replacement: 'Replacement', annual: 'Annual leave' }[x.lv.leave_type] || LEAVE[x.lv.leave_type]}</span>` : takenOff && !x.hours ? `<span class="cal-lv">${x.note.startsWith('Swap for') ? 'Swap off' : 'Day off'}</span>` : x.hours ? `<span>${x.hours} h${x.ranges.length > 1 ? ' · split' : ''}</span>` : `<span class="faint">${off ? 'off' : '-'}</span>`}
@@ -3850,6 +3859,7 @@ function calHtml(per, entries, set, hol, { editable }) {
   }).join('');
   return `<div class="card"><div class="card-head"><h2>${Math.round(th * 100) / 100} h worked · ${Math.round(tot * 100) / 100} h OT${lvd ? ` · ${lvd} day${lvd > 1 ? 's' : ''} leave` : ''}</h2><span class="faint" style="font-size:12px">${editable ? 'Click a day to change it' : 'Click a day for details'}</span></div>
     <div class="cal">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => `<span class="cal-h">${d}</span>`).join('')}<span class="cal-h">Week</span>${grid}</div>
+    <div class="cal-key"><span><i class="k-wk"></i>Work</span><span><i class="k-ot"></i>OT</span><span><i class="k-lv"></i>Leave</span><span><i class="k-off"></i>Day off</span><span><i class="k-td"></i>Today</span></div>
 </div>`;
 }
 function wireCal({ entries, set, hol, editable, ensureForm, reload, lock = '', askFor = null, askName = '' }) {
@@ -4917,18 +4927,18 @@ async function pagePayroll() {
   const table = `<table class="paytbl"><thead><tr><th>Staff</th><th>Type</th><th>Timesheet</th><th class="num">Workday OT<div class="faint">hours</div></th><th class="num">Day off x2<div class="faint">hours</div></th><th class="num">Saved days</th><th class="num">Replacement<div class="faint">days used</div></th><th>Leave</th></tr></thead><tbody>
     ${rows.map((r) => `<tr class="click" data-href="#/ot?p=${per.end}&u=${r.x.id}"><td>${esc(r.x.full_name)}<div class="faint mono">${esc(r.x.staff_no || '')}</div></td><td>${TYPE[r.pt] || r.pt}</td><td>${r.f ? `<span class="pill ${ST[r.f.status]?.[1] || ''}">${ST[r.f.status]?.[0] || r.f.status}</span>` : '<span class="faint">Not started</span>'}</td><td class="num">${cell(r, r.sp.ot)}</td><td class="num">${cell(r, r.sp.x2)}</td><td class="num">${cell(r, r.sp.saved)}</td><td class="num">${cell(r, r.repl)}</td><td>${esc(r.leave || '-')}</td></tr>`).join('')}
     <tr style="font-weight:600"><td colspan="3">Total (approved only)</td><td class="num">${R2(tot.ot)}</td><td class="num">${R2(tot.x2)}</td><td class="num">${tot.saved}</td><td class="num">${tot.repl}</td><td></td></tr></tbody></table>`;
-  shell(`<div class="page-head"><div><h1>Payroll summary · ${esc(per.label)}</h1><p>${esc(dateLabel(per.start))} to ${esc(dateLabel(per.end))} · hours only, rates are applied in payroll</p></div>
+  shell(`<div class="page-head"><div><h1>Timesheet summary · ${esc(per.label)}</h1><p>${esc(dateLabel(per.start))} to ${esc(dateLabel(per.end))} · hours only, rates are applied in payroll</p></div>
     <div class="row"><a class="btn small" href="#/payroll?p=${per.prev}">‹</a><a class="btn small" href="#/payroll?p=${per.next}">›</a><button class="btn small" id="pyprint">Print</button><button class="btn small" id="pycsv">Excel</button></div></div>
   ${notOk ? `<div class="banner warn" style="margin-bottom:12px">${notOk} of ${rows.length} timesheet${rows.length === 1 ? '' : 's'} not approved yet. Their numbers may still change and are left out of the totals.</div>` : ''}
   <div class="card"><div class="table-wrap">${table}</div></div>
   <div class="faint" style="font-size:12px;margin-top:8px">Click a name to open their timesheet. Freelancers show hours worked instead of OT.</div>`);
   bindRowLinks();
-  document.getElementById('pyprint').onclick = () => printSheet(`<div class="ps-head"><div><b>Bloom Chiangmai</b><div>Payroll summary · ${esc(per.label)}</div></div><div style="text-align:right">${esc(dateLabel(per.start))} to ${esc(dateLabel(per.end))}<br>Printed ${esc(dateLabel(iso(new Date())))}</div></div>${table}`);
+  document.getElementById('pyprint').onclick = () => printSheet(`<div class="ps-head"><div><b>Bloom Chiangmai</b><div>Timesheet summary · ${esc(per.label)}</div></div><div style="text-align:right">${esc(dateLabel(per.start))} to ${esc(dateLabel(per.end))}<br>Printed ${esc(dateLabel(iso(new Date())))}</div></div>${table}`);
   document.getElementById('pycsv').onclick = () => {
     const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const lines = [['Staff', 'Staff no', 'Type', 'Timesheet', 'Workday OT h', 'Day off x2 h', 'Saved days', 'Replacement days', 'Leave'].map(q).join(',')]
       .concat(rows.map((r) => [r.x.full_name, r.x.staff_no, TYPE[r.pt] || r.pt, r.f ? ST[r.f.status]?.[0] : 'Not started', cell(r, r.sp.ot), cell(r, r.sp.x2), cell(r, r.sp.saved), cell(r, r.repl), r.leave].map(q).join(',')));
-    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv' })); a.download = `payroll-${per.end.slice(0, 7)}.csv`; a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv' })); a.download = `timesheet-summary-${per.end.slice(0, 7)}.csv`; a.click();
   };
 }
 // FlowAccount supplier names for the Supplier box (loaded once, in the background)

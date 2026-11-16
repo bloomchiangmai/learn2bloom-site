@@ -227,6 +227,7 @@ function injectSidebarStyles(){
       .msheet .sys-n{background:#534AB7;color:#fff;font-size:11px;border-radius:999px;padding:1px 8px;}
       .msheet .co{color:#1D7A5C;}
       .msheet .so{color:#6B6A64;font-weight:500;}
+      .msheet [data-push]{color:#534AB7;}
       [data-page-tabs]{overflow-x:auto;flex-wrap:nowrap !important;}
       body.has-sidebar main{padding:8px 16px 40px !important;max-width:none !important;}
       body.has-sidebar .page-content table{display:block;overflow-x:auto;max-width:100%;}
@@ -281,11 +282,13 @@ function renderSidebar(activeKey){
     <div class="sidebar-footer">
       <div class="name">${window.currentStaff ? escShared(window.currentStaff.name) : ''}</div>
       <div class="role">${escShared((window.currentStaffRole === 'admin' && window.currentStaff?.job_title && window.currentStaff.job_title !== 'Admin') ? window.currentStaff.job_title : roleLabelShared(window.currentStaffRole))}</div>
+      <span class="pushlink" data-push onclick="pushToggle()" style="display:block;color:#534AB7;cursor:pointer;margin-bottom:8px;"></span>
       <span class="signout" onclick="doLogout()">Sign out</span>
     </div>
   `;
   document.body.insertBefore(el, document.body.firstChild);
   renderPhoneChrome(activeKey, sys, isAdminOrIt);
+  pushSetup();
   if(!sys){ try{ applyNavCounts(JSON.parse(sessionStorage.getItem('bloomNavCounts') || '{}')); }catch(e){} }
   // Other pages with the main menu work the counts out fresh (the dashboard does it itself)
   if(!sys && !['dashboard','marketing'].includes(activeKey)) refreshNavCounts();
@@ -350,7 +353,7 @@ function renderPhoneChrome(activeKey, sys, isAdminOrIt){
   }).join('');
   window._mSheets = {
     menu: `<div class="grab"></div><h3>${escShared(st.name || '')}</h3><div class="who">${escShared(roleLabelShared(window.currentStaffRole))}</div>${sysLinks}${mainLinks}
-      <div class="mgrp">Account</div>${st.hub_id ? `<a href="https://iga-backoffice.netlify.app/" class="co" onclick="event.preventDefault(); goIGA()">Switch to INGROUP ASIA</a>` : ''}<button class="ml so" onclick="doLogout()">Sign out</button>`,
+      <div class="mgrp">Account</div><button class="ml" data-push onclick="pushToggle()"></button>${st.hub_id ? `<a href="https://iga-backoffice.netlify.app/" class="co" onclick="event.preventDefault(); goIGA()">Switch to INGROUP ASIA</a>` : ''}<button class="ml so" onclick="doLogout()">Sign out</button>`,
     add: `<div class="grab"></div><h3>Add</h3><div class="add">${ADD.map(a => `<a href="${a.href}" onclick="closeMSheet()">${a.label}<small>${a.sub}</small></a>`).join('')}</div>`
   };
   const pc = document.getElementById('pageContent');
@@ -361,8 +364,68 @@ function openMSheet(which){
   const sh = document.querySelector('.msheet'), dim = document.querySelector('.mdim'); if(!sh) return;
   sh.innerHTML = window._mSheets[which] || ''; sh.classList.add('open'); dim.classList.add('open');
   try{ applyNavCounts(JSON.parse(sessionStorage.getItem('bloomNavCounts') || '{}')); }catch(e){}
+  pushLabel();
 }
 function closeMSheet(){ document.querySelector('.msheet')?.classList.remove('open'); document.querySelector('.mdim')?.classList.remove('open'); }
+
+// ---- Notifications on this phone or computer (web push) ----
+const PUSH_FN = SUPABASE_URL + '/functions/v1/push';
+const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+let _pushOn = false;
+async function pushCall(action, extra){
+  const { data: { session } } = await sb.auth.getSession();
+  const r = await fetch(PUSH_FN, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + (session?.access_token || '') }, body: JSON.stringify({ action, ...(extra || {}) }) });
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok) throw new Error(j.error || 'Could not reach the server');
+  return j;
+}
+async function pushSetup(){
+  if(!('serviceWorker' in navigator)) { pushLabel(); return; }
+  try{
+    const reg = await navigator.serviceWorker.register('/staff-sw.js');
+    const sub = reg.pushManager ? await reg.pushManager.getSubscription() : null;
+    _pushOn = !!sub && Notification.permission === 'granted';
+    if(_pushOn) pushCall('subscribe', { sub: sub.toJSON(), ua: navigator.userAgent }).catch(() => {});
+  }catch(e){}
+  pushLabel();
+}
+function pushLabel(){
+  let t;
+  if(!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) t = isIOS() && !isStandalone() ? 'Notifications: add Bloom to your Home Screen first' : 'Notifications not available here';
+  else if(Notification.permission === 'denied') t = 'Notifications blocked, allow them in settings';
+  else t = _pushOn ? 'Notifications on (tap to turn off)' : 'Turn on notifications';
+  document.querySelectorAll('[data-push]').forEach(el => el.textContent = t);
+}
+async function pushToggle(){
+  if(!('PushManager' in window) || !('Notification' in window)){
+    if(isIOS() && !isStandalone()) showToastShared('On iPhone: tap Share, then Add to Home Screen. Open Bloom from that icon and turn notifications on there.');
+    else showToastShared('This browser cannot show notifications. Try Chrome, Edge or Safari.');
+    return;
+  }
+  const reg = await navigator.serviceWorker.ready;
+  try{
+    if(_pushOn){
+      const sub = await reg.pushManager.getSubscription();
+      if(sub){ await pushCall('unsubscribe', { endpoint: sub.endpoint }).catch(() => {}); await sub.unsubscribe(); }
+      _pushOn = false; pushLabel(); showToastShared('Notifications off on this device'); return;
+    }
+    const perm = await Notification.requestPermission();
+    if(perm !== 'granted'){ pushLabel(); showToastShared('Notifications were not allowed'); return; }
+    const { publicKey } = await pushCall('key');
+    const raw = atob(publicKey.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - publicKey.length % 4) % 4));
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: Uint8Array.from(raw, c => c.charCodeAt(0)) });
+    await pushCall('subscribe', { sub: sub.toJSON(), ua: navigator.userAgent });
+    _pushOn = true; pushLabel();
+    await pushCall('test');
+    showToastShared('Notifications on. A test message is on its way.');
+  }catch(e){ showToastShared(e.message || 'Could not turn on notifications'); }
+}
+function showToastShared(msg){
+  let t = document.getElementById('sharedToast');
+  if(!t){ t = document.createElement('div'); t.id = 'sharedToast'; t.style.cssText = 'position:fixed;left:16px;right:16px;bottom:96px;max-width:420px;margin:0 auto;background:#2C2C2A;color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:200;text-align:center;'; document.body.appendChild(t); }
+  t.textContent = msg; t.style.display = 'block'; clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', 5000);
+}
 
 function escShared(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 

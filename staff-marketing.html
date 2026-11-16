@@ -372,10 +372,14 @@ button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-vi
 .pchips{display:flex;gap:6px;flex-wrap:wrap;} .pchip{font:inherit;font-size:13px;padding:5px 12px;border-radius:999px;border:1px solid #DCD5C6;background:#fff;color:#2C2C2A;cursor:pointer;} .pchip:hover{border-color:#534AB7;} .pchip.on{border-color:#534AB7;background:#EEEDFE;color:#3C3489;font-weight:700;} .pchip:disabled{cursor:default;}
 @media (max-width:700px){ .lb-r{grid-template-columns:1fr auto;} .lb-r .pchips{grid-column:1 / -1;} }
 .us-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;} .us-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;} @media (max-width:700px){ .us-grid{grid-template-columns:1fr;} }
-.sharebox{border:1px solid #E8E3D8;border-radius:12px;padding:14px 16px;margin:4px 0 14px;background:#FFFFFF;} .sharebox h4{font-size:13px;margin:0 0 8px;color:#2C2C2A;}
+.sharebox{border:0;border-radius:12px;padding:14px 16px;margin:4px 0 14px;background:#FFFFFF;}
+.sh2{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:9px 0;font-size:13.5px;} .sh2+.sh2{box-shadow:0 -1px 0 #EFEAE0;}
+.sh2 .sh-n small{display:block;font-weight:400;color:#6B6A64;font-size:12px;margin-top:1px;} .sh-j{color:#6B6A64;font-size:12.5px;}
+.sh-add{display:flex;gap:8px;margin-top:6px;} .sh-add input{flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid #E5E0D5;font:inherit;font-size:13px;}
+.btn-soft{background:#EEEDFE;color:#534AB7;border:0;border-radius:8px;padding:7px 12px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;} .sharebox h4{font-size:13px;margin:0 0 8px;color:#2C2C2A;}
 .sh{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) 110px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #EFEAE0;font-size:13px;} .sh:first-of-type{border-top:0;}
 .sh-n{font-weight:600;min-width:0;} .sh-n a{color:#2C2C2A;text-decoration:none;} .sh-n a:hover{color:#534AB7;} .sh-r{color:#5F5E5A;} .sh-l{color:#8A877F;} .sh-d{color:#0F6E56;font-weight:600;text-align:right;} .sh button{justify-self:end;}
-@media (max-width:700px){ .sh{grid-template-columns:1fr auto;} .sh-r,.sh-l{grid-column:1;} }
+@media (max-width:700px){ .sh{grid-template-columns:1fr auto;} .sh .sh-r,.sh .sh-l{grid-column:1;} .sharebox{padding:4px 0;} .sh2{gap:10px;} }
 th.sortable{cursor:pointer;user-select:none;white-space:nowrap;} th.sortable .arr{margin-left:4px;opacity:0;font-size:10px;} th.sortable:hover .arr{opacity:.45;} th.sorted{color:#3C3489;} th.sorted .arr{opacity:1;color:#534AB7;}
 .subtabs.rows{flex-direction:column;align-items:flex-start;gap:8px;} .subrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;} .sublbl{font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;color:#6B6A64;width:132px;flex:0 0 132px;} @media (max-width:700px){ .sublbl{flex:0 0 100%;width:auto;} } .plain{color:#5F5E5A;font-size:13px;} .rowtag{font-size:12px;font-weight:600;color:#6B6A64;margin-left:6px;}
 .refpager{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:10px;font-size:13px;}
@@ -1312,23 +1316,46 @@ function shareList(p){
     .sort((a,b)=>SHARE_RANK[a.promo]-SHARE_RANK[b.promo] || memberCount(b.members)-memberCount(a.members));
 }
 function daysAgo(d){ const n = Math.round((new Date(new Date().toDateString()) - new Date(d+'T00:00:00')) / 86400000); return n<=0 ? 'today' : n===1 ? 'yesterday' : n + ' days ago'; }
-function shareBox(p){
-  const list = shareList(p), today = new Date().toLocaleDateString('en-CA');
-  if(!list.length) return '';
-  pageFor('share', p.id);
-  return `<div class="sharebox"><h4>Where to share</h4>${pageOf('share', list).map(g=>{ const link = linkOf('groups', g), done = g.last_posted === today;
-    return `<div class="sh"><span class="sh-n">${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(g.name)} &#8599;</a>`:esc(g.name)}${g.status!=='Joined'&&g.status!=='Active'?' <span class="rowtag">not joined yet</span>':''}</span>
-      <span class="sh-r" title="${esc(g.rules||'')}">${esc(SHARE_RULE[g.promo])}</span>
-      <span class="sh-l">${g.last_posted ? 'Last shared ' + daysAgo(g.last_posted) : 'Never shared'}</span>
-      ${canEdit ? (done ? '<span class="sh-d">Shared today</span>' : `<button class="btn-outline sm" onclick="markShared('${g.id}')">Shared</button>`) : '<span></span>'}</div>`; }).join('')}${pager('share', list.length, 'redrawPost')}</div>`;
+// 17 Nov: only on posts that are live. "Shared in" is this post's own record; "Could also go to" are suggestions.
+function sharedIn(p){
+  const m = new Map();
+  (EVENTS[p.id]||[]).forEach(e=>{ if(e.kind==='shared in a group') m.set(e.note, e.created_at); else if(e.kind==='removed a group share') m.delete(e.note); });
+  return [...m.entries()].map(([name, at])=>({ name, at }));
 }
-async function markShared(gid){
-  const g = (DATA.groups||[]).find(x=>x.id===gid); if(!g) return;
-  const body = Object.fromEntries(Object.entries(g).filter(([k])=>k!=='id' && !k.startsWith('_')));
-  body.last_posted = new Date().toLocaleDateString('en-CA');
-  const { error } = await sb.from('marketing_entries').update({ data: body }).eq('id', gid);
+function shareBox(p){
+  if(p.step !== 'posted') return '';
+  const done = sharedIn(p), doneSet = new Set(done.map(d=>d.name));
+  const list = shareList(p).filter(g=>!doneSet.has(g.name));
+  const joined = g => g.status==='Joined' || g.status==='Active';
+  pageFor('share', p.id);
+  const fmt = d => new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  return `<div class="sharebox">
+    <h4>Shared in</h4>
+    ${done.length ? done.map(d=>`<div class="sh2"><span class="sh-n">${esc(d.name)}</span><span class="sh-l">${fmt(d.at)}</span>${canEdit?`<button class="link-btn" onclick="markShared(null, ${JSON.stringify(d.name).replace(/"/g,'&quot;')}, true)">Undo</button>`:'<span></span>'}</div>`).join('') : '<p class="meta" style="margin:2px 0 6px">Not shared in any group yet.</p>'}
+    ${canEdit ? `<div class="sh-add"><input id="shAdd" placeholder="Another group, e.g. What, Where, When Chiang Mai"><button class="btn-soft sm" onclick="markShared(null, ($('#shAdd').value||'').trim())">Add</button></div>` : ''}
+    ${list.length ? `<h4 style="margin-top:14px">Could also go to</h4>${pageOf('share', list).map(g=>{ const link = linkOf('groups', g);
+      return `<div class="sh2"><span class="sh-n">${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(g.name)} &#8599;</a>`:esc(g.name)}<small>${esc(SHARE_RULE[g.promo])}${g.last_posted ? ' · last used ' + daysAgo(g.last_posted) : ''}</small></span><span></span>
+      ${canEdit ? (joined(g) ? `<button class="btn-soft sm" onclick="markShared('${g.id}')">Mark as shared</button>` : '<span class="sh-j">Join first</span>') : '<span></span>'}</div>`; }).join('')}${pager('share', list.length, 'redrawPost')}` : ''}
+  </div>`;
+}
+async function markShared(gid, name, undo){
+  const p = (DATA.posts||[]).find(x=>x.id===postId()) || null;
+  const pid = postId();
+  const g = gid ? (DATA.groups||[]).find(x=>x.id===gid) : null;
+  const group = g ? g.name : name;
+  if(!group){ showToast('Type the group name first.'); return; }
+  const { error } = await sb.rpc('mkt_post', { p_action: undo ? 'unshared' : 'shared', p_id: pid, p: { group } });
   if(error){ showToast('Could not save: ' + error.message); return; }
-  g.last_posted = body.last_posted; showToast('Noted: shared in ' + g.name + ' today.'); renderPost($('#view'));
+  if(g && !undo){
+    const body = Object.fromEntries(Object.entries(g).filter(([k])=>k!=='id' && !k.startsWith('_')));
+    body.last_posted = new Date().toLocaleDateString('en-CA');
+    const r = await sb.from('marketing_entries').update({ data: body }).eq('id', gid);
+    if(!r.error) g.last_posted = body.last_posted;
+  }
+  const { data } = await sb.from('marketing_post_events').select('actor,kind,note,created_at').eq('post_id', pid).order('created_at');
+  EVENTS[pid] = data || [];
+  showToast(undo ? 'Removed ' + group + '.' : 'Noted: shared in ' + group + '.');
+  renderPost($('#view'));
 }
 function enAiLabel(){ return ((($('#f-copy_en')||{}).value||'').trim()) ? 'Rewrite with AI' : 'Draft with AI'; }
 function aiShowPanel(){

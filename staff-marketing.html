@@ -375,6 +375,11 @@ button.tile:focus{outline:none;} button.tile:focus-visible,.stepcol.ovt:focus-vi
 .sharebox{border:0;border-radius:12px;padding:14px 16px;margin:4px 0 14px;background:#FFFFFF;}
 .sh2{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:9px 0;font-size:13.5px;} .sh2+.sh2{box-shadow:0 -1px 0 #EFEAE0;}
 .sh2 .sh-n small{display:block;font-weight:400;color:#6B6A64;font-size:12px;margin-top:1px;} .sh-j{color:#6B6A64;font-size:12.5px;}
+.sh3{grid-template-columns:minmax(0,1fr) auto;} .sh3 small{white-space:nowrap;} .sh-a{align-items:center;} @media (max-width:700px){ .sh3{grid-template-columns:1fr;gap:6px;} .sh3 .sh-a{justify-content:flex-start;} } .sh-o{font-weight:600;color:#534AB7;text-decoration:none;font-size:13px;white-space:nowrap;} .sh-a{display:flex;gap:12px;justify-content:flex-end;}
+.st{position:static;display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;margin-right:4px;} .st-live{background:#E1F5EE;color:#0F6E56;} .st-scheduled{background:#FAEEDA;color:#854F0B;}
+.shf{background:#F7F5F0;border-radius:10px;padding:12px;margin:2px 0 10px;display:grid;gap:8px;} .shf input{padding:9px 10px;border-radius:8px;border:1px solid #E5E0D5;font:inherit;font-size:13px;background:#fff;} .shf .meta{margin:0;font-size:12px;}
+.shf-t{display:flex;gap:6px;} .shf-t button{flex:0 0 auto;padding:6px 12px;border-radius:99px;border:1px solid #E5E0D5;background:#fff;font:inherit;font-size:12.5px;cursor:pointer;color:#5F5E5A;} .shf-t button.on{background:#534AB7;border-color:#534AB7;color:#fff;}
+.shf-b{display:flex;gap:14px;justify-content:flex-end;align-items:center;}
 .sh-add{display:flex;gap:8px;margin-top:6px;} .sh-add input{flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid #E5E0D5;font:inherit;font-size:13px;}
 .btn-soft{background:#EEEDFE;color:#534AB7;border:0;border-radius:8px;padding:7px 12px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;} .sharebox h4{font-size:13px;margin:0 0 8px;color:#2C2C2A;}
 .sh{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) 110px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #EFEAE0;font-size:13px;} .sh:first-of-type{border-top:0;}
@@ -851,12 +856,12 @@ function notMarkedBox(){
   const canMarkP = p => isAdmin() || posterOf(p) === ME;
   return `<div class="box" style="border-color:#EF9F27"><h3 class="bh">Posted? Not marked yet: ${a.length}</h3>
     <p class="meta" style="font-size:13px;margin-bottom:6px">These were due to go out and are still waiting at the Post step. If they are on Facebook, mark them so the numbers stay true.</p>
-    ${pageOf('nm', a).map(p=>`<div class="wl" style="cursor:default"><span class="late-d">${fmtShort(p.post_date)}</span><span class="pt"><a href="javascript:void 0" onclick="go('post/${p.id}')" class="ptt">${esc(p.title)}</a></span><span></span><span></span><span class="wl-act">${canMarkP(p)?`<button class="btn-outline sm" onclick="quickMark('${p.id}')">Mark as posted</button>`:''}</span></div>`).join('')}${pager('nm', a.length)}
+    ${pageOf('nm', a).map(p=>`<div class="wl" style="cursor:default"><span class="late-d">${fmtShort(p.post_date)}</span><span class="pt"><a href="javascript:void 0" onclick="go('post/${p.id}')" class="ptt">${esc(p.title)}</a></span><span></span><span></span><span class="wl-act">${canMarkP(p)?`<button class="btn-outline sm" onclick="quickMark('${p.id}')">Finish post</button>`:''}</span></div>`).join('')}${pager('nm', a.length)}
   </div>`;
 }
 async function quickMark(id){
   const r = await act('mark_posted', id, {}); if(!r) return;
-  showToast('Marked as posted.'); await reloadPosts(true);
+  showToast('Finished. Moved to Posted.'); await reloadPosts(true);
 }
 
 // ---------- Overview ----------
@@ -1100,7 +1105,7 @@ function nextLine(p){
     english: [pic ? `${pic} reviews it${due(2)?', due '+due(2):''}` : 'No reviewer set yet'],
     review: [thaiPart || postPart],
     thai: [postPart],
-    post: ['Post it on Facebook, then mark it as posted.']
+    post: ['Post or schedule it, tap Done for each place, then Finish post.']
   }[p.step];
   if(!parts) return '';
   return p.step === 'post' ? 'Last step: ' + esc(parts[0]) : 'Next: ' + esc(parts[0]) + '.';
@@ -1126,7 +1131,7 @@ async function renderPost(el){
   draft = p;
   if(!EVENTS[id]){
     EVENTS[id] = [];
-    sb.from('marketing_post_events').select('actor,kind,note,created_at').eq('post_id', id).order('created_at').then(({data})=>{ EVENTS[id] = data || []; if(postId()===id && !dirty()) renderPost($('#view')); });
+    sb.from('marketing_post_events').select('actor,kind,note,meta,created_at').eq('post_id', id).order('created_at').then(({data})=>{ EVENTS[id] = data || []; if(postId()===id && !dirty()) renderPost($('#view')); });
   }
   if(!VERSIONS[id]){
     VERSIONS[id] = [];
@@ -1161,8 +1166,7 @@ async function renderPost(el){
     if(p.step==='post') actions = p.needs_thai && p.th_stale && !isAdmin()
       ? `<span class="muted">The English changed after the Thai was checked. Ask the admin to update the Thai before this goes out.</span>`
       : `<button class="btn-outline" onclick="copyCaption()">Copy caption</button>
-      <input id="f-url" placeholder="Facebook link (optional)" class="note-in">
-      <button class="btn-primary" onclick="doAct('mark_posted')">Mark as posted</button>`;
+      <button class="btn-primary" onclick="doAct('mark_posted')">Finish post</button>`;
   }
   const stepWho = {english:nameOf(p.writer)||'the writer', review:nameOf(p.pic)||'the reviewer', thai:nameOf(p.translator)||'the translator', post:nameOf(posterOf(p))||'the poster'}[p.step] || '';
   const adminLine = actions && asAdmin ? `<p class="adminline">You're doing ${esc(stepWho)}'s step as admin. This is logged.</p>` : '';
@@ -1171,7 +1175,8 @@ async function renderPost(el){
     ? `<div class="briefbox"><span><b>For</b>${esc((p.brief_audience||[]).join(', ')||'Not set')}</span><span><b>Goal</b>${esc(goalName(p.brief_goal)||'Not set')}</span><span><b>Format</b>${esc(formatName(p.brief_format)||'Not set')}</span>${canBrief?`<button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Edit brief</button>`:''}${p.brief?`<span class="kp"><b>Key points</b>${esc(p.brief)}</span>`:''}</div>`
     : (canBrief ? `<div class="briefbox"><span class="meta">No brief yet.</span><button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Add brief</button></div>` : '');
   const waiting = !canAct && openStep(p) ? `<span class="muted">Waiting on ${esc(ownerName(p))}${isLate(p)?' · <span class="late-d">late</span>':''}</span>` : '';
-  const hist = (EVENTS[id]||[]).map(e=>`${esc(nameOf(e.actor)||'System')} ${esc(e.kind)}${e.note?` ("${esc(e.note)}")`:''} · ${new Date(e.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`).join('<br>');
+  const PLACE_KIND = {'shared in a group':'posted in', 'scheduled in':'scheduled in', 'removed a group share':'removed'};
+  const hist = (EVENTS[id]||[]).map(e=>`${esc(nameOf(e.actor)||'System')} ${PLACE_KIND[e.kind] ? esc(PLACE_KIND[e.kind]) + ' ' + esc(e.note||'') : esc(e.kind) + (e.note?` ("${esc(e.note)}")`:'')} · ${new Date(e.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`).join('<br>');
   if(p.step==='posted'){ el.innerHTML = postedView(p, imgs, hist); return; }
   el.innerHTML = `<div id="pg">
   <button class="link-btn" style="margin-bottom:14px" onclick="history.length>1?history.back():go('${lastTab||'turn'}')">&#8249; Back</button>
@@ -1200,7 +1205,6 @@ async function renderPost(el){
       ${canImg?`<label class="imadd">+ Add<input type="file" accept="image/*" multiple onchange="addImgs(this.files)" hidden></label>`:''}${!imgs.length&&!canImg?'<span class="meta">No images yet.</span>':''}</div></div>
     <div class="f"><label>Video link <span class="hint">reels: paste a link for now</span></label><input id="f-video_url" ${canImg?'':'readonly'} value="${esc(p.video_url||'')}" placeholder="https://"></div>
     ${['post','posted'].includes(p.step) ? shareBox(p) : ''}
-    ${p.post_url?`<p style="margin-bottom:12px"><a href="${esc(safeUrl(p.post_url))}" target="_blank" rel="noopener" style="font-weight:600">View the live post</a></p>`:''}
     <button class="link-btn" style="margin:2px 0 10px" onclick="togglePreview()">${SHOW_PREVIEW?'Hide':'Preview as'} Facebook post</button>
     <div id="fbPreview">${SHOW_PREVIEW?fbPreviewHtml(p):''}</div>
     ${adminLine}
@@ -1316,37 +1320,76 @@ function shareList(p){
     .sort((a,b)=>SHARE_RANK[a.promo]-SHARE_RANK[b.promo] || memberCount(b.members)-memberCount(a.members));
 }
 function daysAgo(d){ const n = Math.round((new Date(new Date().toDateString()) - new Date(d+'T00:00:00')) / 86400000); return n<=0 ? 'today' : n===1 ? 'yesterday' : n + ' days ago'; }
-// 17 Nov: on posts at the Post step and live ones. "Posted in" is this post's own record; "Suggested places" are Bloom's channels and fitting groups.
+// 17 Nov: each place a post went to (live or scheduled, with its link), then where else it could go.
+const OWN_LINK = {'Facebook Page':'https://www.facebook.com/BLOOM.chiangmai', 'Instagram':'https://www.instagram.com/bloom.chiangmai/'};
+const SUITE = 'https://business.facebook.com/';
+let SH_FORM = null; // { name, gid, status } while the Done box is open
 function sharedIn(p){
   const m = new Map();
-  (EVENTS[p.id]||[]).forEach(e=>{ if(e.kind==='shared in a group') m.set(e.note, e.created_at); else if(e.kind==='removed a group share') m.delete(e.note); });
-  return [...m.entries()].map(([name, at])=>({ name, at }));
+  (EVENTS[p.id]||[]).forEach(e=>{
+    if(e.kind==='shared in a group' || e.kind==='scheduled in') m.set(e.note, { at: e.created_at, status: e.kind==='scheduled in' ? 'scheduled' : 'live', link: (e.meta||{}).link || '' });
+    else if(e.kind==='removed a group share') m.delete(e.note);
+  });
+  return [...m.entries()].map(([name, v])=>({ name, ...v }));
 }
+function placeHome(name){
+  if(OWN_LINK[name]) return OWN_LINK[name];
+  const g = (DATA.groups||[]).find(x=>x.name===name);
+  return g ? linkOf('groups', g) : '';
+}
+function shForm(){
+  const f = SH_FORM, sch = f.status==='scheduled';
+  return `<div class="shf">
+    <div class="shf-t"><button class="${sch?'':'on'}" onclick="shStatus('live')">Live now</button><button class="${sch?'on':''}" onclick="shStatus('scheduled')">Scheduled</button></div>
+    <input id="shLink" value="${esc(f.link||'')}" oninput="SH_FORM.link=this.value" placeholder="${sch ? 'Link from Meta Business Suite (optional)' : 'Link to the live post (optional)'}">
+    <p class="meta">${sch ? 'Anyone opening a scheduled link logs in to Facebook first.' : 'On the post, tap ··· then Copy link.'}</p>
+    <div class="shf-b"><button class="link-btn" onclick="SH_FORM=null;redrawPost()">Cancel</button><button class="btn-primary sm" onclick="saveShared()">Save</button></div>
+  </div>`;
+}
+function shStatus(st){ SH_FORM.link = ($('#shLink')||{}).value || ''; SH_FORM.status = st; redrawPost(); }
+function openDone(gid, name, status){ SH_FORM = { gid: gid||null, name, status: status||'live', link:'' }; redrawPost(); setTimeout(()=>{ const i=$('#shLink'); if(i) i.focus(); }, 0); }
 function shareBox(p){
   if(!['post','posted'].includes(p.step)) return '';
+  if(SH_FORM && SH_FORM.pid !== undefined && SH_FORM.pid !== p.id) SH_FORM = null;
+  if(SH_FORM) SH_FORM.pid = p.id;
   const done = sharedIn(p), doneSet = new Set(done.map(d=>d.name));
-  // Bloom's own channels first, then the groups that fit this post's audience
-  const OWN = [{ id:'', name:'Facebook Page', promo:'Own', status:'Joined', own:true }, { id:'', name:'Instagram', promo:'Own', status:'Joined', own:true }].filter(c=>!doneSet.has(c.name));
+  const OWN = Object.keys(OWN_LINK).map(name=>({ id:'', name, promo:'Own', status:'Joined', own:true })).filter(c=>!doneSet.has(c.name));
   const list = OWN.concat(shareList(p).filter(g=>!doneSet.has(g.name)));
   const joined = g => g.status==='Joined' || g.status==='Active';
   pageFor('share', p.id);
   const fmt = d => new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  const q = v => JSON.stringify(v).replace(/"/g,'&quot;');
+  const formFor = name => SH_FORM && SH_FORM.name===name ? shForm() : '';
+  const openLink = d => {
+    const href = safeUrl(d.link) ? d.link : d.status==='scheduled' ? SUITE : placeHome(d.name);
+    if(!href) return '<span></span>';
+    const label = d.status==='scheduled' && !safeUrl(d.link) ? 'Open (log in)' : d.link ? 'Open' : 'Open page';
+    return `<a class="sh-o" href="${esc(href)}" target="_blank" rel="noopener">${label} &#8599;</a>`;
+  };
+  const extra = SH_FORM && !SH_FORM.gid && !OWN_LINK[SH_FORM.name] && !doneSet.has(SH_FORM.name) && !list.some(g=>g.name===SH_FORM.name);
   return `<div class="sharebox">
-    <h4>Posted in</h4>
-    ${done.length ? done.map(d=>`<div class="sh2"><span class="sh-n">${esc(d.name)}</span><span class="sh-l">${fmt(d.at)}</span>${canEdit?`<button class="link-btn" onclick="markShared(null, ${JSON.stringify(d.name).replace(/"/g,'&quot;')}, true)">Undo</button>`:'<span></span>'}</div>`).join('') : '<p class="meta" style="margin:2px 0 6px">Nowhere yet. Mark each place as you post it.</p>'}
-    ${canEdit ? `<div class="sh-add"><input id="shAdd" placeholder="Somewhere else, e.g. What, Where, When Chiang Mai"><button class="btn-soft sm" onclick="markShared(null, ($('#shAdd').value||'').trim())">Add</button></div>` : ''}
-    ${list.length ? `<h4 style="margin-top:14px">Suggested places</h4>${pageOf('share', list).map(g=>{ const link = g.own ? (g.name==='Instagram' ? 'https://www.instagram.com/bloom.chiangmai/' : 'https://www.facebook.com/BLOOM.chiangmai') : linkOf('groups', g);
+    <h4>Posted or scheduled</h4>
+    ${done.length ? done.map(d=>`<div class="sh2 sh3"><span class="sh-n">${esc(d.name)}<small><span class="st st-${d.status}">${d.status==='live'?'Live':'Scheduled'}</span> ${fmt(d.at)}</small></span>
+      ${canEdit?`<span class="sh-a">${openLink(d)}${d.status==='scheduled'?`<button class="link-btn" onclick="openDone(null, ${q(d.name)}, 'live')">It's live</button>`:''}<button class="link-btn" onclick="markShared(null, ${q(d.name)}, true)">Undo</button></span>`:`<span class="sh-a">${openLink(d)}</span>`}</div>${formFor(d.name)}`).join('')
+      : '<p class="meta" style="margin:2px 0 6px">Nothing yet. After you post or schedule somewhere, tap Done on it below.</p>'}
+    ${canEdit ? `<div class="sh-add"><input id="shAdd" placeholder="Somewhere else, e.g. What, Where, When Chiang Mai"><button class="btn-soft sm" onclick="const v=($('#shAdd').value||'').trim(); if(!v){showToast('Type the place first.');return;} openDone(null, v)">Done</button></div>${extra ? shForm() : ''}` : ''}
+    ${list.length ? `<h4 style="margin-top:14px">Where else to post</h4>${pageOf('share', list).map(g=>{ const link = g.own ? OWN_LINK[g.name] : linkOf('groups', g);
       return `<div class="sh2"><span class="sh-n">${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(g.name)} &#8599;</a>`:esc(g.name)}<small>${g.own ? 'Bloom\'s own' : esc(SHARE_RULE[g.promo])}${g.last_posted ? ' · last used ' + daysAgo(g.last_posted) : ''}</small></span><span></span>
-      ${canEdit ? (joined(g) ? `<button class="btn-soft sm" onclick="markShared(${g.own ? `null, '${g.name}'` : `'${g.id}'`})">Posted here</button>` : '<span class="sh-j">Join first</span>') : '<span></span>'}</div>`; }).join('')}${pager('share', list.length, 'redrawPost')}` : ''}
+      ${canEdit ? (joined(g) ? `<button class="btn-soft sm" onclick="openDone(${g.own ? 'null' : q(g.id)}, ${q(g.name)})">Done</button>` : '<span class="sh-j">Join first</span>') : '<span></span>'}</div>${formFor(g.name)}`; }).join('')}${pager('share', list.length, 'redrawPost')}` : ''}
   </div>`;
 }
-async function markShared(gid, name, undo){
-  const p = (DATA.posts||[]).find(x=>x.id===postId()) || null;
+async function saveShared(){
+  const f = SH_FORM; if(!f) return;
+  const link = (($('#shLink')||{}).value||'').trim();
+  if(link && !/^https:\/\//i.test(link)){ showToast('The link should start with https://'); return; }
+  await markShared(f.gid, f.name, false, { link, status: f.status });
+}
+async function markShared(gid, name, undo, extra){
   const pid = postId();
   const g = gid ? (DATA.groups||[]).find(x=>x.id===gid) : null;
   const group = g ? g.name : name;
-  if(!group){ showToast('Type the group name first.'); return; }
-  const { error } = await sb.rpc('mkt_post', { p_action: undo ? 'unshared' : 'shared', p_id: pid, p: { group } });
+  if(!group){ showToast('Type the place first.'); return; }
+  const { error } = await sb.rpc('mkt_post', { p_action: undo ? 'unshared' : 'shared', p_id: pid, p: Object.assign({ group }, extra||{}) });
   if(error){ showToast('Could not save: ' + error.message); return; }
   if(g && !undo){
     const body = Object.fromEntries(Object.entries(g).filter(([k])=>k!=='id' && !k.startsWith('_')));
@@ -1354,11 +1397,13 @@ async function markShared(gid, name, undo){
     const r = await sb.from('marketing_entries').update({ data: body }).eq('id', gid);
     if(!r.error) g.last_posted = body.last_posted;
   }
-  const { data } = await sb.from('marketing_post_events').select('actor,kind,note,created_at').eq('post_id', pid).order('created_at');
+  SH_FORM = null;
+  const { data } = await sb.from('marketing_post_events').select('actor,kind,note,meta,created_at').eq('post_id', pid).order('created_at');
   EVENTS[pid] = data || [];
-  showToast(undo ? 'Removed ' + group + '.' : 'Noted: posted in ' + group + '.');
+  showToast(undo ? 'Removed ' + group + '.' : (extra && extra.status==='scheduled' ? 'Noted: scheduled in ' : 'Noted: live in ') + group + '.');
   renderPost($('#view'));
 }
+
 function enAiLabel(){ return ((($('#f-copy_en')||{}).value||'').trim()) ? 'Rewrite with AI' : 'Draft with AI'; }
 function aiShowPanel(){
   const slot = $('#aiSlot'); if(!slot || !AI_SUG) return;
@@ -1491,7 +1536,12 @@ async function doAct(a){
   if(a==='send_on' && !p.pic){ showToast('Pick the reviewer first.'); editTopic(p.id); return; }
   if(a==='translator_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the reviewer knows what to check.'); $('#f-note').focus(); return; } }
   if(a==='send_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the writer knows what to change.'); $('#f-note').focus(); return; } }
-  if(a==='mark_posted') pay.post_url = (($('#f-url')||{}).value||'').trim();
+  if(a==='mark_posted'){
+    const places = sharedIn(p);
+    if(!places.length){ showToast('Tap Done for each place you posted or scheduled first.'); return; }
+    const live = places.filter(x=>x.status==='live' && x.link);
+    pay.post_url = ((live.find(x=>x.name==='Facebook Page') || live[0] || {}).link) || '';
+  }
   // Item IX: approving a Thai post with no Thai yet makes an AI Thai draft first, so the translator starts from it.
   let aiTh = '';
   if(a==='approve' && p.needs_thai && !(p.copy_th||'').trim() && (p.copy_en||'').trim()){
@@ -1503,7 +1553,7 @@ async function doAct(a){
   const r = await act(a, p.id, pay); if(!r) return;
   EXTRA_KEYS.forEach(k => { const e = $('#f-'+k); if(e) e.value = ''; });
   if(aiTh) showToast(aiTh==='ok' ? 'Approved. The translator starts from an AI Thai draft.' : 'Approved. The AI Thai draft did not work, so the translator writes the Thai.');
-  else showToast({send_on:'Sent to Review.', thai_checked:'Thai done. Sent to Post.', send_back:'Sent back to English with your note.', translator_back:'Sent back to Review with your note.', approve: p.needs_thai ? 'Approved. Sent to Translate.' : 'Approved. Sent to Post.', mark_posted:'Marked as posted.'}[a] || 'Done.');
+  else showToast({send_on:'Sent to Review.', thai_checked:'Thai done. Sent to Post.', send_back:'Sent back to English with your note.', translator_back:'Sent back to Review with your note.', approve: p.needs_thai ? 'Approved. Sent to Translate.' : 'Approved. Sent to Post.', mark_posted:'Finished. Moved to Posted.'}[a] || 'Done.');
   delete EVENTS[p.id]; await reloadPosts(true);
 }
 async function copyCaption(){

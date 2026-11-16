@@ -1316,26 +1316,28 @@ function shareList(p){
     .sort((a,b)=>SHARE_RANK[a.promo]-SHARE_RANK[b.promo] || memberCount(b.members)-memberCount(a.members));
 }
 function daysAgo(d){ const n = Math.round((new Date(new Date().toDateString()) - new Date(d+'T00:00:00')) / 86400000); return n<=0 ? 'today' : n===1 ? 'yesterday' : n + ' days ago'; }
-// 17 Nov: only on posts that are live. "Shared in" is this post's own record; "Could also go to" are suggestions.
+// 17 Nov: on posts at the Post step and live ones. "Posted in" is this post's own record; "Suggested places" are Bloom's channels and fitting groups.
 function sharedIn(p){
   const m = new Map();
   (EVENTS[p.id]||[]).forEach(e=>{ if(e.kind==='shared in a group') m.set(e.note, e.created_at); else if(e.kind==='removed a group share') m.delete(e.note); });
   return [...m.entries()].map(([name, at])=>({ name, at }));
 }
 function shareBox(p){
-  if(p.step !== 'posted') return '';
+  if(!['post','posted'].includes(p.step)) return '';
   const done = sharedIn(p), doneSet = new Set(done.map(d=>d.name));
-  const list = shareList(p).filter(g=>!doneSet.has(g.name));
+  // Bloom's own channels first, then the groups that fit this post's audience
+  const OWN = [{ id:'', name:'Facebook Page', promo:'Own', status:'Joined', own:true }, { id:'', name:'Instagram', promo:'Own', status:'Joined', own:true }].filter(c=>!doneSet.has(c.name));
+  const list = OWN.concat(shareList(p).filter(g=>!doneSet.has(g.name)));
   const joined = g => g.status==='Joined' || g.status==='Active';
   pageFor('share', p.id);
   const fmt = d => new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
   return `<div class="sharebox">
-    <h4>Shared in</h4>
-    ${done.length ? done.map(d=>`<div class="sh2"><span class="sh-n">${esc(d.name)}</span><span class="sh-l">${fmt(d.at)}</span>${canEdit?`<button class="link-btn" onclick="markShared(null, ${JSON.stringify(d.name).replace(/"/g,'&quot;')}, true)">Undo</button>`:'<span></span>'}</div>`).join('') : '<p class="meta" style="margin:2px 0 6px">Not shared in any group yet.</p>'}
-    ${canEdit ? `<div class="sh-add"><input id="shAdd" placeholder="Another group, e.g. What, Where, When Chiang Mai"><button class="btn-soft sm" onclick="markShared(null, ($('#shAdd').value||'').trim())">Add</button></div>` : ''}
-    ${list.length ? `<h4 style="margin-top:14px">Could also go to</h4>${pageOf('share', list).map(g=>{ const link = linkOf('groups', g);
-      return `<div class="sh2"><span class="sh-n">${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(g.name)} &#8599;</a>`:esc(g.name)}<small>${esc(SHARE_RULE[g.promo])}${g.last_posted ? ' · last used ' + daysAgo(g.last_posted) : ''}</small></span><span></span>
-      ${canEdit ? (joined(g) ? `<button class="btn-soft sm" onclick="markShared('${g.id}')">Mark as shared</button>` : '<span class="sh-j">Join first</span>') : '<span></span>'}</div>`; }).join('')}${pager('share', list.length, 'redrawPost')}` : ''}
+    <h4>Posted in</h4>
+    ${done.length ? done.map(d=>`<div class="sh2"><span class="sh-n">${esc(d.name)}</span><span class="sh-l">${fmt(d.at)}</span>${canEdit?`<button class="link-btn" onclick="markShared(null, ${JSON.stringify(d.name).replace(/"/g,'&quot;')}, true)">Undo</button>`:'<span></span>'}</div>`).join('') : '<p class="meta" style="margin:2px 0 6px">Nowhere yet. Mark each place as you post it.</p>'}
+    ${canEdit ? `<div class="sh-add"><input id="shAdd" placeholder="Somewhere else, e.g. What, Where, When Chiang Mai"><button class="btn-soft sm" onclick="markShared(null, ($('#shAdd').value||'').trim())">Add</button></div>` : ''}
+    ${list.length ? `<h4 style="margin-top:14px">Suggested places</h4>${pageOf('share', list).map(g=>{ const link = g.own ? (g.name==='Instagram' ? 'https://www.instagram.com/bloom.chiangmai/' : 'https://www.facebook.com/BLOOM.chiangmai') : linkOf('groups', g);
+      return `<div class="sh2"><span class="sh-n">${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(g.name)} &#8599;</a>`:esc(g.name)}<small>${g.own ? 'Bloom\'s own' : esc(SHARE_RULE[g.promo])}${g.last_posted ? ' · last used ' + daysAgo(g.last_posted) : ''}</small></span><span></span>
+      ${canEdit ? (joined(g) ? `<button class="btn-soft sm" onclick="markShared(${g.own ? `null, '${g.name}'` : `'${g.id}'`})">Posted here</button>` : '<span class="sh-j">Join first</span>') : '<span></span>'}</div>`; }).join('')}${pager('share', list.length, 'redrawPost')}` : ''}
   </div>`;
 }
 async function markShared(gid, name, undo){
@@ -1354,7 +1356,7 @@ async function markShared(gid, name, undo){
   }
   const { data } = await sb.from('marketing_post_events').select('actor,kind,note,created_at').eq('post_id', pid).order('created_at');
   EVENTS[pid] = data || [];
-  showToast(undo ? 'Removed ' + group + '.' : 'Noted: shared in ' + group + '.');
+  showToast(undo ? 'Removed ' + group + '.' : 'Noted: posted in ' + group + '.');
   renderPost($('#view'));
 }
 function enAiLabel(){ return ((($('#f-copy_en')||{}).value||'').trim()) ? 'Rewrite with AI' : 'Draft with AI'; }

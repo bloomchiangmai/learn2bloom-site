@@ -137,6 +137,20 @@ function toastUndo(msg, rowIds, after) {
     toast('Restored'); await refreshCounts(); after && after();
   };
 }
+// "Take back to edit": the owner pulls a submitted form back to draft while nobody has approved it yet (same as IGA)
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('#takeback'); if (!b) return;
+  const rep = location.hash.match(/^#\/report\/([^?/]+)/);
+  const kind = rep ? 'report' : 'ot';
+  const id = rep ? rep[1] : S.otFormId;
+  if (!id) return;
+  b.disabled = true; b.textContent = 'Taking back...';
+  const { error } = await sb.rpc('take_back', { p_kind: kind, p_id: id });
+  if (error) { b.disabled = false; b.textContent = 'Take back to edit'; toast(friendly(error), true); return; }
+  toast('Taken back. It is a draft again, change what you need and submit.');
+  await refreshCounts();
+  if (kind === 'report') location.hash = '#/expenses?id=' + id; else route();
+});
 function friendly(err) {
   const m = err?.message || String(err || 'Something went wrong');
   return m.replace(/^.*?ERROR:\s*/, '');
@@ -1872,6 +1886,8 @@ async function pageReport(id) {
   <div class="stack">
     ${report.status === 'rejected' ? `<div class="banner bad"><b>Returned:</b> ${esc(report.rejection_reason)}</div>` : ''}
     ${mine && report.status === 'submitted' ? seenBanner(x.events) : ''}
+    ${mine && (report.status === 'submitted' || (report.status === 'checked' && !report.checked_by)) ? `<div class="banner info tb-line"><span><b>Locked while it is checked.</b> Nobody has approved it yet, so you can still take it back to change something.</span><button class="btn small" id="takeback">Take back to edit</button></div>` : ''}
+    ${mine && ['checked', 'approved'].includes(report.status) && report.checked_by ? '<div class="faint" style="font-size:13px">Locked. Someone has approved it, so only an approver can return it to you.</div>' : ''}
     ${statsHtml(report, totals)}
     ${isApprover() && report.status === 'submitted' ? sinceReturnedHtml(items, staff.full_name) : ''}
     ${isApprover() && x.changed.size ? `<div class="banner info"><b>${x.changed.size} line${x.changed.size > 1 ? 's' : ''} changed</b> since the form was returned on ${dateLabel(report.last_returned_at)}. Marked "Changed" below.</div>` : ''}
@@ -3306,6 +3322,7 @@ async function pageOT() {
   const sv = (await sb.from('saved_days_balance').select('*').eq('staff_id', uid).maybeSingle()).data || { days_left: 0, next_expiry: null };
   window.__savedLeft = Number(sv.days_left) || 0;
   // Only the staff member changes their own days. Admin and HR can ask about a day instead.
+  S.otFormId = form?.id || null;
   const editable = self && (!form || ['draft', 'rejected'].includes(form.status));
   const uq = self ? '' : `&u=${uid}`;
   // All OT periods for this person, so earlier ones are one click away
@@ -3358,7 +3375,8 @@ async function pageOT() {
     ${savedSoon}
     ${self && (!form || form.status === 'draft') && iso(new Date()) >= iso(new Date(new Date(`${per.end}T00:00:00`).getTime() - 86400000)) && iso(new Date()) <= per.end ? `<div class="banner warn"><b>Due ${esc(dateLabel(per.end))}.</b> Not submitted yet. Check your days, then submit below.</div>` : ''}
     ${form?.status === 'rejected' ? `<div class="banner bad"><b>Returned:</b> ${esc(form.rejection_reason)}<br>Fix it and submit again.</div>` : ''}
-    ${form && form.status !== 'draft' && form.status !== 'rejected' ? `<div class="banner info">${pill(form.status)} ${form.status === 'submitted' ? (form.seen_at && form.seen_at >= form.submitted_at ? 'Being reviewed.' : 'Waiting for review.') : form.status === 'approved' ? `Approved by ${esc(form.approved_by_name || '')} on ${dateLabel(form.approved_at)}.` : `Paid on ${dateLabel(form.paid_at)}.`}</div>` : ''}
+    ${form && form.status !== 'draft' && form.status !== 'rejected' ? `<div class="banner info">${pill(form.status)} ${form.status === 'submitted' ? (form.seen_at && form.seen_at >= form.submitted_at ? 'Being reviewed.' : 'Waiting for review.') : form.status === 'approved' ? `Approved by ${esc(form.approved_by_name || '')} on ${dateLabel(form.approved_at)}.` : `Paid on ${dateLabel(form.paid_at)}.`}
+      <div class="lockline">${self ? 'Locked, you can no longer change days.' : 'Locked.'} ${form.status === 'submitted' ? `${self ? 'Nobody has approved it yet, so you can still take it back.' : 'Return it if something needs changing.'}` : 'It can only be reopened by an admin or HR.'}${self && form.status === 'submitted' ? ' <button class="btn small" id="takeback">Take back to edit</button>' : ''}</div></div>` : ''}
     ${calHtml(per, entries, set, hol, { editable })}
     ${editable && entries.length ? `<div class="row" style="justify-content:flex-end"><button class="btn primary" id="otsub">Submit for approval</button></div>` : ''}
     ${!editable && form ? `<div class="muted" style="font-size:13px">${otSplitText(form, total)}</div>` : ''}

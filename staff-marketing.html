@@ -307,6 +307,9 @@ div.tile{cursor:default;}
 .chip.tg-warn{background:#FAEEDA;color:#854F0B;margin-left:6px;} .chip.tg-sch{background:#FAEEDA;color:#854F0B;} .st-waiting{background:#E6F1FB;color:#0C447C;}
 .ask{position:fixed;inset:0;background:rgba(30,28,24,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;} .ask-b{background:#fff;border-radius:14px;padding:20px 22px;max-width:420px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2);} .ask-b h4{font-size:16px;margin:0 0 6px;} .ask-b p{font-size:14px;color:#5F5E5A;margin:0 0 16px;line-height:1.5;} .ask-a{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
 .ck{display:flex;gap:8px;align-items:center;font-size:13.5px;margin-top:4px;}
+.del-c{width:44px;text-align:right;padding-right:10px !important;} .row-del{background:none;border:0;color:#8A877F;font-size:20px;line-height:1;width:30px;height:30px;border-radius:99px;cursor:pointer;opacity:0;} tr:hover .row-del,.row-del:focus-visible{opacity:1;} .row-del:hover{background:#FAECE7;color:#A23F1C;}
+.undo-t{position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:#2C2C2A;color:#fff;border-radius:12px;padding:10px 12px 10px 18px;gap:16px;align-items:center;font-size:14px;z-index:300;display:none;box-shadow:0 8px 24px rgba(0,0,0,.2);} .undo-t button{background:#fff;color:#2C2C2A;border:0;border-radius:8px;padding:7px 14px;font:inherit;font-weight:700;cursor:pointer;}
+@media (max-width:700px){ .undo-t{bottom:96px;white-space:nowrap;} .row-del{opacity:1;} td.del-c,th.del-c{position:sticky;right:0;background:#fff;box-shadow:-8px 0 8px -6px rgba(0,0,0,.08);} }
 .chip.tg-paid{background:#EEEDFE;color:#3C3489;margin-left:6px;}
 .bud-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px;} .bud-top .bh{margin:0;} .bud-r{padding:10px 0;border-top:1px solid #F0ECE3;} .bud-h{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;}
 .bud-bar{height:8px;border-radius:99px;background:#F1EFE8;display:flex;overflow:hidden;} .bud-bar span{background:#534AB7;} .bud-bar span.p{background:#CECBF6;} .bud-r .meta{margin:6px 0 0;font-size:12.5px;} .warn-t{color:#854F0B !important;}
@@ -540,7 +543,7 @@ const REF = [
  {k:'audiences',t:'Audiences',view:'cards',d:'Who we talk to, what they worry about, and what we say to them.',title:'name',chip:'priority',cols:['priority','language','channels'],
   f:[['name','Segment','text'],['priority','Priority','select',['Primary','Secondary','Watch']],['who','Who they are','long'],['worries','What they worry about','long'],['message','Our message to them','long'],['channels','Where they are','text'],['language','Language','text']]},
  {k:'channels',t:'Channels',view:'cards',d:'Every account Bloom owns, and how each one gets fed.',title:'name',chip:'status',cols:['type','automation','status'],
-  f:[['name','Channel','text'],['type','Type','select',['Social','Messaging','Website','Email']],['handle','Link','url'],['automation','How it is fed','select',['Buffer (automated)','Manual','Own app','Not set up']],['status','Status','select',['Active','To confirm','To create','Paused']],['audience','Main audience','text'],['notes','Notes','long']]},
+  f:[['name','Channel','text'],['type','Type','select',['Social','Messaging','Website','Email']],['handle','Link','url'],['automation','How it is fed','select',['Bot (Grok)','Manual','Own app','Buffer (automated)','Not set up']],['status','Status','select',['Active','To confirm','To create','Paused']],['audience','Main audience','text'],['notes','Notes','long']]},
  {k:'groups',t:'Communities',view:'table',d:'Groups, pages and chats run by others, where families already gather. Check the rules before posting.',title:'name',chip:'status',cols:['audience','members','status'],filter:'audience',tag:'platform',rank:groupRank,
   f:[['name','Community','text'],['platform','Platform','select',['Facebook group','Facebook Page','WhatsApp group','LINE group','Redbook','WeChat group','Forum','Other']],['url','Link','url'],['audience','Audience','select',AUD.slice(0,7)],['members','Members','text'],['promo','Promotion allowed','select',['Unknown','Yes','Specific days only','Admin approval','No']],['status','Status','select',['To verify','Joined','Pending approval','Active','Avoid']],['last_posted','Last posted','date'],['angle','Best angle','long'],['rules','Rules','long'],['notes','Notes','long']]},
  {k:'coaches',t:'Coaches',view:'table',d:'Communities where coaches gather, for hiring and for showing Bloom as a place to work.',title:'name',chip:'status',cols:['use_for','members','status'],tag:'platform',rank:groupRank,
@@ -2169,9 +2172,32 @@ function table(s,rows,hide=[],sortable=false){
   const cols = s.cols.filter(c=>!hide.includes(c)), so = sortable && REF_SORT[s.k];
   const th = c => sortable ? `<th class="sortable${so && so.key===c ? ' sorted' : ''}" onclick="refSort('${s.k}','${c}')" aria-sort="${so && so.key===c ? (so.dir===1?'ascending':'descending') : 'none'}">${label(s,c)}<span class="arr">${so && so.key===c ? (so.dir===1?'▲':'▼') : '↕'}</span></th>` : `<th>${label(s,c)}</th>`;
   const tag = r => s.tag && r[s.tag] && r[s.tag] !== s.f.find(f=>f[0]===s.tag)[3][0] ? ` <span class="rowtag">${esc(r[s.tag])}</span>` : '';
-  return `<div class="tbl"><table><thead><tr>${th(s.title)}${cols.map(th).join('')}</tr></thead><tbody>
+  // Admins delete straight from the list, with Undo in the message that follows.
+  return `<div class="tbl"><table><thead><tr>${th(s.title)}${cols.map(th).join('')}${canDelete?'<th class="del-c"></th>':''}</tr></thead><tbody>
   ${rows.map(r=>`<tr onclick="viewRef('${s.k}','${r.id}')"><td class="main">${esc(r[s.title])}${tag(r)}</td>
-  ${cols.map(c=>`<td>${cell(s,c,r[c])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  ${cols.map(c=>`<td>${cell(s,c,r[c])}</td>`).join('')}${canDelete?`<td class="del-c"><button class="row-del" title="Delete" aria-label="Delete ${esc(r[s.title]||'')}" onclick="event.stopPropagation();quickDelete('${r.id}')">&times;</button></td>`:''}</tr>`).join('')}</tbody></table></div>`;
+}
+async function quickDelete(id){
+  const { data: row, error: e1 } = await sb.from('marketing_entries').select('id,collection,data,created_at').eq('id', id).single();
+  if(e1 || !row){ showToast('Could not delete: ' + (e1 ? e1.message : 'not found')); return; }
+  const { error } = await sb.from('marketing_entries').delete().eq('id', id);
+  if(error){ showToast('Could not delete: ' + error.message); return; }
+  const name = (row.data && (row.data.name || row.data.title)) || 'Entry';
+  await loadAll();
+  undoToast('Deleted ' + name + '.', async () => {
+    const r = await sb.from('marketing_entries').insert(row);
+    if(r.error){ showToast('Could not undo: ' + r.error.message); return; }
+    showToast('Put back ' + name + '.'); loadAll();
+  });
+}
+// A message with an Undo button that stays for 8 seconds.
+function undoToast(msg, onUndo){
+  let t = $('#undoToast');
+  if(!t){ t = document.createElement('div'); t.id = 'undoToast'; t.className = 'undo-t'; document.body.appendChild(t); }
+  t.innerHTML = `<span>${esc(msg)}</span><button>Undo</button>`;
+  t.style.display = 'flex'; clearTimeout(t._h);
+  t.querySelector('button').onclick = () => { t.style.display = 'none'; clearTimeout(t._h); onUndo(); };
+  t._h = setTimeout(() => { t.style.display = 'none'; }, 8000);
 }
 function cards(s,rows){
   return `<div class="cards">${rows.map(r=>`<div class="entry" onclick="editRef('${s.k}','${r.id}')">

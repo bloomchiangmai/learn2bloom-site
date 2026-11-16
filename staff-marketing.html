@@ -307,6 +307,16 @@ div.tile{cursor:default;}
 .chip.tg-warn{background:#FAEEDA;color:#854F0B;margin-left:6px;} .chip.tg-sch{background:#FAEEDA;color:#854F0B;} .st-waiting{background:#E6F1FB;color:#0C447C;}
 .ask{position:fixed;inset:0;background:rgba(30,28,24,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;} .ask-b{background:#fff;border-radius:14px;padding:20px 22px;max-width:420px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2);} .ask-b h4{font-size:16px;margin:0 0 6px;} .ask-b p{font-size:14px;color:#5F5E5A;margin:0 0 16px;line-height:1.5;} .ask-a{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
 .ck{display:flex;gap:8px;align-items:center;font-size:13.5px;margin-top:4px;}
+.chip.tg-paid{background:#EEEDFE;color:#3C3489;margin-left:6px;}
+.bud-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px;} .bud-top .bh{margin:0;} .bud-r{padding:10px 0;border-top:1px solid #F0ECE3;} .bud-h{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;}
+.bud-bar{height:8px;border-radius:99px;background:#F1EFE8;display:flex;overflow:hidden;} .bud-bar span{background:#534AB7;} .bud-bar span.p{background:#CECBF6;} .bud-r .meta{margin:6px 0 0;font-size:12.5px;} .warn-t{color:#854F0B !important;}
+.sm-sel{padding:6px 8px;border-radius:7px;border:1px solid #E5E0D5;font:inherit;font-size:12.5px;background:#fff;}
+.ad-r{display:grid;grid-template-columns:minmax(0,2.2fr) 90px 80px 90px 60px 80px 100px;gap:10px;align-items:center;padding:11px 2px;border-top:1px solid #F0ECE3;font-size:13.5px;cursor:pointer;} .ad-r.ad-h{cursor:default;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#6B6A64;font-weight:700;border-top:0;padding-bottom:6px;}
+.ad-n small{display:block;color:#6B6A64;font-size:12px;margin-top:2px;} .ad-n small a{color:#534AB7;}
+.st-ad-active{background:#E1F5EE;color:#0F6E56;} .st-ad-paused{background:#FAEEDA;color:#854F0B;} .st-ad-draft{background:#F1EFE8;color:#5F5E5A;} .st-ad-ended{background:#F1EFE8;color:#5F5E5A;}
+.paidbox{padding:4px 16px 8px;margin-bottom:6px;} .paidbox h4{font-size:13.5px;margin:6px 0 2px;} .paid-l{margin:4px 0 10px;padding:0 16px;font-size:13px;} .paid-l a{color:#534AB7;font-weight:600;}
+@media (max-width:760px){ .ad-r.ad-h{display:none;} .ad-r{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:6px;background:#fff;border:1px solid #EDE8DD;border-radius:12px;padding:12px 14px;margin-bottom:10px;}
+  .ad-r>.ad-n{grid-column:1/3;} .ad-r>:nth-child(2){grid-column:3;justify-self:end;align-self:start;} .ad-c::before{content:attr(data-l);display:block;font-size:11px;color:#8A877F;} .paidbox,.paid-l{padding-left:0;padding-right:0;} }
 .brief{background:#F7F3EC;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-bottom:14px;} .brief b{margin-right:6px;}
 textarea[readonly],input[readonly]{background:#F7F3EC!important;color:#5F5E5A;}
 .imgs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
@@ -591,6 +601,7 @@ let canEdit = false, canDelete = false, ME = null, LANGS = {};
 let INFORMED = {}, FYI = [], FYI_READ = null;
 // Site features: when the HQ is switched off, the team sees a short message. Admin, director and IT still get in.
 let HQ_OFF = false;
+let ADS = [], BUDGET = null;
 let refKey = 'facts', calMonth = null, calMode = 'month', postTimer = null;
 const filt = {q:'', s:''};
 
@@ -669,6 +680,7 @@ function stepChip(p){
   const k = p.step === 'english' && p.sent_back ? 'back' : p.step;
   const t = p.step === 'english' && p.sent_back ? 'Sent back' : STEP_LABEL[p.step];
   const extra = (p.thai_unchecked && p.needs_thai ? '<span class="chip tg-warn">Thai unchecked</span>' : '')
+    + (ADS.some(a=>a.post_id===p.id && a.status!=='draft') ? '<span class="chip tg-paid">Paid</span>' : '')
     + (p.approval_recorded && !p.approval_recorded.seen && ['thai','post'].includes(p.step) ? '<span class="chip tg-warn">Approval recorded</span>' : '');
   return `<span class="chip" style="background:${STEP_BG[k]};color:${STEP_FG[k]}">${t}</span>${extra}`;
 }
@@ -703,7 +715,7 @@ async function fyiRead(){
 
 // ---------- Data ----------
 async function loadAll(){
-  const [posts, staff, team, labels, ent, sch, spec, hid, ais, acc] = await Promise.all([
+  const [posts, staff, team, labels, ent, sch, spec, hid, ais, acc, ads, bud] = await Promise.all([
     sb.from('marketing_posts').select('*').order('post_date', {ascending:true, nullsFirst:false}),
     sb.from('staff').select('id,name,status'),
     sb.from('marketing_team').select('staff_id,duty,langs,informed,fyi_read_at'),
@@ -713,7 +725,9 @@ async function loadAll(){
     sb.from('marketing_special_dates').select('*').order('date'),
     sb.from('marketing_hidden_suggestions').select('key'),
     sb.from('marketing_ai_status').select('*').maybeSingle(),
-    sb.rpc('mkt_team_access')
+    sb.rpc('mkt_team_access'),
+    sb.from('marketing_ads').select('*').order('created_at'),
+    sb.from('marketing_ad_budgets').select('*').eq('active', true).order('updated_at', {ascending:false}).limit(1)
   ]);
   if(posts.error){ showToast('Could not load posts: ' + posts.error.message); return; }
   POSTS = posts.data || [];
@@ -727,6 +741,7 @@ async function loadAll(){
   NO_ACCESS = new Set(((acc && acc.data) || []).filter(x=>!x.can_edit).map(x=>x.staff_id));
   LEVEL = Object.fromEntries(((acc && acc.data) || []).map(x=>[x.staff_id, x.level || (x.can_edit ? 'edit' : 'none')]));
   LABELS = labels.data || [];
+  ADS = (ads && ads.data) || []; BUDGET = (bud && bud.data && bud.data[0]) || null;
   SPECIAL = spec.data || [];
   AISTATUS = (ais && ais.data) || null;
   HIDDEN = new Set((hid.data||[]).map(h=>h.key));
@@ -777,6 +792,7 @@ function tabsFor(){
   t.push(['overview','Overview']);
   t.push(['turn','My turn']);
   t.push(['calendar','Content']);
+  t.push(['ads','Ads']);
   t.push(['ref','Reference']);
   if(canDelete) t.push(['settings','Settings']);
   return t;
@@ -787,6 +803,7 @@ const HQ_HEAD = {
   turn:['My turn','Posts waiting on you.'],
   overview:['Overview','Where every post stands, and what the plan is.'],
   calendar:['Content','Every post and idea, by date.'],
+  ads:['Ads','What each paid ad costs and brings in, against the budget.'],
   ref:['Reference','The facts, people and places behind every post.'],
   settings:['Settings','The team, labels and special dates.'],
 };
@@ -823,6 +840,7 @@ function render(){ closeDayMenu();
   else if(v==='overview') el.innerHTML = overview();
   else if(v==='calendar') el.innerHTML = calendarView();
   else if(v==='settings') el.innerHTML = teamView();
+  else if(v==='ads') el.innerHTML = adsView();
   else if(v==='post') renderPost(el);
   else renderGroup(el, REF_GROUPS.find(g=>g.k===refKey) || REF_GROUPS[0]);
   if(v==='ref' && REF_BACK){
@@ -1124,7 +1142,7 @@ function nextLine(p){
     english: [p.writer && p.writer===p.pic ? `${pic} writes and approves it, one tap when ready` : pic ? `${pic} reviews it${due(2)?', due '+due(2):''}` : 'No reviewer set yet'],
     review: [thaiPart || postPart],
     thai: [postPart],
-    post: ['Post or schedule it, tap Done for each place, then Finish post.']
+    post: ['Post or schedule it, then tap Done on each place. The first place marked Live moves the post to Posted.']
   }[p.step];
   if(!parts) return '';
   return p.step === 'post' ? 'Last step: ' + esc(parts[0]) : 'Next: ' + esc(parts[0]) + '.';
@@ -1191,8 +1209,7 @@ async function renderPost(el){
       <span class="needtext" data-for="copy_th" data-msg="Write the Thai or use Draft Thai with AI first."><button class="btn-primary" onclick="doAct('thai_checked')">Thai done, send to Post</button></span>`;
     if(p.step==='post') actions = p.needs_thai && p.th_stale && !isAdmin()
       ? `<span class="muted">The English changed after the Thai was checked. Ask the admin to update the Thai before this goes out.</span>`
-      : `<button class="btn-outline" onclick="copyCaption()">Copy caption</button>
-      <button class="btn-primary" onclick="doAct('mark_posted')">Finish post</button>`;
+      : `<button class="btn-primary" onclick="copyCaption()">Copy caption</button>`;
   }
   // Approved outside HQ (for example in chat): someone on the post records it, the reviewer is told and can undo.
   const canRecord = ['english','review'].includes(p.step) && p.pic && p.writer !== p.pic && !pic && (W || posterOf(p)===ME || isAdmin());
@@ -1243,7 +1260,7 @@ async function renderPost(el){
     <div class="f"><label>Images</label><div class="imgs">${imgs.map((im,i)=>`<span class="im">${safeUrl(im.url)?`<a href="${esc(im.url)}" target="_blank" rel="noopener">${im.external?'<span class="ext">Drive link</span>':`<img src="${esc(im.url)}" alt="">`}</a>`:''}${canImg?`<button class="imx" title="Remove" onclick="removeImg(${i})">×</button>`:''}</span>`).join('')}
       ${canImg?`<label class="imadd">+ Add<input type="file" accept="image/*" multiple onchange="addImgs(this.files)" hidden></label>`:''}${!imgs.length&&!canImg?'<span class="meta">No images yet.</span>':''}</div></div>
     <div class="f"><label>Video link <span class="hint">reels: paste a link for now</span></label><input id="f-video_url" ${canImg?'':'readonly'} value="${esc(p.video_url||'')}" placeholder="https://"></div>
-    ${['post','posted'].includes(p.step) ? shareBox(p) : ''}
+    ${['post','posted'].includes(p.step) ? paidBox(p) + shareBox(p) : ''}
     <button class="link-btn" style="margin:2px 0 10px" onclick="togglePreview()">${SHOW_PREVIEW?'Hide':'Preview as'} Facebook post</button>
     <div id="fbPreview">${SHOW_PREVIEW?fbPreviewHtml(p):''}</div>
     ${adminLine}
@@ -1282,7 +1299,7 @@ function postedView(p, imgs, hist){
     ${who ? `<p class="meta" style="font-size:12.5px;margin-top:2px">${who}</p>` : ''}
     ${body ? `<div class="pv-box">${body}</div>` : ''}
     ${media ? `<div class="imgs" style="margin-top:14px">${media}</div>` : ''}${video}
-    <div style="margin-top:16px">${shareBox(p)}</div>
+    <div style="margin-top:16px">${paidBox(p)}${shareBox(p)}</div>
   </div>
   <div class="hist"><b>History</b><br>${hist||'…'}</div>
   </div>`;
@@ -1438,10 +1455,12 @@ async function markShared(gid, name, undo, extra){
     if(!r.error) g.last_posted = body.last_posted;
   }
   SH_FORM = null;
+  const wasPost = (POSTS.find(x=>x.id===pid)||{}).step === 'post';
   const { data } = await sb.from('marketing_post_events').select('actor,kind,note,meta,created_at').eq('post_id', pid).order('created_at');
   EVENTS[pid] = data || [];
-  showToast(undo ? 'Removed ' + group + '.' : (extra && extra.status==='scheduled' ? 'Noted: scheduled in ' : extra && extra.status==='waiting' ? 'Noted: waiting on the admin of ' : 'Noted: live in ') + group + '.');
-  renderPost($('#view'));
+  const live = !undo && (!extra || !extra.status || extra.status==='live');
+  showToast(undo ? 'Removed ' + group + '.' : (extra && extra.status==='scheduled' ? 'Noted: scheduled in ' : extra && extra.status==='waiting' ? 'Noted: waiting on the admin of ' : 'Noted: live in ') + group + '.' + (live && wasPost ? ' The post is now Posted.' : ''));
+  const keep = EVENTS[pid]; await reloadPosts(true); EVENTS[pid] = keep; renderPost($('#view'));
 }
 
 function enAiLabel(){ return ((($('#f-copy_en')||{}).value||'').trim()) ? 'Rewrite with AI' : 'Draft with AI'; }
@@ -1596,6 +1615,121 @@ async function doAct(a){
   if(aiTh) showToast(aiTh==='ok' ? 'Approved. The translator starts from an AI Thai draft.' : 'Approved. The AI Thai draft did not work, so the translator writes the Thai.');
   else showToast({send_on:'Sent to Review.', thai_checked:'Thai done. Sent to Post.', send_back:'Sent back to English with your note.', translator_back:'Sent back to Review with your note.', approve: p.needs_thai ? 'Approved. Sent to Translate.' : 'Approved. Sent to Post.', quick_approve: p.needs_thai ? 'Approved. Sent to Translate.' : 'Approved. Ready to post.', mark_posted:'Finished. Moved to Posted.', ack_recorded:'Confirmed.', undo_recorded_approval:'Undone. Back to approval.'}[a] || 'Done.');
   delete EVENTS[p.id]; await reloadPosts(true);
+}
+// ---------- Ads (part 2): what each paid ad costs and brings in, against the budget ----------
+const thb = n => (Math.round(Number(n||0)*100)/100).toLocaleString('en-GB', {maximumFractionDigits: 2}) + ' THB';
+const PLAT = {meta:'Meta', google:'Google', other:'Other'};
+const AD_ST = {draft:'Draft', active:'Running', paused:'Paused', ended:'Ended'};
+const daysBetween = (a, b) => Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00')) / 864e5);
+function adProjection(a){
+  // What a running ad will still spend at its daily budget, up to its end date or the budget's end date
+  if(a.status!=='active' || !a.daily_budget) return 0;
+  const endB = BUDGET && BUDGET.end_date, end = [a.end_date, endB].filter(Boolean).sort()[0];
+  if(!end) return null;
+  const d = daysBetween(todayISO(), end) + 1;
+  return d > 0 ? d * Number(a.daily_budget) : 0;
+}
+function budgetBox(){
+  if(!BUDGET) return '';
+  const row = (plat, cap) => {
+    const list = ADS.filter(a=>a.platform===plat), spent = list.reduce((t,a)=>t+Number(a.spend||0), 0);
+    const proj = list.map(adProjection), open = proj.some(x=>x===null), more = proj.reduce((t,x)=>t+(x||0), 0);
+    const pct = cap ? Math.min(100, spent/cap*100) : 0, pctP = cap ? Math.min(100-pct, more/cap*100) : 0, over = spent + more > cap;
+    return `<div class="bud-r"><div class="bud-h"><b>${PLAT[plat]}</b><span>${thb(spent)} of ${thb(cap)}</span></div>
+      <div class="bud-bar"><span style="width:${pct}%"></span><span class="p" style="width:${pctP}%"></span></div>
+      <p class="meta ${over||open?'warn-t':''}">${open ? 'A running ad has no end date, so the total can\'t be worked out. Give it an end date.' : `At today's daily budgets: about ${thb(spent+more)} by ${fmtShort(BUDGET.end_date)}${over?', over the limit':''}.`}</p></div>`;
+  };
+  const spentAll = ADS.reduce((t,a)=>t+Number(a.spend||0), 0), cap = Number(BUDGET.cap_meta) + Number(BUDGET.cap_google);
+  return `<div class="box"><div class="bud-top"><h3 class="bh">${esc(BUDGET.name)}</h3><span class="meta">${thb(spentAll)} of ${thb(cap)} spent${BUDGET.end_date?' · ends '+fmtShort(BUDGET.end_date):''}</span></div>
+    ${row('meta', Number(BUDGET.cap_meta))}${row('google', Number(BUDGET.cap_google))}</div>`;
+}
+function adsView(){
+  const order = {active:0, paused:1, draft:2, ended:3};
+  const list = [...ADS].sort((a,b)=>order[a.status]-order[b.status] || Number(b.spend)-Number(a.spend));
+  const stale = a => a.status==='active' && (!a.numbers_at || (Date.now() - new Date(a.numbers_at)) > 4*864e5);
+  const months = [...new Set([todayISO().slice(0,7), ...ADS.map(a=>String(a.created_at||'').slice(0,7))])].filter(Boolean).sort().reverse();
+  return `${budgetBox()}
+  <div class="box"><div class="bud-top"><h3 class="bh">Ads</h3><span style="flex:1"></span>
+    <select id="adMonth" class="sm-sel">${months.map(m=>`<option value="${m}">${new Date(m+'-01T00:00:00').toLocaleDateString('en-GB',{month:'long', year:'numeric'})}</option>`).join('')}</select>
+    <button class="btn-outline sm" onclick="exportAds()">Export month</button>${canEdit?`<button class="btn-primary sm" onclick="editAd()">+ Add ad</button>`:''}</div>
+    <div class="ad-r ad-h"><span>Ad</span><span>Status</span><span>Daily</span><span>Spent</span><span>Clicks</span><span>Enquiries</span><span>Per enquiry</span></div>
+    ${list.length ? list.map(a=>{ const post = POSTS.find(x=>x.id===a.post_id);
+      return `<div class="ad-r" onclick="${canEdit?`editAd('${a.id}')`:''}">
+        <span class="ad-n"><b>${esc(a.name)}</b><small>${PLAT[a.platform]}${a.ad_ref?' · ID '+esc(a.ad_ref):''}${post?` · <a href="javascript:void 0" onclick="event.stopPropagation();go('post/${post.id}')">post</a>`:''}${a.end_date?' · ends '+fmtShort(a.end_date):''}</small>
+          <small class="${stale(a)?'warn-t':''}">${a.numbers_at ? 'Numbers from ' + whenText(a.numbers_at) : 'No numbers yet'}${stale(a)?', update due':''}</small></span>
+        <span><span class="st st-ad-${a.status}">${AD_ST[a.status]}</span></span>
+        <span class="ad-c" data-l="Daily">${a.daily_budget ? thb(a.daily_budget) : '—'}</span>
+        <span class="ad-c" data-l="Spent">${thb(a.spend)}</span>
+        <span class="ad-c" data-l="Clicks">${a.clicks}</span>
+        <span class="ad-c" data-l="Enquiries"><b>${a.enquiries}</b></span>
+        <span class="ad-c" data-l="Per enquiry">${a.enquiries ? thb(a.spend/a.enquiries) : '—'}</span></div>`; }).join('')
+      : '<p class="meta" style="padding:12px 0">No ads yet.</p>'}
+    <p class="meta" style="margin-top:10px">Enquiries means real calls or LINE messages from a family, not taps. Numbers are typed in from Ads Manager and Google Ads, so check the date on each.</p>
+  </div>`;
+}
+function paidBox(p){
+  const list = ADS.filter(a=>a.post_id===p.id);
+  if(!list.length) return canEdit ? `<p class="meta paid-l">Organic. <a href="javascript:void 0" onclick="editAd(null, '${p.id}')">Boosted it? Add the ad</a></p>` : '';
+  return `<div class="paidbox"><h4>Paid</h4>${list.map(a=>`<div class="sh2"><span class="sh-n">${esc(a.name)}<small>${PLAT[a.platform]} · <span class="st st-ad-${a.status}">${AD_ST[a.status]}</span> ${thb(a.spend)} · ${a.clicks} clicks · ${a.enquiries} enquir${a.enquiries===1?'y':'ies'}</small></span><span></span>${canEdit?`<button class="link-btn" onclick="editAd('${a.id}')">Update</button>`:'<span></span>'}</div>`).join('')}
+    ${canEdit?`<p class="meta" style="margin:6px 0 0"><a href="javascript:void 0" onclick="editAd(null, '${p.id}')">Add another ad</a></p>`:''}</div>`;
+}
+function editAd(id, postId){
+  const a = id ? ADS.find(x=>x.id===id) : { platform:'meta', status:'active', post_id: postId || null, spend:0, impressions:0, clicks:0, enquiries:0 };
+  if(!a) return;
+  cur = {ad:true};
+  const posts = POSTS.filter(p=>['post','posted'].includes(p.step) || p.id===a.post_id).sort((x,y)=>String(y.post_date).localeCompare(String(x.post_date))).slice(0, 60);
+  const opt = (v, l, sel) => `<option value="${esc(v)}" ${String(sel??'')===String(v)?'selected':''}>${esc(l)}</option>`;
+  drawerShell(id ? 'Update ad' : 'Add ad', `
+    <div class="grid-2"><div class="f"><label>Platform</label><select name="platform">${Object.entries(PLAT).map(([k,l])=>opt(k,l,a.platform)).join('')}</select></div>
+      <div class="f"><label>Status</label><select name="status">${Object.entries(AD_ST).map(([k,l])=>opt(k,l,a.status)).join('')}</select></div></div>
+    <div class="f"><label>Name, as in Ads Manager or Google Ads</label><input name="name" value="${esc(a.name||'')}"></div>
+    <div class="grid-2"><div class="f"><label>Ad ID <span class="hint">optional</span></label><input name="ad_ref" value="${esc(a.ad_ref||'')}"></div>
+      <div class="f"><label>Post it promotes <span class="hint">optional</span></label><select name="post_id">${opt('', 'None (stands alone)', a.post_id||'')}${posts.map(p=>opt(p.id, (p.post_date?fmtShort(p.post_date)+' · ':'') + p.title, a.post_id)).join('')}</select></div></div>
+    <div class="grid-3"><div class="f"><label>Daily budget, THB</label><input name="daily_budget" type="number" min="0" step="1" value="${a.daily_budget??''}"></div>
+      <div class="f"><label>Start</label><input name="start_date" type="date" value="${esc(a.start_date||'')}"></div>
+      <div class="f"><label>End</label><input name="end_date" type="date" value="${esc(a.end_date||'')}"></div></div>
+    <h4 class="who-h">Numbers so far <span class="who-opt">totals to date, from the ad account</span></h4>
+    <div class="grid-2"><div class="f"><label>Spent, THB</label><input name="spend" type="number" min="0" step="0.01" value="${a.spend??0}"></div>
+      <div class="f"><label>Impressions</label><input name="impressions" type="number" min="0" step="1" value="${a.impressions??0}"></div></div>
+    <div class="grid-2"><div class="f"><label>Clicks</label><input name="clicks" type="number" min="0" step="1" value="${a.clicks??0}"></div>
+      <div class="f"><label>Enquiries <span class="hint">real calls or LINE messages</span></label><input name="enquiries" type="number" min="0" step="1" value="${a.enquiries??0}"></div></div>
+    <div class="f"><label>Notes</label><textarea name="notes" rows="3">${esc(a.notes||'')}</textarea></div>
+    ${a.numbers_at?`<p class="meta">Numbers last updated ${whenText(a.numbers_at)}${a.updated_by&&nameOf(a.updated_by)?' by '+esc(nameOf(a.updated_by)):''}.</p>`:''}`, null, false);
+  $('#drawer').classList.add('mid');
+  $('#sv').onclick = async () => {
+    const fd = new FormData($('#fm')), o = {};
+    ['platform','status','name','ad_ref','post_id','start_date','end_date','notes'].forEach(k=>{ const v = String(fd.get(k)||'').trim(); o[k] = v || null; });
+    ['daily_budget','spend','impressions','clicks','enquiries'].forEach(k=>{ const v = String(fd.get(k)||'').trim(); o[k] = v === '' ? (k==='daily_budget' ? null : 0) : Number(v); });
+    if(!o.name){ $('#msg').textContent = 'Add the ad name.'; return; }
+    if(['spend','impressions','clicks','enquiries','daily_budget'].some(k=>o[k]!==null && (isNaN(o[k]) || o[k] < 0))){ $('#msg').textContent = 'Numbers must be 0 or more.'; return; }
+    if(o.status==='active' && !o.end_date){ $('#msg').textContent = 'A running ad needs an end date, so it can\'t run past the budget.'; return; }
+    if(id && Number(o.spend) < Number(a.spend||0)){ $('#msg').textContent = 'Spent is a running total, so it can\'t go down. Check the figure.'; return; }
+    const r = id ? await sb.from('marketing_ads').update(o).eq('id', id).select().single() : await sb.from('marketing_ads').insert(o).select().single();
+    if(r.error){ $('#msg').textContent = 'Could not save: ' + r.error.message; return; }
+    if(id) Object.assign(a, r.data); else ADS.push(r.data);
+    closeD(); showToast(id ? 'Ad updated.' : 'Ad added.'); render();
+  };
+}
+// Monthly export: what each ad spent and brought in during the month, worked out from the saved history of its numbers.
+async function exportAds(){
+  const m = ($('#adMonth')||{}).value || todayISO().slice(0,7);
+  const start = new Date(m+'-01T00:00:00'), end = new Date(start); end.setMonth(end.getMonth()+1);
+  const { data, error } = await sb.from('marketing_ad_snapshots').select('ad_id,spend,impressions,clicks,enquiries,taken_at').lt('taken_at', end.toISOString()).order('taken_at');
+  if(error){ showToast('Could not export: ' + error.message); return; }
+  const last = (id, before) => (data||[]).filter(x=>x.ad_id===id && new Date(x.taken_at) < before).pop() || { spend:0, impressions:0, clicks:0, enquiries:0 };
+  const rows = [['Platform','Ad','Ad ID','Post','Status','Spent THB','Impressions','Clicks','Enquiries','Cost per enquiry THB']];
+  let tot = 0;
+  ADS.forEach(a=>{
+    const e = last(a.id, end), b = last(a.id, start), d = k => Math.max(0, Number(e[k]) - Number(b[k]));
+    if(!d('spend') && !d('clicks') && !d('enquiries') && !d('impressions')) return;
+    const post = POSTS.find(x=>x.id===a.post_id); tot += d('spend');
+    rows.push([PLAT[a.platform], a.name, a.ad_ref||'', post?post.title:'', AD_ST[a.status], d('spend').toFixed(2), d('impressions'), d('clicks'), d('enquiries'), d('enquiries') ? (d('spend')/d('enquiries')).toFixed(2) : '']);
+  });
+  rows.push(['Total','','','','', tot.toFixed(2)]);
+  const csv = rows.map(r=>r.map(v=>{ const t = String(v??''); return /[",\n]/.test(t) ? '"' + t.replace(/"/g,'""') + '"' : t; }).join(',')).join('\n');
+  const url = URL.createObjectURL(new Blob(['﻿' + csv], {type:'text/csv'}));
+  const l = document.createElement('a'); l.href = url; l.download = `Bloom ads ${m}.csv`; document.body.appendChild(l); l.click(); l.remove(); setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  showToast(rows.length > 2 ? 'Exported ' + (rows.length-2) + ' ads.' : 'No ad spend recorded in that month.');
 }
 let REC_OPEN = null;
 async function recordApproval(){
@@ -1765,6 +1899,7 @@ function setThai(on){
   $('#fm input[name="needs_thai"]').value = on ? 'true' : 'false';
   document.querySelectorAll('#fm .thsw button').forEach((b,i)=>b.classList.toggle('on', on ? i===0 : i===1));
   $('#thaiWho').hidden = !on;
+  try{ localStorage.setItem('mkt_thai_last', on ? '1' : '0'); }catch(e){}
   if(!on){ $('#fm input[name="translator"]').value = ''; lightChip('translator', ''); }
 }
 function topicPayload(){
@@ -1787,7 +1922,8 @@ function topicMissing(o){
 function newTopic(date, pre, suggKey){
   cur = {topic:true};
   pre = pre || {};
-  drawerShell('New post', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || '', writer: '', pic: '', translator: '', poster: ''}, true), null, false);
+    let thaiLast = true; try{ thaiLast = localStorage.getItem('mkt_thai_last') !== '0'; }catch(e){}
+  drawerShell('New post', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || '', writer: '', pic: '', translator: '', poster: '', needs_thai: thaiLast}, true), null, false);
   $('#drawer').classList.add('mid');
   $('#sv').textContent = 'Create';
   $('#sv').onclick = async () => {

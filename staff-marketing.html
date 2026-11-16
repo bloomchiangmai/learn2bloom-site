@@ -310,16 +310,20 @@ div.tile{cursor:default;}
 .del-c{width:44px;text-align:right;padding-right:10px !important;} .row-del{background:none;border:0;color:#8A877F;font-size:20px;line-height:1;width:30px;height:30px;border-radius:99px;cursor:pointer;opacity:0;} tr:hover .row-del,.row-del:focus-visible{opacity:1;} .row-del:hover{background:#FAECE7;color:#A23F1C;}
 .undo-t{position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:#2C2C2A;color:#fff;border-radius:12px;padding:10px 12px 10px 18px;gap:16px;align-items:center;font-size:14px;z-index:300;display:none;box-shadow:0 8px 24px rgba(0,0,0,.2);} .undo-t button{background:#fff;color:#2C2C2A;border:0;border-radius:8px;padding:7px 14px;font:inherit;font-weight:700;cursor:pointer;}
 @media (max-width:700px){ .undo-t{bottom:96px;white-space:nowrap;} .row-del{opacity:1;} td.del-c,th.del-c{position:sticky;right:0;background:#fff;box-shadow:-8px 0 8px -6px rgba(0,0,0,.08);} }
-.chip.tg-paid{background:#EEEDFE;color:#3C3489;margin-left:6px;}
+.chip.tg-paid{background:#EEEDFE;color:#3C3489;margin-left:6px;} .chip.tg-info{background:#E6F1FB;color:#0C447C;margin-left:6px;}
+[hidden]{display:none !important;}
+details.fold{border-top:1px solid #EFEAE0;margin-top:14px;padding-top:12px;} details.fold>summary{cursor:pointer;list-style:none;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;} details.fold>summary::-webkit-details-marker{display:none;}
+.fold-t{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#534AB7;font-weight:700;} .fold-t::before{content:'+ ';} details[open]>summary .fold-t::before{content:'− ';} .fold-s{font-size:13px;color:#5F5E5A;} details.fold[open]>summary{margin-bottom:10px;}
+.box.needs{border-color:#EF9F27;}
 .bud-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px;} .bud-top .bh{margin:0;} .bud-r{padding:10px 0;border-top:1px solid #F0ECE3;} .bud-h{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;}
 .bud-bar{height:8px;border-radius:99px;background:#F1EFE8;display:flex;overflow:hidden;} .bud-bar span{background:#534AB7;} .bud-bar span.p{background:#CECBF6;} .bud-r .meta{margin:6px 0 0;font-size:12.5px;} .warn-t{color:#854F0B !important;}
 .sm-sel{padding:6px 8px;border-radius:7px;border:1px solid #E5E0D5;font:inherit;font-size:12.5px;background:#fff;}
-.ad-r{display:grid;grid-template-columns:minmax(0,2.2fr) 90px 80px 90px 60px 80px 100px;gap:10px;align-items:center;padding:11px 2px;border-top:1px solid #F0ECE3;font-size:13.5px;cursor:pointer;} .ad-r.ad-h{cursor:default;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#6B6A64;font-weight:700;border-top:0;padding-bottom:6px;}
+.ad-r{display:grid;grid-template-columns:minmax(0,2.2fr) 82px 70px 90px 52px 70px 76px 90px 70px;gap:10px;align-items:center;padding:11px 2px;border-top:1px solid #F0ECE3;font-size:13.5px;cursor:pointer;} .ad-r.ad-h{cursor:default;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#6B6A64;font-weight:700;border-top:0;padding-bottom:6px;}
 .ad-n small{display:block;color:#6B6A64;font-size:12px;margin-top:2px;} .ad-n small a{color:#534AB7;}
 .st-ad-active{background:#E1F5EE;color:#0F6E56;} .st-ad-paused{background:#FAEEDA;color:#854F0B;} .st-ad-draft{background:#F1EFE8;color:#5F5E5A;} .st-ad-ended{background:#F1EFE8;color:#5F5E5A;}
 .paidbox{padding:4px 16px 8px;margin-bottom:6px;} .paidbox h4{font-size:13.5px;margin:6px 0 2px;} .paid-l{margin:4px 0 10px;padding:0 16px;font-size:13px;} .paid-l a{color:#534AB7;font-weight:600;}
 @media (max-width:760px){ .ad-r.ad-h{display:none;} .ad-r{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:6px;background:#fff;border:1px solid #EDE8DD;border-radius:12px;padding:12px 14px;margin-bottom:10px;}
-  .ad-r>.ad-n{grid-column:1/3;} .ad-r>:nth-child(2){grid-column:3;justify-self:end;align-self:start;} .ad-c::before{content:attr(data-l);display:block;font-size:11px;color:#8A877F;} .paidbox,.paid-l{padding-left:0;padding-right:0;} }
+  .ad-r>.ad-n{grid-column:1/3;} .ad-r>:nth-child(2){grid-column:3;justify-self:end;align-self:start;} .ad-e{grid-column:1/-1;} .ad-c::before{content:attr(data-l);display:block;font-size:11px;color:#8A877F;} .paidbox,.paid-l{padding-left:0;padding-right:0;} }
 .brief{background:#F7F3EC;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-bottom:14px;} .brief b{margin-right:6px;}
 textarea[readonly],input[readonly]{background:#F7F3EC!important;color:#5F5E5A;}
 .imgs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
@@ -591,7 +595,9 @@ const thisMonth = () => localISO(new Date()).slice(0,7);
 // ---------- Workflow ----------
 // Posts live in marketing_posts. Every change goes through the mkt_post() database function,
 // which checks who you are and which step the post is at.
-const STEP_LABEL = {english:'Draft', review:'For approval', thai:'Approved · Thai', post:'Approved', posted:'Posted', cancelled:'Cancelled'};
+const STEP_LABEL = {english:'Draft', review:'Draft', thai:'Approved', post:'Approved', posted:'Posted', cancelled:'Cancelled'};
+// Where in the work a post is, for counts and filters. The chip on a post only ever says Draft, Approved or Posted.
+const STEP_BOX = {english:'Being written', review:'For approval', thai:'Thai to check', post:'Ready to post', posted:'Posted', cancelled:'Cancelled'};
 const STEP_ORDER = ['english','review','thai','post'];
 const STEP_BG = {english:'#EEEDFE', thai:'#FAEEDA', review:'#E6F1FB', post:'#E1F5EE', posted:'#F1EFE8', cancelled:'#FAECE7', back:'#FCEBEB'};
 const STEP_FG = {english:'#3C3489', thai:'#633806', review:'#0C447C', post:'#085041', posted:'#444441', cancelled:'#712B13', back:'#791F1F'};
@@ -682,7 +688,8 @@ function dueText(p){
 function stepChip(p){
   const k = p.step === 'english' && p.sent_back ? 'back' : p.step;
   const t = p.step === 'english' && p.sent_back ? 'Sent back' : STEP_LABEL[p.step];
-  const extra = (p.thai_unchecked && p.needs_thai ? '<span class="chip tg-warn">Thai unchecked</span>' : '')
+  const extra = (p.step==='review' ? '<span class="chip tg-info">For approval</span>' : p.step==='thai' ? '<span class="chip tg-info">Thai to check</span>' : '')
+    + (p.thai_unchecked && p.needs_thai ? '<span class="chip tg-warn">Thai unchecked</span>' : '')
     + (ADS.some(a=>a.post_id===p.id && a.status!=='draft') ? '<span class="chip tg-paid">Paid</span>' : '')
     + (p.approval_recorded && !p.approval_recorded.seen && ['thai','post'].includes(p.step) ? '<span class="chip tg-warn">Approval recorded</span>' : '');
   return `<span class="chip" style="background:${STEP_BG[k]};color:${STEP_FG[k]}">${t}</span>${extra}`;
@@ -891,6 +898,18 @@ function myTurn(){
 
 // ---------- Item 41: posted on Facebook but not marked ----------
 const notMarked = () => POSTS.filter(p=>p.step==='post' && p.post_date && p.post_date < todayISO()).sort((a,b)=>a.post_date.localeCompare(b.post_date));
+// One list of what needs someone now: not marked as posted, due but not ready, or late. Each post once, with the reason.
+function needsActionBox(late, urgent){
+  const why = new Map();
+  notMarked().forEach(p=>why.set(p.id, 'Went out? Not marked'));
+  urgent.forEach(p=>{ if(!why.has(p.id)) why.set(p.id, 'Due, not ready'); });
+  late.forEach(p=>{ if(!why.has(p.id)) why.set(p.id, 'Late'); });
+  if(!why.size) return '';
+  const a = [...why.keys()].map(id=>POSTS.find(x=>x.id===id)).filter(Boolean).sort((x,y)=>String(x.post_date).localeCompare(String(y.post_date)));
+  pageFor('urg', 'na');
+  return `<div class="box needs"><h3 class="bh">Needs action: ${a.length}</h3>
+    ${pageOf('urg', a).map(p=>`<div class="wl" onclick="go('post/${p.id}')"><span class="late-d">${p.post_date?fmtShort(p.post_date):'No date'}</span><span class="pt"><span class="ptt">${esc(p.title)}</span></span><span>${stepChip(p)}</span><span class="wl-due muted">${esc(ownerName(p)||'')}</span><span class="wl-act"><span class="chip rust">${why.get(p.id)}</span></span></div>`).join('')}${pager('urg', a.length)}</div>`;
+}
 function notMarkedBox(){
   const a = notMarked(); if(!a.length) return '';
   const canMarkP = p => isAdmin() || posterOf(p) === ME;
@@ -962,26 +981,23 @@ function overview(){
   const max = Math.max(1, ...Object.values(ppl).map(a=>a.length));
   const ideas = POSTS.filter(p=>openStep(p) && !p.post_date).length;
   return `
-  ${notMarkedBox()}
+  ${needsActionBox(late, urgent)}
   ${goalBox(P)}
-  <div class="tiles four">
-    ${ovTile('late', late.length, late.length?'bad':'good', 'Late')}
+  <div class="tiles">
     ${ovTile('week', week.length, '', 'Due in the next 7 days')}
     ${ovTile('posted', posted, '', 'Posted this month')}
     ${ovTile('empty', empty, empty?'warn':'good', 'Weeks with nothing planned (next 4)')}
   </div>
   ${(() => { const lists = { late: late.slice().sort((a,b)=>String(a.post_date).localeCompare(String(b.post_date))), week: week.slice().sort((a,b)=>String(a.post_date).localeCompare(String(b.post_date))), posted: postedList.slice().sort((a,b)=>String(b.posted_at||b.post_date).localeCompare(String(a.posted_at||a.post_date))) };
      const a = lists[ovOpen]; pageFor('ov', ovOpen); return a && a.length ? `<div class="ovlist">${pageOf('ov', a).map(p=>line(p,true)).join('')}${pager('ov', a.length)}</div>` : ''; })()}
-  ${urgent.length ? `<div class="urgent"><h3>Urgent: ${urgent.length} post${urgent.length>1?'s':''} due to go out but not ready</h3>${pageOf('urg', urgent).map(p=>line(p,true)).join('')}${pager('urg', urgent.length)}</div>` : ''}
   ${empty && canEdit ? `<div class="emptyweeks"><span><b>${empty} empty week${empty>1?'s':''}</b> coming up</span>${emptyWeeks.map(d=>`<button class="btn-outline sm" onclick="newTopic('${d}')">Plan a post for ${fmtShort(d)}</button>`).join('')}</div>` : ''}
-  ${groundwork()}
   ${(() => {
     // Item 53: one box. Step boxes and Waiting on names filter the list underneath; click again for everything.
     const F = ovFilter && ((ovFilter.k==='step' && live.some(p=>p.step===ovFilter.v)) || (ovFilter.k==='who' && ppl[ovFilter.v])) ? ovFilter : null;
     const shown = live.filter(p => !F || (F.k==='step' ? p.step===F.v : ownerName(p)===F.v)).sort((a,b)=>Number(isLate(b))-Number(isLate(a)) || a.post_date.localeCompare(b.post_date));
-    const head = !F ? 'Everything in progress' : F.k==='step' ? `At ${STEP_LABEL[F.v]}` : `Waiting on ${esc(F.v)}`;
+    const head = !F ? 'Everything in progress' : F.k==='step' ? STEP_BOX[F.v] : `Waiting on ${esc(F.v)}`;
     const stepBox = s0 => { const a = live.filter(p=>p.step===s0), on = F && F.k==='step' && F.v===s0;
-      const inner = `<div class="h">${STEP_LABEL[s0]}</div><div class="c">${a.length}</div><div class="dots">${a.map(p=>`<i class="${isLate(p)?'r':''}" title="${esc(p.title)}"></i>`).join('')}</div>`;
+      const inner = `<div class="h">${STEP_BOX[s0]}</div><div class="c">${a.length}</div><div class="dots">${a.map(p=>`<i class="${isLate(p)?'r':''}" title="${esc(p.title)}"></i>`).join('')}</div>`;
       return a.length ? `<div class="stepcol ovt ${on?'on':''}" role="button" tabindex="0" aria-pressed="${!!on}" onclick="ovSetFilter('step','${s0}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();ovSetFilter('step','${s0}')}">${inner}</div>` : `<div class="stepcol">${inner}</div>`; };
     const names = Object.entries(ppl).sort((a,b)=>b[1].length-a[1].length);
     return `<div class="box" id="ovPosts"><h3 class="bh">Where posts are now</h3>
@@ -1099,7 +1115,7 @@ function calendarView(){
     const ps = inMonth.filter(p=>p.post_date===iso), sg = iso >= t ? openSugg().filter(x=>x.date===iso) : [];
     const add = canEdit && iso >= t;
     cells += `<div class="day ${iso===t?'today':iso<t?'past':''}${add?' can-add':''}" ${add?`onclick="dayClick(event,'${iso}')"`:''}>${d}${iso===t?'<i class="tdot"></i>':''}${ps.map(p=>{ const late = isLate(p), k = late ? 'late' : p.step==='posted' ? 'posted' : 'open';
-      return `<span class="pp k-${k}" title="${esc(p.title)} · ${late?'Late, at '+STEP_LABEL[p.step]:STEP_LABEL[p.step]}" style="background:${CAL_STATE[k].bg};color:${CAL_STATE[k].fg}" ${add?'':`onclick="event.stopPropagation();go('post/${p.id}')"`}>${esc(p.title)}</span>`; }).join('')}${sg.map(x=>`<span class="sg" title="Suggested: ${esc(x.name)}${x.confirmed?'':' (date to confirm)'}" onclick="event.stopPropagation();openSg(${SUGG.indexOf(x)})">${esc(x.name)}</span>`).join('')}</div>`;
+      return `<span class="pp k-${k}" title="${esc(p.title)} · ${late?'Late, '+STEP_BOX[p.step].toLowerCase():STEP_BOX[p.step]}" style="background:${CAL_STATE[k].bg};color:${CAL_STATE[k].fg}" ${add?'':`onclick="event.stopPropagation();go('post/${p.id}')"`}>${esc(p.title)}</span>`; }).join('')}${sg.map(x=>`<span class="sg" title="Suggested: ${esc(x.name)}${x.confirmed?'':' (date to confirm)'}" onclick="event.stopPropagation();openSg(${SUGG.indexOf(x)})">${esc(x.name)}</span>`).join('')}</div>`;
   }
   return head + `<div class="cal-wrap"><div class="cal">${cells}</div>
     <div class="legend">${['open','late','posted'].map(k=>`<span><i style="background:${CAL_STATE[k].dot}"></i>${CAL_STATE[k].label}</span>`).join('')}<span><i style="background:transparent;border:1px dashed #A8A39A"></i>Suggested</span></div></div>`;
@@ -1142,10 +1158,10 @@ function nextLine(p){
   const thaiPart = p.needs_thai ? (tr ? `${tr} does the Thai${due(1)?', due '+due(1):''}` : 'No translator set yet') : '';
   const postPart = wr ? `${wr} posts it${p.post_date?' on '+fmtShort(p.post_date):''}` : 'No poster set yet';
   const parts = {
-    english: [p.writer && p.writer===p.pic ? `${pic} writes and approves it, one tap when ready` : pic ? `${pic} reviews it${due(2)?', due '+due(2):''}` : 'No reviewer set yet'],
+    english: [p.writer && p.writer===p.pic ? (p.writer===ME ? 'You approve it yourself with the button above when it is ready' : `${pic} writes it and approves it`) : pic ? `${pic} reviews it${due(2)?', due '+due(2):''}` : 'No reviewer set yet'],
     review: [thaiPart || postPart],
     thai: [postPart],
-    post: ['Post or schedule it, then tap Done on each place. The first place marked Live moves the post to Posted.']
+    post: ['Post it, then tap Mark live on that place. The first place marked live moves the post to Posted.']
   }[p.step];
   if(!parts) return '';
   return p.step === 'post' ? 'Last step: ' + esc(parts[0]) : 'Next: ' + esc(parts[0]) + '.';
@@ -1383,9 +1399,13 @@ function daysAgo(d){ const n = Math.round((new Date(new Date().toDateString()) -
 // 17 Nov: each place a post went to (live or scheduled, with its link), then where else it could go.
 const OWN_LINK = {'Facebook Page':'https://www.facebook.com/BLOOM.chiangmai', 'Instagram':'https://www.instagram.com/bloom.chiangmai/'};
 const SUITE = 'https://business.facebook.com/';
+let SH_MORE = {};
 let SH_FORM = null; // { name, gid, status } while the Done box is open
 function sharedIn(p){
   const m = new Map();
+  // Posts finished before places were recorded: the saved post link stands for the Facebook Page.
+  if(p.step==='posted' && safeUrl(p.post_url) && !(EVENTS[p.id]||[]).some(e=>['shared in a group','scheduled in','waiting in'].includes(e.kind)))
+    m.set(/instagram\.com/i.test(p.post_url) ? 'Instagram' : 'Facebook Page', { at: p.posted_at || (p.post_date ? p.post_date+'T00:00:00' : new Date().toISOString()), status:'live', link: p.post_url, fromLink: true });
   (EVENTS[p.id]||[]).forEach(e=>{
     if(e.kind==='shared in a group' || e.kind==='scheduled in' || e.kind==='waiting in') m.set(e.note, { at: e.created_at, status: e.kind==='scheduled in' ? 'scheduled' : e.kind==='waiting in' ? 'waiting' : 'live', link: (e.meta||{}).link || '' });
     else if(e.kind==='removed a group share') m.delete(e.note);
@@ -1428,14 +1448,16 @@ function shareBox(p){
   };
   const extra = SH_FORM && !SH_FORM.gid && !OWN_LINK[SH_FORM.name] && !doneSet.has(SH_FORM.name) && !list.some(g=>g.name===SH_FORM.name);
   return `<div class="sharebox">
-    <h4>Posted or scheduled</h4>
+    <h4>${p.step==='posted' ? 'Where it went' : 'Posted or scheduled'}</h4>
+    ${p.step==='posted' && !done.length ? '<p class="meta" style="margin:2px 0 6px">Posted, but where was not recorded. If you know, mark it below.</p>' : ''}
     ${done.length ? done.map(d=>`<div class="sh2 sh3"><span class="sh-n">${esc(d.name)}<small><span class="st st-${d.status}">${{live:'Live', scheduled:'Scheduled', waiting:'Waiting on admin'}[d.status]}</span> ${fmt(d.at)}</small></span>
-      ${canEdit?`<span class="sh-a">${openLink(d)}${d.status!=='live'?`<button class="link-btn" onclick="openDone(null, ${q(d.name)}, 'live')">It's live</button>`:''}<button class="link-btn" onclick="markShared(null, ${q(d.name)}, true)">Undo</button></span>`:`<span class="sh-a">${openLink(d)}</span>`}</div>${formFor(d.name)}`).join('')
-      : '<p class="meta" style="margin:2px 0 6px">Nothing yet. After you post or schedule somewhere, tap Done on it below.</p>'}
-    ${canEdit ? `<div class="sh-add"><input id="shAdd" placeholder="Somewhere else, e.g. What, Where, When Chiang Mai"><button class="btn-soft sm" onclick="const v=($('#shAdd').value||'').trim(); if(!v){showToast('Type the place first.');return;} openDone(null, v)">Done</button></div>${extra ? shForm() : ''}` : ''}
-    ${list.length ? `<h4 style="margin-top:14px">Where else to post</h4>${pageOf('share', list).map(g=>{ const link = g.own ? OWN_LINK[g.name] : linkOf('groups', g);
+      ${canEdit && !d.fromLink?`<span class="sh-a">${openLink(d)}${d.status!=='live'?`<button class="link-btn" onclick="openDone(null, ${q(d.name)}, 'live')">It's live</button>`:''}<button class="link-btn" onclick="markShared(null, ${q(d.name)}, true)">Undo</button></span>`:`<span class="sh-a">${openLink(d)}</span>`}</div>${formFor(d.name)}`).join('')
+      : (p.step==='posted' ? '' : '<p class="meta" style="margin:2px 0 6px">Nothing yet. After you post or schedule somewhere, tap Mark live on it below.</p>')}
+    ${canEdit && !(p.step==='posted' && done.length && !SH_MORE[p.id]) ? `<div class="sh-add"><input id="shAdd" placeholder="Somewhere else, e.g. What, Where, When Chiang Mai"><button class="btn-soft sm" onclick="const v=($('#shAdd').value||'').trim(); if(!v){showToast('Type the place first.');return;} openDone(null, v)">Mark live</button></div>${extra ? shForm() : ''}` : ''}
+    ${list.length && p.step==='posted' && done.length && !SH_MORE[p.id] ? `<p class="meta" style="margin-top:10px"><a href="javascript:void 0" onclick="SH_MORE['${p.id}']=1;redrawPost()">Posted somewhere else too? Add it</a></p>` : ''}
+    ${list.length && !(p.step==='posted' && done.length && !SH_MORE[p.id]) ? `<h4 style="margin-top:14px">Where else to post</h4>${pageOf('share', list).map(g=>{ const link = g.own ? OWN_LINK[g.name] : linkOf('groups', g);
       return `<div class="sh2"><span class="sh-n">${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(g.name)} &#8599;</a>`:esc(g.name)}<small>${g.own ? 'Bloom\'s own' : esc(SHARE_RULE[g.promo])}${g.last_posted ? ' · last used ' + daysAgo(g.last_posted) : ''}</small></span><span></span>
-      ${canEdit ? (joined(g) ? `<button class="btn-soft sm" onclick="openDone(${g.own ? 'null' : q(g.id)}, ${q(g.name)})">Done</button>` : '<span class="sh-j">Join first</span>') : '<span></span>'}</div>${formFor(g.name)}`; }).join('')}${pager('share', list.length, 'redrawPost')}` : ''}
+      ${canEdit ? (joined(g) ? `<button class="btn-soft sm" onclick="openDone(${g.own ? 'null' : q(g.id)}, ${q(g.name)})">Mark live</button>` : '<span class="sh-j">Join first</span>') : '<span></span>'}</div>${formFor(g.name)}`; }).join('')}${pager('share', list.length, 'redrawPost')}` : ''}
   </div>`;
 }
 async function saveShared(){
@@ -1655,25 +1677,28 @@ function adsView(){
   <div class="box"><div class="bud-top"><h3 class="bh">Ads</h3><span style="flex:1"></span>
     <select id="adMonth" class="sm-sel">${months.map(m=>`<option value="${m}">${new Date(m+'-01T00:00:00').toLocaleDateString('en-GB',{month:'long', year:'numeric'})}</option>`).join('')}</select>
     <button class="btn-outline sm" onclick="exportAds()">Export month</button>${canEdit?`<button class="btn-primary sm" onclick="editAd()">+ Add ad</button>`:''}</div>
-    <div class="ad-r ad-h"><span>Ad</span><span>Status</span><span>Daily</span><span>Spent</span><span>Clicks</span><span>Enquiries</span><span>Per enquiry</span></div>
+    ${(() => { const t = ADS.map(a=>a.numbers_at).filter(Boolean).sort().pop(); return t ? `<p class="meta" style="margin:-2px 0 8px">Numbers last updated ${whenText(t)}.</p>` : ''; })()}
+    <div class="ad-r ad-h"><span>Ad</span><span>Status</span><span>Daily</span><span>Spent</span><span>Clicks</span><span>Call taps</span><span>Enquiries</span><span>Per enquiry</span><span></span></div>
     ${list.length ? list.map(a=>{ const post = POSTS.find(x=>x.id===a.post_id);
       return `<div class="ad-r" onclick="${canEdit?`editAd('${a.id}')`:''}">
         <span class="ad-n"><b>${esc(a.name)}</b><small>${PLAT[a.platform]}${a.ad_ref?' · ID '+esc(a.ad_ref):''}${post?` · <a href="javascript:void 0" onclick="event.stopPropagation();go('post/${post.id}')">post</a>`:''}${a.end_date?' · ends '+fmtShort(a.end_date):''}</small>
-          <small class="${stale(a)?'warn-t':''}">${a.numbers_at ? 'Numbers from ' + whenText(a.numbers_at) : 'No numbers yet'}${stale(a)?', update due':''}</small></span>
+          ${stale(a) ? `<small class="warn-t">${a.numbers_at ? 'Numbers from ' + whenText(a.numbers_at) + ', update due' : 'No numbers yet'}</small>` : ''}</span>
         <span><span class="st st-ad-${a.status}">${AD_ST[a.status]}</span></span>
         <span class="ad-c" data-l="Daily">${a.daily_budget ? thb(a.daily_budget) : '—'}</span>
         <span class="ad-c" data-l="Spent">${thb(a.spend)}</span>
         <span class="ad-c" data-l="Clicks">${a.clicks}</span>
+        <span class="ad-c" data-l="Call taps" title="Taps on Call or LINE. Not confirmed.">${a.call_taps||0}</span>
         <span class="ad-c" data-l="Enquiries"><b>${a.enquiries}</b></span>
-        <span class="ad-c" data-l="Per enquiry">${a.enquiries ? thb(a.spend/a.enquiries) : '—'}</span></div>`; }).join('')
+        <span class="ad-c" data-l="Per enquiry">${a.enquiries ? thb(a.spend/a.enquiries) : '—'}</span>
+        <span class="ad-e">${canEdit?'<button class="btn-outline sm">Update</button>':''}</span></div>`; }).join('')
       : '<p class="meta" style="padding:12px 0">No ads yet.</p>'}
-    <p class="meta" style="margin-top:10px">Enquiries means real calls or LINE messages from a family, not taps. Numbers are typed in from Ads Manager and Google Ads, so check the date on each.</p>
+    <p class="meta" style="margin-top:10px">Call taps are people who tapped Call or LINE on the ad, which may not have led anywhere. Enquiries are only real calls or LINE messages from a family. Numbers are typed in from Ads Manager and Google Ads, so check the date on each.</p>
   </div>`;
 }
 function paidBox(p){
   const list = ADS.filter(a=>a.post_id===p.id);
   if(!list.length) return canEdit ? `<p class="meta paid-l">Organic. <a href="javascript:void 0" onclick="editAd(null, '${p.id}')">Boosted it? Add the ad</a></p>` : '';
-  return `<div class="paidbox"><h4>Paid</h4>${list.map(a=>`<div class="sh2"><span class="sh-n">${esc(a.name)}<small>${PLAT[a.platform]} · <span class="st st-ad-${a.status}">${AD_ST[a.status]}</span> ${thb(a.spend)} · ${a.clicks} clicks · ${a.enquiries} enquir${a.enquiries===1?'y':'ies'}</small></span><span></span>${canEdit?`<button class="link-btn" onclick="editAd('${a.id}')">Update</button>`:'<span></span>'}</div>`).join('')}
+  return `<div class="paidbox"><h4>Paid</h4>${list.map(a=>`<div class="sh2"><span class="sh-n">${esc(a.name)}<small>${PLAT[a.platform]} · <span class="st st-ad-${a.status}">${AD_ST[a.status]}</span> ${thb(a.spend)} · ${a.clicks} clicks · ${a.call_taps||0} call taps · ${a.enquiries} enquir${a.enquiries===1?'y':'ies'}</small></span><span></span>${canEdit?`<button class="link-btn" onclick="editAd('${a.id}')">Update</button>`:'<span></span>'}</div>`).join('')}
     ${canEdit?`<p class="meta" style="margin:6px 0 0"><a href="javascript:void 0" onclick="editAd(null, '${p.id}')">Add another ad</a></p>`:''}</div>`;
 }
 function editAd(id, postId){
@@ -1694,15 +1719,16 @@ function editAd(id, postId){
     <h4 class="who-h">Numbers so far <span class="who-opt">totals to date, from the ad account</span></h4>
     <div class="grid-2"><div class="f"><label>Spent, THB</label><input name="spend" type="number" min="0" step="0.01" value="${a.spend??0}"></div>
       <div class="f"><label>Impressions</label><input name="impressions" type="number" min="0" step="1" value="${a.impressions??0}"></div></div>
-    <div class="grid-2"><div class="f"><label>Clicks</label><input name="clicks" type="number" min="0" step="1" value="${a.clicks??0}"></div>
-      <div class="f"><label>Enquiries <span class="hint">real calls or LINE messages</span></label><input name="enquiries" type="number" min="0" step="1" value="${a.enquiries??0}"></div></div>
+    <div class="grid-3"><div class="f"><label>Clicks</label><input name="clicks" type="number" min="0" step="1" value="${a.clicks??0}"></div>
+      <div class="f"><label>Call taps <span class="hint">not confirmed</span></label><input name="call_taps" type="number" min="0" step="1" value="${a.call_taps??0}"></div>
+      <div class="f"><label>Enquiries <span class="hint">real, confirmed</span></label><input name="enquiries" type="number" min="0" step="1" value="${a.enquiries??0}"></div></div>
     <div class="f"><label>Notes</label><textarea name="notes" rows="3">${esc(a.notes||'')}</textarea></div>
     ${a.numbers_at?`<p class="meta">Numbers last updated ${whenText(a.numbers_at)}${a.updated_by&&nameOf(a.updated_by)?' by '+esc(nameOf(a.updated_by)):''}.</p>`:''}`, null, false);
   $('#drawer').classList.add('mid');
   $('#sv').onclick = async () => {
     const fd = new FormData($('#fm')), o = {};
     ['platform','status','name','ad_ref','post_id','start_date','end_date','notes'].forEach(k=>{ const v = String(fd.get(k)||'').trim(); o[k] = v || null; });
-    ['daily_budget','spend','impressions','clicks','enquiries'].forEach(k=>{ const v = String(fd.get(k)||'').trim(); o[k] = v === '' ? (k==='daily_budget' ? null : 0) : Number(v); });
+    ['daily_budget','spend','impressions','clicks','call_taps','enquiries'].forEach(k=>{ const v = String(fd.get(k)||'').trim(); o[k] = v === '' ? (k==='daily_budget' ? null : 0) : Number(v); });
     if(!o.name){ $('#msg').textContent = 'Add the ad name.'; return; }
     if(['spend','impressions','clicks','enquiries','daily_budget'].some(k=>o[k]!==null && (isNaN(o[k]) || o[k] < 0))){ $('#msg').textContent = 'Numbers must be 0 or more.'; return; }
     if(o.status==='active' && !o.end_date){ $('#msg').textContent = 'A running ad needs an end date, so it can\'t run past the budget.'; return; }
@@ -1717,16 +1743,16 @@ function editAd(id, postId){
 async function exportAds(){
   const m = ($('#adMonth')||{}).value || todayISO().slice(0,7);
   const start = new Date(m+'-01T00:00:00'), end = new Date(start); end.setMonth(end.getMonth()+1);
-  const { data, error } = await sb.from('marketing_ad_snapshots').select('ad_id,spend,impressions,clicks,enquiries,taken_at').lt('taken_at', end.toISOString()).order('taken_at');
+  const { data, error } = await sb.from('marketing_ad_snapshots').select('ad_id,spend,impressions,clicks,enquiries,call_taps,taken_at').lt('taken_at', end.toISOString()).order('taken_at');
   if(error){ showToast('Could not export: ' + error.message); return; }
-  const last = (id, before) => (data||[]).filter(x=>x.ad_id===id && new Date(x.taken_at) < before).pop() || { spend:0, impressions:0, clicks:0, enquiries:0 };
-  const rows = [['Platform','Ad','Ad ID','Post','Status','Spent THB','Impressions','Clicks','Enquiries','Cost per enquiry THB']];
+  const last = (id, before) => (data||[]).filter(x=>x.ad_id===id && new Date(x.taken_at) < before).pop() || { spend:0, impressions:0, clicks:0, enquiries:0, call_taps:0 };
+  const rows = [['Platform','Ad','Ad ID','Post','Status','Spent THB','Impressions','Clicks','Call taps','Enquiries','Cost per enquiry THB']];
   let tot = 0;
   ADS.forEach(a=>{
     const e = last(a.id, end), b = last(a.id, start), d = k => Math.max(0, Number(e[k]) - Number(b[k]));
     if(!d('spend') && !d('clicks') && !d('enquiries') && !d('impressions')) return;
     const post = POSTS.find(x=>x.id===a.post_id); tot += d('spend');
-    rows.push([PLAT[a.platform], a.name, a.ad_ref||'', post?post.title:'', AD_ST[a.status], d('spend').toFixed(2), d('impressions'), d('clicks'), d('enquiries'), d('enquiries') ? (d('spend')/d('enquiries')).toFixed(2) : '']);
+    rows.push([PLAT[a.platform], a.name, a.ad_ref||'', post?post.title:'', AD_ST[a.status], d('spend').toFixed(2), d('impressions'), d('clicks'), d('call_taps'), d('enquiries'), d('enquiries') ? (d('spend')/d('enquiries')).toFixed(2) : '']);
   });
   rows.push(['Total','','','','', tot.toFixed(2)]);
   const csv = rows.map(r=>r.map(v=>{ const t = String(v??''); return /[",\n]/.test(t) ? '"' + t.replace(/"/g,'""') + '"' : t; }).join(',')).join('\n');
@@ -1763,6 +1789,22 @@ function askConfirm(title, text, yes){
   });
 }
 // Item IV (bot review): small fixes after posting, each logged. The caption only changes to match what is live.
+let FIX_IMGS = [];
+function drawFixImgs(pid){
+  const el = $('#fixImgs'); if(!el) return;
+  el.innerHTML = FIX_IMGS.map((im,i)=>`<span class="im">${safeUrl(im.url)?(im.external?'<span class="ext">Drive link</span>':`<img src="${esc(im.url)}" alt="">`):''}<button type="button" class="imx" title="Remove" onclick="FIX_IMGS.splice(${i},1);drawFixImgs('${pid}')">×</button></span>`).join('')
+    + `<label class="imadd">+ Add<input type="file" accept="image/*" multiple hidden onchange="fixAddImgs(this.files,'${pid}')"></label>`;
+}
+async function fixAddImgs(files, pid){
+  for(const f of files){
+    if(f.size > 10*1024*1024){ showToast(f.name + ' is over 10 MB.'); continue; }
+    const path = `${pid}/${Date.now()}-${f.name.replace(/[^\w.\-]+/g,'_')}`;
+    const { error } = await sb.storage.from(IMG_BUCKET).upload(path, f, { cacheControl:'3600', upsert:false });
+    if(error){ showToast('Upload failed: ' + error.message); continue; }
+    FIX_IMGS.push({ path, url: sb.storage.from(IMG_BUCKET).getPublicUrl(path).data.publicUrl });
+  }
+  drawFixImgs(pid);
+}
 function fixPosted(id){
   const p = POSTS.find(x=>x.id===id); if(!p) return;
   cur = {topic:true};
@@ -1771,11 +1813,14 @@ function fixPosted(id){
     <div class="f"><label>Label</label><select name="label">${LABELS.map(l=>`<option ${l.name===p.label?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div>
     <div class="f"><label>English, as it is live</label><textarea name="copy_en" rows="7">${esc(p.copy_en||'')}</textarea></div>
     <div class="f"><label>Hashtags</label><input name="hashtags" value="${esc(p.hashtags||'')}"></div>
+    <div class="f"><label>Images, as they are live</label><div class="imgs" id="fixImgs"></div></div>
     ${p.needs_thai ? `<div class="f"><label>Thai, as it is live</label><textarea name="copy_th" rows="5">${esc(p.copy_th||'')}</textarea></div>
     <label class="ck"><input type="checkbox" name="en_only"> This post went out in English only. Clear the Thai.</label>` : ''}`, null, false);
   $('#drawer').classList.add('mid');
+  FIX_IMGS = [...(p.images||[])]; drawFixImgs(p.id);
   $('#sv').onclick = async () => {
     const fd = new FormData($('#fm')), o = {};
+    if(JSON.stringify(FIX_IMGS) !== JSON.stringify(p.images||[])) o.images = FIX_IMGS;
     if(fd.get('label') !== (p.label||'')) o.label = fd.get('label');
     if(fd.get('copy_en') !== (p.copy_en||'')) o.copy_en = fd.get('copy_en');
     if(fd.get('hashtags') !== (p.hashtags||'')) o.hashtags = fd.get('hashtags');
@@ -1861,14 +1906,15 @@ function topicForm(p, withBrief){
     <div class="grid-3"><div class="f"><label>Posting date</label><input name="post_date" type="date" value="${esc(p.post_date||'')}"></div>
       <div class="f"><label>Time <span class="hint">optional</span></label><input name="post_time" type="time" value="${esc(p.post_time||'')}"></div>
       <div class="f"><label>Label</label><select name="label"><option value="">Choose</option>${LABELS.map(l=>`<option ${l.name===p.label?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div></div>
-    <h4 class="who-h">Who does this post</h4>
-    ${chipField('writer', 'Writer', p.writer||'')}
-    ${chipField('pic', 'Reviewer', p.pic||'')}
     <input type="hidden" name="needs_thai" value="${thai}">
     <div class="f"><label>Thai caption</label><div class="shf-t thsw"><button type="button" class="${thai==='true'?'on':''}" onclick="setThai(true)">Thai on</button><button type="button" class="${thai==='false'?'on':''}" onclick="setThai(false)">English only</button></div></div>
+    <details class="fold" id="rolesBox" ${withBrief && p.writer && p.pic ? '' : 'open'}><summary><span class="fold-t">Who does this post</span> <span class="fold-s" id="rolesSum"></span></summary>
+    ${chipField('writer', 'Writer', p.writer||'')}
+    ${chipField('pic', 'Approves it', p.pic||'')}
     <div id="thaiWho" ${thai==='false'?'hidden':''}>${chipField('translator', 'Translator', thai==='false' ? '' : (p.translator||''))}</div>
     ${chipField('poster', 'Poster', p.poster || p.writer || '').replace('type="hidden" name="poster"', `type="hidden" name="poster" data-own="${p.poster && p.poster !== p.writer ? 1 : ''}"`)}
-    ${withBrief ? `<h4 class="who-h">Brief <span class="who-opt">optional</span></h4>${briefFields(p)}` : ''}`;
+    </details>
+    ${withBrief ? `<details class="fold"><summary><span class="fold-t">Brief</span> <span class="fold-s">optional: who it is for, goal, key points</span></summary>${briefFields(p)}</details>` : ''}`;
 }
 // Item 91: people are name chips. First names; a small grey number shows posts in progress. Click again to clear.
 function chipField(name, label, sel, first, last){
@@ -1891,18 +1937,25 @@ function pickChip(b){
     const w = $('#fm input[name="writer"]').value;
     if(b.classList.contains('on')) v = w;
     inp.dataset.own = v && v !== w ? '1' : '';
-    inp.value = v; lightChip(f, v); return;
+    inp.value = v; lightChip(f, v); rolesSummary(); return;
   }
   if(b.classList.contains('on') && v !== '__none') v = '';
   lightChip(f, v === '' ? '' : v);
   inp.value = v;
   if(f === 'writer'){ const po = $('#fm input[name="poster"]'); if(po && (!po.dataset.own || po.value === v)){ po.dataset.own = ''; po.value = v; lightChip('poster', v); } }
+  rolesSummary();
+}
+function rolesSummary(){
+  const v = k => (($('#fm input[name="'+k+'"]')||{}).value||''), nm = id => id ? esc(firstName(nameOf(id)||'')) : '<b class="warn-t">not set</b>';
+  const thai = v('needs_thai') !== 'false', el = $('#rolesSum'); if(!el) return;
+  el.innerHTML = `${nm(v('writer'))} writes · ${nm(v('pic'))} approves${thai ? ' · ' + nm(v('translator')) + ' does the Thai' : ''} · ${nm(v('poster')||v('writer'))} posts`;
 }
 function setThai(on){
   $('#fm input[name="needs_thai"]').value = on ? 'true' : 'false';
   document.querySelectorAll('#fm .thsw button').forEach((b,i)=>b.classList.toggle('on', on ? i===0 : i===1));
   $('#thaiWho').hidden = !on;
   try{ localStorage.setItem('mkt_thai_last', on ? '1' : '0'); }catch(e){}
+  rolesSummary();
   if(!on){ $('#fm input[name="translator"]').value = ''; lightChip('translator', ''); }
 }
 function topicPayload(){
@@ -1919,14 +1972,20 @@ function topicMissing(o){
   if(!o.title) return 'Add a topic.';
   if(!o.post_date) return 'Pick a posting date.';
   if(!o.label) return 'Pick a label.';
-  if(!o.writer) return 'Pick a writer.';
+  if(!o.writer){ const b = $('#rolesBox'); if(b) b.open = true; return 'Pick a writer.'; }
   return '';
 }
 function newTopic(date, pre, suggKey){
   cur = {topic:true};
   pre = pre || {};
     let thaiLast = true; try{ thaiLast = localStorage.getItem('mkt_thai_last') !== '0'; }catch(e){}
-  drawerShell('New post', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || '', writer: '', pic: '', translator: '', poster: '', needs_thai: thaiLast}, true), null, false);
+  const meIn = members().includes(ME) ? ME : '', lblPic = l => ((LABELS.find(x=>x.name===l)||{}).default_pic) || '';
+  // The approver defaults from the label, never to the writer, so nobody approves their own post by accident.
+  const picDef = lblPic(pre.label) && lblPic(pre.label) !== meIn ? lblPic(pre.label) : '';
+  drawerShell('New post', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || '', writer: meIn, pic: picDef, translator: '', poster: '', needs_thai: thaiLast}, true), null, false);
+  rolesSummary();
+  { const ls = $('#fm select[name="label"]'); if(ls) ls.addEventListener('change', () => { const pc = $('#fm input[name="pic"]'), d = lblPic(ls.value);
+      if(pc && d && d !== ($('#fm input[name="writer"]')||{}).value){ pc.value = d; lightChip('pic', d); rolesSummary(); } }); }
   $('#drawer').classList.add('mid');
   $('#sv').textContent = 'Create';
   $('#sv').onclick = async () => {

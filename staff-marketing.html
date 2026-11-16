@@ -302,7 +302,11 @@ div.tile{cursor:default;}
 .sb.done .sd{background:#E1F5EE;color:#085041;border-color:#E1F5EE;} .sb.now .sd{background:#534AB7;color:#fff;border-color:#534AB7;}
 .sl{flex:1;height:1px;background:#DCD5C6;min-width:12px;}
 .banner{border-radius:10px;padding:10px 14px;font-size:13.5px;font-weight:600;margin-bottom:14px;}
-.banner.bad{background:#FCEBEB;color:#791F1F;} .banner.warn{background:#FAEEDA;color:#633806;}
+.banner.bad{background:#FCEBEB;color:#791F1F;} .banner.warn{background:#FAEEDA;color:#633806;} .banner.info{background:#F1EFE8;color:#444441;font-weight:500;}
+.rec-a{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;} .recbox{background:#F7F5F0;border-radius:10px;padding:12px;margin-top:10px;display:grid;gap:8px;} .recbox label{font-size:12px;font-weight:600;color:#5F5E5A;} .recbox input{padding:9px 10px;border-radius:8px;border:1px solid #E5E0D5;font:inherit;font-size:13px;background:#fff;} .recbox .meta{margin:0;font-size:12px;}
+.chip.tg-warn{background:#FAEEDA;color:#854F0B;margin-left:6px;} .chip.tg-sch{background:#FAEEDA;color:#854F0B;} .st-waiting{background:#E6F1FB;color:#0C447C;}
+.ask{position:fixed;inset:0;background:rgba(30,28,24,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;} .ask-b{background:#fff;border-radius:14px;padding:20px 22px;max-width:420px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2);} .ask-b h4{font-size:16px;margin:0 0 6px;} .ask-b p{font-size:14px;color:#5F5E5A;margin:0 0 16px;line-height:1.5;} .ask-a{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
+.ck{display:flex;gap:8px;align-items:center;font-size:13.5px;margin-top:4px;}
 .brief{background:#F7F3EC;border-radius:10px;padding:10px 14px;font-size:13.5px;margin-bottom:14px;} .brief b{margin-right:6px;}
 textarea[readonly],input[readonly]{background:#F7F3EC!important;color:#5F5E5A;}
 .imgs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
@@ -466,6 +470,19 @@ th.sortable{cursor:pointer;user-select:none;white-space:nowrap;} th.sortable .ar
   .tools input{min-width:0;flex:1;}
   .hide-m{display:none;}
 }
+/* Bot review item VII: on phones each post in a list is a card with title, date, state and one button */
+@media (max-width: 700px){
+  .wl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;background:#fff;border:1px solid #EDE8DD;border-radius:12px;padding:12px 14px;margin:0 0 10px;}
+  .wl+.wl,.bh+p+.wl,.bh+.wl{border-top:1px solid #EDE8DD;}
+  .wl>:nth-child(2){grid-row:1;grid-column:1/3;font-weight:600;} .wl .ptt{white-space:normal;}
+  .wl>:nth-child(1){grid-row:2;grid-column:1;font-size:12.5px;}
+  .wl>:nth-child(3){grid-row:3;grid-column:1;display:flex;flex-wrap:wrap;gap:4px;}
+  .wl>:nth-child(4){grid-row:2;grid-column:2;font-size:12.5px;text-align:right;}
+  .wl>:nth-child(5){grid-row:3;grid-column:2;}
+  .wl .wl-act .btn-outline{padding:7px 14px;}
+  main{padding-bottom:120px;}
+  .stepbar .sb{font-size:12px;}
+}
 </style>
 </head>
 <body>
@@ -480,7 +497,7 @@ th.sortable{cursor:pointer;user-select:none;white-space:nowrap;} th.sortable .ar
         <h1 id="hqTitle">Marketing HQ</h1>
         <p class="sub" id="hqSub">Every post, from topic to Facebook, and whose turn it is.</p>
       </div>
-      <div class="hdr-btns"><button class="btn-outline" id="planBtn" style="display:none" onclick="planSeveral()">Plan several</button><button class="btn-primary" id="newTopicBtn" style="display:none" onclick="newTopic()">+ New topic</button></div>
+      <div class="hdr-btns"><button class="btn-outline" id="planBtn" style="display:none" onclick="planSeveral()">Plan several</button><button class="btn-primary" id="newTopicBtn" style="display:none" onclick="newTopic()">+ New post</button></div>
     </div>
     <nav class="tabs" id="tabs" style="display:none"></nav>
     <div id="subtabs"></div>
@@ -561,7 +578,7 @@ const thisMonth = () => localISO(new Date()).slice(0,7);
 // ---------- Workflow ----------
 // Posts live in marketing_posts. Every change goes through the mkt_post() database function,
 // which checks who you are and which step the post is at.
-const STEP_LABEL = {english:'English', review:'Review', thai:'Translate', post:'Post', posted:'Posted', cancelled:'Cancelled'};
+const STEP_LABEL = {english:'Draft', review:'For approval', thai:'Approved · Thai', post:'Approved', posted:'Posted', cancelled:'Cancelled'};
 const STEP_ORDER = ['english','review','thai','post'];
 const STEP_BG = {english:'#EEEDFE', thai:'#FAEEDA', review:'#E6F1FB', post:'#E1F5EE', posted:'#F1EFE8', cancelled:'#FAECE7', back:'#FCEBEB'};
 const STEP_FG = {english:'#3C3489', thai:'#633806', review:'#0C447C', post:'#085041', posted:'#444441', cancelled:'#712B13', back:'#791F1F'};
@@ -651,7 +668,9 @@ function dueText(p){
 function stepChip(p){
   const k = p.step === 'english' && p.sent_back ? 'back' : p.step;
   const t = p.step === 'english' && p.sent_back ? 'Sent back' : STEP_LABEL[p.step];
-  return `<span class="chip" style="background:${STEP_BG[k]};color:${STEP_FG[k]}">${t}</span>`;
+  const extra = (p.thai_unchecked && p.needs_thai ? '<span class="chip tg-warn">Thai unchecked</span>' : '')
+    + (p.approval_recorded && !p.approval_recorded.seen && ['thai','post'].includes(p.step) ? '<span class="chip tg-warn">Approval recorded</span>' : '');
+  return `<span class="chip" style="background:${STEP_BG[k]};color:${STEP_FG[k]}">${t}</span>${extra}`;
 }
 const actionWord = p => ({english: p.sent_back ? 'Fix' : 'Write', thai:'Translate', review:'Review', post:'Post it'}[p.step] || 'Open');
 
@@ -933,7 +952,7 @@ function overview(){
   ${(() => { const lists = { late: late.slice().sort((a,b)=>String(a.post_date).localeCompare(String(b.post_date))), week: week.slice().sort((a,b)=>String(a.post_date).localeCompare(String(b.post_date))), posted: postedList.slice().sort((a,b)=>String(b.posted_at||b.post_date).localeCompare(String(a.posted_at||a.post_date))) };
      const a = lists[ovOpen]; pageFor('ov', ovOpen); return a && a.length ? `<div class="ovlist">${pageOf('ov', a).map(p=>line(p,true)).join('')}${pager('ov', a.length)}</div>` : ''; })()}
   ${urgent.length ? `<div class="urgent"><h3>Urgent: ${urgent.length} post${urgent.length>1?'s':''} due to go out but not ready</h3>${pageOf('urg', urgent).map(p=>line(p,true)).join('')}${pager('urg', urgent.length)}</div>` : ''}
-  ${empty && canEdit ? `<div class="emptyweeks"><span><b>${empty} empty week${empty>1?'s':''}</b> coming up</span>${emptyWeeks.map(d=>`<button class="btn-outline sm" onclick="newTopic('${d}')">Plan a topic for ${fmtShort(d)}</button>`).join('')}</div>` : ''}
+  ${empty && canEdit ? `<div class="emptyweeks"><span><b>${empty} empty week${empty>1?'s':''}</b> coming up</span>${emptyWeeks.map(d=>`<button class="btn-outline sm" onclick="newTopic('${d}')">Plan a post for ${fmtShort(d)}</button>`).join('')}</div>` : ''}
   ${groundwork()}
   ${(() => {
     // Item 53: one box. Step boxes and Waiting on names filter the list underneath; click again for everything.
@@ -1074,7 +1093,7 @@ function dayClick(e, iso){
   if(!ps.length){ newTopic(iso); return; }
   const m = document.createElement('div'); m.id = 'dayMenu'; m.className = 'daymenu';
   m.innerHTML = ps.map(p=>`<button onclick="closeDayMenu();go('post/${p.id}')"><span class="dm-t">${esc(p.title)}</span><span class="dm-v">View</span></button>`).join('')
-    + `<button class="dm-new" onclick="closeDayMenu();newTopic('${iso}')">+ New topic on ${fmtShort(iso)}</button>`;
+    + `<button class="dm-new" onclick="closeDayMenu();newTopic('${iso}')">+ New post on ${fmtShort(iso)}</button>`;
   document.body.appendChild(m);
   const r = e.currentTarget.getBoundingClientRect(), w = m.offsetWidth;
   m.style.left = Math.max(8, Math.min(r.left + window.scrollX, window.scrollX + document.documentElement.clientWidth - w - 8)) + 'px';
@@ -1102,7 +1121,7 @@ function nextLine(p){
   const thaiPart = p.needs_thai ? (tr ? `${tr} does the Thai${due(1)?', due '+due(1):''}` : 'No translator set yet') : '';
   const postPart = wr ? `${wr} posts it${p.post_date?' on '+fmtShort(p.post_date):''}` : 'No poster set yet';
   const parts = {
-    english: [pic ? `${pic} reviews it${due(2)?', due '+due(2):''}` : 'No reviewer set yet'],
+    english: [p.writer && p.writer===p.pic ? `${pic} writes and approves it, one tap when ready` : pic ? `${pic} reviews it${due(2)?', due '+due(2):''}` : 'No reviewer set yet'],
     review: [thaiPart || postPart],
     thai: [postPart],
     post: ['Post or schedule it, tap Done for each place, then Finish post.']
@@ -1148,15 +1167,22 @@ async function renderPost(el){
   // Thai AI draft is available as soon as there is English (item 12): translator at Thai, writer at English, PIC at Review, admin.
   const canAiTh = p.needs_thai && openStep(p) && (canTh || (W && p.step==='english') || (pic && p.step==='review'));
   window._canEdit = { en: canEn, th: canTh || canAiTh };
-  const steps = ['english', 'review', ...(p.needs_thai?['thai']:[]), 'post'];
-  const cur = p.step==='posted' ? steps.length : steps.indexOf(p.step);
-  const bar = steps.map((s,i)=>`<span class="sb ${i<cur?'done':i===cur?'now':''}"><span class="sd">${i<cur?'&#10003;':i+1}</span>${STEP_LABEL[s]}${{english:p.writer,review:p.pic,thai:p.translator,post:posterOf(p)}[s]!==undefined?` · ${esc(nameOf({english:p.writer,review:p.pic,thai:p.translator,post:posterOf(p)}[s])||'not set')}`:''}</span>`).join('<span class="sl"></span>');
+  // 3 stages: Draft (writer, then reviewer), Approved (Thai if on, then poster), Posted. Names show whose part each is.
+  const nm = id => esc(nameOf(id)||'not set');
+  const stages = [
+    ['Draft', `${nm(p.writer)}${p.pic && p.pic!==p.writer ? ', approval ' + nm(p.pic) : ''}`],
+    ['Approved', p.needs_thai ? `Thai ${nm(p.translator)}` : 'English only'],
+    ['Posted', nm(posterOf(p))]];
+  const cur = {english:0, review:0, thai:1, post:1, posted:3}[p.step] ?? 0;
+  const bar = stages.map(([l, who], i)=>`<span class="sb ${i<cur?'done':i===cur?'now':''}"><span class="sd">${i<cur?'&#10003;':i+1}</span>${l} · ${who}</span>`).join('<span class="sl"></span>');
   const imgs = (p.images||[]);
   const canAct = mine || bk || adm;
   const asAdmin = !mine && !bk && adm ? ' <span class="adm">(as admin)</span>' : '';
   let actions = '';
   if(canAct){
-    if(p.step==='english') actions = `<span class="needtext" data-for="copy_en" data-msg="Write the English first, then send it to Review."><button class="btn-primary" onclick="doAct('send_on')">Send to Review</button></span>`;
+    if(p.step==='english') actions = p.writer && p.writer===p.pic
+      ? `<span class="needtext" data-for="copy_en" data-msg="Write the English first."><button class="btn-primary" onclick="doAct('quick_approve')">Approve and ready to post</button></span>`
+      : `<span class="needtext" data-for="copy_en" data-msg="Write the English first, then send it to Review."><button class="btn-primary" onclick="doAct('send_on')">Send to Review</button></span>`;
     if(p.step==='review' && (pic || adm)) actions = `<input id="f-note" placeholder="Note to the writer (needed to send back)" class="note-in">
       <button class="btn-outline" onclick="doAct('send_back')">Send back to English</button>
       <button class="btn-primary" onclick="doAct('approve')">Approve${p.needs_thai?', send to Translate':', send to Post'}</button>`;
@@ -1168,6 +1194,18 @@ async function renderPost(el){
       : `<button class="btn-outline" onclick="copyCaption()">Copy caption</button>
       <button class="btn-primary" onclick="doAct('mark_posted')">Finish post</button>`;
   }
+  // Approved outside HQ (for example in chat): someone on the post records it, the reviewer is told and can undo.
+  const canRecord = ['english','review'].includes(p.step) && p.pic && p.writer !== p.pic && !pic && (W || posterOf(p)===ME || isAdmin());
+  const recordHtml = canRecord ? (REC_OPEN===p.id
+    ? `<div class="recbox"><label>Who approved it, where and when</label><input id="recNote" placeholder="e.g. Ronnie in Grok chat, 17 Nov 1:14"><div class="shf-b"><button class="link-btn" onclick="REC_OPEN=null;redrawPost()">Cancel</button><button class="btn-primary sm" onclick="recordApproval()">Record approval</button></div><p class="meta">${esc(nameOf(p.pic)||'The reviewer')} gets a notification and can undo it.</p></div>`
+    : `<p class="meta" style="margin-top:8px"><a href="javascript:void 0" onclick="REC_OPEN='${p.id}';redrawPost()">Already approved outside HQ? Record it</a></p>`) : '';
+  const canSkipTh = p.step==='thai' && (pic || posterOf(p)===ME || T || isAdmin());
+  const skipThHtml = canSkipTh ? `<p class="meta" style="margin-top:8px">No Thai reader free? <a href="javascript:void 0" onclick="skipThai()">Send to Post without a Thai check</a>. It stays marked Thai unchecked.</p>` : '';
+  const ar = p.approval_recorded;
+  const recBanner = ar && ['thai','post'].includes(p.step) ? `<div class="banner ${ar.seen?'info':'warn'}">Approval recorded by ${esc(nameOf(ar.by)||'someone')}: ${esc(ar.note||'')}${ar.seen?'. Confirmed.':''}
+    ${!ar.seen && (pic || isAdmin()) ? `<span class="rec-a"><button class="btn-outline sm" onclick="doAct('ack_recorded')">That's right</button><button class="btn-outline sm" onclick="doAct('undo_recorded_approval')">Undo, back to approval</button></span>` : ''}</div>` : '';
+  const places = ['post','posted'].includes(p.step) ? sharedIn(p) : [];
+  const schedTag = places.some(x=>x.status==='scheduled') ? '<span class="chip tg-sch">Scheduled</span>' : '';
   const stepWho = {english:nameOf(p.writer)||'the writer', review:nameOf(p.pic)||'the reviewer', thai:nameOf(p.translator)||'the translator', post:nameOf(posterOf(p))||'the poster'}[p.step] || '';
   const adminLine = actions && asAdmin ? `<p class="adminline">You're doing ${esc(stepWho)}'s step as admin. This is logged.</p>` : '';
   const nextHint = !openStep(p) ? '' : nextLine(p);
@@ -1175,7 +1213,7 @@ async function renderPost(el){
     ? `<div class="briefbox"><span><b>For</b>${esc((p.brief_audience||[]).join(', ')||'Not set')}</span><span><b>Goal</b>${esc(goalName(p.brief_goal)||'Not set')}</span><span><b>Format</b>${esc(formatName(p.brief_format)||'Not set')}</span>${canBrief?`<button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Edit brief</button>`:''}${p.brief?`<span class="kp"><b>Key points</b>${esc(p.brief)}</span>`:''}</div>`
     : (canBrief ? `<div class="briefbox"><span class="meta">No brief yet.</span><button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Add brief</button></div>` : '');
   const waiting = !canAct && openStep(p) ? `<span class="muted">Waiting on ${esc(ownerName(p))}${isLate(p)?' · <span class="late-d">late</span>':''}</span>` : '';
-  const PLACE_KIND = {'shared in a group':'posted in', 'scheduled in':'scheduled in', 'removed a group share':'removed'};
+  const PLACE_KIND = {'shared in a group':'posted in', 'scheduled in':'scheduled in', 'waiting in':'is waiting on the admin of', 'removed a group share':'removed'};
   const hist = (EVENTS[id]||[]).map(e=>`${esc(nameOf(e.actor)||'System')} ${PLACE_KIND[e.kind] ? esc(PLACE_KIND[e.kind]) + ' ' + esc(e.note||'') : esc(e.kind) + (e.note?` ("${esc(e.note)}")`:'')} · ${new Date(e.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`).join('<br>');
   if(p.step==='posted'){ el.innerHTML = postedView(p, imgs, hist); return; }
   el.innerHTML = `<div id="pg">
@@ -1184,9 +1222,10 @@ async function renderPost(el){
     <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px">
       <div><h2 style="font-family:Georgia,serif;font-size:22px;font-weight:700">${esc(p.title)}</h2>
         <p class="meta" style="font-size:13px;margin-top:2px">${p.post_date?'Posts '+fmtShort(p.post_date):'No date yet'}${p.post_time?', '+esc(p.post_time):''} · Reviewer ${esc(nameOf(p.pic)||'not set')}${p.label?' · '+esc(p.label):''}${p.needs_thai?'':' · English only'}</p></div>
-      <div style="display:flex;gap:8px;align-items:center">${openStep(p)&&dueOf(p)?`<span class="chip ${isLate(p)?'rust':''}">${esc(dueText(p))}</span>`:''}${stepChip(p)}${canTopic?`<button class="btn-outline sm" onclick="editTopic('${p.id}')">Edit topic</button><button class="btn-outline sm" style="color:#A23F1C" onclick="cancelPost('${p.id}')">Delete</button>`:''}</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${openStep(p)&&dueOf(p)?`<span class="chip ${isLate(p)?'rust':''}">${esc(dueText(p))}</span>`:''}${stepChip(p)}${schedTag}${canTopic?`<button class="btn-outline sm" onclick="editTopic('${p.id}')">Edit topic</button><button class="btn-outline sm" style="color:#A23F1C" onclick="cancelPost('${p.id}')">Delete</button>`:''}</div>
     </div>
     <div class="stepbar">${bar}</div>
+    ${recBanner}
     ${p.step==='english'&&p.sent_back&&p.back_note?`<div class="banner bad">${esc(nameOf(p.pic)||'Reviewer')}: ${esc(p.back_note)}</div>`:''}
     ${p.step==='review'&&p.sent_back&&p.back_note?`<div class="banner bad">${esc(p.back_note)}</div>`:''}
     ${briefHtml}
@@ -1210,6 +1249,7 @@ async function renderPost(el){
     ${adminLine}
     <div class="actions">${(canEn||canTh||canTags||canImg)?`<button class="btn-outline" onclick="saveFields()">Save</button>`:''}${waiting}<span style="flex:1"></span>${actions}</div>
     ${nextHint?`<p class="nexthint">${nextHint}</p>`:''}
+    ${recordHtml}${skipThHtml}
   </div>
   <div class="hist"><b>History</b><br>${hist||'…'}${(VERSIONS[id]||[]).length?`<br><a href="javascript:void 0" onclick="SHOW_VERS=!SHOW_VERS;renderPost($('#view'))">${SHOW_VERS?'Hide':'Show'} earlier versions (${VERSIONS[id].length})</a>${SHOW_VERS?versionsHtml(p):''}`:''}</div>
   </div>`;
@@ -1237,7 +1277,7 @@ function postedView(p, imgs, hist){
   return `<div id="pg">
   <button class="link-btn" style="margin-bottom:14px" onclick="history.length>1?history.back():go('${lastTab||'calendar'}')">&#8249; Back</button>
   <div class="box" style="padding:22px 26px">
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="font-family:Georgia,serif;font-size:22px;font-weight:700">${esc(p.title)}</h2>${stepChip(p)}</div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="font-family:Georgia,serif;font-size:22px;font-weight:700">${esc(p.title)}</h2>${stepChip(p)}${p.label?`<span class="fmt">${esc(p.label)}</span>`:''}${canEdit && ([p.writer,p.pic,posterOf(p)].includes(ME) || isAdmin()) ? `<button class="btn-outline sm" style="margin-left:auto" onclick="fixPosted('${p.id}')">Fix after posting</button>` : ''}</div>
     <p class="meta" style="font-size:13.5px;margin-top:4px">${meta}</p>
     ${who ? `<p class="meta" style="font-size:12.5px;margin-top:2px">${who}</p>` : ''}
     ${body ? `<div class="pv-box">${body}</div>` : ''}
@@ -1327,7 +1367,7 @@ let SH_FORM = null; // { name, gid, status } while the Done box is open
 function sharedIn(p){
   const m = new Map();
   (EVENTS[p.id]||[]).forEach(e=>{
-    if(e.kind==='shared in a group' || e.kind==='scheduled in') m.set(e.note, { at: e.created_at, status: e.kind==='scheduled in' ? 'scheduled' : 'live', link: (e.meta||{}).link || '' });
+    if(e.kind==='shared in a group' || e.kind==='scheduled in' || e.kind==='waiting in') m.set(e.note, { at: e.created_at, status: e.kind==='scheduled in' ? 'scheduled' : e.kind==='waiting in' ? 'waiting' : 'live', link: (e.meta||{}).link || '' });
     else if(e.kind==='removed a group share') m.delete(e.note);
   });
   return [...m.entries()].map(([name, v])=>({ name, ...v }));
@@ -1338,11 +1378,11 @@ function placeHome(name){
   return g ? linkOf('groups', g) : '';
 }
 function shForm(){
-  const f = SH_FORM, sch = f.status==='scheduled';
+  const f = SH_FORM, sch = f.status==='scheduled', wt = f.status==='waiting', own = !!OWN_LINK[f.name];
   return `<div class="shf">
-    <div class="shf-t"><button class="${sch?'':'on'}" onclick="shStatus('live')">Live now</button><button class="${sch?'on':''}" onclick="shStatus('scheduled')">Scheduled</button></div>
-    <input id="shLink" value="${esc(f.link||'')}" oninput="SH_FORM.link=this.value" placeholder="${sch ? 'Link from Meta Business Suite (optional)' : 'Link to the live post (optional)'}">
-    <p class="meta">${sch ? 'Anyone opening a scheduled link logs in to Facebook first.' : 'On the post, tap ··· then Copy link.'}</p>
+    <div class="shf-t"><button class="${f.status==='live'?'on':''}" onclick="shStatus('live')">Live now</button><button class="${sch?'on':''}" onclick="shStatus('scheduled')">Scheduled</button>${own?'':`<button class="${wt?'on':''}" onclick="shStatus('waiting')">Waiting on admin</button>`}</div>
+    <input id="shLink" value="${esc(f.link||'')}" oninput="SH_FORM.link=this.value" placeholder="${sch ? 'Link from Meta Business Suite (optional)' : wt ? 'Link to your pending post (optional)' : 'Link to the live post (optional)'}">
+    <p class="meta">${sch ? 'Anyone opening a scheduled link logs in to Facebook first.' : wt ? 'The group admin has to approve it. Tap It\'s live once it shows in the group.' : 'On the post, tap ··· then Copy link.'}</p>
     <div class="shf-b"><button class="link-btn" onclick="SH_FORM=null;redrawPost()">Cancel</button><button class="btn-primary sm" onclick="saveShared()">Save</button></div>
   </div>`;
 }
@@ -1362,15 +1402,15 @@ function shareBox(p){
   const formFor = name => SH_FORM && SH_FORM.name===name ? shForm() : '';
   const openLink = d => {
     const href = safeUrl(d.link) ? d.link : d.status==='scheduled' ? SUITE : placeHome(d.name);
-    if(!href) return '<span></span>';
+    if(!href) return '';
     const label = d.status==='scheduled' && !safeUrl(d.link) ? 'Open (log in)' : d.link ? 'Open' : 'Open page';
     return `<a class="sh-o" href="${esc(href)}" target="_blank" rel="noopener">${label} &#8599;</a>`;
   };
   const extra = SH_FORM && !SH_FORM.gid && !OWN_LINK[SH_FORM.name] && !doneSet.has(SH_FORM.name) && !list.some(g=>g.name===SH_FORM.name);
   return `<div class="sharebox">
     <h4>Posted or scheduled</h4>
-    ${done.length ? done.map(d=>`<div class="sh2 sh3"><span class="sh-n">${esc(d.name)}<small><span class="st st-${d.status}">${d.status==='live'?'Live':'Scheduled'}</span> ${fmt(d.at)}</small></span>
-      ${canEdit?`<span class="sh-a">${openLink(d)}${d.status==='scheduled'?`<button class="link-btn" onclick="openDone(null, ${q(d.name)}, 'live')">It's live</button>`:''}<button class="link-btn" onclick="markShared(null, ${q(d.name)}, true)">Undo</button></span>`:`<span class="sh-a">${openLink(d)}</span>`}</div>${formFor(d.name)}`).join('')
+    ${done.length ? done.map(d=>`<div class="sh2 sh3"><span class="sh-n">${esc(d.name)}<small><span class="st st-${d.status}">${{live:'Live', scheduled:'Scheduled', waiting:'Waiting on admin'}[d.status]}</span> ${fmt(d.at)}</small></span>
+      ${canEdit?`<span class="sh-a">${openLink(d)}${d.status!=='live'?`<button class="link-btn" onclick="openDone(null, ${q(d.name)}, 'live')">It's live</button>`:''}<button class="link-btn" onclick="markShared(null, ${q(d.name)}, true)">Undo</button></span>`:`<span class="sh-a">${openLink(d)}</span>`}</div>${formFor(d.name)}`).join('')
       : '<p class="meta" style="margin:2px 0 6px">Nothing yet. After you post or schedule somewhere, tap Done on it below.</p>'}
     ${canEdit ? `<div class="sh-add"><input id="shAdd" placeholder="Somewhere else, e.g. What, Where, When Chiang Mai"><button class="btn-soft sm" onclick="const v=($('#shAdd').value||'').trim(); if(!v){showToast('Type the place first.');return;} openDone(null, v)">Done</button></div>${extra ? shForm() : ''}` : ''}
     ${list.length ? `<h4 style="margin-top:14px">Where else to post</h4>${pageOf('share', list).map(g=>{ const link = g.own ? OWN_LINK[g.name] : linkOf('groups', g);
@@ -1400,7 +1440,7 @@ async function markShared(gid, name, undo, extra){
   SH_FORM = null;
   const { data } = await sb.from('marketing_post_events').select('actor,kind,note,meta,created_at').eq('post_id', pid).order('created_at');
   EVENTS[pid] = data || [];
-  showToast(undo ? 'Removed ' + group + '.' : (extra && extra.status==='scheduled' ? 'Noted: scheduled in ' : 'Noted: live in ') + group + '.');
+  showToast(undo ? 'Removed ' + group + '.' : (extra && extra.status==='scheduled' ? 'Noted: scheduled in ' : extra && extra.status==='waiting' ? 'Noted: waiting on the admin of ' : 'Noted: live in ') + group + '.');
   renderPost($('#view'));
 }
 
@@ -1516,6 +1556,7 @@ async function saveFields(quiet){
   Object.keys(o).forEach(k=>{ if(o[k] !== (p[k]||'')) ch[k] = o[k]; });
   if(!Object.keys(ch).length){ if(!quiet) showToast('Nothing to save.'); return true; }
   const wasPost = p.step === 'post';
+  if(wasPost && ch.copy_en !== undefined && !(await askConfirm('This caption is already approved', 'Saving your change sends it back for approval. It can\'t be posted until it is approved again.', 'Save and send for approval'))) return false;
   const r = await act('save', p.id, ch); if(!r) return false;
   Object.assign(p, ch); delete EVENTS[p.id];
   if(!quiet){ showToast(wasPost && ch.copy_en !== undefined ? 'Saved. It goes back to Review for approval.' : 'Saved.'); await reloadPosts(true); }
@@ -1532,7 +1573,7 @@ async function doAct(a){
   }
   if(!(await saveFields(true))) return;
   // A draft gap like [ADD TIME] must be filled before the post moves on.
-  if(['send_on','approve','mark_posted'].includes(a) && /\[ADD[^\]]*\]/i.test(p.copy_en||'')){ showToast('Fill the [ADD ...] gaps in the English first.'); return; }
+  if(['send_on','approve','quick_approve','mark_posted'].includes(a) && /\[ADD[^\]]*\]/i.test(p.copy_en||'')){ showToast('Fill the [ADD ...] gaps in the English first.'); return; }
   if(a==='send_on' && !p.pic){ showToast('Pick the reviewer first.'); editTopic(p.id); return; }
   if(a==='translator_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the reviewer knows what to check.'); $('#f-note').focus(); return; } }
   if(a==='send_back'){ pay.note = ($('#f-note')||{}).value || ''; if(!pay.note.trim()){ showToast('Add a note so the writer knows what to change.'); $('#f-note').focus(); return; } }
@@ -1544,7 +1585,7 @@ async function doAct(a){
   }
   // Item IX: approving a Thai post with no Thai yet makes an AI Thai draft first, so the translator starts from it.
   let aiTh = '';
-  if(a==='approve' && p.needs_thai && !(p.copy_th||'').trim() && (p.copy_en||'').trim()){
+  if(['approve','quick_approve'].includes(a) && p.needs_thai && !(p.copy_th||'').trim() && (p.copy_en||'').trim()){
     showToast('Approving. Making a Thai draft for the translator…');
     const out = await aiCall('thai', p.id, p.copy_en);
     if(out && out.ok && out.text){ const s2 = await act('save', p.id, { copy_th: out.text, source: 'ai', th_from_en: p.copy_en }); aiTh = s2 ? 'ok' : 'fail'; }
@@ -1553,8 +1594,60 @@ async function doAct(a){
   const r = await act(a, p.id, pay); if(!r) return;
   EXTRA_KEYS.forEach(k => { const e = $('#f-'+k); if(e) e.value = ''; });
   if(aiTh) showToast(aiTh==='ok' ? 'Approved. The translator starts from an AI Thai draft.' : 'Approved. The AI Thai draft did not work, so the translator writes the Thai.');
-  else showToast({send_on:'Sent to Review.', thai_checked:'Thai done. Sent to Post.', send_back:'Sent back to English with your note.', translator_back:'Sent back to Review with your note.', approve: p.needs_thai ? 'Approved. Sent to Translate.' : 'Approved. Sent to Post.', mark_posted:'Finished. Moved to Posted.'}[a] || 'Done.');
+  else showToast({send_on:'Sent to Review.', thai_checked:'Thai done. Sent to Post.', send_back:'Sent back to English with your note.', translator_back:'Sent back to Review with your note.', approve: p.needs_thai ? 'Approved. Sent to Translate.' : 'Approved. Sent to Post.', quick_approve: p.needs_thai ? 'Approved. Sent to Translate.' : 'Approved. Ready to post.', mark_posted:'Finished. Moved to Posted.', ack_recorded:'Confirmed.', undo_recorded_approval:'Undone. Back to approval.'}[a] || 'Done.');
   delete EVENTS[p.id]; await reloadPosts(true);
+}
+let REC_OPEN = null;
+async function recordApproval(){
+  const p = draft, note = (($('#recNote')||{}).value||'').trim();
+  if(!note){ showToast('Say who approved it, where and when.'); $('#recNote').focus(); return; }
+  if(!(await saveFields(true))) return;
+  if(p.needs_thai && !(p.copy_th||'').trim() && (p.copy_en||'').trim()){
+    const out = await aiCall('thai', p.id, p.copy_en);
+    if(out && out.ok && out.text) await act('save', p.id, { copy_th: out.text, source: 'ai', th_from_en: p.copy_en });
+  }
+  const r = await act('record_approval', p.id, { note }); if(!r) return;
+  REC_OPEN = null; showToast('Approval recorded. ' + (nameOf(p.pic)||'The reviewer') + ' has been told.');
+  delete EVENTS[p.id]; await reloadPosts(true);
+}
+async function skipThai(){
+  const p = draft;
+  if(!(await askConfirm('Post without a Thai check?', 'It moves to Post now. The post stays marked Thai unchecked, so anyone can see the Thai was not checked.', 'Send to Post'))) return;
+  const r = await act('skip_thai', p.id, {}); if(!r) return;
+  showToast('Sent to Post. Marked Thai unchecked.'); delete EVENTS[p.id]; await reloadPosts(true);
+}
+// An in-page question instead of a browser popup, so it also works for the bot.
+function askConfirm(title, text, yes){
+  return new Promise(res => {
+    const d = document.createElement('div'); d.className = 'ask';
+    d.innerHTML = `<div class="ask-b" role="dialog" aria-modal="true"><h4>${esc(title)}</h4><p>${esc(text)}</p><div class="ask-a"><button class="btn-outline" data-r="0">Cancel</button><button class="btn-primary" data-r="1">${esc(yes)}</button></div></div>`;
+    d.addEventListener('click', e => { const b = e.target.closest('[data-r]'); if(!b && e.target!==d) return; d.remove(); res(!!(b && b.dataset.r==='1')); });
+    document.body.appendChild(d); d.querySelector('[data-r="1"]').focus();
+  });
+}
+// Item IV (bot review): small fixes after posting, each logged. The caption only changes to match what is live.
+function fixPosted(id){
+  const p = POSTS.find(x=>x.id===id); if(!p) return;
+  cur = {topic:true};
+  drawerShell('Fix after posting', `
+    <p class="meta" style="margin-bottom:12px">Only to match what is live. Every change is saved in the History.</p>
+    <div class="f"><label>Label</label><select name="label">${LABELS.map(l=>`<option ${l.name===p.label?'selected':''}>${esc(l.name)}</option>`).join('')}</select></div>
+    <div class="f"><label>English, as it is live</label><textarea name="copy_en" rows="7">${esc(p.copy_en||'')}</textarea></div>
+    <div class="f"><label>Hashtags</label><input name="hashtags" value="${esc(p.hashtags||'')}"></div>
+    ${p.needs_thai ? `<div class="f"><label>Thai, as it is live</label><textarea name="copy_th" rows="5">${esc(p.copy_th||'')}</textarea></div>
+    <label class="ck"><input type="checkbox" name="en_only"> This post went out in English only. Clear the Thai.</label>` : ''}`, null, false);
+  $('#drawer').classList.add('mid');
+  $('#sv').onclick = async () => {
+    const fd = new FormData($('#fm')), o = {};
+    if(fd.get('label') !== (p.label||'')) o.label = fd.get('label');
+    if(fd.get('copy_en') !== (p.copy_en||'')) o.copy_en = fd.get('copy_en');
+    if(fd.get('hashtags') !== (p.hashtags||'')) o.hashtags = fd.get('hashtags');
+    if(fd.get('en_only')) o.needs_thai = false;
+    else if(p.needs_thai && fd.get('copy_th') !== (p.copy_th||'')) o.copy_th = fd.get('copy_th');
+    if(!Object.keys(o).length){ closeD(); return; }
+    const r = await act('fix_posted', id, o); if(!r) return;
+    closeD(); showToast('Fixed. Saved in the History.'); delete EVENTS[id]; delete VERSIONS[id]; await reloadPosts(true);
+  };
 }
 async function copyCaption(){
   const p = draft;
@@ -1635,7 +1728,8 @@ function topicForm(p, withBrief){
     ${chipField('writer', 'Writer', p.writer||'')}
     ${chipField('pic', 'Reviewer', p.pic||'')}
     <input type="hidden" name="needs_thai" value="${thai}">
-    ${chipField('translator', 'Translator', thai==='false' ? '__none' : (p.translator||''), null, ['__none','No Thai'])}
+    <div class="f"><label>Thai caption</label><div class="shf-t thsw"><button type="button" class="${thai==='true'?'on':''}" onclick="setThai(true)">Thai on</button><button type="button" class="${thai==='false'?'on':''}" onclick="setThai(false)">English only</button></div></div>
+    <div id="thaiWho" ${thai==='false'?'hidden':''}>${chipField('translator', 'Translator', thai==='false' ? '' : (p.translator||''))}</div>
     ${chipField('poster', 'Poster', p.poster || p.writer || '').replace('type="hidden" name="poster"', `type="hidden" name="poster" data-own="${p.poster && p.poster !== p.writer ? 1 : ''}"`)}
     ${withBrief ? `<h4 class="who-h">Brief <span class="who-opt">optional</span></h4>${briefFields(p)}` : ''}`;
 }
@@ -1644,7 +1738,7 @@ function chipField(name, label, sel, first, last){
   const ids = members(), fn = id => { const f = firstName(STAFF[id].name); return ids.filter(x=>firstName(STAFF[x].name)===f).length > 1 ? STAFF[id].name : f; };
   const chip = (v, text, extra, dis) => `<button type="button" class="nchip ${String(sel)===String(v)?'on':''}" data-f="${name}" data-v="${esc(v)}" ${dis?'disabled title="No HQ access yet"':''} onclick="pickChip(this)">${text}${extra||''}</button>`;
   let out = first ? chip(first[0], first[1]) + '<span class="nchip-sep"></span>' : '';
-  out += ids.map(id => { const n = openLoad(id); return chip(id, esc(fn(id)), n ? `<span class="nchip-n">${n}</span>` : '', NO_ACCESS.has(id) && String(sel)!==id); }).join('');
+  out += ids.map(id => { const n = openLoad(id); return chip(id, esc(fn(id)), n ? `<span class="nchip-n"> · ${n} open</span>` : '', NO_ACCESS.has(id) && String(sel)!==id); }).join('');
   if(sel && sel !== '__none' && !ids.includes(sel) && STAFF[sel]) out += chip(sel, esc(STAFF[sel].name) + ' (not on the team)');
   if(last) out += '<span class="nchip-sep"></span>' + chip(last[0], last[1]);
   const val = sel === '__none' ? '' : sel;
@@ -1664,9 +1758,14 @@ function pickChip(b){
   }
   if(b.classList.contains('on') && v !== '__none') v = '';
   lightChip(f, v === '' ? '' : v);
-  if(f === 'translator'){ $('#fm input[name="needs_thai"]').value = v === '__none' ? 'false' : 'true'; inp.value = v === '__none' ? '' : v; }
-  else inp.value = v;
+  inp.value = v;
   if(f === 'writer'){ const po = $('#fm input[name="poster"]'); if(po && (!po.dataset.own || po.value === v)){ po.dataset.own = ''; po.value = v; lightChip('poster', v); } }
+}
+function setThai(on){
+  $('#fm input[name="needs_thai"]').value = on ? 'true' : 'false';
+  document.querySelectorAll('#fm .thsw button').forEach((b,i)=>b.classList.toggle('on', on ? i===0 : i===1));
+  $('#thaiWho').hidden = !on;
+  if(!on){ $('#fm input[name="translator"]').value = ''; lightChip('translator', ''); }
 }
 function topicPayload(){
   const fd = new FormData($('#fm')), o = {};
@@ -1688,7 +1787,7 @@ function topicMissing(o){
 function newTopic(date, pre, suggKey){
   cur = {topic:true};
   pre = pre || {};
-  drawerShell('New topic', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || '', writer: '', pic: '', translator: '', poster: ''}, true), null, false);
+  drawerShell('New post', topicForm({post_date: date || '', title: pre.title || '', label: pre.label || '', writer: '', pic: '', translator: '', poster: ''}, true), null, false);
   $('#drawer').classList.add('mid');
   $('#sv').textContent = 'Create';
   $('#sv').onclick = async () => {

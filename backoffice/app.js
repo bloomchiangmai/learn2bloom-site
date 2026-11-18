@@ -15,9 +15,24 @@ const bloomHubCookieStorage = {
 const NAV = { ctl: new AbortController() };
 const navFetch = (url, opts = {}) => {
   const method = String(opts.method || 'GET').toUpperCase();
-  if (method !== 'GET' || !/\/rest\/v1\//.test(String(url)) || opts.signal) return fetch(url, opts);
-  return fetch(url, { ...opts, signal: NAV.ctl.signal });
+  const p = (method !== 'GET' || !/\/rest\/v1\//.test(String(url)) || opts.signal) ? fetch(url, opts) : fetch(url, { ...opts, signal: NAV.ctl.signal });
+  // 401 from the database, files or receipt reading while signed in: the session has ended
+  return p.then((r) => { if (r.status === 401 && !/\/auth\/v1\//.test(String(url))) sessionLost(); return r; });
 };
+// The sign-in ran out (or was ended elsewhere). Try to renew it once; if that fails, say so and go to the
+// staff sign-in, which brings them back here.
+let lostBusy = null;
+function sessionLost() {
+  if (lostBusy || typeof S === 'undefined' || !S.user) return;
+  lostBusy = (async () => {
+    let ok = false;
+    try { const { data, error } = await sb.auth.refreshSession(); ok = !error && !!data?.session; } catch { ok = false; }
+    if (ok) { toast('Your sign-in was renewed. Please try that again.'); return; }
+    S.user = null; ++ROUTE_SEQ;
+    toast('Your sign-in has ended. Taking you to sign in again; nothing you saved is lost.', true);
+    setTimeout(() => renderLogin(), 1800);
+  })().finally(() => { setTimeout(() => { lostBusy = null; }, 5000); });
+}
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { db: { schema: 'bo' }, auth: { storage: bloomHubCookieStorage, storageKey: 'bloom-hub-auth', persistSession: true, autoRefreshToken: true }, global: { fetch: navFetch } });
 // Background lists (suppliers, counts) belong to no page: never cancelled when moving page
 const KEEP = new AbortController().signal;
@@ -207,7 +222,7 @@ async function fileHash(file) {
   const buf = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
-async function uploadReceipt(file, { itemId = null, reportId = null, via = 'desktop' } = {}) {
+async function uploadReceipt(file, { itemId = null, reportId = null, via = 'desktop', noRead = false } = {}) {
   if (file.size > 10 * 1024 * 1024) throw new Error(`${file.name} is larger than 10 MB`);
   const hash = await fileHash(file);
   const { data: dup } = await sb.from('receipts').select('created_at').eq('staff_id', S.user.id).eq('file_hash', hash).maybeSingle();
@@ -218,7 +233,7 @@ async function uploadReceipt(file, { itemId = null, reportId = null, via = 'desk
   must(await sb.storage.from(BUCKET).upload(path, f, { contentType: f.type || 'application/octet-stream' }));
   return must(await sb.from('receipts').insert({
     staff_id: S.user.id, item_id: itemId, report_id: reportId, storage_path: path, file_name: file.name, mime_type: f.type, captured_via: via,
-    ai_status: itemId ? 'off' : 'pending', file_hash: hash,
+    ai_status: itemId || noRead ? 'off' : 'pending', file_hash: hash,
   }).select().single());
 }
 // Ask the server to read the receipt. When it can, it creates the expense line itself.
@@ -1388,14 +1403,15 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
     if (!d) return;
     const put = (el, val) => { if (val == null || val === '') return; if (onlyEmpty && el.value && !(el === f.invoice_date && el.value === today())) return; el.value = val; };
     put(f.invoice_date, d.invoice_date);
-    if (d.vat_amount != null && f.vat_amount) put(f.vat_amount, d.vat_amount);
+    if (d.vat_amount != null && f.vat_amount && (d.currency || 'THB').toUpperCase() === 'THB') { if (!Number(f.vat_amount.value)) f.vat_amount.value = d.vat_amount; }
+    if (d.doc_type && f.doc_type && !f.doc_type.value && [...f.doc_type.options].some((o) => o.value === d.doc_type)) { f.doc_type.value = d.doc_type; back.querySelector('.ef-more')?.setAttribute('open', ''); }
     put(f.category_id, d.category_id);
     // never overwrite what the person typed: the item and supplier are filled only when empty (or still the last reading)
     const mine = (el) => el.value.trim() && el.value !== el.dataset.ai;
     const it = joinItem(d.item, d.short_name || d.merchant);
     if (it && !mine(f.item)) { f.item.value = it; f.item.dataset.ai = it; }
     if (f.merchant && d.merchant && !mine(f.merchant)) {
-      const sup = vendorMatch(d.merchant) || String(d.merchant).trim();
+      const sup = d.supplier || vendorMatch(d.merchant) || String(d.merchant).trim(); // d.supplier: matched by tax ID or exact name
       f.merchant.value = sup; f.merchant.dataset.ai = sup; f.merchant.dispatchEvent(new Event('change'));
     }
     const cur = (d.currency || 'THB').toUpperCase();
@@ -1836,27 +1852,31 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
       exchange_rate: d.currency !== 'THB' && d.original_amount && Number(d.amount) ? Math.round((Number(d.amount) / Number(d.original_amount)) * 1e6) / 1e6 : null,
     };
     const btn = back.querySelector('#save'); btn.disabled = true; btn.textContent = 'Saving';
-    let created = null;
+    let created = null; const uploaded = [];
     try {
       await run(async () => {
+        // the files go up first: if one fails, no line is made without its receipt
+        for (const file of newFiles) {
+          if (file._done) { uploaded.push(file._done); continue; } // already uploaded on an earlier try
+          const r = await uploadReceipt(file, { noRead: true });
+          if (file._rot) await sb.from('receipts').update({ rotation: file._rot }).eq('id', r.id);
+          file._done = r.id; uploaded.push(r.id);
+        }
         const saved = item
           ? must(await sb.from('expense_items').update(row).eq('id', item.id).select().single())
           : (created = must(await sb.from('expense_items').insert(row).select().single()));
-        const keep = receipts.map((r) => r.id);
+        const keep = [...receipts.map((r) => r.id), ...uploaded];
         if (item) {
           const dropped = (item.receipts || []).filter((r) => !keep.includes(r.id)).map((r) => r.id);
           if (dropped.length) must(await sb.from('receipts').update({ item_id: null }).in('id', dropped));
         }
-        if (keep.length) must(await sb.from('receipts').update({ item_id: saved.id }).in('id', keep));
-        for (const file of newFiles) {
-          const r = await uploadReceipt(file, { itemId: saved.id });
-          if (file._rot) await sb.from('receipts').update({ rotation: file._rot }).eq('id', r.id);
-        }
+        const { data: linked } = await sb.from('receipts').update({ item_id: saved.id }).in('id', keep).select('id');
+        if ((linked || []).length < keep.length) throw new Error('A receipt could not be attached to the line. Please try Save again.');
       }, 'Saved');
       close(); onDone && onDone();
     } catch {
-      // Don't leave a half-saved line with no receipt behind
-      if (created) { await sb.from('receipts').update({ item_id: null }).eq('item_id', created.id); await sb.from('expense_items').delete().eq('id', created.id); }
+      // Don't leave a half-saved line with no receipt behind (uploaded files stay ready for the next try)
+      if (created) { await sb.from('receipts').update({ item_id: null }).eq('item_id', created.id); await sb.from('expense_items').delete().eq('id', created.id); created = null; }
       btn.disabled = false; btn.textContent = 'Save';
     }
   };

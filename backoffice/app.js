@@ -1276,7 +1276,7 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
   // Petty cash: fields that are rarely needed sit under "More", opened when one of them is already filled in
   // Withholding tax: a new line starts with the choice this person made last time (they can change it)
   if (!item && v.wht_on_top == null) { try { const x = localStorage.getItem('bo_wht_top_' + S.user.id); v.wht_on_top = x === '1' ? true : x === '0' ? false : null; } catch { /* ignore */ } }
-  const whtLast = item ? null : sb.from('expense_items').select('wht_on_top, updated_at, expense_reports!inner(staff_id)').eq('expense_reports.staff_id', meId()).not('wht_on_top', 'is', null).order('updated_at', { ascending: false }).limit(1).then((r) => r.data?.[0]?.wht_on_top ?? null, () => null);
+  const whtLast = item ? null : sb.from('expense_items').select('wht_on_top, updated_at, expense_reports!inner(staff_id)').eq('expense_reports.staff_id', S.user.id).not('wht_on_top', 'is', null).order('updated_at', { ascending: false }).limit(1).then((r) => r.data?.[0]?.wht_on_top ?? null, () => null);
   const pcMore = report.form_type !== 'project';
   const moreOpen = Number(v.qty || 1) !== 1 || !!v.doc_type || !!Number(v.wht_rate || 0) || (v.currency && v.currency !== 'THB') || !!v.accounting_code;
   const moreF = `
@@ -1989,7 +1989,7 @@ async function adminDeleteForm(report, items, who) {
   try { await run(async () => must(await sb.rpc('admin_delete_report', { p_id: report.id, p_reason: why.trim() }))); } catch { return; }
   await refreshCounts();
   // back to the list it came from, then say what happened (the message is shown after the page has changed)
-  location.hash = report.staff_id === meId() && (typeof claimsExp !== "function" || claimsExp()) ? '#/forms' : isReviewer() ? '#/approvals' : '#/home';
+  location.hash = report.staff_id === S.user.id ? '#/forms' : isReviewer() ? '#/approvals' : '#/home';
   setTimeout(() => toast(`${report.ref_no} deleted (${why.trim()}). Its number is not used again.`), 400);
 }
 /* ---------- report detail (staff read-only, approver actions) ---------- */

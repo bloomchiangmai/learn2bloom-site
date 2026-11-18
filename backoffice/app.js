@@ -1160,6 +1160,13 @@ async function pageExpenses() {
     if (e.target.closest('.selcol')) { const cb = r.querySelector('.lsel'); cb.checked = !cb.checked; cb.onchange(); return; }
     openEditor({ report, item: items.find((i) => i.id === r.dataset.open), onDone: reload });
   });
+  // Returned form: open the first line the approver noted that has not been changed or answered yet, once per return
+  if (report.status === 'rejected' && editable) {
+    const k = `${report.id}|${report.last_returned_at || ''}`;
+    S.autoOpened = S.autoOpened || new Set();
+    const first = !S.autoOpened.has(k) && items.find((i) => i.return_note && !retState(i).ok);
+    if (first) { S.autoOpened.add(k); setTimeout(() => openEditor({ report, item: first, onDone: reload }), 150); }
+  }
   // Tap a receipt photo on a line: open the line with that photo, with zoom, rotate and crop
   main().querySelectorAll('.line-thumbs [data-view]').forEach((t) => t.onclick = () => {
     const it = items.find((i) => i.id === t.closest('[data-line]').dataset.line);
@@ -1264,6 +1271,8 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
   };
 
   // Petty cash: fields that are rarely needed sit under "More", opened when one of them is already filled in
+  // Withholding tax: a new line starts with the choice this person made last time (they can change it)
+  if (!item && v.wht_on_top == null) { try { const x = localStorage.getItem('bo_wht_top_' + S.user.id); v.wht_on_top = x === '1' ? true : x === '0' ? false : null; } catch { /* ignore */ } }
   const pcMore = report.form_type !== 'project';
   const moreOpen = Number(v.qty || 1) !== 1 || !!v.doc_type || !!Number(v.wht_rate || 0) || (v.currency && v.currency !== 'THB') || !!v.accounting_code;
   const moreF = `
@@ -1318,8 +1327,8 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
     const box = back.querySelector('#favnew'), h = back.querySelector('#favhint'), raw = item?.merchant_raw;
     const guessType = (t) => (/(co\.?,?\s*ltd|company|limited|inc\.?|corp|บริษัท|ห้างหุ้นส่วน|หจก|จำกัด)/i.test(t) ? 'Corporation' : 'Individual');
     const vh = () => {
-      if (!box || !(S.faVendors || []).length) return;
-      const v2 = f.merchant.value.trim(), known = v2 && S.faVendorSet.has(v2.toLowerCase());
+      if (!box) return;
+      const v2 = f.merchant.value.trim(), known = v2 && (S.faVendorSet || new Set()).has(v2.toLowerCase());
       if (['receipt_form', 'cash_bill'].includes(f.doc_type?.value) || f.mileage?.checked) { box.innerHTML = ''; h.textContent = ''; return; }
       h.textContent = known ? (raw && v2 !== raw ? `Matched from receipt (receipt says "${raw}"). Change if wrong.` : '') : v2 ? 'Not in the list yet. Pick one above or add it as a new supplier.' : 'Pick a supplier from the list (needed before submitting).';
       if (known || !v2) { box.innerHTML = ''; box.dataset.sig = ''; return; }
@@ -1330,27 +1339,19 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
       const sim = similarSuppliers(v2).filter((x) => x.toLowerCase() !== v2.toLowerCase());
       box.innerHTML = `${sim.length ? `<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><span class="faint" style="font-size:12px">Did you mean</span>${sim.map((x) => `<button type="button" class="btn small" data-use="${esc(x)}">${esc(x)}</button>`).join('')}</div>` : ''}<button type="button" class="btn small" id="favadd" style="margin-top:6px">+ Add "${esc(v2)}" as a new supplier</button>`;
       box.querySelectorAll('[data-use]').forEach((b) => (b.onclick = () => { f.merchant.value = b.dataset.use; vh(); }));
-      box.querySelector('#favadd').onclick = () => {
-        const t = guessType(v2);
-        box.innerHTML = `<div class="card card-pad" style="margin-top:8px;background:#F8F7F3"><b>New supplier</b><div class="faint" style="font-size:12px;margin-bottom:8px">Goes to FlowAccount with this month's file.</div>
-          <div class="grid-form"><div class="field full"><label>Business name (as on the receipt)</label><input class="input" id="nvname" value="${esc(v2)}"></div>
-          <div class="field"><label>Type</label><select class="input" id="nvtype"><option value="Corporation" ${t === 'Corporation' ? 'selected' : ''}>Company</option><option value="Individual" ${t === 'Individual' ? 'selected' : ''}>Person</option></select></div>
-          <div class="field"><label>Tax ID <span class="faint">(if on the bill)</span></label><input class="input mono" id="nvtax" inputmode="numeric" placeholder="10 or 13 digits"></div>
-          <div class="field full"><label>Address <span class="faint">(if on the bill)</span></label><textarea class="input" id="nvaddr" rows="2" placeholder="Number, road, district, province, postcode"></textarea></div>
-          <div class="field"><label>Phone number <span class="faint">(if on the bill)</span></label><input class="input mono" id="nvphone" inputmode="tel" placeholder="053 123 456"></div></div>
-          <div class="error" id="nverr"></div><div class="row" style="justify-content:flex-end;margin-top:8px"><button type="button" class="btn ghost small" id="nvx">Cancel</button><button type="button" class="btn primary small" id="nvok">Add supplier</button></div></div>`;
-        box.querySelector('#nvx').onclick = () => { box.dataset.sig = ''; vh(); };
-        box.querySelector('#nvok').onclick = async () => {
-          const name = box.querySelector('#nvname').value.trim(), tax = box.querySelector('#nvtax').value.replace(/\D/g, ''), err = box.querySelector('#nverr');
-          if (!name) { err.textContent = 'Enter the name.'; return; }
-          if (tax && !/^(\d{10}|\d{13})$/.test(tax)) { err.textContent = 'Tax ID must be 10 or 13 digits, or leave it blank.'; return; }
-          if (S.faVendorSet.has(name.toLowerCase())) { f.merchant.value = name; vh(); return; }
-          const { error } = await sb.from('fa_new_vendors').insert({ name, business_type: box.querySelector('#nvtype').value, tax_id: tax || null, address: box.querySelector('#nvaddr').value.trim() || null, phone: box.querySelector('#nvphone').value.trim() || null, created_by: S.user.id, created_by_name: S.profile.full_name });
-          if (error) { err.textContent = /duplicate|unique/i.test(error.message) ? 'Someone already added this supplier. Pick it from the list.' : error.message; return; }
+      // One tap: the name goes in as a new supplier. Type, tax ID and address are added later by the accountant
+      // in Month close › FlowAccount (they are optional for FlowAccount's import).
+      box.querySelector('#favadd').onclick = async (e) => {
+        const b = e.currentTarget; b.disabled = true; b.textContent = 'Adding';
+        const name = v2;
+        if (!(S.faVendorSet || new Set()).has(name.toLowerCase())) {
+          const { error } = await sb.from('fa_new_vendors').insert({ name, business_type: guessType(name), created_by: S.user.id, created_by_name: S.profile.full_name });
+          if (error && !/duplicate|unique/i.test(error.message)) { b.disabled = false; b.textContent = `+ Add "${name}" as a new supplier`; toast(friendly(error), true); return; }
+          S.faVendors = S.faVendors || []; S.faVendorSet = S.faVendorSet || new Set();
           S.faVendors.push(name); S.faVendorSet.add(name.toLowerCase());
           const dl = back.querySelector('#favend'); if (dl) dl.insertAdjacentHTML('beforeend', `<option value="${esc(name)}">`);
-          f.merchant.value = name; toast('Supplier added'); vh();
-        };
+        }
+        f.merchant.value = name; toast(`"${name}" added as a new supplier`); box.dataset.sig = ''; vh();
       };
     };
     f.merchant.addEventListener('change', vh); f.merchant.addEventListener('input', () => { clearTimeout(f.__vt); f.__vt = setTimeout(vh, 300); });
@@ -1839,6 +1840,7 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
     const err = back.querySelector('#eerr'); err.textContent = '';
     if (!f.reportValidity()) return;
     if (!all().length) { err.textContent = 'Attach at least 1 receipt.'; return; }
+    if (f.wht_rate?.value && f.querySelector('[name="wht_top"]:checked')) { try { localStorage.setItem('bo_wht_top_' + S.user.id, f.querySelector('[name="wht_top"]:checked').value); } catch { /* ignore */ } }
     if (f.wht_rate?.value && !f.querySelector('[name="wht_top"]:checked')) { err.textContent = 'Withholding tax: choose whether it was deducted from the supplier or paid on top by the company.'; back.querySelector('.ef-more')?.setAttribute('open', ''); return; }
     const d = Object.fromEntries(new FormData(f));
     const row = {
@@ -1936,7 +1938,7 @@ async function pageHistory() {
   const pids = [...new Set(reps.map((r) => r.project_id).filter(Boolean))];
   const projs = pids.length ? Object.fromEntries(((await sb.from('projects').select('id,name,code,active').in('id', pids)).data || []).map((x) => [x.id, x])) : {};
   const bal = (r) => { const b = Number(r.balance) || 0; return `${money(b)}${b < 0 ? '<div class="faint" style="font-size:11px">owed to you</div>' : b > 0 ? '<div class="faint" style="font-size:11px">to return to company</div>' : ''}`; };
-  const tr = (r) => { const st = rep[r.report_id]?.status; return `<tr class="click" data-href="${['draft', 'rejected'].includes(st) ? '#/expenses?id=' + r.report_id : '#/report/' + r.report_id}"><td>${monthLabel(r.period_month.slice(0, 7))}</td><td class="mono">${esc(r.ref_no)}</td><td>${pill(st)}</td><td class="num">${money(r.total_spent)}</td><td class="num">${bal(r)}</td></tr>`; };
+  const tr = (r) => { const st = rep[r.report_id]?.status; return `<tr class="click" data-href="${['draft', 'rejected'].includes(st) ? '#/expenses?id=' + r.report_id : '#/report/' + r.report_id}"><td>${monthLabel(String(r.period_month || "").slice(0, 7))}</td><td class="mono">${esc(r.ref_no)}</td><td>${pill(st)}</td><td class="num">${money(r.total_spent)}</td><td class="num">${bal(r)}</td></tr>`; };
   const cols = '<colgroup><col style="width:22%"><col style="width:24%"><col style="width:20%"><col style="width:16%"><col style="width:18%"></colgroup>';
   const head = cols + '<thead><tr><th>Month</th><th>Reference</th><th>Status</th><th class="num">Spent</th><th class="num">Balance</th></tr></thead>';
   const personal = rows.filter((r) => rep[r.report_id]?.form_type !== 'project');
@@ -1962,7 +1964,7 @@ async function pageHistoryOld() {
   const st = Object.fromEntries(reps.map((r) => [r.id, r.status]));
   shell(`<div class="page-head"><div><h1>My reports</h1><p>All your monthly expense reports.</p></div></div>
   <div class="card">${rows.length ? `<div class="table-wrap"><table><thead><tr><th>Month</th><th>Reference</th><th>Status</th><th class="num">Spent</th><th class="num">Balance</th></tr></thead><tbody>
-    ${rows.map((r) => `<tr class="click" data-href="#/report/${r.report_id}"><td>${monthLabel(r.period_month.slice(0, 7))}</td><td class="mono">${esc(r.ref_no)}</td><td>${pill(st[r.report_id])}</td><td class="num">${money(r.total_spent)}</td><td class="num">${money(r.balance)}</td></tr>`).join('')}
+    ${rows.map((r) => `<tr class="click" data-href="#/report/${r.report_id}"><td>${monthLabel(String(r.period_month || "").slice(0, 7))}</td><td class="mono">${esc(r.ref_no)}</td><td>${pill(st[r.report_id])}</td><td class="num">${money(r.total_spent)}</td><td class="num">${money(r.balance)}</td></tr>`).join('')}
   </tbody></table></div>` : '<div class="empty">No reports yet.</div>'}</div>`);
   bindRowLinks();
 }
@@ -1977,8 +1979,11 @@ async function adminDeleteForm(report, items, who) {
   setTimeout(() => { const w = document.getElementById('rdwhy'); if (w) { w.focus(); w.oninput = () => { why = w.value; }; } }, 50);
   if (!(await go)) return;
   if (!why.trim()) { toast('Write why it is deleted, then try again', true); return; }
-  try { await run(async () => must(await sb.rpc('admin_delete_report', { p_id: report.id, p_reason: why.trim() })), `${report.ref_no} deleted`); } catch { return; }
-  await refreshCounts(); location.hash = '#/forms';
+  try { await run(async () => must(await sb.rpc('admin_delete_report', { p_id: report.id, p_reason: why.trim() }))); } catch { return; }
+  await refreshCounts();
+  // back to the list it came from, then say what happened (the message is shown after the page has changed)
+  location.hash = report.staff_id === meId() && (typeof claimsExp !== "function" || claimsExp()) ? '#/forms' : isReviewer() ? '#/approvals' : '#/home';
+  setTimeout(() => toast(`${report.ref_no} deleted (${why.trim()}). Its number is not used again.`), 400);
 }
 /* ---------- report detail (staff read-only, approver actions) ---------- */
 async function pageReport(id) {

@@ -129,10 +129,10 @@ const catName = (id) => S.categories.find((c) => c.id === id)?.name || '';
 
 // Receipt name -> the FlowAccount supplier it most likely is (same matcher as bank transfers, then a looser overlap)
 const vSqueeze = (n) => vNorm(n).replace(/\s+/g, '');
+// exact names only (ignoring case, spaces, "Co., Ltd."): anything else stays as read and the box below offers close names
 function vendorMatch(name) {
-  const g = guessVendor(name); if (g) return g;
-  const k = vSqueeze(name); if (k.length < 4) return '';
-  const hit = (S.faVendors || []).filter((v) => { const x = vSqueeze(v); return x.length >= 4 && (x.includes(k) || k.includes(x)); });
+  const k = vNorm(name); if (!k) return '';
+  const hit = (S.faVendors || []).filter((v) => vNorm(v) === k);
   return hit.length === 1 ? hit[0] : '';
 }
 let toastTimer;
@@ -1080,7 +1080,7 @@ async function pageExpenses() {
           ${checkerPicker(report)}
           ${report.form_type === 'project' || report.remarks ? `<div class="field"><label>Remarks (optional)</label><textarea class="input" id="remarks">${esc(report.remarks || '')}</textarea></div>` : ''}
           <div class="spread"><span class="${blockers.length ? 'error' : 'muted'}">${blockers.length ? 'Before submitting: ' + esc(blockers.join(', ')) : 'Ready to submit.'}</span>
-          <button class="btn primary" id="submit" ${blockers.length ? 'disabled' : ''}>${report.checker_id ? 'Submit for checking' : 'Submit to admin'}</button></div><div id="subwarn" style="margin-top:10px"></div></div>` : ''}
+          <span class="row">${isAdmin() ? '<button class="btn ghost small danger" id="rdelete">Delete form (admin)</button>' : ''}<button class="btn primary" id="submit" ${blockers.length ? 'disabled' : ''}>${report.checker_id ? 'Submit for checking' : 'Submit to admin'}</button></span></div><div id="subwarn" style="margin-top:10px"></div></div>` : ''}
       </div>
     </div>
   </div>`);
@@ -1185,6 +1185,7 @@ async function pageExpenses() {
     if (!ids.length || !confirmInline(ldel, `Delete ${ids.length}?`)) return;
     delLines(ids);
   };
+  const rdelE = document.getElementById('rdelete'); if (rdelE) rdelE.onclick = () => adminDeleteForm(report, items, S.profile.full_name);
   const rmEl = document.getElementById('remarks'); if (rmEl) rmEl.onchange = async (e) => { await run(async () => must(await sb.from('expense_reports').update({ remarks: e.target.value }).eq('id', report.id))); };
   const chkBox = document.getElementById('chkbox'); if (chkBox) wireChecker(chkBox, report, reload);
   const sub = document.getElementById('submit');
@@ -1944,6 +1945,18 @@ async function pageHistoryOld() {
 }
 function bindRowLinks() { main().querySelectorAll('[data-href]').forEach((tr) => tr.onclick = () => { location.hash = tr.dataset.href; }); }
 
+// Admin: delete a test form for good (a copy is kept in deleted_reports). Not once it is in FlowAccount.
+async function adminDeleteForm(report, items, who) {
+  let why = '';
+  const n = items.length, sum = items.reduce((a, i) => a + Number(i.amount || 0), 0);
+  const go = confirmBox({ title: `Delete ${report.ref_no}?`, ok: 'Delete form',
+    body: `${esc(who || '')} · ${n} line${n === 1 ? '' : 's'} · THB ${money(sum)} · ${esc(report.status)}. The form, its lines and its receipts are removed for everyone. A copy is kept for admins.<br><br><label class="faint" style="font-size:12px">Why (required)</label><input class="input" id="rdwhy" placeholder="e.g. Test form">` });
+  setTimeout(() => { const w = document.getElementById('rdwhy'); if (w) { w.focus(); w.oninput = () => { why = w.value; }; } }, 50);
+  if (!(await go)) return;
+  if (!why.trim()) { toast('Write why it is deleted, then try again', true); return; }
+  try { await run(async () => must(await sb.rpc('admin_delete_report', { p_id: report.id, p_reason: why.trim() })), `${report.ref_no} deleted`); } catch { return; }
+  await refreshCounts(); location.hash = '#/forms';
+}
 /* ---------- report detail (staff read-only, approver actions) ---------- */
 async function pageReport(id) {
   const report = must(await sb.from('expense_reports').select('*').eq('id', id).single());
@@ -1991,10 +2004,11 @@ async function pageReport(id) {
     ${report.checked_at ? `<div class="faint" style="font-size:13px">Step 1: ${esc(report.checked_by_name || '')}${report.checked_by ? ` · ${esc(dateLabel(report.checked_at))}` : ''}</div>` : ''}
     
     ${canPay(report) && report.status === 'approved' ? `<div class="card card-pad spread"><span class="muted">${Number(totals.balance) < 0 ? `Company owes ${thb(-totals.balance)}. Mark paid once transferred.` : `Nothing to reimburse. ${thb(totals.balance)} ${report.form_type === 'project' ? 'to be returned to the company' : 'carries to the next personal form'}.`}</span><button class="btn primary" id="paid">Mark as paid</button></div>` : ''}
-    ${isAdmin() && report.status !== 'draft' ? `<div class="row"><button class="btn ghost small" id="reopen">Reopen as draft</button></div>` : ''}
+    ${isAdmin() ? `<div class="row">${report.status !== 'draft' ? '<button class="btn ghost small" id="reopen">Reopen as draft</button>' : ''}${!report.fa_entered_at ? '<button class="btn ghost small danger" id="rdelete">Delete form (admin)</button>' : ''}</div>` : ''}
   </div>`);
   wireLines();
   wireDecision(report, items, totals, async () => { await refreshCounts(); pageReport(id); });
+  const rdel = document.getElementById('rdelete'); if (rdel) rdel.onclick = () => adminDeleteForm(report, items, staff.full_name);
 }
 // Approve, Return, Mark as paid, Reopen, approver notes: shared by the Form and Lines views
 function wireDecision(report, items, totals, reload) {
@@ -5107,6 +5121,7 @@ async function readXlsx(file) {
 const FA_PAY_LABEL = { own_money: 'Personal cash', cash_advance: 'Petty cash', company_card: 'Company card', kbiz: 'KBIZ' };
 // Settings › FlowAccount: refresh suppliers, projects and account codes from FlowAccount's import template
 async function pageFALists() {
+  if (!S.faVendors) await loadFAVendors();
   const [meta, nv, np, na] = await Promise.all([
     sb.from('fa_meta').select('*').eq('id', 1).single().then(must),
     sb.from('fa_vendors').select('label', { count: 'exact', head: true }),
@@ -5120,6 +5135,8 @@ async function pageFALists() {
     <div class="card card-pad"><div class="spread"><div><b>FlowAccount lists</b><div class="faint" style="font-size:12px">${meta.updated_at ? `Last updated ${esc(dateLabel(meta.updated_at))} by ${esc(meta.updated_by_name || '')}` : 'Not uploaded yet'} · ${nv.count || 0} suppliers · ${np.count || 0} projects · ${na.count || 0} account codes</div></div>
       <label class="btn">Upload new template<input type="file" id="fafile" accept=".xlsx" hidden></label></div>
       <div class="faint" style="font-size:12px;margin-top:8px">In FlowAccount: Expense › Import bills and receipts › Import from .csv, .xls, .xlsx › Download sample file. Upload that file here. Add new suppliers in FlowAccount's Address Book first, then upload again.</div></div>
+    ${isAdmin() ? `<div class="card card-pad"><b>Remove a supplier</b><div class="faint" style="font-size:12px;margin:4px 0 10px">For test or wrong suppliers. Removes it from the back office lists and the new suppliers file. If it is also in FlowAccount, delete it there too, or it comes back with the next upload.</div>
+      <div class="row" style="gap:8px"><input class="input" id="supx" list="supxl" placeholder="Type the exact supplier name" style="max-width:360px"><datalist id="supxl">${[...new Set(S.faVendors || [])].map((x) => `<option value="${esc(x)}">`).join('')}</datalist><button class="btn danger" id="supxgo">Remove</button></div></div>` : ''}
     <div class="card card-pad"><b>Payment method names in FlowAccount</b><div class="faint" style="font-size:12px;margin:4px 0 10px">Type each name exactly as it appears in FlowAccount's payment channels. Leave blank and those lines import as unpaid.</div>
       <div class="grid-form">${Object.entries(FA_PAY_LABEL).map(([k, l]) => `<div class="field"><label>${l}</label><input class="input" data-pm="${k}" value="${esc(pm[k] || '')}" placeholder="e.g. Cash"></div>`).join('')}</div>
       <div style="margin-top:10px"><button class="btn" id="pmsave">Save names</button></div></div>
@@ -5131,6 +5148,14 @@ async function pageFALists() {
   main().querySelectorAll('[data-ac] input').forEach((el) => (el.onchange = async () => { const id = el.closest('[data-ac]').dataset.ac;
     try { await run(async () => must(await sb.from('expense_categories').update({ [el.dataset.k]: el.value.trim() || null }).eq('id', id)), 'Saved'); } catch { return; }
     S.categories = must(await sb.from('expense_categories').select('*').order('sort_order')); }));
+  const sx = document.getElementById('supxgo');
+  if (sx) sx.onclick = async () => {
+    const name = document.getElementById('supx').value.trim(); if (!name) { toast('Type the supplier name', true); return; }
+    if (!(S.faVendors || []).some((x) => x.toLowerCase() === name.toLowerCase())) { toast(`No supplier called "${name}". Pick it from the list.`, true); return; }
+    if (!(await confirmBox({ title: `Remove "${name}"?`, body: 'It is taken off the supplier list and the new suppliers file. Lines that use it show it as a new supplier again.', ok: 'Remove' }))) return;
+    try { await run(async () => { const n = must(await sb.rpc('admin_remove_supplier', { p_name: name })); if (!n) throw new Error('Nothing removed: check the exact name'); }, `"${name}" removed`); } catch { return; }
+    await loadFAVendors(); pageFALists();
+  };
   document.getElementById('fafile').onchange = async (e) => {
     const file = e.target.files[0]; if (!file) return;
     try {
@@ -5320,6 +5345,8 @@ async function pageFAExport() {
   } else {
     const nReady = ready.length + cardReady.length;
     const waitSup = [];
+    // only suppliers still waiting in step 1 count: once step 1 is marked added, the note goes
+    const waitKeys = new Set(newV.map((x) => vKey(x.name))), nUses = [...newSupLines].filter((k) => waitKeys.has(k)).length;
     // the new suppliers file that was downloaded last (kept on this computer): "Added in FlowAccount" marks only those
     let nvFile = []; try { nvFile = JSON.parse(localStorage.getItem('bloom_nv_file') || '[]'); } catch { /* none */ }
     var nvMark = newV.filter((x) => nvFile.includes(x.id));
@@ -5348,7 +5375,7 @@ async function pageFAExport() {
     <div class="card mc-step"><span class="mc-n">2</span><div style="flex:1;min-width:0">
       <b>Expenses file</b> <span class="faint">${nReady} line${nReady === 1 ? '' : 's'} ready</span>
       <div class="faint" style="font-size:12px;margin-top:4px">${[ready.length ? `Staff forms ${ready.length} ready` : '', billRows.filter((y) => !y.problems.length && !y.c.fa_done).length ? `Bank transfers ${billRows.filter((y) => !y.problems.length && !y.c.fa_done).length} ready` : '', cardReady0.length ? `Card payments ${cardReady0.length} ready` : '', !stIds.length ? 'Card payments: statement comes next month' : ''].filter(Boolean).join(' · ') || 'Nothing ready yet.'}</div>
-      ${newSupLines.size && nReady ? `<div class="mc-wait" style="background:var(--accent-soft)">This file uses ${newSupLines.size} supplier${newSupLines.size > 1 ? 's' : ''} from step 1. Import the step 1 file in FlowAccount first, then this one.</div>` : ''}
+      ${nReady && nUses ? `<div class="mc-wait" style="background:var(--accent-soft)">This file uses ${nUses} supplier${nUses > 1 ? 's' : ''} from step 1. Import the step 1 file in FlowAccount and press "Added in FlowAccount" first, then this one.</div>` : ''}
       ${bad.length ? `<div class="mc-wait">${waitSup.length ? `${waitSup.length} line${waitSup.length > 1 ? 's' : ''} wait for new suppliers in step 1.` : ''}${bad.length > waitSup.length ? `${waitSup.length ? ' ' : ''}${bad.length - waitSup.length} other line${bad.length - waitSup.length > 1 ? 's' : ''} not in this file:<ul>${[...new Set(bad.filter((y) => !waitSup.includes(y)).flatMap((y) => y.problems))].map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}${bad.length > waitSup.length ? '<div style="margin-top:4px">Correct the line, then it joins the next file.</div>' : ''}</div>` : ''}
       <div class="faint" style="font-size:12px">In FlowAccount: Expense › Import bills and receipts › Import from .csv. On Match Column Headers set Unit Price to <b>Excluding VAT</b>.</div>
       <div class="row" style="margin-top:10px;gap:8px"><button class="btn primary" id="fadl" ${nReady ? '' : 'disabled'}>Download expenses (${nReady})</button><button class="btn" id="faent" ${nReady ? '' : 'disabled'}>Entered in FlowAccount</button></div>
@@ -5422,9 +5449,10 @@ async function pageRoster() {
   const parts = await Promise.all(pers.map((per, i) => rosterTable(per, i === 0)));
   const appr = isAdmin();
   let minOn = 2; try { minOn = Number(localStorage.getItem('bo_roster_min')) || 2; } catch { /* ignore */ }
-  const label = span > 1 ? `${pers[0].label} to ${pers[span - 1].label}` : first.label;
+  // the roster follows the timesheet period (26th to 25th), so the heading says the real dates
+  const label = `${shortDate(pers[0].start)} to ${shortDate(pers[span - 1].end)}`;
   if (location.hash !== pageHash) return;
-  shell(`<div class="page-head"><div><h1>Roster · ${esc(label)}</h1><p>Everyone's days, view only. Leave and days off come from each person's Timesheet.${S.profile?.no_timesheet ? '' : ' Click a day in your row to open it there.'}</p></div>
+  shell(`<div class="page-head"><div><h1>Roster · ${esc(label)}</h1><p>Runs 26th to 25th, the same periods as the timesheet. Use › for the next period. Everyone's days, view only. Leave and days off come from each person's Timesheet.${S.profile?.no_timesheet ? '' : ' Click a day in your row to open it there.'}</p></div>
     <div class="ro-nav" id="rospan">${[1, 2, 3].map((n) => `<button class="${n === span ? 'on' : ''}" data-n="${n}">${n}</button>`).join('<span>·</span>')}<span class="faint">months</span><a href="#/roster?p=${first.prev}" title="Earlier periods">‹ Earlier</a><a href="#/roster" title="Back to this month">Today</a><a href="#/roster?p=${first.next}" title="Later">›</a><button class="btn small" id="roprint" style="margin-left:10px">Preview</button></div></div>
   ${parts.map((x) => x.html).join('')}
   <div class="row ro-lg"><span><i class="ro-c ro-w ro-past"></i>Past</span><span><i class="ro-c ro-w"></i>Working</span><span><i class="ro-c ro-l"></i>Leave (AL, Sick, Pers, Repl)</span><span><i class="ro-c ro-o"></i>Day off</span><span><i class="ro-c ro-ho"></i>Holiday</span>${appr ? `<span style="margin-left:auto">Warn when fewer than <input class="input" id="romin" type="number" min="0" value="${minOn}" style="width:56px;padding:2px 6px;display:inline-block"> are working</span>` : ''}</div>`);

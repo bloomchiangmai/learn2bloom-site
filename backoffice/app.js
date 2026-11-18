@@ -10,7 +10,15 @@ const bloomHubCookieStorage = {
   setItem(key, value) { let c = key + '=' + encodeURIComponent(value) + '; Max-Age=' + (60 * 60 * 24 * 30) + '; Path=/; SameSite=Lax; Secure'; if (location.hostname.endsWith('learn2bloom.org')) c += '; Domain=.learn2bloom.org'; document.cookie = c; },
   removeItem(key) { let c = key + '=; Max-Age=0; Path=/; SameSite=Lax; Secure'; if (location.hostname.endsWith('learn2bloom.org')) c += '; Domain=.learn2bloom.org'; document.cookie = c; },
 };
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { db: { schema: 'bo' }, auth: { storage: bloomHubCookieStorage, storageKey: 'bloom-hub-auth', persistSession: true, autoRefreshToken: true } });
+// When someone moves to another page, reads still running for the old page are cancelled, so it can never
+// draw over the new one. Only reads (GET) are cancelled: saves always finish.
+const NAV = { ctl: new AbortController() };
+const navFetch = (url, opts = {}) => {
+  const method = String(opts.method || 'GET').toUpperCase();
+  if (method !== 'GET' || !/\/rest\/v1\//.test(String(url)) || opts.signal) return fetch(url, opts);
+  return fetch(url, { ...opts, signal: NAV.ctl.signal });
+};
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { db: { schema: 'bo' }, auth: { storage: bloomHubCookieStorage, storageKey: 'bloom-hub-auth', persistSession: true, autoRefreshToken: true }, global: { fetch: navFetch } });
 // All 3 stages on: Expenses and Approvals, Time, Accounting.
 const STAGE = 3;
 const ORG = 'Bloom Chiangmai';
@@ -120,7 +128,7 @@ const catName = (id) => S.categories.find((c) => c.id === id)?.name || '';
 let toastTimer;
 function toast(msg, bad = false) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.className = bad ? 'bad' : ''; t.hidden = false;
+  t.textContent = msg; t.className = bad ? 'bad' : 'ok'; t.hidden = false; t.setAttribute('role', bad ? 'alert' : 'status');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), bad ? 6000 : 2800);
 }
 let undoTimer;
@@ -301,13 +309,20 @@ async function loadMe() {
   S.profile = p;
   if (!p || !p.active) { S.noAccess = true; S.profile = null; return; }
   try { S.hubId = (await sb.schema('public').from('staff').select('hub_id').eq('auth_user_id', S.user.id).maybeSingle()).data?.hub_id || null; } catch { S.hubId = null; }
-  S.categories = must(await sb.from('expense_categories').select('*').order('sort_order'));
+  // all at once, not one after another
   loadFAVendors();
-  S.myPics = ((await sb.from('project_pics').select('project_id').eq('staff_id', S.user.id)).data || []).map((x) => x.project_id);
-  S.picProjects = new Set(((await sb.from('project_pics').select('project_id')).data || []).map((x) => x.project_id));
+  const [cats, mine, pics, ppl] = await Promise.all([
+    sb.from('expense_categories').select('*').order('sort_order'),
+    sb.from('project_pics').select('project_id').eq('staff_id', S.user.id),
+    sb.from('project_pics').select('project_id'),
+    sb.from('profiles').select('id, full_name, staff_no').eq('active', true).order('full_name'),
+    refreshCounts(),
+  ]);
+  S.categories = must(cats);
+  S.myPics = (mine.data || []).map((x) => x.project_id);
+  S.picProjects = new Set((pics.data || []).map((x) => x.project_id));
   S.approverIds = [];
-  S.people = must(await sb.from('profiles').select('id, full_name, staff_no').eq('active', true).order('full_name'));
-  await refreshCounts();
+  S.people = must(ppl);
 }
 async function refreshCounts() {
   if (!S.user) return;
@@ -315,18 +330,13 @@ async function refreshCounts() {
   let fid = null; try { fid = sessionStorage.getItem('bo_form'); } catch { /* ignore */ }
   let q = sb.from('receipts').select('id', { count: 'exact', head: true }).eq('staff_id', S.user.id).is('item_id', null);
   if (fid) q = q.or(`report_id.eq.${fid},report_id.is.null`);
-  const { count } = await q;
-  S.inboxCount = count || 0;
   let q2 = sb.from('expense_items').select('id, expense_reports!inner(staff_id)', { count: 'exact', head: true })
     .eq('needs_review', true).eq('expense_reports.staff_id', S.user.id);
   if (fid) q2 = q2.eq('report_id', fid);
-  const { count: rv } = await q2;
-  S.reviewCount = rv || 0;
-  { const { count: m } = await sb.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null); S.msgCount = m || 0; }
-  {
-    const { count: c2 } = await sb.from('expense_reports').select('id', { count: 'exact', head: true }).eq('status', 'submitted').eq('checker_id', S.user.id);
-    S.pendingCount = c2 || 0;
-  }
+  const [a, b, c, d] = await Promise.all([q, q2,
+    sb.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null),
+    sb.from('expense_reports').select('id', { count: 'exact', head: true }).eq('status', 'submitted').eq('checker_id', S.user.id)]);
+  S.inboxCount = a.count || 0; S.reviewCount = b.count || 0; S.msgCount = c.count || 0; S.pendingCount = d.count || 0;
   if (isPhone()) await phoneCount();
 }
 
@@ -436,6 +446,7 @@ function phoneNav() {
   return `<select id="pnav" aria-label="Menu">${opts.map(([h, l]) => `<option value="${h}" ${cur.startsWith(h) ? 'selected' : ''}>${esc(l)}</option>`).join('')}${inBoth() ? `<option value="cosw">Switch to ${CO_OTHER.name}</option>` : ''}<option value="out">Sign out</option></select>`;
 }
 function shell(content) {
+  S.shownPath = curPath();
   app.innerHTML = `
   <div class="shell">
     <aside class="side">
@@ -481,7 +492,26 @@ window.addEventListener('hashchange', () => setTimeout(flashLine, 300));
 setTimeout(flashLine, 1200);
 const PHONE_OK = ['/', '/home', '/capture', '/check', '/forms', '/expenses', '/history', '/inbox', '/trash', '/approvals', '/ot', '/roster', '/messages', '/account', '/agree'];
 const phoneAllowed = (path) => PHONE_OK.includes(path) || path.startsWith('/report/') || path.startsWith('/ot/review/') || path.startsWith('/print/');
+// Pages load one at a time from the user's point of view: the page asked for last is the one that shows.
+let ROUTE_SEQ = 0, ROUTE_DONE = 0;
+const curPath = () => (location.hash || '').replace(/^#/, '').split('?')[0] || '/';
+function pageLoading() {
+  const m = document.getElementById('main');
+  if (!m || S.shownPath === curPath()) return; // same page with different options: keep it up
+  document.querySelectorAll('.side .nav a').forEach((a) => a.classList.toggle('on', (a.getAttribute('href') || '').replace(/^#/, '').split('?')[0] === curPath()));
+  m.innerHTML = '<div class="pg-load" role="status" aria-label="Loading"><span class="spin"></span></div>';
+  S.shownPath = null;
+}
 async function route() {
+  const seq = ++ROUTE_SEQ;
+  if (S.shownPath && S.shownPath !== curPath()) { NAV.ctl.abort(); NAV.ctl = new AbortController(); }
+  if (S.user && S.profile) pageLoading();
+  await routeInner(seq);
+  // an older, slower page finished after a newer one and drew over it: draw the page asked for again
+  if (seq < ROUTE_DONE) { route(); return; }
+  ROUTE_DONE = Math.max(ROUTE_DONE, seq);
+}
+async function routeInner(seq) {
   if (S.noAccess) return renderNoAccess();
   if (!S.user) return renderLogin();
   const path = (location.hash || '').replace(/^#/, '').split('?')[0] || '/';
@@ -529,6 +559,7 @@ async function route() {
     if (path === '/admin/categories' && isApprover()) return await pageCategories();
     location.replace('#/');
   } catch (e) {
+    if (seq !== ROUTE_SEQ) return; // this page was left before it finished: say nothing
     console.error(e);
     shell(`<div class="banner bad">${esc(friendly(e))}</div>`);
   }
@@ -1783,9 +1814,11 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
 
 /* ---------- home ---------- */
 async function pageHome() {
+  const pageHash = location.hash; // left before it loaded? then draw nothing
   if (isAdmin()) return pageHomeAdmin();
   const { forms } = await currentForm();
   const card = (href, title, sub, extra = '') => `<a class="card card-pad home-card" href="${href}"><h2>${title}</h2><p class="muted" style="margin:6px 0 0">${sub}</p>${extra}</a>`;
+  if (location.hash !== pageHash) return;
   shell(`<div class="page-head"><div><h1>Hello, ${esc(S.profile.full_name || S.profile.staff_no)}</h1><p>What do you want to do?</p></div></div>
   <div class="home-grid">
     ${card('#/forms', 'Expenses', forms.length ? `${forms.length} open form${forms.length > 1 ? 's' : ''}: ${forms.map((f) => esc(monthLabel(f.period_month.slice(0, 7)) + (f.form_type === 'project' ? ' (' + (f.project || 'project') + ')' : ''))).join(', ')}` : 'No open form. Start one for the month you need.',
@@ -1797,6 +1830,7 @@ async function pageHome() {
 
 // Admins: only what is waiting for them
 async function pageHomeAdmin() {
+  const pageHash = location.hash; // left before it loaded? then draw nothing
   const { forms } = await currentForm();
   const [chk, appr, sub, ots, otsAll] = await Promise.all([
     sb.from('expense_reports').select('id, staff_id, checked_by', { count: 'exact' }).eq('status', 'checked'),
@@ -1809,6 +1843,7 @@ async function pageHomeAdmin() {
   const finalN = (chk.data || []).filter((r) => r.staff_id !== S.user.id && r.checked_by !== S.user.id).length;
   const tsN = (ots.count || 0) + (hasHR ? 0 : otsAll.count || 0);
   const tile = (href, n, title, sub) => `<a class="card card-pad home-card" href="${href}"><div style="font-size:34px;font-weight:600;line-height:1;${n ? '' : 'color:var(--ink-3)'}">${n}</div><h2 style="margin-top:8px">${title}</h2><p class="muted" style="margin:4px 0 0">${sub}</p></a>`;
+  if (location.hash !== pageHash) return;
   shell(`<div class="page-head"><div><h1>Hello, ${esc(S.profile.full_name || S.profile.staff_no)}</h1><p>${finalN + tsN + (appr.count || 0) + (S.pendingCount || 0) ? 'Here is what is waiting.' : 'Nothing is waiting for you.'}</p></div></div>
   <div class="home-grid">
     <a class="card card-pad home-card" href="#/forms"><h2>My expenses</h2><p class="muted" style="margin:6px 0 0">${forms.length ? `${forms.length} open form${forms.length > 1 ? 's' : ''}: ${forms.map((f) => esc(monthLabel(f.period_month.slice(0, 7)) + (f.form_type === 'project' ? ' (' + (f.project || 'project') + ')' : ''))).join(', ')}` : 'No open form. Start one for the month you need.'}</p></a>
@@ -2248,6 +2283,7 @@ async function pageFA(id) {
   draw();
 }
 async function pageApprovals() {
+  const pageHash = location.hash; // left before it loaded? then draw nothing
   await loadOverLimit();
   const p = params();
   const status = p.s || 'todo';
@@ -2283,6 +2319,7 @@ async function pageApprovals() {
   const TABL = (t) => (t === 'all' ? 'All' : t === 'todo' ? 'For me' : t === 'checked' ? 'Waiting final' : t === 'rejected' ? 'Returned' : STATUS_TEXT[t]);
   // Months that actually have forms, newest first
   const allMonths = [...new Set(((await sb.from('expense_reports').select('period_month')).data || []).map((r) => r.period_month.slice(0, 7)))].sort().reverse();
+  if (location.hash !== pageHash) return;
   shell(`
   <div class="page-head"><div><h1>Approvals</h1><p>${esc(todoHint())}</p></div>
     <div class="row"><select class="input" id="m" style="width:auto"><option value="">All months</option>${allMonths.map((k) => `<option value="${k}" ${k === key ? 'selected' : ''}>${monthLabel(k)}</option>`).join('')}</select></div></div>
@@ -2562,9 +2599,16 @@ async function hubArrive() {
   } catch { /* they sign in as usual */ }
   return false;
 }
+const withTime = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('timeout')), ms))]);
 async function start() {
   if (await hubArrive()) return;
-  await loadMe(); route(); setTimeout(pollPending, 800);
+  // Never leave the page on Loading: if the connection stalls, say so with a button to try again
+  try { await withTime(loadMe(), 15000); } catch (e) {
+    console.error(e);
+    app.innerHTML = `<div class="login"><div class="card"><h1>${ORG}</h1><p>The connection is slow or dropped.</p><button class="btn primary" onclick="location.reload()">Try again</button></div></div>`;
+    return;
+  }
+  route(); setTimeout(pollPending, 800);
   let later = false; try { later = !!sessionStorage.getItem('bo_sig_later'); } catch { /* ignore */ }
   if (S.profile && !S.profile.signature && !later && !S.user.user_metadata?.must_change_pin) setTimeout(() => signatureDialog({ first: true }), 600);
 }
@@ -3306,6 +3350,7 @@ async function pageOTStaff() {
   }).join('') || '<div class="empty">No staff yet.</div>'}</div>`);
 }
 async function pageOT() {
+  const pageHash = location.hash; // left before it loaded? then draw nothing
   if ((isAdmin() || (isHR() && params().all)) && !params().u) return pageOTStaff();
   if (!keepsTS() && !params().u && !isHR()) { shell(`<div class="page-head"><div><h1>Timesheet</h1><p>You do not keep a timesheet at BCM. An admin can change this in Settings › Timesheet.</p></div></div>`); return; }
   const per = otPeriod(params().p);
@@ -3366,6 +3411,7 @@ async function pageOT() {
     const names = Object.fromEntries(people.map((x) => [x.id, x.full_name]));
     if (rows.length) savedSoon = `<div class="card"><div class="card-head"><h2>Saved days off running out</h2><span class="faint" style="font-size:12px">Agree with the staff member, then choose</span></div><div class="table-wrap"><table><tbody>${rows.map((o) => `<tr><td>${esc(names[o.staff_id] || '')}</td><td>Worked ${esc(dateLabel(o.day))}</td><td class="faint">runs out ${esc(dateLabel(o.save_until))}</td><td class="num"><button class="btn small" data-sext="${o.staff_id}|${o.day}|${o.save_until}">Extend 3 months</button> <button class="btn small" data-spay="${o.staff_id}|${o.day}">Pay x2 instead</button></td></tr>`).join('')}</tbody></table></div></div>`;
   }
+  if (location.hash !== pageHash) return;
   shell(`${isAdmin() && !self ? `<a class="faint" href="#/ot?p=${per.end}" style="text-decoration:none;font-size:13px">‹ All staff</a>` : ''}<div class="page-head"><div>${self ? `<h1>Timesheet · ${esc(per.label)}</h1>` : `<div class="row" style="gap:10px;align-items:center"><span class="avatar">${esc((who?.full_name || '?').trim()[0] || '?')}</span><h1 style="margin:0">${esc(who?.full_name || '')} · Timesheet · ${esc(per.label)}</h1></div>`}<p>${self ? '' : `${esc(who?.staff_no || '')} · `}${esc(otSetLine(set))}</p></div>
     <div class="row">${people.length ? `<select class="input" id="otwho" style="width:auto">${people.map((x) => `<option value="${x.id}" ${x.id === uid ? 'selected' : ''}>${x.id === S.user.id ? 'Me' : esc(x.full_name)}</option>`).join('')}</select>` : ''}<a class="btn small" href="#/ot?p=${per.prev}${uq}" aria-label="Previous period">‹</a><a class="btn small" href="#/ot?p=${per.next}${uq}" aria-label="Next period">›</a><button class="btn small" id="otprint">Preview</button>${!self && form ? `<a class="btn" href="#/ot/review/${form.id}">Open for review</a>` : ''}</div></div>
   <div class="stack">
@@ -5285,6 +5331,7 @@ async function pageAgree() {
   main().querySelectorAll('[data-dc]').forEach((b) => (b.onclick = go(Number(b.dataset.dc), false)));
 }
 async function pageRoster() {
+  const pageHash = location.hash; // left before it loaded? then draw nothing
   const first = otPeriod(params().p);
   let span = 2; try { span = Number(localStorage.getItem('bo_roster_span')) || 2; } catch { /* ignore */ }
   if (isPhone()) span = 1; // phone: 1 month at a time
@@ -5293,6 +5340,7 @@ async function pageRoster() {
   const appr = isAdmin();
   let minOn = 2; try { minOn = Number(localStorage.getItem('bo_roster_min')) || 2; } catch { /* ignore */ }
   const label = span > 1 ? `${pers[0].label} to ${pers[span - 1].label}` : first.label;
+  if (location.hash !== pageHash) return;
   shell(`<div class="page-head"><div><h1>Roster · ${esc(label)}</h1><p>Everyone's days, view only. Leave and days off come from each person's Timesheet. Click a day in your row to open it there.</p></div>
     <div class="ro-nav" id="rospan">${[1, 2, 3].map((n) => `<button class="${n === span ? 'on' : ''}" data-n="${n}">${n}</button>`).join('<span>·</span>')}<span class="faint">months</span><a href="#/roster?p=${first.prev}" title="Earlier periods">‹ Earlier</a><a href="#/roster" title="Back to this month">Today</a><a href="#/roster?p=${first.next}" title="Later">›</a><button class="btn small" id="roprint" style="margin-left:10px">Preview</button></div></div>
   ${parts.map((x) => x.html).join('')}

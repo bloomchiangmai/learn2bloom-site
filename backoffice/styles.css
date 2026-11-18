@@ -1070,3 +1070,8 @@ table.roster:not(.ro-phone) th.ro-h { min-width: 36px; }
 .ro-leave { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; padding: 10px 14px 4px; font-size: 13px; }
 .ro-leave b { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3, #8a867d); margin-right: 4px; }
 .ro-lvp { background: var(--warn-soft, #fdf3e3); color: #7a4a06; border-radius: 14px; padding: 3px 10px; }
+.pg-load { display: flex; justify-content: center; align-items: center; min-height: 40vh; }
+#toast { z-index: 1000; display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 24px rgba(27,27,25,.18); }
+#toast[hidden] { display: none; }
+#toast.ok::before { content: ""; width: 16px; height: 16px; flex: none; border-radius: 50%; background: #3fb07f url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 8.2l2.3 2.3 4.7-4.9' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat; }
+@media (max-width: 760px) { #toast { bottom: calc(78px + env(safe-area-inset-bottom)); } }

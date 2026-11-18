@@ -638,8 +638,8 @@ const isWriterOf = p => !!p && p.writer === ME;
 // Item 83: posting is its own task. With no poster named, the writer posts.
 const posterOf = p => p ? (p.poster || p.writer) : null;
 const isTranslatorOf = p => !!p && p.translator === ME;
-const GOALS = [['inform','Inform'],['invite','Invite to an event'],['enrol','Get enrolments'],['celebrate','Celebrate or thank']];
-const FORMATS = [['post','Post'],['reel','Reel script'],['announcement','Short announcement']];
+const GOALS = [['inform','Inform'],['invite','Invite to an event'],['visit','Book a visit'],['enrol','Get enrolments'],['celebrate','Celebrate or thank']];
+const FORMATS = [['reel','Reel / Video'],['post','Photo post'],['carousel','Carousel'],['announcement','Short announcement']];
 const goalName = k => (GOALS.find(g=>g[0]===k)||[0,''])[1];
 const formatName = k => (FORMATS.find(g=>g[0]===k)||[0,''])[1];
 const audienceList = () => { const a = (DATA.audiences||[]).map(r=>r.name).filter(Boolean); return a.length ? a : ['Parents','Prospective families','Students','Community']; };
@@ -719,9 +719,9 @@ async function listToggle(id){
 }
 function listPanel(p){
   if(p.step==='post'){
-    const done = new Set(sharedIn(p).filter(d=>d.status==='live').map(d=>d.name)), plan = plannedOf(p);
+    const done = new Set(sharedIn(p).filter(d=>d.status==='live').map(d=>d.name)), plan = placeRows(p), grp = plannedOf(p).includes(GROUPS_CH);
     return `<div class="lp">${plan.length ? plan.map(n=>`<div class="lp-r"><span>${esc(n)}</span>${done.has(n) ? '<span class="st st-live">Live</span>' : `<button class="btn-soft sm" onclick="listLive('${p.id}', ${JSON.stringify(n).replace(/"/g,'&quot;')})">Mark live</button>`}</div>`).join('') : '<p class="meta">No places planned.</p>'}
-      <p class="meta"><a href="javascript:void 0" onclick="go('post/${p.id}')">Open the post</a> for links, groups, or scheduled.</p></div>`;
+      <p class="meta">${grp ? 'Facebook groups: ' : ''}<a href="javascript:void 0" onclick="go('post/${p.id}')">Open the post</a> for ${grp ? 'the groups, ' : ''}links, or scheduled.</p></div>`;
   }
   const th = p.needs_thai && (p.copy_th||'').trim();
   return `<div class="lp"><div class="lp-cap">${esc(p.copy_en||'')}</div>${th ? `<div class="lp-cap th">${esc(p.copy_th)}</div>` : ''}${(p.images||[]).length ? `<p class="meta">${p.images.length} image${p.images.length>1?'s':''}. <a href="javascript:void 0" onclick="go('post/${p.id}')">See them in the post</a>.</p>` : ''}
@@ -1302,8 +1302,8 @@ async function renderPost(el){
   const stepWho = {english:nameOf(p.writer)||'the writer', review:nameOf(p.pic)||'the reviewer', thai:nameOf(p.translator)||'the translator', post:nameOf(posterOf(p))||'the poster'}[p.step] || '';
   const adminLine = actions && asAdmin ? `<p class="adminline">You're doing ${esc(stepWho)}'s step as admin. This is logged.</p>` : '';
   const nextHint = !openStep(p) ? '' : nextLine(p);
-  const briefHtml = (p.brief_goal || p.brief_format || (p.brief_audience||[]).length || p.brief)
-    ? `<div class="briefbox"><span><b>For</b>${esc((p.brief_audience||[]).join(', ')||'Not set')}</span><span><b>Goal</b>${esc(goalName(p.brief_goal)||'Not set')}</span><span><b>Format</b>${esc(formatName(p.brief_format)||'Not set')}</span>${canBrief?`<button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Edit brief</button>`:''}${p.brief?`<span class="kp"><b>Key points</b>${esc(p.brief)}</span>`:''}</div>`
+  const briefHtml = (p.brief_goal || p.brief_format || (p.brief_audience||[]).length || p.brief || (p.planned_places||[]).length)
+    ? `<div class="briefbox"><span><b>For</b>${esc((p.brief_audience||[]).join(', ')||'Not set')}</span><span><b>Goal</b>${esc(goalName(p.brief_goal)||'Not set')}</span><span><b>Format</b>${esc(formatName(p.brief_format)||'Not set')}</span><span><b>Channels</b>${esc(plannedOf(p).join(', ')||'Not set')}</span>${canBrief?`<button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Edit brief</button>`:''}${p.brief?`<span class="kp"><b>Key points</b>${esc(p.brief)}</span>`:''}</div>`
     : (canBrief ? `<div class="briefbox"><span class="meta">No brief yet.</span><button class="link-btn" style="margin-left:auto" onclick="editBrief('${p.id}')">Add brief</button></div>` : '');
   const waiting = !canAct && openStep(p) ? `<span class="muted">Waiting on ${esc(ownerName(p))}${isLate(p)?' · <span class="late-d">late</span>':''}</span>` : '';
   const PLACE_KIND = {'shared in a group':'posted in', 'scheduled in':'scheduled in', 'waiting in':'is waiting on the admin of', 'removed a group share':'removed'};
@@ -1445,7 +1445,7 @@ async function aiRun(action){
 const SHARE_RANK = {'Yes':0, 'Specific days only':1, 'Admin approval':2};
 const SHARE_RULE = {'Yes':'Allowed', 'Specific days only':'Limited, check the rule', 'Admin approval':'Ask the admin first'};
 function audTags(list){
-  const map = [[/expat|english/i,'Expat English'],[/thai/i,'Thai'],[/chinese/i,'Chinese'],[/alternative/i,'Alternative education'],[/homeschool/i,'Homeschool'],[/worldschool/i,'Worldschool']];
+  const map = [[/expat|english|relocat/i,'Expat English'],[/thai/i,'Thai'],[/chinese/i,'Chinese'],[/alternative/i,'Alternative education'],[/homeschool/i,'Homeschool'],[/worldschool/i,'Worldschool']];
   const out = new Set(); (list||[]).forEach(a=>map.forEach(([re,t])=>{ if(re.test(a)) out.add(t); })); return out;
 }
 function shareList(p){
@@ -1462,6 +1462,11 @@ const ownChannels = () => { const c = (DATA.channels||[]).filter(x=>x.type==='So
 const isOwn = name => !!OWN_LINK[name] || ownChannels().some(c=>c.name===name);
 const ownLink = name => { const c = ownChannels().find(x=>x.name===name); const h = c && c.handle ? (/^https?:\/\//.test(c.handle) ? c.handle : 'https://' + c.handle) : ''; return safeUrl(h) ? h : (OWN_LINK[name] || ''); };
 const plannedOf = p => (p.planned_places && p.planned_places.length) ? p.planned_places : ownChannels().filter(c=>c.status==='Active').map(c=>c.name);
+const GROUPS_CH = 'Facebook groups';
+// Channels a post can go to: Bloom's channels from Reference (not the website), then Facebook groups.
+const channelChoices = () => { const c = (DATA.channels||[]).filter(x=>x.type!=='Website' && !['Paused','To create'].includes(x.status));
+  return [...(c.length ? c : ownChannels()), { name: GROUPS_CH, status: 'Active', type: 'Groups' }]; };
+const placeRows = p => plannedOf(p).filter(n=>n!==GROUPS_CH);
 const SUITE = 'https://business.facebook.com/';
 let SH_MORE = {};
 let SH_FORM = null; // { name, gid, status } while the Done box is open
@@ -1497,7 +1502,7 @@ function shareBox(p){
   if(SH_FORM && SH_FORM.pid !== undefined && SH_FORM.pid !== p.id) SH_FORM = null;
   if(SH_FORM) SH_FORM.pid = p.id;
   const done = sharedIn(p), doneSet = new Set(done.map(d=>d.name));
-  const plan = plannedOf(p);
+  const plan = placeRows(p);
   const OWN = [...plan, ...ownChannels().map(c=>c.name).filter(n=>!plan.includes(n))].map(name=>({ id:'', name, promo:'Own', status:'Joined', own:true, planned: plan.includes(name) })).filter(c=>!doneSet.has(c.name));
   const list = OWN.concat(shareList(p).filter(g=>!doneSet.has(g.name)));
   const joined = g => g.status==='Joined' || g.status==='Active';
@@ -1762,11 +1767,30 @@ function adsView(){
     <p class="meta" style="margin-top:10px">Call taps are people who tapped Call or LINE on the ad, which may not have led anywhere. Enquiries are only real calls or LINE messages from a family. Numbers are typed in from Ads Manager and Google Ads, so check the date on each.</p>
   </div>`;
 }
+function adLinkPicker(p){
+  const free = ADS.filter(a=>!a.post_id);
+  if(!canEdit || !free.length) return '';
+  return `<select class="sm-sel" onchange="linkAd(this.value, '${p.id}')"><option value="">Link an ad from the Ads tab…</option>${free.map(a=>`<option value="${a.id}">${esc(PLAT[a.platform])} · ${esc(a.name)}</option>`).join('')}</select>`;
+}
+async function linkAd(adId, postId){
+  if(!adId) return;
+  const a = ADS.find(x=>x.id===adId); if(!a) return;
+  const { error } = await sb.from('marketing_ads').update({ post_id: postId }).eq('id', adId);
+  if(error){ showToast('Could not link: ' + error.message); return; }
+  a.post_id = postId; showToast('Ad linked.'); render();
+}
+async function unlinkAd(adId){
+  const a = ADS.find(x=>x.id===adId); if(!a) return; const was = a.post_id;
+  const { error } = await sb.from('marketing_ads').update({ post_id: null }).eq('id', adId);
+  if(error){ showToast('Could not unlink: ' + error.message); return; }
+  a.post_id = null; render();
+  undoToast('Ad unlinked from this post.', async () => { const r = await sb.from('marketing_ads').update({ post_id: was }).eq('id', adId); if(r.error){ showToast('Could not undo: ' + r.error.message); return; } a.post_id = was; render(); });
+}
 function paidBox(p){
   const list = ADS.filter(a=>a.post_id===p.id);
-  if(!list.length) return canEdit ? `<p class="meta paid-l">Organic. <a href="javascript:void 0" onclick="editAd(null, '${p.id}')">Boosted it? Add the ad</a></p>` : '';
-  return `<div class="paidbox"><h4>Paid</h4>${list.map(a=>`<div class="sh2"><span class="sh-n">${esc(a.name)}<small>${PLAT[a.platform]} · <span class="st st-pd-${a.status}">${AD_ST[a.status]}</span> ${thb(a.spend)} · ${a.clicks} clicks · ${a.call_taps||0} call tap${(a.call_taps||0)===1?'':'s'} · ${a.enquiries} enquir${a.enquiries===1?'y':'ies'}</small></span><span></span>${canEdit?`<button class="link-btn" onclick="editAd('${a.id}')">Update</button>`:'<span></span>'}</div>`).join('')}
-    ${canEdit?`<p class="meta" style="margin:6px 0 0"><a href="javascript:void 0" onclick="editAd(null, '${p.id}')">Add another ad</a></p>`:''}</div>`;
+  if(!list.length) return canEdit ? `<div class="meta paid-l"><b>Ad linked:</b> none, organic. ${adLinkPicker(p)} <a href="javascript:void 0" onclick="editAd(null, '${p.id}')">Add a new ad</a></div>` : '';
+  return `<div class="paidbox"><h4>Ad linked</h4>${list.map(a=>`<div class="sh2"><span class="sh-n">${esc(a.name)}<small>${PLAT[a.platform]} · <span class="st st-pd-${a.status}">${AD_ST[a.status]}</span> ${thb(a.spend)} · ${a.clicks} clicks · ${a.call_taps||0} call tap${(a.call_taps||0)===1?'':'s'} · ${a.enquiries} enquir${a.enquiries===1?'y':'ies'}</small></span><span></span>${canEdit?`<span class="sh-a"><button class="link-btn" onclick="editAd('${a.id}')">Update</button><button class="x-del" title="Unlink this ad" aria-label="Unlink ${esc(a.name)}" onclick="unlinkAd('${a.id}')">&times;</button></span>`:'<span></span>'}</div>`).join('')}
+    ${canEdit?`<p class="meta" style="margin:6px 0 0">${adLinkPicker(p)} <a href="javascript:void 0" onclick="editAd(null, '${p.id}')">Add a new ad</a></p>`:''}</div>`;
 }
 function editAd(id, postId){
   const a = id ? ADS.find(x=>x.id===id) : { platform:'meta', status:'active', post_id: postId || null, spend:0, impressions:0, clicks:0, enquiries:0 };
@@ -1950,7 +1974,7 @@ function briefFields(p){
   return `
     <div class="f"><label>Who is it for?</label><div class="nchips">${list.map(a=>`<button type="button" class="nchip ${aud.includes(a)?'on':''}" data-aud="${esc(a)}" onclick="this.classList.toggle('on')">${esc(a)}</button>`).join('')}</div></div>
     ${optChips('brief_goal', 'Goal', GOALS, p.brief_goal||'')}
-    ${optChips('brief_format', 'Format', FORMATS, p.brief_format||'')}
+    ${optChips('brief_format', 'Format', FORMATS.filter(f=>f[0]!=='announcement' || p.brief_format==='announcement'), p.brief_format||'')}
     <div class="f"><label>Key points</label><textarea name="brief" placeholder="What must the post say? Dates, times, names, links.">${esc(p.brief||'')}</textarea></div>`;
 }
 function optChips(name, label, items, sel){
@@ -1992,8 +2016,9 @@ function topicForm(p, withBrief){
     <div id="thaiWho" ${thai==='false'?'hidden':''}>${chipField('translator', 'Translator', thai==='false' ? '' : (p.translator||''))}</div>
     ${chipField('poster', 'Poster', p.poster || p.writer || '').replace('type="hidden" name="poster"', `type="hidden" name="poster" data-own="${p.poster && p.poster !== p.writer ? 1 : ''}"`)}
     </details>
-    ${withBrief ? (() => { const ch = ownChannels(); if(!ch.length) return '';
-      return `<details class="fold"><summary><span class="fold-t">Where it goes</span> <span class="fold-s" id="placesSum"></span></summary><div class="nchips">${ch.map(c=>`<button type="button" class="nchip pl-chip ${c.status==='Active'?'on':''}" data-place="${esc(c.name)}" onclick="this.classList.toggle('on');placesSummary()">${esc(c.name)}${c.status==='Active'?'':` <span class="nchip-n">${esc(c.status.toLowerCase())}</span>`}</button>`).join('')}</div></details>`; })() : ''}
+    ${(() => { const ch = channelChoices(); if(!ch.length) return '';
+      const on = withBrief ? new Set(ownChannels().filter(c=>c.status==='Active').map(c=>c.name)) : new Set(plannedOf(p));
+      return `<details class="fold" ${withBrief ? '' : 'open'}><summary><span class="fold-t">Channels</span> <span class="fold-s" id="placesSum"></span></summary><div class="nchips">${ch.map(c=>`<button type="button" class="nchip pl-chip ${on.has(c.name)?'on':''}" data-place="${esc(c.name)}" onclick="this.classList.toggle('on');placesSummary()">${esc(c.name)}${c.status==='Active'?'':` <span class="nchip-n">${esc(String(c.status||'').toLowerCase())}</span>`}</button>`).join('')}</div></details>`; })()}
     ${withBrief ? `<details class="fold"><summary><span class="fold-t">Brief</span> <span class="fold-s">optional: who it is for, goal, key points</span></summary>${briefFields(p)}</details>` : ''}`;
 }
 // Item 91: people are name chips. First names; a small grey number shows posts in progress. Click again to clear.
@@ -2083,10 +2108,11 @@ function editTopic(id){
   const p = POSTS.find(x=>x.id===id); if(!p) return;
   cur = {topic:true};
   drawerShell('Edit topic', topicForm(p, false) + `<p style="margin-top:6px"><button type="button" class="link-btn" style="color:#A23F1C" onclick="cancelPost('${id}')">Delete this post</button></p>`, null, false);
-  $('#drawer').classList.add('mid');
+  $('#drawer').classList.add('mid'); placesSummary();
   $('#sv').onclick = async () => {
     const o = topicPayload(), miss = (!o.title ? 'Add a topic.' : (o.post_date && !o.label) ? 'Pick a label.' : '');
     if(miss){ $('#msg').textContent = miss; return; }
+    if(document.querySelector('#fm .pl-chip')) o.planned_places = [...document.querySelectorAll('#fm .pl-chip.on')].map(b=>b.dataset.place);
     const r = await act('edit_topic', id, o); if(!r) return;
     closeD(); showToast('Topic updated.'); delete EVENTS[id]; await reloadPosts(true);
   };

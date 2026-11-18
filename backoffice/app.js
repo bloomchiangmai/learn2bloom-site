@@ -127,6 +127,14 @@ const joinItem = (what, shop) => { what = String(what || '').trim(); shop = Stri
 const catFor = (form, keepId) => S.categories.filter((c) => c.id === keepId || (c.active && (form?.form_type === 'project' ? c.on_project : c.on_petty)));
 const catName = (id) => S.categories.find((c) => c.id === id)?.name || '';
 
+// Receipt name -> the FlowAccount supplier it most likely is (same matcher as bank transfers, then a looser overlap)
+const vSqueeze = (n) => vNorm(n).replace(/\s+/g, '');
+function vendorMatch(name) {
+  const g = guessVendor(name); if (g) return g;
+  const k = vSqueeze(name); if (k.length < 4) return '';
+  const hit = (S.faVendors || []).filter((v) => { const x = vSqueeze(v); return x.length >= 4 && (x.includes(k) || k.includes(x)); });
+  return hit.length === 1 ? hit[0] : '';
+}
 let toastTimer;
 function toast(msg, bad = false) {
   const t = document.getElementById('toast');
@@ -154,6 +162,7 @@ document.addEventListener('click', async (e) => {
   const kind = rep ? 'report' : 'ot';
   const id = rep ? rep[1] : S.otFormId;
   if (!id) return;
+  if (!(await confirmBox({ title: 'Take it back to edit?', body: `The ${kind === 'report' ? 'form' : 'timesheet'} goes back to draft and leaves the approver's list. You need to submit it again when you are done.`, ok: 'Take back' }))) return;
   b.disabled = true; b.textContent = 'Taking back...';
   const { error } = await sb.rpc('take_back', { p_kind: kind, p_id: id });
   if (error) { b.disabled = false; b.textContent = 'Take back to edit'; toast(friendly(error), true); return; }
@@ -1069,7 +1078,7 @@ async function pageExpenses() {
         <div class="card"><div class="card-head"><h2>By category</h2></div>${categorySummary(items)}</div>
         ${editable ? `<div class="card card-pad stack" id="chkbox">
           ${checkerPicker(report)}
-          <div class="field"><label>Remarks (optional)</label><textarea class="input" id="remarks">${esc(report.remarks || '')}</textarea></div>
+          ${report.form_type === 'project' || report.remarks ? `<div class="field"><label>Remarks (optional)</label><textarea class="input" id="remarks">${esc(report.remarks || '')}</textarea></div>` : ''}
           <div class="spread"><span class="${blockers.length ? 'error' : 'muted'}">${blockers.length ? 'Before submitting: ' + esc(blockers.join(', ')) : 'Ready to submit.'}</span>
           <button class="btn primary" id="submit" ${blockers.length ? 'disabled' : ''}>${report.checker_id ? 'Submit for checking' : 'Submit to admin'}</button></div><div id="subwarn" style="margin-top:10px"></div></div>` : ''}
       </div>
@@ -1192,7 +1201,7 @@ async function pageExpenses() {
     try {
       await run(async () => {
         if (inbox.length) must(await sb.from('receipts').update({ report_id: null }).in('id', inbox.map((r) => r.id)));
-        must(await sb.from('expense_reports').update({ status: 'submitted', remarks: document.getElementById('remarks').value }).eq('id', report.id));
+        must(await sb.from('expense_reports').update({ status: 'submitted', ...(document.getElementById('remarks') ? { remarks: document.getElementById('remarks').value } : {}) }).eq('id', report.id));
       }, report.checker_id ? `Sent to ${firstName(report.checker_name)} to check` : 'Sent to admin');
     } catch { return; } // message already shown
     reload();
@@ -1238,6 +1247,17 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
     original_amount: ai && ai.currency && ai.currency !== 'THB' ? ai.total_amount : '',
   };
 
+  // Petty cash: fields that are rarely needed sit under "More", opened when one of them is already filled in
+  const pcMore = report.form_type !== 'project';
+  const moreOpen = Number(v.qty || 1) !== 1 || !!v.doc_type || !!Number(v.wht_rate || 0) || (v.currency && v.currency !== 'THB') || !!v.accounting_code;
+  const moreF = `
+          <div class="field"><label>Qty</label><input class="input" name="qty" type="number" step="0.01" min="0.01" value="${esc(v.qty)}" required></div>
+          <div class="field"><label>Document</label><select class="input" name="doc_type"><option value="">Choose</option>${Object.entries(DOCT).map(([k, l]) => `<option value="${k}" ${k === v.doc_type ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
+          <div class="field"><label>Withholding tax</label><div class="row" style="gap:6px;flex-wrap:nowrap"><select class="input" name="wht_rate" style="width:96px">${[['', 'None'], ['1', '1%'], ['2', '2%'], ['3', '3%'], ['5', '5%']].map(([k, l]) => `<option value="${k}" ${String(v.wht_rate ?? '') === k || (k && Number(v.wht_rate) === Number(k)) ? 'selected' : ''}>${l}</option>`).join('')}</select><input class="input" type="number" step="0.01" min="0" name="wht_amount" value="${v.wht_amount ?? ''}" placeholder="amount"></div><span class="hint" id="whthint">1% transport · 2% advertising · 3% services, contract work · 5% rent</span></div>
+          <div class="field"><label>Accounting code (optional)</label><input class="input mono" name="accounting_code" value="${esc(v.accounting_code)}"></div>
+          <div class="field"><label>Currency on receipt</label><select class="input" name="currency">${['THB', 'USD', 'HKD', 'SGD', 'CNY', 'EUR', 'GBP', 'JPY'].map((c) => `<option ${c === v.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+          <div class="field" id="origf"><label>Amount on receipt</label><input class="input" name="original_amount" type="number" step="0.01" min="0" value="${esc(v.original_amount)}"><span class="hint">Amount in the receipt's currency. The THB above is worked out from the exchange rate.</span></div>
+          <div class="field full" id="fxrow" hidden><span class="hint" id="fxnote"></span></div>`;
   const back = document.createElement('div');
   back.className = 'modal-back';
   back.innerHTML = `
@@ -1257,16 +1277,10 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
           <div class="field full"><label>Item</label><input class="input" name="item" value="${esc(v.item)}" placeholder="e.g. Fuel, PTT Suea Sawat" required></div>
           <div class="field full"><label>Usage / purpose <span class="faint">(you can add it later)</span></label><textarea class="input" name="purpose" placeholder="What was it for? Which project or client?">${esc(v.purpose)}</textarea></div>
           <div class="field"><label>Amount paid (THB)</label><input class="input" name="amount" type="number" step="0.01" min="0" value="${esc(v.amount)}" required></div>
-          <div class="field"><label>Qty</label><input class="input" name="qty" type="number" step="0.01" min="0.01" value="${esc(v.qty)}" required></div>
           <div class="field"><label>Paid by</label><select class="input" name="payment_method">${Object.entries(PAY).map(([k, l]) => `<option value="${k}" ${k === v.payment_method ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
-          <div class="field"><label>Document</label><select class="input" name="doc_type"><option value="">Choose</option>${Object.entries(DOCT).map(([k, l]) => `<option value="${k}" ${k === v.doc_type ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
           <div class="field"><label>VAT (THB) <span class="faint">if on the bill</span></label><input class="input" type="number" step="0.01" min="0" name="vat_amount" value="${v.vat_amount ?? ''}" placeholder="0.00"></div>
-          <div class="field"><label>Withholding tax</label><div class="row" style="gap:6px;flex-wrap:nowrap"><select class="input" name="wht_rate" style="width:96px">${[['', 'None'], ['1', '1%'], ['2', '2%'], ['3', '3%'], ['5', '5%']].map(([k, l]) => `<option value="${k}" ${String(v.wht_rate ?? '') === k || (k && Number(v.wht_rate) === Number(k)) ? 'selected' : ''}>${l}</option>`).join('')}</select><input class="input" type="number" step="0.01" min="0" name="wht_amount" value="${v.wht_amount ?? ''}" placeholder="amount"></div><span class="hint" id="whthint">1% transport · 2% advertising · 3% services, contract work · 5% rent</span></div>
           <div class="field full"><label>Supplier <span class="faint">(company or shop name on the bill)</span></label><input class="input" name="merchant" list="favend" autocomplete="off" value="${esc(v.merchant || '')}" placeholder="Start typing, pick from FlowAccount suppliers"><datalist id="favend">${(S.faVendors || []).map((x) => `<option value="${esc(x)}">`).join('')}</datalist><span class="hint" id="favhint">${item?.merchant_raw ? `Matched from receipt (receipt says "${esc(item.merchant_raw)}"). Change if wrong.` : ''}</span><div id="favnew"></div></div>
-          <div class="field"><label>Accounting code (optional)</label><input class="input mono" name="accounting_code" value="${esc(v.accounting_code)}"></div>
-          <div class="field"><label>Currency on receipt</label><select class="input" name="currency">${['THB', 'USD', 'HKD', 'SGD', 'CNY', 'EUR', 'GBP', 'JPY'].map((c) => `<option ${c === v.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
-          <div class="field" id="origf"><label>Amount on receipt</label><input class="input" name="original_amount" type="number" step="0.01" min="0" value="${esc(v.original_amount)}"><span class="hint">Amount in the receipt's currency. The THB above is worked out from the exchange rate.</span></div>
-          <div class="field full" id="fxrow" hidden><span class="hint" id="fxnote"></span></div>
+          ${pcMore ? `<details class="field full ef-more" ${moreOpen ? 'open' : ''}><summary>More: quantity, document type, withholding tax, currency, accounting code</summary><div class="grid-form">${moreF}</div></details>` : moreF}
         </div>
         ${!item && ai?.held_reason === 'duplicate' ? `<div class="banner bad" style="font-size:13px"><b>Possible duplicate.</b> Same store, date${ai.duplicate_item?.receipt_time ? ', time' : ''} and amount as your line from ${dateLabel(ai.duplicate_item?.invoice_date)}: ${esc(ai.duplicate_item?.item || '')}. Only save if this is really a separate expense. Otherwise press <b>Delete receipt</b> below.</div>` : ''}
         ${item?.duplicate_of ? `<div class="banner bad" style="font-size:13px"><b>Possible duplicate.</b> Another of your expense lines has the same date and amount.<br><label style="display:flex;gap:8px;align-items:center;margin-top:6px;color:var(--ink)"><input type="checkbox" name="duplicate_ok" ${item.duplicate_ok ? 'checked' : ''}> This is a separate expense, not a duplicate</label></div>` : ''}
@@ -1375,7 +1389,14 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
     put(f.invoice_date, d.invoice_date);
     if (d.vat_amount != null && f.vat_amount) put(f.vat_amount, d.vat_amount);
     put(f.category_id, d.category_id);
-    put(f.item, joinItem(d.item, d.short_name || d.merchant));
+    // never overwrite what the person typed: the item and supplier are filled only when empty (or still the last reading)
+    const mine = (el) => el.value.trim() && el.value !== el.dataset.ai;
+    const it = joinItem(d.item, d.short_name || d.merchant);
+    if (it && !mine(f.item)) { f.item.value = it; f.item.dataset.ai = it; }
+    if (f.merchant && d.merchant && !mine(f.merchant)) {
+      const sup = vendorMatch(d.merchant) || String(d.merchant).trim();
+      f.merchant.value = sup; f.merchant.dataset.ai = sup; f.merchant.dispatchEvent(new Event('change'));
+    }
     const cur = (d.currency || 'THB').toUpperCase();
     if (!onlyEmpty && [...f.currency.options].some((o) => o.value === cur)) f.currency.value = cur;
     if (d.total_amount != null) { if (f.currency.value === 'THB') put(f.amount, d.total_amount); else put(f.original_amount, d.total_amount); }
@@ -1966,7 +1987,7 @@ async function pageReport(id) {
       </div>
     </div>
     ${isApprover() ? `<div class="card card-pad stack"><h2>Approver notes</h2><textarea class="input" id="anote" rows="2" placeholder="Only approvers and admins see this. e.g. Checked the Wi-Fi purchase with Mary by phone.">${esc(x.note?.note || '')}</textarea><span class="faint" style="font-size:12px" id="anotes">${x.note?.updated_by_name ? `Last edited by ${esc(x.note.updated_by_name)}, ${dateLabel(x.note.updated_at)}` : 'Saved when you click outside the box.'}</span></div>` : ''}
-    ${canDecide ? `<div class="card card-pad spread"><span class="muted">Approve or return this form in Form view, where you see every receipt.</span><a class="btn primary" href="#/print/${report.id}">Open Form view</a></div>` : ''}
+    ${canDecide ? `<div class="card card-pad spread"><span class="muted">Check the notes above, then decide. <a href="#/print/${report.id}">Form view</a> shows every receipt.</span><span class="row"><button class="btn danger" id="no">Return</button><button class="btn primary" id="ok">${report.status === 'checked' ? 'Final approve' : 'Approve (step 1)'}</button></span></div>` : ''}
     ${report.checked_at ? `<div class="faint" style="font-size:13px">Step 1: ${esc(report.checked_by_name || '')}${report.checked_by ? ` · ${esc(dateLabel(report.checked_at))}` : ''}</div>` : ''}
     
     ${canPay(report) && report.status === 'approved' ? `<div class="card card-pad spread"><span class="muted">${Number(totals.balance) < 0 ? `Company owes ${thb(-totals.balance)}. Mark paid once transferred.` : `Nothing to reimburse. ${thb(totals.balance)} ${report.form_type === 'project' ? 'to be returned to the company' : 'carries to the next personal form'}.`}</span><button class="btn primary" id="paid">Mark as paid</button></div>` : ''}
@@ -1980,7 +2001,12 @@ function wireDecision(report, items, totals, reload) {
   const id = report.id;
   const set = async (patch, msg) => { try { await run(async () => must(await sb.from('expense_reports').update(patch).eq('id', id)), msg); } catch { return; } reload(); };
   const ok = document.getElementById('ok');
-  if (ok) ok.onclick = async (e) => { if (!(await ensureSignature('approve'))) return; confirmInline(e.target, 'Click again to approve') && set({ status: report.status === 'checked' ? 'approved' : 'checked' }, report.status === 'checked' ? 'Final approval given' : 'Checked, sent to admin for final approval'); };
+  if (ok) ok.onclick = async () => {
+    if (!(await ensureSignature('approve'))) return;
+    const fin = report.status === 'checked', n = items.length;
+    if (!(await confirmBox({ title: fin ? 'Give final approval?' : 'Approve this form?', body: `${n} line${n === 1 ? '' : 's'}, THB ${money(items.reduce((a, i) => a + Number(i.amount || 0), 0))}. ${fin ? 'It then goes for payment.' : 'It then goes to admin for final approval.'}`, ok: fin ? 'Final approve' : 'Approve' }))) return;
+    set({ status: fin ? 'approved' : 'checked' }, fin ? 'Final approval given' : 'Checked, sent to admin for final approval');
+  };
   const fa = document.getElementById('faent');
   if (fa) fa.onclick = () => set({ fa_entered_at: report.fa_entered_at ? null : new Date().toISOString() }, report.fa_entered_at ? 'Unmarked' : 'Marked entered in FlowAccount');
   const no = document.getElementById('no');
@@ -2206,6 +2232,7 @@ async function pagePrint(id) {
         <div class="row">${['draft', 'rejected'].includes(report.status) ? '<span class="pill">Draft: not yet approved</span>' : ''}${figs.length ? `<label class="muted" style="display:flex;gap:6px;align-items:center">Receipts <select class="input" id="rcper" style="width:auto;padding:4px 8px">${opts(per, false)}</select></label>` : ''}<button class="btn primary" id="pp">Print form</button></div>`}</div>
     ${x && (x.flags.length || x.changed.size) ? `<div class="pf-flags" id="flp" hidden>${x.changed.size ? `<div><b>${x.changed.size} line${x.changed.size > 1 ? 's' : ''} changed</b> since returned on ${dateLabel(report.last_returned_at)}: ${items.filter((i) => x.changed.has(i.id)).map((i) => esc(i.item)).join(', ')}</div>` : ''}${x.flags.length ? `<ul class="flaglist">${x.flags.map((f) => `<li>${esc(f.text)}</li>`).join('')}</ul>` : ''}</div>` : ''}
     ${reviewing && report.status === 'submitted' ? sinceReturnedHtml(items, applicant) : ''}
+    ${reviewing && isApprover() ? `<div class="pf-screen pf-note"><label for="anote"><b>Approver notes</b> <span class="faint" id="anotes">${x.note?.updated_by_name ? `Last edited by ${esc(x.note.updated_by_name)}, ${dateLabel(x.note.updated_at)}` : 'Only approvers and admins see this. Saved when you click outside the box.'}</span></label><textarea class="input" id="anote" rows="2" placeholder="e.g. Checked the Wi-Fi purchase with Mary by phone.">${esc(x.note?.note || '')}</textarea></div>` : ''}
     <div class="pf-wrap">${page1}${catPages.join('')}<div id="rcpages">${rcPages.join('')}</div></div>`;
   const flb = document.getElementById('fl'); if (flb) flb.onclick = () => { const pnl = document.getElementById('flp'); pnl.hidden = !pnl.hidden; };
   if (reviewing) wireDecision(report, items, totals, () => pagePrint(id));
@@ -3585,7 +3612,7 @@ async function pageOTReview(id) {
     ${isAdmin() && form.status !== 'draft' ? '<div class="row"><button class="btn ghost small" id="otreopen">Reopen as draft</button></div>' : ''}
   </div>`);
   const set2 = async (patch, msg) => { try { await run(async () => must(await sb.from('ot_forms').update(patch).eq('id', id)), msg); } catch { return; } await pollPending(); pageOTReview(id); };
-  const ok = document.getElementById('otok2'); if (ok) { if (hrStep) ok.textContent = 'Checked, send to admin'; ok.onclick = async (e) => { if (!(await ensureSignature('approve'))) return; confirmInline(e.target, hrStep ? 'Click again to send to admin' : 'Click again to approve') && (hrStep ? set2({ status: 'checked' }, 'Sent to admin') : (async () => { const allOff = Number(form.time_off_hours || 0) >= total; try { await run(async () => { must(await sb.from('ot_forms').update({ status: 'approved' }).eq('id', id)); if (allOff) must(await sb.from('ot_forms').update({ status: 'paid' }).eq('id', id)); }, allOff ? 'Approved and closed (all taken as time off)' : 'Approved'); } catch { return; } await pollPending(); pageOTReview(id); })()); }; }
+  const ok = document.getElementById('otok2'); if (ok) { if (hrStep) ok.textContent = 'Checked, send to admin'; ok.onclick = async () => { if (!(await ensureSignature('approve'))) return; (await confirmBox({ title: hrStep ? 'Send this timesheet to admin?' : 'Approve this timesheet?', body: hrStep ? 'You checked it. Admin gives the final approval.' : 'This is the final approval.', ok: hrStep ? 'Send to admin' : 'Approve' })) && (hrStep ? set2({ status: 'checked' }, 'Sent to admin') : (async () => { const allOff = Number(form.time_off_hours || 0) >= total; try { await run(async () => { must(await sb.from('ot_forms').update({ status: 'approved' }).eq('id', id)); if (allOff) must(await sb.from('ot_forms').update({ status: 'paid' }).eq('id', id)); }, allOff ? 'Approved and closed (all taken as time off)' : 'Approved'); } catch { return; } await pollPending(); pageOTReview(id); })()); }; }
   const no = document.getElementById('otno'); if (no) no.onclick = (e) => { const r = document.getElementById('otr').value.trim(); if (!r) return toast('Write a reason first', true); confirmInline(e.target, 'Click again to return') && set2({ status: 'rejected', rejection_reason: r }, 'Returned'); };
   const pd = document.getElementById('otpaid'); if (pd) pd.onclick = (e) => confirmInline(e.target) && set2({ status: 'paid' }, 'Done');
   const ro = document.getElementById('otreopen'); if (ro) ro.onclick = (e) => confirmInline(e.target) && set2({ status: 'draft' }, 'Reopened');
@@ -5144,6 +5171,7 @@ async function pageFAExport() {
   const cardLines = stIds.length ? must(await sb.from('card_charges').select('*').in('statement_id', stIds).or('doc_path.not.is.null,no_doc.eq.true').is('item_id', null).not('merchant', 'is', null).order('trans_date')).filter((c) => c.account_code || c.category_id) : [];
   const list = reps.filter((r) => r.period_month.slice(0, 7) === mk);
   const ids = list.map((r) => r.id);
+  let pendV = [];
   const [items, staff, projs, accs, vend, meta, projRows] = await Promise.all([
     ids.length ? sb.from('expense_items').select('*').in('report_id', ids).order('invoice_date').order('created_at').then(must) : [],
     sb.from('profiles').select('id, full_name').then(must),
@@ -5152,15 +5180,26 @@ async function pageFAExport() {
     sb.from('fa_vendors').select('label, contact_type').then(must),
     sb.from('fa_meta').select('*').eq('id', 1).single().then(must),
     sb.from('projects').select('id, name, code').then(must),
-  ]);
+    sb.from('fa_new_vendors').select('name, business_type').is('exported_at', null).then(must),
+  ]).then((x) => { pendV = x.pop(); return x; });
   const P = Object.fromEntries(staff.map((x) => [x.id, x.full_name]));
   const PJ = new Set(projs.map((x) => x.name)), AC = Object.fromEntries(accs.map((x) => [x.code, x.label]));
   // Supplier names: "Uniform tailor (individual payee)" matches "Uniform tailor"
   const vKey = (n) => String(n || '').replace(/\s*\([^)]*\)\s*$/, '').trim().toLowerCase();
   const VD = Object.fromEntries(vend.flatMap((x) => [[vKey(x.label), x], [x.label.toLowerCase(), x]]));
-  const vFind = (n) => VD[String(n || '').trim().toLowerCase()] || VD[vKey(n)];
-  const unknown = new Map();
-  const miss = (n) => { const k = vKey(n); if (k && !unknown.has(k)) unknown.set(k, String(n).replace(/\s*\([^)]*\)\s*$/, '').trim()); return `supplier "${String(n).replace(/\s*\([^)]*\)\s*$/, '').trim()}" is new: it goes in the new suppliers file (step 1) first`; };
+  const vFind0 = (n) => VD[String(n || '').trim().toLowerCase()] || VD[vKey(n)];
+  // A supplier not in FlowAccount yet still exports once it has a name: it is in the new suppliers file (step 1),
+  // which is imported first. Lines using one are counted so step 2 can say so.
+  const NV = Object.fromEntries(pendV.map((x) => [vKey(x.name), { label: x.name, contact_type: x.business_type, pending: true }]));
+  const unknown = new Map(), newSupLines = new Set();
+  const vFind = (n) => {
+    const v = vFind0(n); if (v || !String(n || '').trim()) return v;
+    const k = vKey(n), clean = String(n).replace(/\s*\([^)]*\)\s*$/, '').trim();
+    if (!NV[k] && !unknown.has(k)) unknown.set(k, clean); // goes into the new suppliers file below
+    newSupLines.add(k);
+    return NV[k] || { label: clean, contact_type: /(co\.?,?\s*ltd|company|limited|inc\.?|corp|part|บริษัท|ห้างหุ้นส่วน|หจก|จำกัด)/i.test(clean) ? 'Corporation' : 'Individual', pending: true };
+  };
+  const miss = (n) => `no supplier "${n}"`;
   const pm = meta.pay_map || {};
   const dmy2 = (d) => { const [y, m, dd] = String(d).slice(0, 10).split('-'); return `${dd}/${m}/${y}`; };
   const WHTD = { 1: 'ค่าขนส่ง', 2: 'ค่าโฆษณา', 3: 'ค่าบริการ', 5: 'ค่าเช่า' };
@@ -5280,7 +5319,10 @@ async function pageFAExport() {
       <p class="faint" style="font-size:12px">Counts every saved line, approved or not. FlowAccount stays the official number once the month is imported.</p>`;
   } else {
     const nReady = ready.length + cardReady.length;
-    const waitSup = bad.filter((y) => y.problems.some((t) => /is new/.test(t)));
+    const waitSup = [];
+    // the new suppliers file that was downloaded last (kept on this computer): "Added in FlowAccount" marks only those
+    let nvFile = []; try { nvFile = JSON.parse(localStorage.getItem('bloom_nv_file') || '[]'); } catch { /* none */ }
+    var nvMark = newV.filter((x) => nvFile.includes(x.id));
     const newNames = newV.map((x) => x.name);
     // Only the name is required (as in FlowAccount's own import). Tax ID, address and phone are optional;
     // a Tax ID that is typed must be 10 or 13 digits.
@@ -5300,11 +5342,13 @@ async function pageFAExport() {
         </div>
         <div class="nv-f"><span class="faint" style="font-size:12px;margin-right:auto">Added by ${esc(x.created_by_name || '')}</span><button class="btn ghost small danger" data-nvx="${x.id}">Remove</button><button class="btn small primary" data-nvs="${x.id}">Save</button></div></details>`; }).join('')}</div>
       <div class="faint" style="font-size:12px;margin-top:8px">In FlowAccount: Contacts › Import Contact List.</div>
-      <div class="row" style="margin-top:8px;gap:8px"><button class="btn primary" id="nvdl" ${nvDone.length ? '' : 'disabled'}>Download new suppliers (${nvDone.length})</button><button class="btn" id="nvdone" ${nvDone.length ? '' : 'disabled'}>Added in FlowAccount</button></div>` : ''}
+      <div class="row" style="margin-top:8px;gap:8px"><button class="btn primary" id="nvdl" ${nvDone.length ? '' : 'disabled'}>Download new suppliers (${nvDone.length})</button><button class="btn" id="nvdone" ${nvMark.length ? '' : 'disabled'} title="${nvMark.length ? 'Marks the suppliers in the file you downloaded' : 'Download the file first'}">Added in FlowAccount${nvMark.length ? ` (${nvMark.length})` : ''}</button></div>
+      ${nvMark.length && nvMark.length < nvDone.length ? `<div class="faint" style="font-size:12px;margin-top:6px">${nvDone.length - nvMark.length} supplier${nvDone.length - nvMark.length > 1 ? 's were' : ' was'} added after your last download. Download again to include ${nvDone.length - nvMark.length > 1 ? 'them' : 'it'}.</div>` : ''}` : ''}
     </div></div>
     <div class="card mc-step"><span class="mc-n">2</span><div style="flex:1;min-width:0">
       <b>Expenses file</b> <span class="faint">${nReady} line${nReady === 1 ? '' : 's'} ready</span>
       <div class="faint" style="font-size:12px;margin-top:4px">${[ready.length ? `Staff forms ${ready.length} ready` : '', billRows.filter((y) => !y.problems.length && !y.c.fa_done).length ? `Bank transfers ${billRows.filter((y) => !y.problems.length && !y.c.fa_done).length} ready` : '', cardReady0.length ? `Card payments ${cardReady0.length} ready` : '', !stIds.length ? 'Card payments: statement comes next month' : ''].filter(Boolean).join(' · ') || 'Nothing ready yet.'}</div>
+      ${newSupLines.size && nReady ? `<div class="mc-wait" style="background:var(--accent-soft)">This file uses ${newSupLines.size} supplier${newSupLines.size > 1 ? 's' : ''} from step 1. Import the step 1 file in FlowAccount first, then this one.</div>` : ''}
       ${bad.length ? `<div class="mc-wait">${waitSup.length ? `${waitSup.length} line${waitSup.length > 1 ? 's' : ''} wait for new suppliers in step 1.` : ''}${bad.length > waitSup.length ? `${waitSup.length ? ' ' : ''}${bad.length - waitSup.length} other line${bad.length - waitSup.length > 1 ? 's' : ''} not in this file:<ul>${[...new Set(bad.filter((y) => !waitSup.includes(y)).flatMap((y) => y.problems))].map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}${bad.length > waitSup.length ? '<div style="margin-top:4px">Correct the line, then it joins the next file.</div>' : ''}</div>` : ''}
       <div class="faint" style="font-size:12px">In FlowAccount: Expense › Import bills and receipts › Import from .csv. On Match Column Headers set Unit Price to <b>Excluding VAT</b>.</div>
       <div class="row" style="margin-top:10px;gap:8px"><button class="btn primary" id="fadl" ${nReady ? '' : 'disabled'}>Download expenses (${nReady})</button><button class="btn" id="faent" ${nReady ? '' : 'disabled'}>Entered in FlowAccount</button></div>
@@ -5329,10 +5373,13 @@ async function pageFAExport() {
       const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
       const csv = [CH.map(q).join(',')].concat(nvDone.map((x) => [`BO-${x.id}`, x.name, 'Supplier', x.business_type, x.tax_id || '', x.business_type === 'Corporation' ? 'Head Office' : '', x.business_type === 'Corporation' ? '00000' : '', x.address || '', (String(x.address || '').match(/\b(\d{5})\s*$/) || [])[1] || '', '', x.phone || '', '', '', '', '', '', '', '', '', '', '', '', '', `Added in back office by ${x.created_by_name || ''}`].map(q).join(','))).join('\r\n');
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })); a.download = `flowaccount-new-suppliers-${iso(new Date())}.csv`; a.click();
+      try { localStorage.setItem('bloom_nv_file', JSON.stringify(nvDone.map((x) => x.id))); } catch { /* the button then marks what is shown */ }
+      const d = document.getElementById('nvdone'); d.disabled = false; d.textContent = `Added in FlowAccount (${nvDone.length})`; nvMark = nvDone;
     };
     document.getElementById('nvdone').onclick = async (e) => {
-      if (!confirmInline(e.target, 'Imported in FlowAccount?')) return;
-      try { await run(async () => must(await sb.rpc('fa_new_vendors_added', { p_ids: nvDone.map((x) => x.id) })), 'Suppliers added to the FlowAccount list'); } catch { return; }
+      if (!(await confirmBox({ title: `Mark ${nvMark.length} supplier${nvMark.length > 1 ? 's' : ''} as added?`, body: `Only the suppliers in the file you downloaded: ${nvMark.map((x) => esc(x.name)).join(', ')}.`, ok: 'Yes, added' }))) return;
+      try { await run(async () => must(await sb.rpc('fa_new_vendors_added', { p_ids: nvMark.map((x) => x.id) })), 'Suppliers added to the FlowAccount list'); } catch { return; }
+      try { localStorage.removeItem('bloom_nv_file'); } catch { /* ignore */ }
       await loadFAVendors(); pageFAExport();
     };
     main().querySelectorAll('[data-nvs]').forEach((b) => (b.onclick = async () => {

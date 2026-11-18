@@ -1083,3 +1083,9 @@ table.roster:not(.ro-phone) { table-layout: fixed; }
 table.roster:not(.ro-phone) .ro-c { min-width: 0; height: 38px; }
 table.roster:not(.ro-phone) th.ro-h { min-width: 0; }
 table.roster:not(.ro-phone) th.ro-stick { width: 132px; }
+.pch.dim { opacity: .45; }
+.ef-more summary { cursor: pointer; color: var(--ink-2); font-size: 13px; padding: 4px 0; }
+.ef-more[open] summary { margin-bottom: 8px; }
+.pf-note { max-width: 900px; margin: 12px auto 0; padding: 0 20px; display: grid; gap: 6px; font-size: 13px; }
+.pf-note .faint { font-weight: 400; margin-left: 6px; }
+@media print { .pf-note { display: none !important; } }

@@ -1051,3 +1051,22 @@ table.acc input[type=checkbox] { width: 22px; height: 22px; }
 .x-del:hover,.x-del:focus-visible{background:#FAECE7;color:var(--bad,#A23F1C);}
 /* The X shows when you point at the row; on touch screens it always shows */
 @media (hover:hover) and (pointer:fine){ .x-del{opacity:0;transition:opacity .12s;} :is(div,tr,li):hover > .x-del, :is(div,tr,li):hover > :is(span,td,div) > .x-del, .x-del:focus-visible{opacity:1;} }
+
+/* 18 Nov 2026: same as IGA (timesheet and roster) */
+.spin { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--accent-soft, #ece8f6); border-top-color: var(--accent); animation: spin .8s linear infinite; display: inline-block; }
+.spin.sm { width: 14px; height: 14px; border-width: 2px; vertical-align: -2px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+.cal-c, .rc-d { position: relative; }
+.cal-note { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: #c98a1b; }
+.dd-more { margin-top: 2px; }
+.dd-more > summary { cursor: pointer; font-size: 13px; color: var(--ink-3, #8a867d); list-style: none; padding: 4px 0; }
+.dd-more > summary::before { content: "+ "; }
+.dd-more[open] > summary::before { content: "− "; }
+.dd-more > summary::-webkit-details-marker { display: none; }
+.dd-more[open] { display: grid; gap: 10px; }
+table.roster:not(.ro-phone) .ro-c { height: 38px; min-width: 34px; font-size: 12px; border-radius: 6px; }
+table.roster:not(.ro-phone) th.ro-h { min-width: 36px; }
+.ro-leave { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; padding: 10px 14px 4px; font-size: 13px; }
+.ro-leave b { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3, #8a867d); margin-right: 4px; }
+.ro-lvp { background: var(--warn-soft, #fdf3e3); color: #7a4a06; border-radius: 14px; padding: 3px 10px; }

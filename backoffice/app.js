@@ -27,7 +27,7 @@ const money = (n) => fmt.format(Number(n || 0));
 const thb = (n) => `THB ${money(n)}`;
 const staffEmail = (no) => `${no.toLowerCase()}@staff.ingroup.asia`;
 const normStaffNo = (v) => String(v || '').toUpperCase().replace(/\s+/g, '');
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' }); // Bangkok date, not UTC
 const monthKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 const monthStart = (key) => `${key}-01`;
 const monthLabel = (key) => new Date(`${key}-01T00:00:00`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
@@ -3216,8 +3216,10 @@ async function otSetup(staffId) {
     sb.from('ot_settings').select('*').eq('staff_id', staffId).maybeSingle().then((r) => r.data),
     sb.from('holidays').select('day, name').then((r) => { HOLNAME = Object.fromEntries((r.data || []).map((x) => [x.day, x.name || 'Holiday'])); return (r.data || []).map((x) => x.day); }),
   ]);
-  const ov = (await sb.from('ot_day_type').select('day, treat_as').eq('staff_id', staffId)).data || [];
-  const od = (await sb.from('ot_offday').select('day, choice, save_until, swap_date').eq('staff_id', staffId)).data || [];
+  const [ov, od] = await Promise.all([
+    sb.from('ot_day_type').select('day, treat_as').eq('staff_id', staffId).then((r) => r.data || []),
+    sb.from('ot_offday').select('day, choice, save_until, swap_date').eq('staff_id', staffId).then((r) => r.data || []),
+  ]);
   const st = set || { start_time: '08:00', end_time: '16:30', lunch_hours: 1, week_pattern: 'mon_fri', sat_off_anchor: null, dayoff_mult: 1, holiday_mult: 1, pay_type: 'full_time' }; // BCM default
   st.__sid = staffId; st.ovr = Object.fromEntries(ov.map((x) => [x.day, x.treat_as])); st.offd = Object.fromEntries(od.map((x) => [x.day, x.choice])); st.swapd = Object.fromEntries(od.filter((x) => x.swap_date).map((x) => [x.day, x.swap_date]));
   return { set: st, hol };
@@ -3438,6 +3440,12 @@ async function pageOT() {
     try { await run(async () => must(await sb.from('ot_forms').update({ status: 'submitted' }).eq('id', form.id)), 'Submitted for approval'); } catch { return; }
     reload();
   };
+  // from the roster: open that day straight away (once)
+  const dq = params().d;
+  if (dq && self) {
+    history.replaceState(null, '', location.hash.replace(/[?&]d=\d{4}-\d{2}-\d{2}/, ''));
+    main().querySelector(`.cal-c[data-day="${dq}"], [data-cd="${dq}"]`)?.click();
+  }
 }
 function otEntryDialog({ entry, per, set, hol, onSave, onDone }) {
   const back = document.createElement('div');
@@ -3860,7 +3868,9 @@ function calHtml(per, entries, set, hol, { editable }) {
       const d = new Date(mon); d.setDate(d.getDate() + k); const date = iso(d);
       if (!days.includes(date)) { cells.push(`<div class="cal-c cal-out"><span class="cal-d">${d.getDate()}</span></div>`); continue; }
       const x = dayInfo(date, entries, set, hol);
-      wh += x.hours; wo += x.ot; if (x.lv) lvd++;
+      // only days up to today count; later workdays are planned, not worked yet
+      if (date <= today()) { wh += x.hours; wo += x.ot; }
+      if (x.lv) lvd++;
       const off = (x.type !== 'workday' || !!x.lv) && set.pay_type !== 'freelance';
       // a scheduled workday taken off (leave or "other"): grey like a day off, plus its type
       const takenOff = set.ovr?.[date] === 'day_off' && baseTypeOf(date, set, hol) === 'workday';
@@ -3868,13 +3878,13 @@ function calHtml(per, entries, set, hol, { editable }) {
       cells.push(`<button type="button" class="cal-c${off ? ' cal-off' : ''}${x.lv ? ' cal-islv' : x.ot ? ' cal-isot' : ''}${date === tdy ? ' cal-today' : date > tdy ? ' cal-future' : ''}" data-day="${date}">
         <span class="cal-d">${d.getDate()}${d.getDate() === 1 || date === days[0] && days === weeks[0] ? ` <span class="cal-m">${d.toLocaleDateString('en-GB', { month: 'short' })}</span>` : ''} <span class="cal-wd">${d.toLocaleDateString('en-GB', { weekday: 'short' })}</span></span>
         <span class="cal-b">${set.ovr?.[date] ? '' : x.type === 'holiday' ? `<span class="cal-hol">${esc(HOLNAME[date] || 'Holiday')}</span>` : ''}
-        ${x.lv ? `<span class="cal-lv" title="${LEAVE[x.lv.leave_type]}">${{ replacement: 'Replacement', annual: 'Annual leave' }[x.lv.leave_type] || LEAVE[x.lv.leave_type]}</span>` : takenOff && !x.hours ? `<span class="cal-lv">${x.note.startsWith('Swap for') ? 'Swap off' : 'Day off'}</span>` : x.hours ? `<span>${x.hours} h${x.ranges.length > 1 ? ' · split' : ''}</span>` : `<span class="faint">${off ? 'off' : '-'}</span>`}
+        ${x.lv ? `<span class="cal-lv" title="${LEAVE[x.lv.leave_type]}">${{ replacement: 'Replacement', annual: 'Annual leave' }[x.lv.leave_type] || LEAVE[x.lv.leave_type]}</span>` : takenOff && !x.hours ? `<span class="cal-lv">${x.note.startsWith('Swap for') ? 'Swap off' : 'Day off'}</span>` : x.hours && x.isDefault && date > today() ? '<span class="faint">planned</span>' : x.hours ? `<span>${x.hours} h${x.ranges.length > 1 ? ' · split' : ''}</span>` : `<span class="faint">${off ? 'off' : '-'}</span>`}${x.note ? `<span class="cal-note" title="${esc(x.note)}" aria-label="Has a note"></span>` : ''}
         ${x.hours && off && !x.lv && set.offd?.[x.date] === 'swap' ? `<span class="cal-ot">Swap ↔ ${esc(dateLabel(set.swapd[x.date]).replace(/ \d{4}$/, ''))}</span>${x.ot ? `<span class="cal-ot">OT ${x.ot}</span>` : ''}` : x.hours && off && !x.lv && set.offd?.[x.date] === 'save' ? '<span class="cal-ot">Saved day</span>' : x.ot ? `<span class="cal-ot">${off && !x.lv && set.offd?.[x.date] === 'pay' ? `${x.ot} h x2` : off && !x.lv ? `${x.ot} h · choose` : `OT ${x.ot}`}</span>` : ''}</span></button>`);
     }
     th += wh; tot += wo;
     return `${cells.join('')}<div class="cal-wk">${Math.round(wh * 100) / 100} h${wo ? `<br><b>OT ${Math.round(wo * 100) / 100}</b>` : ''}</div>`;
   }).join('');
-  return `<div class="card"><div class="card-head"><h2>${Math.round(th * 100) / 100} h worked · ${Math.round(tot * 100) / 100} h OT${lvd ? ` · ${lvd} day${lvd > 1 ? 's' : ''} leave` : ''}</h2><span class="faint" style="font-size:12px">${editable ? 'Click a day to change it' : 'Click a day for details'}</span></div>
+  return `<div class="card"><div class="card-head"><h2>${Math.round(th * 100) / 100} h worked so far · ${Math.round(tot * 100) / 100} h OT${lvd ? ` · ${lvd} day${lvd > 1 ? 's' : ''} leave` : ''}</h2><span class="faint" style="font-size:12px">${editable ? 'Click a day to change it' : 'Click a day for details'}</span></div>
     <div class="cal">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => `<span class="cal-h">${d}</span>`).join('')}<span class="cal-h">Week</span>${grid}</div>
     <div class="cal-key"><span><i class="k-wk"></i>Work</span><span><i class="k-ot"></i>OT</span><span><i class="k-lv"></i>Leave</span><span><i class="k-off"></i>Day off</span><span><i class="k-td"></i>Today</span></div>
 </div>`;
@@ -3912,7 +3922,7 @@ function phoneCalHtml(per, entries, set, hol, { editable }) {
     else if (x.ot) tag = `<span class="rc-t rc-on">OT ${x.ot}</span>`;
     else if (x.type === 'holiday') tag = `<span class="rc-t rc-hol">Holiday</span>`;
     else if (free && x.hours) tag = `<span class="rc-t">${x.hours} h</span>`;
-    return `<button type="button" class="rc-d${off && !x.hours ? ' rc-we' : ''}${d === today ? ' rc-today' : ''}" data-cd="${d}"><span class="rc-top"><b>${n.getDate()}</b></span>${tag}</button>`;
+    return `<button type="button" class="rc-d${off && !x.hours ? ' rc-we' : ''}${d === today ? ' rc-today' : ''}" data-cd="${d}"><span class="rc-top"><b>${n.getDate()}</b>${x.note ? '<span class="cal-note" aria-label="Has a note"></span>' : ''}</span>${tag}</button>`;
   }));
   return `<div class="card card-pad" id="tcal"><div class="rc-lg"><span class="rc-t rc-on">OT</span><span class="rc-t rc-leave">Leave</span><span class="rc-t rc-dw">Day-off work</span><span class="faint">${editable ? 'Tap a day, then Change' : 'Tap a day for details'}</span></div>
     <div class="rc-g rc-wk">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((x) => `<span>${x}</span>`).join('')}</div>
@@ -3990,15 +4000,17 @@ function dayDialog({ x, set, editable, ensureForm, reload, hol = [], lock = '', 
       <div class="faint" id="ddoffh" style="font-size:12px">Not a workday on your schedule. If you worked, tap In: it fills your normal hours to adjust. Then choose Paid x2, Keep as a day off, or Swap.</div>
       <div id="ddt" class="stack" style="gap:10px">
         <div class="row" style="gap:10px;flex-wrap:nowrap"><div class="field" style="flex:1"><label>In</label><input class="input" type="time" name="in1" value="${r1 ? mm(r1[0]) : ''}" ${dis}></div><div class="field" style="flex:1"><label>Out</label><input class="input" type="time" name="out1" value="${r1 ? mm(r1[1]) : ''}" ${dis}></div></div>
-        <label class="row" style="gap:6px;font-size:13px"><input type="checkbox" name="split" ${r2 ? 'checked' : ''} ${dis}> Split: a second time range on this day</label>
-        <div id="dd2" class="stack" style="gap:6px" ${r2 ? '' : 'hidden'}><div class="row" style="gap:10px;flex-wrap:nowrap"><div class="field" style="flex:1"><label>2nd in</label><input class="input" type="time" name="in2" value="${r2 ? mm(r2[0]) : ''}" ${dis}></div><div class="field" style="flex:1"><label>2nd out</label><input class="input" type="time" name="out2" value="${r2 ? mm(r2[1]) : ''}" ${dis}></div></div><span class="faint" style="font-size:12px">Not for overnight shifts. Use one time ending after midnight.</span></div>
       </div>
       <div class="field" id="ddch" hidden><label>How do you want this day?</label>
         <label class="ddopt"><input type="radio" name="och" value="pay" ${set.offd?.[x.date] === 'pay' ? 'checked' : ''} ${dis}><span><b>Paid x2</b><br><span class="faint" id="ddchp">Hours paid at x2</span></span></label>
         <label class="ddopt"><input type="radio" name="och" value="save" ${set.offd?.[x.date] === 'save' ? 'checked' : ''} ${dis}><span><b>Keep as a day off for later</b><br><span class="faint">+1 replacement day, use within 3 months</span></span></label>
         <label class="ddopt"><input type="radio" name="och" value="swap" ${set.offd?.[x.date] === 'swap' ? 'checked' : ''} ${dis}><span style="flex:1"><b>Swap for another day</b><br><span class="faint">Worked as a normal day; take this day off instead (within 2 months):</span><input class="input" type="date" name="swapd" value="${set.swapd?.[x.date] || ''}" min="${periodOf(x.date).start}" max="${swapMax(x.date)}" style="margin-top:4px" ${dis}></span></label></div>
       <div class="field"><label>Note <span class="faint" id="ddneed"></span></label><input class="input" name="note" value="${esc(x.note)}" placeholder="e.g. Night shoot for Symatics" ${dis}></div>
+      <details class="dd-more" id="ddmore" ${r2 ? 'open' : ''}><summary>More</summary>
+        <label class="row" style="gap:6px;font-size:13px"><input type="checkbox" name="split" ${r2 ? 'checked' : ''} ${dis}> Split: a second time range on this day</label>
+        <div id="dd2" class="stack" style="gap:6px" ${r2 ? '' : 'hidden'}><div class="row" style="gap:10px;flex-wrap:nowrap"><div class="field" style="flex:1"><label>2nd in</label><input class="input" type="time" name="in2" value="${r2 ? mm(r2[0]) : ''}" ${dis}></div><div class="field" style="flex:1"><label>2nd out</label><input class="input" type="time" name="out2" value="${r2 ? mm(r2[1]) : ''}" ${dis}></div></div><span class="faint" style="font-size:12px">Not for overnight shifts. Use one time ending after midnight.</span></div>
       ${cpHtml}
+      </details>
       <div class="banner info" id="ddpv" style="font-size:13px"></div>
       <div class="error" id="dderr"></div>
     </form></div>
@@ -4049,6 +4061,7 @@ function dayDialog({ x, set, editable, ensureForm, reload, hol = [], lock = '', 
     back.querySelector('#ddt').hidden = !!f.lv.value;
     const v = read();
     back.querySelector('#ddt').hidden = !!v.lv;
+    back.querySelector('#ddmore').hidden = !!v.lv || (off && !v.ranges.length);
     back.querySelector('#dd2').hidden = !f.split.checked;
     const c = dayCalc(v.ranges, f.querySelector('input[name=och]:checked')?.value === 'swap' ? 'workday' : etype, set);
     const showCh = off && !freeD && !v.lv && v.ranges.length > 0;
@@ -4137,6 +4150,7 @@ function dayDialog({ x, set, editable, ensureForm, reload, hol = [], lock = '', 
       close(); reload(); return;
     }
     const cpGo = !v.lv && etype === 'workday' && v.ranges.length > 0 && cpPick.size > 0;
+    const okb = back.querySelector('#ddok'); okb.disabled = true; okb.innerHTML = '<span class="spin sm"></span> Saving…';
     try { await run(async () => {
       await saveRows(rows, f.treat.value);
       if (cpGo) {
@@ -4144,7 +4158,7 @@ function dayDialog({ x, set, editable, ensureForm, reload, hol = [], lock = '', 
         must(await sb.from('ot_entries').delete().eq('form_id', fm.id).in('work_date', ds));
         if (rows.length) must(await sb.from('ot_entries').insert(ds.flatMap((d) => rows.map((r) => ({ ...r, form_id: fm.id, work_date: d })))));
       }
-    }, cpGo ? `${cpPick.size + 1} days saved` : 'Saved'); } catch { return; }
+    }, cpGo ? `${cpPick.size + 1} days saved` : `Saved · ${dateLabel(x.date).replace(/ \d{4}$/, '')}`); } catch { okb.disabled = false; okb.textContent = 'Save'; return; }
     close(); reload();
   };
 }
@@ -5279,7 +5293,7 @@ async function pageRoster() {
   const appr = isAdmin();
   let minOn = 2; try { minOn = Number(localStorage.getItem('bo_roster_min')) || 2; } catch { /* ignore */ }
   const label = span > 1 ? `${pers[0].label} to ${pers[span - 1].label}` : first.label;
-  shell(`<div class="page-head"><div><h1>Roster · ${esc(label)}</h1><p>Everyone's days. Click a day in your own row to change it. Only each person changes their own days.</p></div>
+  shell(`<div class="page-head"><div><h1>Roster · ${esc(label)}</h1><p>Everyone's days, view only. Leave and days off come from each person's Timesheet. Click a day in your row to open it there.</p></div>
     <div class="ro-nav" id="rospan">${[1, 2, 3].map((n) => `<button class="${n === span ? 'on' : ''}" data-n="${n}">${n}</button>`).join('<span>·</span>')}<span class="faint">months</span><a href="#/roster?p=${first.prev}" title="Earlier periods">‹ Earlier</a><a href="#/roster" title="Back to this month">Today</a><a href="#/roster?p=${first.next}" title="Later">›</a><button class="btn small" id="roprint" style="margin-left:10px">Preview</button></div></div>
   ${parts.map((x) => x.html).join('')}
   <div class="row ro-lg"><span><i class="ro-c ro-w ro-past"></i>Past</span><span><i class="ro-c ro-w"></i>Working</span><span><i class="ro-c ro-l"></i>Leave (AL, Sick, Pers, Repl)</span><span><i class="ro-c ro-o"></i>Day off</span><span><i class="ro-c ro-ho"></i>Holiday</span>${appr ? `<span style="margin-left:auto">Warn when fewer than <input class="input" id="romin" type="number" min="0" value="${minOn}" style="width:56px;padding:2px 6px;display:inline-block"> are working</span>` : ''}</div>`);
@@ -5316,7 +5330,7 @@ async function rosterTable(per) {
     const f = forms.find((x) => x.staff_id === p.id);
     const es = f ? ents.filter((e) => e.form_id === f.id) : [];
     const own = p.id === S.user.id;
-    const canEdit = own && (!f || ['draft', 'rejected'].includes(f.status));
+    const canEdit = false; // the roster is view-only; days and leave are changed in the Timesheet
     const showHrs = own || appr;
     ctx[p.id] = { set, form: f, es, canEdit, name: p.full_name };
     let ot = 0, hrs = 0;
@@ -5332,7 +5346,7 @@ async function rosterTable(per) {
       if (x.lv) { cls = 'ro-l'; txt = short[x.lv.leave_type]; }
       else if (!x.hours) { cls = x.type === 'holiday' ? 'ro-ho' : 'ro-o'; txt = free ? '' : 'off'; }
       const tip = `${esc(p.full_name)} · ${esc(dateLabel(d))}${x.lv ? ' · ' + LEAVE[x.lv.leave_type] : x.hours ? (showHrs ? ` · ${x.hours} h${x.ot ? `, OT ${x.ot}` : ''}` : ' · working') : ' · off'}`;
-      const tapRo = own && !canEdit;
+      const tapRo = own;
       return `<td><${canEdit || tapRo ? 'button' : 'span'} class="ro-c ${cls}${canEdit ? ' ro-ed' : ''}${tapRo ? ' ro-rd' : ''}${d < today ? ' ro-past' : ''}" data-p="${p.id}" data-d="${d}" data-k="${K}" title="${tip}">${txt}</${canEdit || tapRo ? 'button' : 'span'}></td>`;
     });
     const nm = appr || own ? `<a href="#/ot?p=${per.end}${own ? '' : '&u=' + p.id}">${esc(p.full_name)}</a>` : esc(p.full_name);
@@ -5359,7 +5373,19 @@ async function rosterTable(per) {
       <div class="rc-g rc-wk">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((x) => `<span>${x}</span>`).join('')}</div>
       <div class="rc-g">${cells.join('')}</div><div class="rc-det" id="rcdet-${K}"></div>`;
   };
-  const html = `<div class="card" style="margin-bottom:14px"><div class="ro-ph">${esc(per.label)}</div>${isPhone() ? calHtml() : chunks.map(tableFor).join('')}</div>`;
+  // who is on leave, from today to the end of this period, as date ranges
+  const lvRanges = [];
+  people.forEach((p) => {
+    let cur = null;
+    days.forEach((d) => {
+      const e = (dayList[d] || []).find((y) => y.id === p.id);
+      if (d >= today && e?.kind === 'leave') { if (cur && cur.t === e.txt) cur.to = d; else { cur = { name: firstName(p.full_name), t: e.txt, from: d, to: d }; lvRanges.push(cur); } }
+      else if (e?.kind === 'on') cur = null;
+    });
+  });
+  const dd = (d) => new Date(`${d}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  const lvHtml = `<div class="ro-leave"><b>On leave</b>${lvRanges.length ? lvRanges.map((r) => `<span class="ro-lvp">${esc(r.name)} · ${esc(r.t)} · ${r.from === r.to ? dd(r.from) : `${dd(r.from)} to ${dd(r.to)}`}</span>`).join('') : '<span class="faint">Nobody from today to the end of this period</span>'}</div>`;
+  const html = `<div class="card" style="margin-bottom:14px"><div class="ro-ph">${esc(per.label)}</div>${lvHtml}${isPhone() ? calHtml() : chunks.map(tableFor).join('')}</div>`;
   const showDay = (d) => {
     main().querySelectorAll(`[data-cd][data-k="${K}"]`).forEach((b) => b.classList.toggle('rc-sel', b.dataset.cd === d));
     const L = dayList[d] || [], box = document.getElementById(`rcdet-${K}`); if (!box) return;
@@ -5384,6 +5410,7 @@ async function rosterTable(per) {
   }));
   const bindRd = () => main().querySelectorAll(`.ro-rd[data-k="${K}"]`).forEach((b) => (b.onclick = async () => {
     const c = ctx[b.dataset.p];
+    if (b.dataset.p === S.user.id && (!c.form || ['draft', 'rejected'].includes(c.form.status))) { location.hash = `#/ot?p=${per.end}&d=${b.dataset.d}`; return; }
     const es = c.form ? must(await sb.from('ot_entries').select('*').eq('form_id', c.form.id)) : [];
     dayDialog({ x: dayInfo(b.dataset.d, es, c.set, hol), set: c.set, hol, editable: false, lock: c.form ? `Your timesheet is ${(STATUS_TEXT[c.form.status] || c.form.status).toLowerCase()}. To change it, ask HR or admin to return it.` : '' });
   }));

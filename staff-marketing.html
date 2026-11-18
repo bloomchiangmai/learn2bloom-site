@@ -1337,7 +1337,7 @@ async function renderPost(el){
       ${canImg?`<label class="imadd">+ Add<input type="file" accept="image/*" multiple onchange="addImgs(this.files)" hidden></label>`:''}${!imgs.length&&!canImg?'<span class="meta">No images yet.</span>':''}</div></div>
     <div class="f"><label>Video <span class="hint">upload up to 50 MB, or paste a link</span></label><input id="f-video_url" ${canImg?'':'readonly'} value="${esc(p.video_url||'')}" placeholder="https://">
       ${canImg?`<div class="aibar"><label class="btn-outline sm vid-up">Upload video<input type="file" accept="video/mp4,video/quicktime,video/webm" hidden onchange="uploadVideo(this.files[0])"></label>${safeUrl(p.video_url) && /marketing-video/.test(p.video_url)?`<a class="meta" href="${esc(p.video_url)}" target="_blank" rel="noopener">Play the uploaded video &#8599;</a>`:''}<span class="meta" id="vidMsg"></span></div>`:''}</div>
-    ${['post','posted'].includes(p.step) ? paidBox(p) + shareBox(p) : ''}
+    ${paidBox(p)}${['post','posted'].includes(p.step) ? shareBox(p) : ''}
     <button class="link-btn" style="margin:2px 0 10px" onclick="togglePreview()">${SHOW_PREVIEW?'Hide':'Preview as'} Facebook post</button>
     <div id="fbPreview">${SHOW_PREVIEW?fbPreviewHtml(p):''}</div>
     ${adminLine}
@@ -1796,14 +1796,15 @@ function editAd(id, postId){
   const a = id ? ADS.find(x=>x.id===id) : { platform:'meta', status:'active', post_id: postId || null, spend:0, impressions:0, clicks:0, enquiries:0 };
   if(!a) return;
   cur = {ad:true};
-  const posts = POSTS.filter(p=>['post','posted'].includes(p.step) || p.id===a.post_id).sort((x,y)=>String(y.post_date).localeCompare(String(x.post_date))).slice(0, 60);
+  // Any post that isn't cancelled, drafts included, so a draft ad can be linked to its draft post. Newest dates first.
+  const posts = POSTS.filter(p=>p.step!=='cancelled' || p.id===a.post_id).sort((x,y)=>String(y.post_date||'9999').localeCompare(String(x.post_date||'9999'))).slice(0, 80);
   const opt = (v, l, sel) => `<option value="${esc(v)}" ${String(sel??'')===String(v)?'selected':''}>${esc(l)}</option>`;
   drawerShell(id ? 'Update ad' : 'Add ad', `
     <div class="grid-2"><div class="f"><label>Platform</label><select name="platform">${Object.entries(PLAT).map(([k,l])=>opt(k,l,a.platform)).join('')}</select></div>
       <div class="f"><label>Status</label><select name="status">${Object.entries(AD_ST).map(([k,l])=>opt(k,l,a.status)).join('')}</select></div></div>
     <div class="f"><label>Name, as in Ads Manager or Google Ads</label><input name="name" value="${esc(a.name||'')}"></div>
     <div class="grid-2"><div class="f"><label>Ad ID <span class="hint">optional</span></label><input name="ad_ref" value="${esc(a.ad_ref||'')}"></div>
-      <div class="f"><label>Post it promotes <span class="hint">optional</span></label><select name="post_id">${opt('', 'None (stands alone)', a.post_id||'')}${posts.map(p=>opt(p.id, (p.post_date?fmtShort(p.post_date)+' · ':'') + p.title, a.post_id)).join('')}</select></div></div>
+      <div class="f"><label>Post it promotes <span class="hint">optional</span></label><select name="post_id">${opt('', 'None (stands alone)', a.post_id||'')}${posts.map(p=>opt(p.id, (p.post_date?fmtShort(p.post_date)+' · ':'') + p.title + ' (' + STEP_LABEL[p.step] + ')', a.post_id)).join('')}</select></div></div>
     <div class="grid-3"><div class="f"><label>Daily budget, THB</label><input name="daily_budget" type="number" min="0" step="1" value="${a.daily_budget??''}"></div>
       <div class="f"><label>Start</label><input name="start_date" type="date" value="${esc(a.start_date||'')}"></div>
       <div class="f"><label>End</label><input name="end_date" type="date" value="${esc(a.end_date||'')}"></div></div>

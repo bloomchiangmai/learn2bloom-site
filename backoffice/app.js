@@ -1269,7 +1269,7 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
   const moreF = `
           <div class="field"><label>Qty</label><input class="input" name="qty" type="number" step="0.01" min="0.01" value="${esc(v.qty)}" required></div>
           <div class="field"><label>Document</label><select class="input" name="doc_type"><option value="">Choose</option>${Object.entries(DOCT).map(([k, l]) => `<option value="${k}" ${k === v.doc_type ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
-          <div class="field"><label>Withholding tax</label><div class="row" style="gap:6px;flex-wrap:nowrap"><select class="input" name="wht_rate" style="width:96px">${[['', 'None'], ['1', '1%'], ['2', '2%'], ['3', '3%'], ['5', '5%']].map(([k, l]) => `<option value="${k}" ${String(v.wht_rate ?? '') === k || (k && Number(v.wht_rate) === Number(k)) ? 'selected' : ''}>${l}</option>`).join('')}</select><input class="input" type="number" step="0.01" min="0" name="wht_amount" value="${v.wht_amount ?? ''}" placeholder="amount"></div><span class="hint" id="whthint">1% transport · 2% advertising · 3% services, contract work · 5% rent</span></div>
+          <div class="field"><label>Withholding tax</label><div class="row" style="gap:6px;flex-wrap:nowrap"><select class="input" name="wht_rate" style="width:96px">${[['', 'None'], ['1', '1%'], ['2', '2%'], ['3', '3%'], ['5', '5%']].map(([k, l]) => `<option value="${k}" ${String(v.wht_rate ?? '') === k || (k && Number(v.wht_rate) === Number(k)) ? 'selected' : ''}>${l}</option>`).join('')}</select><input class="input" type="number" step="0.01" min="0" name="wht_amount" value="${v.wht_amount ?? ''}" placeholder="WHT amount"></div><span class="hint" id="whthint">1% transport · 2% advertising · 3% services, contract work · 5% rent</span></div>
           <div class="field"><label>Accounting code (optional)</label><input class="input mono" name="accounting_code" value="${esc(v.accounting_code)}"></div>
           <div class="field"><label>Currency on receipt</label><select class="input" name="currency">${['THB', 'USD', 'HKD', 'SGD', 'CNY', 'EUR', 'GBP', 'JPY'].map((c) => `<option ${c === v.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
           <div class="field" id="origf"><label>Amount on receipt</label><input class="input" name="original_amount" type="number" step="0.01" min="0" value="${esc(v.original_amount)}"><span class="hint">Amount in the receipt's currency. The THB above is worked out from the exchange rate.</span></div>
@@ -1389,7 +1389,9 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
     setTimeout(mlShow, 0);
   }
   // WHT: the amount paid is what the vendor received (after WHT), so WHT = paid x rate / (100 - rate). Editable.
-  const whtCalc = () => { const r = Number(f.wht_rate?.value || 0); if (!f.wht_amount) return; if (!r) { f.wht_amount.value = ''; f.wht_amount.disabled = true; return; } f.wht_amount.disabled = false; if (f.wht_amount.dataset.manual) return; const a = Number(f.amount.value || 0); f.wht_amount.value = a ? (Math.round((a * r / (100 - r)) * 100) / 100).toFixed(2) : ''; };
+  // Withholding tax: recorded exactly as the staff member types it (rate and amount). Nothing is worked out here;
+// the accountant settles it (deducted from the supplier or paid on top by the company).
+  const whtCalc = () => { const r = Number(f.wht_rate?.value || 0); if (!f.wht_amount) return; if (!r) { f.wht_amount.value = ''; f.wht_amount.disabled = true; return; } f.wht_amount.disabled = false; };
   if (f.wht_rate) { f.wht_rate.addEventListener('change', () => { delete f.wht_amount.dataset.manual; whtCalc(); }); f.amount.addEventListener('input', whtCalc); f.wht_amount.addEventListener('input', () => { f.wht_amount.dataset.manual = '1'; }); if (f.wht_amount.value) f.wht_amount.dataset.manual = '1'; whtCalc(); }
   const close = () => back.remove();
   back.querySelectorAll('[data-x]').forEach((b) => b.onclick = close);
@@ -2347,9 +2349,9 @@ async function pageFA(id) {
       ['Details', details(i), i.payment_method === 'kbiz' ? 'KBIZ: leave empty' : ''],
       ['Description', [i.item, i.purpose].filter(Boolean).join(', '), ''],
       ['Category', cat.v, cat.note],
-      ['Amount', money(i.amount), i.wht_rate ? 'paid to the vendor, after WHT' : ''],
+      ['Amount', money(i.amount), i.wht_rate ? 'as entered by staff' : ''],
       ['VAT', i.vat_amount ? money(i.vat_amount) : '', i.vat_amount ? '' : 'none'],
-      ['WHT', i.wht_rate ? `${Number(i.wht_rate)}% · ${money(i.wht_amount)}` : '', i.wht_rate ? `bill total before WHT: ${money(Number(i.amount) + Number(i.wht_amount || 0))}` : 'none'],
+      ['WHT', i.wht_rate ? `${Number(i.wht_rate)}%${i.wht_amount != null ? ' · ' + money(i.wht_amount) : ''}` : '', i.wht_rate ? 'as entered by staff; the accountant settles it' : 'none'],
       ['Paid by', PAY[i.payment_method] || '', ''],
       ['Document', DOCT[i.doc_type] || '', i.doc_type ? '' : 'not set'],
     ];

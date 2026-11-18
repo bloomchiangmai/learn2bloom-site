@@ -1295,6 +1295,7 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
     <div class="modal-body"><div class="editor">
       <div class="preview" id="pv"></div>
       <form class="form" id="ef">
+        ${item?.return_note ? `<div class="banner bad" style="font-size:13px;margin-bottom:10px"><b>Approver:</b> ${esc(item.return_note)}${item.staff_reply ? `<div class="faint" style="margin-top:4px">Your reply: ${esc(item.staff_reply)}</div>` : ''}</div>` : ''}
         <div class="grid-form">
           <div class="field"><label>Invoice date</label><input class="input" type="date" name="invoice_date" value="${esc(v.invoice_date)}" required></div>
           <div class="field"><label>Category</label><select class="input" name="category_id" required><option value="">Choose</option>${cats.map((c) => `<option value="${c.id}" ${c.id === v.category_id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>

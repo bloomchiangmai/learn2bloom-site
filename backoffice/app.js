@@ -1269,7 +1269,7 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
   const moreF = `
           <div class="field"><label>Qty</label><input class="input" name="qty" type="number" step="0.01" min="0.01" value="${esc(v.qty)}" required></div>
           <div class="field"><label>Document</label><select class="input" name="doc_type"><option value="">Choose</option>${Object.entries(DOCT).map(([k, l]) => `<option value="${k}" ${k === v.doc_type ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
-          <div class="field"><label>Withholding tax</label><div class="row" style="gap:6px;flex-wrap:nowrap"><select class="input" name="wht_rate" style="width:96px">${[['', 'None'], ['1', '1%'], ['2', '2%'], ['3', '3%'], ['5', '5%']].map(([k, l]) => `<option value="${k}" ${String(v.wht_rate ?? '') === k || (k && Number(v.wht_rate) === Number(k)) ? 'selected' : ''}>${l}</option>`).join('')}</select><input class="input" type="number" step="0.01" min="0" name="wht_amount" value="${v.wht_amount ?? ''}" placeholder="WHT amount"></div><span class="hint" id="whthint">1% transport · 2% advertising · 3% services, contract work · 5% rent</span></div>
+          <div class="field"><label>Withholding tax</label><div class="row" style="gap:6px;flex-wrap:nowrap"><select class="input" name="wht_rate" style="width:96px">${[['', 'None'], ['1', '1%'], ['2', '2%'], ['3', '3%'], ['5', '5%']].map(([k, l]) => `<option value="${k}" ${String(v.wht_rate ?? '') === k || (k && Number(v.wht_rate) === Number(k)) ? 'selected' : ''}>${l}</option>`).join('')}</select><input class="input" type="number" step="0.01" min="0" name="wht_amount" value="${v.wht_amount ?? ''}" placeholder="WHT amount"></div><span class="hint" id="whthint">1% transport · 2% advertising · 3% services, contract work · 5% rent</span><div class="wht-how" ${v.wht_rate ? '' : 'hidden'}><span class="faint">The tax was:</span><label><input type="radio" name="wht_top" value="0" ${v.wht_on_top === false ? 'checked' : ''}> deducted from the supplier</label><label><input type="radio" name="wht_top" value="1" ${v.wht_on_top === true ? 'checked' : ''}> paid on top by the company</label></div></div>
           <div class="field"><label>Accounting code (optional)</label><input class="input mono" name="accounting_code" value="${esc(v.accounting_code)}"></div>
           <div class="field"><label>Currency on receipt</label><select class="input" name="currency">${['THB', 'USD', 'HKD', 'SGD', 'CNY', 'EUR', 'GBP', 'JPY'].map((c) => `<option ${c === v.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
           <div class="field" id="origf"><label>Amount on receipt</label><input class="input" name="original_amount" type="number" step="0.01" min="0" value="${esc(v.original_amount)}"><span class="hint">Amount in the receipt's currency. The THB above is worked out from the exchange rate.</span></div>
@@ -1391,7 +1391,7 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
   // WHT: the amount paid is what the vendor received (after WHT), so WHT = paid x rate / (100 - rate). Editable.
   // Withholding tax: recorded exactly as the staff member types it (rate and amount). Nothing is worked out here;
 // the accountant settles it (deducted from the supplier or paid on top by the company).
-  const whtCalc = () => { const r = Number(f.wht_rate?.value || 0); if (!f.wht_amount) return; if (!r) { f.wht_amount.value = ''; f.wht_amount.disabled = true; return; } f.wht_amount.disabled = false; };
+  const whtCalc = () => { const r = Number(f.wht_rate?.value || 0); if (!f.wht_amount) return; const how = back.querySelector('.wht-how'); if (how) how.hidden = !r; if (!r) { f.wht_amount.value = ''; f.wht_amount.disabled = true; return; } f.wht_amount.disabled = false; };
   if (f.wht_rate) { f.wht_rate.addEventListener('change', () => { delete f.wht_amount.dataset.manual; whtCalc(); }); f.amount.addEventListener('input', whtCalc); f.wht_amount.addEventListener('input', () => { f.wht_amount.dataset.manual = '1'; }); if (f.wht_amount.value) f.wht_amount.dataset.manual = '1'; whtCalc(); }
   const close = () => back.remove();
   back.querySelectorAll('[data-x]').forEach((b) => b.onclick = close);
@@ -1839,6 +1839,7 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
     const err = back.querySelector('#eerr'); err.textContent = '';
     if (!f.reportValidity()) return;
     if (!all().length) { err.textContent = 'Attach at least 1 receipt.'; return; }
+    if (f.wht_rate?.value && !f.querySelector('[name="wht_top"]:checked')) { err.textContent = 'Withholding tax: choose whether it was deducted from the supplier or paid on top by the company.'; back.querySelector('.ef-more')?.setAttribute('open', ''); return; }
     const d = Object.fromEntries(new FormData(f));
     const row = {
       report_id: report.id, invoice_date: d.invoice_date, item: d.item.trim(), category_id: d.category_id,
@@ -1849,7 +1850,7 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
       accounting_code: d.accounting_code.trim() || null, currency: d.currency,
       doc_type: d.doc_type || null, ...(d.merchant != null ? { merchant: d.merchant.trim() || null } : {}),
       vat_amount: d.vat_amount === '' || d.vat_amount == null ? null : Number(d.vat_amount),
-      wht_rate: d.wht_rate ? Number(d.wht_rate) : null, wht_amount: d.wht_rate && d.wht_amount !== '' && d.wht_amount != null ? Number(d.wht_amount) : null,
+      wht_rate: d.wht_rate ? Number(d.wht_rate) : null, wht_on_top: d.wht_rate ? d.wht_top === '1' : null, wht_amount: d.wht_rate && d.wht_amount !== '' && d.wht_amount != null ? Number(d.wht_amount) : null,
       original_amount: d.currency === 'THB' ? null : (d.original_amount ? Number(d.original_amount) : null),
       exchange_rate: d.currency !== 'THB' && d.original_amount && Number(d.amount) ? Math.round((Number(d.amount) / Number(d.original_amount)) * 1e6) / 1e6 : null,
     };
@@ -2351,7 +2352,7 @@ async function pageFA(id) {
       ['Category', cat.v, cat.note],
       ['Amount', money(i.amount), i.wht_rate ? 'as entered by staff' : ''],
       ['VAT', i.vat_amount ? money(i.vat_amount) : '', i.vat_amount ? '' : 'none'],
-      ['WHT', i.wht_rate ? `${Number(i.wht_rate)}%${i.wht_amount != null ? ' · ' + money(i.wht_amount) : ''}` : '', i.wht_rate ? 'as entered by staff; the accountant settles it' : 'none'],
+      ['WHT', i.wht_rate ? `${Number(i.wht_rate)}%${i.wht_amount != null ? ' · ' + money(i.wht_amount) : ''}` : '', i.wht_rate ? `${i.wht_on_top === true ? 'paid on top by the company' : i.wht_on_top === false ? 'deducted from the supplier' : 'not said'}, as entered by staff; the accountant settles it` : 'none'],
       ['Paid by', PAY[i.payment_method] || '', ''],
       ['Document', DOCT[i.doc_type] || '', i.doc_type ? '' : 'not set'],
     ];
@@ -5260,7 +5261,7 @@ async function pageFAExport() {
     const pjName = r.form_type === 'project' ? (pr?.code || '') : `BCMEXP${r.period_month.slice(2, 4)}${r.period_month.slice(5, 7)}`;
     const vat = Number(i.vat_amount || 0), amt = Number(i.amount || 0), wr = Number(i.wht_rate || 0);
     const problems = [!v ? (sup ? miss(sup) : 'no supplier on the line') : '', !code ? `no FlowAccount code for ${c.name || 'category'}` : code && !AC[code] ? `code ${code} not in FlowAccount` : ''].filter(Boolean);
-    return { i, n, problems, cols: [dmy2(i.invoice_date), '', '', `${r.ref_no}-${String(n + 1).padStart(2, '0')}`, PJ.has(pjName) ? pjName : '', (i.purpose || '').slice(0, 255), (i.item || '').slice(0, 1500), AC[code] || code || '', 1, '', (Math.round((amt - vat) * 100) / 100).toFixed(2), '', vat > 0 ? '7%' : 'No VAT (N/A)', v ? v.label : sup, '', '', '', '', pm[i.payment_method] ? dmy2(r.paid_at || i.invoice_date) : '', pm[i.payment_method] || '', wr ? (v?.contact_type === 'Corporation' ? 'P.N.D.53' : 'P.N.D.3') : '', wr ? '6. Others (Please specify)' : '', wr ? (WHTD[wr] || 'ค่าบริการ') : '', wr ? `${wr}%` : '', '', `${P[r.staff_id] || ''} · ${r.ref_no}`] };
+    return { i, n, problems, cols: [dmy2(i.invoice_date), '', '', `${r.ref_no}-${String(n + 1).padStart(2, '0')}`, PJ.has(pjName) ? pjName : '', (i.purpose || '').slice(0, 255), (i.item || '').slice(0, 1500), AC[code] || code || '', 1, '', (Math.round((wr && i.wht_on_top ? (amt - vat) / (1 - wr / 100) : amt - vat) * 100) / 100).toFixed(2), '', vat > 0 ? '7%' : 'No VAT (N/A)', v ? v.label : sup, '', '', '', '', pm[i.payment_method] ? dmy2(r.paid_at || i.invoice_date) : '', pm[i.payment_method] || '', wr ? (v?.contact_type === 'Corporation' ? 'P.N.D.53' : 'P.N.D.3') : '', wr ? '6. Others (Please specify)' : '', wr ? (WHTD[wr] || 'ค่าบริการ') : '', wr ? `${wr}%` : '', '', `${P[r.staff_id] || ''} · ${r.ref_no}${wr ? (i.wht_on_top ? ` · WHT ${wr}% paid on top by the company, paid ${money(amt)}` : ' · WHT deducted from the supplier') : ''}`] };
   });
   const all = list.map((r) => ({ r, rows: rowsFor(r) }));
   // Company card charges finished on the Company card page with an attached file (not on any staff form)

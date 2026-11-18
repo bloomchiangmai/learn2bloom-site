@@ -1089,3 +1089,5 @@ table.roster:not(.ro-phone) th.ro-stick { width: 132px; }
 .pf-note { max-width: 900px; margin: 12px auto 0; padding: 0 20px; display: grid; gap: 6px; font-size: 13px; }
 .pf-note .faint { font-weight: 400; margin-left: 6px; }
 @media print { .pf-note { display: none !important; } }
+.wht-how:not([hidden]) { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin-top: 6px; font-size: 13px; }
+.wht-how label { display: flex; gap: 6px; align-items: center; color: var(--ink); }

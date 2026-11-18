@@ -1292,7 +1292,11 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
       const v2 = f.merchant.value.trim(), known = v2 && S.faVendorSet.has(v2.toLowerCase());
       if (['receipt_form', 'cash_bill'].includes(f.doc_type?.value) || f.mileage?.checked) { box.innerHTML = ''; h.textContent = ''; return; }
       h.textContent = known ? (raw && v2 !== raw ? `Matched from receipt (receipt says "${raw}"). Change if wrong.` : '') : v2 ? 'Not in the list yet. Pick one above or add it as a new supplier.' : 'Pick a supplier from the list (needed before submitting).';
-      if (known || !v2) { box.innerHTML = ''; return; }
+      if (known || !v2) { box.innerHTML = ''; box.dataset.sig = ''; return; }
+      // leaving the box fires "change": redraw only when the name really changed, so a click on
+      // "Add as new supplier" (or the half-filled New supplier form) is not swept away
+      if (box.dataset.sig === v2 && box.innerHTML) return;
+      box.dataset.sig = v2;
       const sim = similarSuppliers(v2).filter((x) => x.toLowerCase() !== v2.toLowerCase());
       box.innerHTML = `${sim.length ? `<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><span class="faint" style="font-size:12px">Did you mean</span>${sim.map((x) => `<button type="button" class="btn small" data-use="${esc(x)}">${esc(x)}</button>`).join('')}</div>` : ''}<button type="button" class="btn small" id="favadd" style="margin-top:6px">+ Add "${esc(v2)}" as a new supplier</button>`;
       box.querySelectorAll('[data-use]').forEach((b) => (b.onclick = () => { f.merchant.value = b.dataset.use; vh(); }));
@@ -1305,7 +1309,7 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
           <div class="field full"><label>Address <span class="faint">(if on the bill)</span></label><textarea class="input" id="nvaddr" rows="2" placeholder="Number, road, district, province, postcode"></textarea></div>
           <div class="field"><label>Phone number <span class="faint">(if on the bill)</span></label><input class="input mono" id="nvphone" inputmode="tel" placeholder="053 123 456"></div></div>
           <div class="error" id="nverr"></div><div class="row" style="justify-content:flex-end;margin-top:8px"><button type="button" class="btn ghost small" id="nvx">Cancel</button><button type="button" class="btn primary small" id="nvok">Add supplier</button></div></div>`;
-        box.querySelector('#nvx').onclick = vh;
+        box.querySelector('#nvx').onclick = () => { box.dataset.sig = ''; vh(); };
         box.querySelector('#nvok').onclick = async () => {
           const name = box.querySelector('#nvname').value.trim(), tax = box.querySelector('#nvtax').value.replace(/\D/g, ''), err = box.querySelector('#nverr');
           if (!name) { err.textContent = 'Enter the name.'; return; }
@@ -5124,13 +5128,18 @@ async function pageFALists() {
 // Review › Send to FlowAccount: one CSV per month in FlowAccount's import format, one document per receipt line
 async function pageFAExport() {
   const key = params().m || '';
-  const reps = must(await sb.from('expense_reports').select('*').in('status', ['approved', 'paid']).order('period_month', { ascending: false }));
-  const cardSt = must(await sb.from('card_statements').select('id, period_month').eq('status', 'ready'));
-  let kpAll = must(await sb.from('kbiz_payments').select('*, kbiz_docs(*)').eq('admin_only', false));
+  if (key) await sb.rpc('assign_fa_refs', { p_month: key + '-01' });
+  const [reps, cardSt, kp0] = await Promise.all([
+    sb.from('expense_reports').select('*').in('status', ['approved', 'paid']).order('period_month', { ascending: false }).then(must),
+    sb.from('card_statements').select('id, period_month').eq('status', 'ready').then(must),
+    sb.from('kbiz_payments').select('period_month').eq('admin_only', false).then(must), // only for the month list
+  ]);
+  let kpAll = kp0;
   const months = [...new Set([...reps.map((r) => r.period_month.slice(0, 7)), ...cardSt.map((x) => x.period_month.slice(0, 7)), ...kpAll.map((x) => x.period_month.slice(0, 7))])].sort().reverse();
   const mk = key || months[0] || new Date(Date.now() + 7 * 36e5).toISOString().slice(0, 7); // empty back office: this month
   // Fixed references (BILLyymmA, CARDyymmA): given once, never move, so paper and FlowAccount always agree
-  if (mk) { await sb.rpc('assign_fa_refs', { p_month: mk + '-01' }); kpAll = must(await sb.from('kbiz_payments').select('*, kbiz_docs(*)').eq('admin_only', false)); }
+  // bank transfers with their files: only this month and the one before (for "Change"), not every month
+  if (mk) { if (!key) await sb.rpc('assign_fa_refs', { p_month: mk + '-01' }); kpAll = must(await sb.from('kbiz_payments').select('*, kbiz_docs(*)').eq('admin_only', false).gte('period_month', shiftMonth(mk, -1) + '-01').lt('period_month', shiftMonth(mk, 1) + '-01')); }
   const stIds = cardSt.filter((x) => x.period_month.slice(0, 7) === mk).map((x) => x.id);
   const cardLines = stIds.length ? must(await sb.from('card_charges').select('*').in('statement_id', stIds).or('doc_path.not.is.null,no_doc.eq.true').is('item_id', null).not('merchant', 'is', null).order('trans_date')).filter((c) => c.account_code || c.category_id) : [];
   const list = reps.filter((r) => r.period_month.slice(0, 7) === mk);
@@ -5201,7 +5210,7 @@ async function pageFAExport() {
   if (unknown.size) {
     const have = new Set(must(await sb.from('fa_new_vendors').select('name')).map((x) => vKey(x.name)));
     const add = [...unknown.entries()].filter(([k]) => !have.has(k)).map(([, name]) => ({ name, business_type: /(co\.?,?\s*ltd|company|limited|inc\.?|corp|part|บริษัท|ห้างหุ้นส่วน|หจก|จำกัด)/i.test(name) ? 'Corporation' : 'Individual', created_by: S.user.id, created_by_name: 'Back office (from the lines)' }));
-    for (const r of add) await sb.from('fa_new_vendors').insert(r);
+    if (add.length) await sb.from('fa_new_vendors').insert(add); // all in one go
   }
   const newV = must(await sb.from('fa_new_vendors').select('*').is('exported_at', null).order('created_at'));
   // Month close: Status, Spending, FlowAccount tabs
@@ -5273,12 +5282,14 @@ async function pageFAExport() {
     const nReady = ready.length + cardReady.length;
     const waitSup = bad.filter((y) => y.problems.some((t) => /is new/.test(t)));
     const newNames = newV.map((x) => x.name);
-    const nvMissing = (x) => [!String(x.name || '').trim() ? 'name' : '', !/^\d{13}$/.test(String(x.tax_id || '').replace(/\D/g, '')) ? 'Tax ID' : '', String(x.address || '').trim().length < 10 ? 'address' : '', String(x.phone || '').replace(/\D/g, '').length < 9 ? 'phone' : ''].filter(Boolean);
+    // Only the name is required (as in FlowAccount's own import). Tax ID, address and phone are optional;
+    // a Tax ID that is typed must be 10 or 13 digits.
+    const nvMissing = (x) => { const t = String(x.tax_id || '').replace(/\D/g, ''); return [!String(x.name || '').trim() ? 'name' : '', t && t.length !== 13 && t.length !== 10 ? 'Tax ID (10 or 13 digits)' : ''].filter(Boolean); };
     var nvDone = newV.filter((x) => !nvMissing(x).length);
     body = `${noLists ? '<div class="banner warn" style="margin-bottom:12px">FlowAccount lists are not uploaded yet. Go to Settings › FlowAccount and upload FlowAccount\'s template first.</div>' : ''}
     <div class="card mc-step"><span class="mc-n ${newV.length ? '' : 'ok'}">${newV.length ? '1' : '✓'}</span><div style="flex:1;min-width:0">
       <b>New suppliers file</b> ${newV.length ? `<span class="ln-p ${nvDone.length === newV.length ? 'ok' : 'warn'}">${nvDone.length} of ${newV.length} complete</span>` : '<span class="ln-p ok">Nothing new</span>'}
-      <div class="faint" style="font-size:12px;margin-top:4px">${newV.length ? 'Fill in each new supplier: name, type, Tax ID (13 digits), address and phone. Only complete suppliers go into the file; their expense lines follow once they are in FlowAccount.' : 'No new suppliers to add to FlowAccount.'}</div>
+      <div class="faint" style="font-size:12px;margin-top:4px">${newV.length ? 'Check each new supplier\'s name and type. Tax ID, address and phone are optional; add the Tax ID when you have it, it is needed to claim VAT on a tax invoice.' : 'No new suppliers to add to FlowAccount.'}</div>
       ${newV.length ? `<div class="nv-list">${newV.map((x) => { const m = nvMissing(x); return `<details class="nv-row" data-nv="${x.id}"><summary class="nv-s"><b>${esc(x.name)}</b><span class="faint">${x.business_type === 'Corporation' ? 'Company' : 'Person'}</span><span class="${m.length ? 'ln-p warn' : 'ln-p ok'}">${m.length ? 'Missing: ' + m.join(', ') : 'Complete'}</span><span class="ln-chev">›</span></summary>
         <div class="nv-g">
           <label><span>Business name</span><input class="input" data-k="name" value="${esc(x.name)}"></label>
@@ -5316,18 +5327,18 @@ async function pageFAExport() {
     const CH = ['Contact ID', 'Business Name*', 'Contact Type*', 'Business Type*', 'Tax ID', 'Branch Name', 'Branch Code', 'Address', 'Zip Code', 'Shipping Info', 'Phone', 'Fax Number', 'Website', 'Contact Name', 'Email', 'Mobile', 'Credit (Days)', 'Bank', 'Account Name', 'Account Number', 'Bank Branch Code', 'Bank Branch Name', 'Account Type', 'Notes'];
     nvdl.onclick = () => {
       const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-      const csv = [CH.map(q).join(',')].concat(newV.filter((x) => /^\d{13}$/.test(String(x.tax_id || '').replace(/\D/g, '')) && String(x.address || '').trim().length >= 10 && String(x.phone || '').replace(/\D/g, '').length >= 9 && String(x.name || '').trim()).map((x) => [`BO-${x.id}`, x.name, 'Supplier', x.business_type, x.tax_id || '', x.business_type === 'Corporation' ? 'Head Office' : '', x.business_type === 'Corporation' ? '00000' : '', x.address || '', (String(x.address || '').match(/\b(\d{5})\s*$/) || [])[1] || '', '', x.phone || '', '', '', '', '', '', '', '', '', '', '', '', '', `Added in back office by ${x.created_by_name || ''}`].map(q).join(','))).join('\r\n');
+      const csv = [CH.map(q).join(',')].concat(nvDone.map((x) => [`BO-${x.id}`, x.name, 'Supplier', x.business_type, x.tax_id || '', x.business_type === 'Corporation' ? 'Head Office' : '', x.business_type === 'Corporation' ? '00000' : '', x.address || '', (String(x.address || '').match(/\b(\d{5})\s*$/) || [])[1] || '', '', x.phone || '', '', '', '', '', '', '', '', '', '', '', '', '', `Added in back office by ${x.created_by_name || ''}`].map(q).join(','))).join('\r\n');
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })); a.download = `flowaccount-new-suppliers-${iso(new Date())}.csv`; a.click();
     };
     document.getElementById('nvdone').onclick = async (e) => {
       if (!confirmInline(e.target, 'Imported in FlowAccount?')) return;
-      try { await run(async () => must(await sb.rpc('fa_new_vendors_added', { p_ids: newV.filter((x) => /^\d{13}$/.test(String(x.tax_id || '').replace(/\D/g, '')) && String(x.address || '').trim().length >= 10 && String(x.phone || '').replace(/\D/g, '').length >= 9).map((x) => x.id) })), 'Suppliers added to the FlowAccount list'); } catch { return; }
+      try { await run(async () => must(await sb.rpc('fa_new_vendors_added', { p_ids: nvDone.map((x) => x.id) })), 'Suppliers added to the FlowAccount list'); } catch { return; }
       await loadFAVendors(); pageFAExport();
     };
     main().querySelectorAll('[data-nvs]').forEach((b) => (b.onclick = async () => {
       const row = main().querySelector(`[data-nv="${b.dataset.nvs}"]`), g = (k) => row.querySelector(`[data-k="${k}"]`).value.trim();
       const tax = g('tax_id').replace(/\D/g, '');
-      if (tax && !/^\d{13}$/.test(tax)) { toast('Tax ID must be 13 digits', true); return; }
+      if (tax && !/^(\d{10}|\d{13})$/.test(tax)) { toast('Tax ID must be 10 or 13 digits, or leave it blank', true); return; }
       try { await run(async () => must(await sb.from('fa_new_vendors').update({ name: g('name'), business_type: g('business_type'), tax_id: tax || null, address: g('address') || null, phone: g('phone') || null }).eq('id', b.dataset.nvs)), 'Saved'); } catch { return; }
       pageFAExport();
     }));

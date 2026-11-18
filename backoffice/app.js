@@ -15,7 +15,9 @@ const bloomHubCookieStorage = {
 const NAV = { ctl: new AbortController() };
 const navFetch = (url, opts = {}) => {
   const method = String(opts.method || 'GET').toUpperCase();
-  const p = (method !== 'GET' || !/\/rest\/v1\//.test(String(url)) || opts.signal) ? fetch(url, opts) : fetch(url, { ...opts, signal: NAV.ctl.signal });
+  // only reads asked for while a page is loading can be cancelled by moving to another page;
+  // reads made by a save or a click (a duplicate check while saving a line, say) always finish
+  const p = (method !== 'GET' || !/\/rest\/v1\//.test(String(url)) || opts.signal || !NAV.loading) ? fetch(url, opts) : fetch(url, { ...opts, signal: NAV.ctl.signal });
   // 401 from the database, files or receipt reading while signed in: the session has ended
   return p.then((r) => { if (r.status === 401 && !/\/auth\/v1\//.test(String(url))) sessionLost(); return r; });
 };
@@ -539,7 +541,8 @@ async function route() {
   const seq = ++ROUTE_SEQ;
   if (S.shownPath && S.shownPath !== curPath()) { NAV.ctl.abort(); NAV.ctl = new AbortController(); }
   if (S.user && S.profile) pageLoading();
-  await routeInner(seq);
+  NAV.loading = (NAV.loading || 0) + 1;
+  try { await routeInner(seq); } finally { NAV.loading = Math.max(0, NAV.loading - 1); }
   // an older, slower page finished after a newer one and drew over it: draw the page asked for again
   if (seq < ROUTE_DONE) { route(); return; }
   ROUTE_DONE = Math.max(ROUTE_DONE, seq);
@@ -1273,6 +1276,7 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
   // Petty cash: fields that are rarely needed sit under "More", opened when one of them is already filled in
   // Withholding tax: a new line starts with the choice this person made last time (they can change it)
   if (!item && v.wht_on_top == null) { try { const x = localStorage.getItem('bo_wht_top_' + S.user.id); v.wht_on_top = x === '1' ? true : x === '0' ? false : null; } catch { /* ignore */ } }
+  const whtLast = item ? null : sb.from('expense_items').select('wht_on_top, updated_at, expense_reports!inner(staff_id)').eq('expense_reports.staff_id', meId()).not('wht_on_top', 'is', null).order('updated_at', { ascending: false }).limit(1).then((r) => r.data?.[0]?.wht_on_top ?? null, () => null);
   const pcMore = report.form_type !== 'project';
   const moreOpen = Number(v.qty || 1) !== 1 || !!v.doc_type || !!Number(v.wht_rate || 0) || (v.currency && v.currency !== 'THB') || !!v.accounting_code;
   const moreF = `
@@ -1393,6 +1397,8 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
   // Withholding tax: recorded exactly as the staff member types it (rate and amount). Nothing is worked out here;
 // the accountant settles it (deducted from the supplier or paid on top by the company).
   const whtCalc = () => { const r = Number(f.wht_rate?.value || 0); if (!f.wht_amount) return; const how = back.querySelector('.wht-how'); if (how) how.hidden = !r; if (!r) { f.wht_amount.value = ''; f.wht_amount.disabled = true; return; } f.wht_amount.disabled = false; };
+  // a new line starts with this person's last choice (deducted or paid on top), until they pick themselves
+  if (whtLast) whtLast.then((top) => { if (top == null || back.querySelector('[name="wht_top"]:checked')) return; const r0 = back.querySelector(`[name="wht_top"][value="${top ? 1 : 0}"]`); if (r0) r0.checked = true; });
   if (f.wht_rate) { f.wht_rate.addEventListener('change', () => { delete f.wht_amount.dataset.manual; whtCalc(); }); f.amount.addEventListener('input', whtCalc); f.wht_amount.addEventListener('input', () => { f.wht_amount.dataset.manual = '1'; }); if (f.wht_amount.value) f.wht_amount.dataset.manual = '1'; whtCalc(); }
   const close = () => back.remove();
   back.querySelectorAll('[data-x]').forEach((b) => b.onclick = close);
@@ -3273,6 +3279,7 @@ function signatureDialog({ first = false, reason = '' } = {}) {
 }
 async function ensureSignature(what) {
   if (S.profile?.signature) return true;
+  try { const { data } = await sb.from('profiles').select('signature').eq('id', S.user.id).maybeSingle(); if (data?.signature) { S.profile.signature = data.signature; return true; } } catch { /* ask below */ }
   return !!(await signatureDialog({ reason: what === 'approve' ? 'Add your signature to approve. It is printed in "Approved by" on the form.' : 'Add your signature to submit. It is printed in "Signed by applicant" on the form.' }));
 }
 // Approvals dot: check every minute, when the app comes back to the front, and on every page change

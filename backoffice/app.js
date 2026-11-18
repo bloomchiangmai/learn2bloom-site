@@ -19,6 +19,8 @@ const navFetch = (url, opts = {}) => {
   return fetch(url, { ...opts, signal: NAV.ctl.signal });
 };
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { db: { schema: 'bo' }, auth: { storage: bloomHubCookieStorage, storageKey: 'bloom-hub-auth', persistSession: true, autoRefreshToken: true }, global: { fetch: navFetch } });
+// Background lists (suppliers, counts) belong to no page: never cancelled when moving page
+const KEEP = new AbortController().signal;
 // All 3 stages on: Expenses and Approvals, Time, Accounting.
 const STAGE = 3;
 const ORG = 'Bloom Chiangmai';
@@ -293,6 +295,13 @@ async function openViewer(path, mime, rot = 0) {
   lb.onclick = () => lb.remove();
   document.body.appendChild(lb);
 }
+// Escape closes the receipt viewer, or the top dialog through its own Cancel / Close
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || e.defaultPrevented) return;
+  const lbs = document.querySelectorAll('.lightbox'); if (lbs.length) { lbs[lbs.length - 1].remove(); return; }
+  const ms = document.querySelectorAll('.modal-back'); const top = ms[ms.length - 1];
+  top?.querySelector('[data-x], [data-no]')?.click();
+});
 document.addEventListener('click', (e) => {
   const t = e.target.closest('[data-tog]');
   if (t) { const body = t.nextElementSibling, open = body.hidden; document.querySelectorAll('.ln-body').forEach((b) => { b.hidden = true; b.parentElement.classList.remove('open'); }); body.hidden = !open; t.parentElement.classList.toggle('open', open); if (open) body.querySelector('input, select')?.focus({ preventScroll: true }); return; }
@@ -494,11 +503,11 @@ const PHONE_OK = ['/', '/home', '/capture', '/check', '/forms', '/expenses', '/h
 const phoneAllowed = (path) => PHONE_OK.includes(path) || path.startsWith('/report/') || path.startsWith('/ot/review/') || path.startsWith('/print/');
 // Pages load one at a time from the user's point of view: the page asked for last is the one that shows.
 let ROUTE_SEQ = 0, ROUTE_DONE = 0;
-const curPath = () => (location.hash || '').replace(/^#/, '').split('?')[0] || '/';
+const curPath = () => { const h = (location.hash || '').replace(/^#/, ''); const q = new URLSearchParams(h.split('?')[1] || ''); return (h.split('?')[0] || '/') + (q.get('u') ? '|u=' + q.get('u') : '') + (q.get('id') ? '|id=' + q.get('id') : ''); };
 function pageLoading() {
   const m = document.getElementById('main');
   if (!m || S.shownPath === curPath()) return; // same page with different options: keep it up
-  document.querySelectorAll('.side .nav a').forEach((a) => a.classList.toggle('on', (a.getAttribute('href') || '').replace(/^#/, '').split('?')[0] === curPath()));
+  document.querySelectorAll('.side .nav a').forEach((a) => a.classList.toggle('on', (a.getAttribute('href') || '').replace(/^#/, '').split('?')[0] === curPath().split('|')[0]));
   m.innerHTML = '<div class="pg-load" role="status" aria-label="Loading"><span class="spin"></span></div>';
   S.shownPath = null;
 }
@@ -1178,7 +1187,8 @@ async function pageExpenses() {
       document.getElementById('subany').onclick = () => { sub.dataset.ok = '1'; sub.dataset.armed = '1'; sub.click(); };
       return;
     }
-    if (!confirmInline(sub, 'Click again to submit')) return;
+    if (!sub.dataset.armed && !(await confirmBox({ title: 'Submit this form?', body: 'It goes for checking and approval. You can take it back to edit until someone approves it.' }))) return;
+    delete sub.dataset.armed;
     try {
       await run(async () => {
         if (inbox.length) must(await sb.from('receipts').update({ report_id: null }).in('id', inbox.map((r) => r.id)));
@@ -1189,6 +1199,20 @@ async function pageExpenses() {
   };
 }
 // 2-click confirm without browser dialogs
+// One click opens a small box that says what will happen; Submit or Cancel. Resolves true or false.
+function confirmBox({ title, body = '', ok = 'Submit' }) {
+  return new Promise((resolve) => {
+    const back = document.createElement('div'); back.className = 'modal-back';
+    back.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="max-width:420px"><div class="modal-head"><h2>${esc(title)}</h2></div>
+      <div class="modal-body" style="padding:16px 20px">${body ? `<p class="muted" style="margin:0">${body}</p>` : ''}</div>
+      <div class="modal-foot"><span></span><div class="row"><button class="btn ghost" data-no>Cancel</button><button class="btn primary" data-yes>${esc(ok)}</button></div></div></div>`;
+    const done = (v) => { back.remove(); resolve(v); };
+    back.querySelector('[data-no]').onclick = () => done(false);
+    back.querySelector('[data-yes]').onclick = () => done(true);
+    back.onclick = (e) => { if (e.target === back) done(false); };
+    document.body.appendChild(back); back.querySelector('[data-yes]').focus();
+  });
+}
 function confirmInline(btn, text = 'Click again to confirm') {
   if (btn.dataset.armed) return true;
   btn.dataset.armed = '1'; const old = btn.textContent; btn.textContent = text;
@@ -3194,9 +3218,9 @@ async function pollPending() {
   pollMessages();
   if (!isReviewer()) return;
   await loadOverLimit();
-  const { data: subs } = await sb.from('expense_reports').select('id, staff_id, submitted_at, status, form_type, project_id, fa_entered_at').in('status', ['submitted', 'checked', 'approved', 'paid']);
+  const { data: subs } = await sb.from('expense_reports').select('id, staff_id, submitted_at, status, form_type, project_id, fa_entered_at').in('status', ['submitted', 'checked', 'approved', 'paid']).abortSignal(KEEP);
   const waiting = (subs || []).filter(myTodo);
-  const { data: ots } = isAdmin() || isHR() ? await sb.from('ot_forms').select('id, staff_id, submitted_at, seen_at').eq('status', isAdmin() && !isHR() ? 'checked' : 'submitted').neq('staff_id', S.user.id) : { data: [] };
+  const { data: ots } = isAdmin() || isHR() ? await sb.from('ot_forms').select('id, staff_id, submitted_at, seen_at').eq('status', isAdmin() && !isHR() ? 'checked' : 'submitted').neq('staff_id', S.user.id).abortSignal(KEEP) : { data: [] };
   const otWait = (ots || []).filter((r) => r.staff_id !== S.user.id || isAdmin());
   const otNew = otWait.filter((r) => !r.seen_at || r.seen_at < r.submitted_at).length;
   const unseen = (await unseenIds(waiting)).size + otNew;
@@ -3482,7 +3506,7 @@ async function pageOT() {
   const sub = document.getElementById('otsub');
   if (sub) sub.onclick = async () => {
     if (!(await ensureSignature('submit'))) return;
-    if (!confirmInline(sub, 'Click again to submit')) return;
+    if (!(await confirmBox({ title: `Submit your ${per.label} timesheet?`, body: 'It goes for checking and approval. You can take it back to edit until someone approves it.' }))) return;
     try { await run(async () => must(await sb.from('ot_forms').update({ status: 'submitted' }).eq('id', form.id)), 'Submitted for approval'); } catch { return; }
     reload();
   };
@@ -5020,8 +5044,9 @@ async function pagePayroll() {
 // FlowAccount supplier names for the Supplier box (loaded once, in the background)
 async function loadFAVendors() {
   const out = []; let from = 0;
-  for (;;) { const { data } = await sb.from('fa_vendors').select('label').order('label').range(from, from + 999); if (!data?.length) break; out.push(...data.map((x) => x.label)); if (data.length < 1000) break; from += 1000; }
-  const { data: nv } = await sb.from('fa_new_vendors').select('name, created_by_name').is('exported_at', null);
+  for (;;) { const { data, error } = await sb.from('fa_vendors').select('label').order('label').range(from, from + 999).abortSignal(KEEP); if (error) return; if (!data?.length) break; out.push(...data.map((x) => x.label)); if (data.length < 1000) break; from += 1000; }
+  const { data: nv, error: e2 } = await sb.from('fa_new_vendors').select('name, created_by_name').is('exported_at', null).abortSignal(KEEP);
+  if (e2) return;
   S.faNew = nv || [];
   S.faVendors = [...out, ...S.faNew.map((x) => x.name)]; S.faVendorSet = new Set(S.faVendors.map((x) => x.toLowerCase()));
 }
@@ -5341,7 +5366,7 @@ async function pageRoster() {
   let minOn = 2; try { minOn = Number(localStorage.getItem('bo_roster_min')) || 2; } catch { /* ignore */ }
   const label = span > 1 ? `${pers[0].label} to ${pers[span - 1].label}` : first.label;
   if (location.hash !== pageHash) return;
-  shell(`<div class="page-head"><div><h1>Roster · ${esc(label)}</h1><p>Everyone's days, view only. Leave and days off come from each person's Timesheet. Click a day in your row to open it there.</p></div>
+  shell(`<div class="page-head"><div><h1>Roster · ${esc(label)}</h1><p>Everyone's days, view only. Leave and days off come from each person's Timesheet.${S.profile?.no_timesheet ? '' : ' Click a day in your row to open it there.'}</p></div>
     <div class="ro-nav" id="rospan">${[1, 2, 3].map((n) => `<button class="${n === span ? 'on' : ''}" data-n="${n}">${n}</button>`).join('<span>·</span>')}<span class="faint">months</span><a href="#/roster?p=${first.prev}" title="Earlier periods">‹ Earlier</a><a href="#/roster" title="Back to this month">Today</a><a href="#/roster?p=${first.next}" title="Later">›</a><button class="btn small" id="roprint" style="margin-left:10px">Preview</button></div></div>
   ${parts.map((x) => x.html).join('')}
   <div class="row ro-lg"><span><i class="ro-c ro-w ro-past"></i>Past</span><span><i class="ro-c ro-w"></i>Working</span><span><i class="ro-c ro-l"></i>Leave (AL, Sick, Pers, Repl)</span><span><i class="ro-c ro-o"></i>Day off</span><span><i class="ro-c ro-ho"></i>Holiday</span>${appr ? `<span style="margin-left:auto">Warn when fewer than <input class="input" id="romin" type="number" min="0" value="${minOn}" style="width:56px;padding:2px 6px;display:inline-block"> are working</span>` : ''}</div>`);

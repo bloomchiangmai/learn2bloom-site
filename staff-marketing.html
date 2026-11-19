@@ -315,6 +315,7 @@ div.tile{cursor:default;}
 details.fold{border-top:1px solid #EFEAE0;margin-top:14px;padding-top:12px;} details.fold>summary{cursor:pointer;list-style:none;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;} details.fold>summary::-webkit-details-marker{display:none;}
 .fold-t{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#534AB7;font-weight:700;} .fold-t::before{content:'+ ';} details[open]>summary .fold-t::before{content:'− ';} .fold-s{font-size:13px;color:#5F5E5A;} details.fold[open]>summary{margin-bottom:10px;}
 .box.needs{border-color:#EF9F27;}
+.dchip{position:relative;cursor:pointer;color:inherit;border-bottom:1px dashed #AFA9EC;white-space:nowrap;} .dchip:hover{border-bottom-style:solid;} .dchip input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;border:0;padding:0;}
 .st-plan{background:#EEEDFE;color:#3C3489;} .sm-l{font-size:12.5px;color:#6B6A64;} .f label.vid-up{cursor:pointer;text-transform:none;letter-spacing:0;font-size:12.5px;color:#534AB7;margin:0;}
 .lp{background:#F7F5F0;border-radius:10px;padding:12px 14px;margin:0 0 10px;display:grid;gap:8px;} .lp-cap{white-space:pre-wrap;font-size:13.5px;line-height:1.55;background:#fff;border-radius:8px;padding:10px 12px;max-height:260px;overflow:auto;} .lp-cap.th{font-size:13px;}
 .lp-a{display:flex;gap:8px;flex-wrap:wrap;align-items:center;} .lp-a input{flex:1;min-width:160px;padding:8px 10px;border-radius:8px;border:1px solid #E5E0D5;font:inherit;font-size:13px;} .lp-r{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13.5px;} .lp .meta{margin:0;font-size:12.5px;}
@@ -920,10 +921,24 @@ function render(){ closeDayMenu();
 }
 
 // ---------- Lines ----------
+// Tap the date to move a post: the device's own date picker opens, the pick saves at once, Undo follows.
+const canMove = p => openStep(p) && canEdit && (!!TEAM[ME] || isAdmin());
+function dateChip(p, text){
+  if(!canMove(p)) return esc(text);
+  return `<label class="dchip" title="Change the date" onclick="event.stopPropagation()">${esc(text)}<input type="date" value="${esc(p.post_date||'')}" aria-label="Change the posting date" onclick="event.stopPropagation();try{this.showPicker()}catch(e){}" onchange="moveDate('${p.id}', this.value)"></label>`;
+}
+async function moveDate(id, v, quiet){
+  const p = POSTS.find(x=>x.id===id); if(!p || !v || v===p.post_date) return;
+  const was = p.post_date;
+  const r = await act('move_date', id, { post_date: v }); if(!r) return;
+  p.post_date = v; delete EVENTS[id];
+  const y = window.scrollY; render(); window.scrollTo(0, y);
+  if(!quiet && was) undoToast('Moved to ' + fmtShort(v) + '.', () => moveDate(id, was, true));
+}
 function line(p, showWho){
   const late = isLate(p);
   return `<div class="wl" onclick="go('post/${p.id}')">
-    <span class="${late?'late-d':'muted'}">${p.post_date?fmtShort(p.post_date):'No date'}</span>
+    <span class="${late?'late-d':'muted'}">${dateChip(p, p.post_date?fmtShort(p.post_date):'No date')}</span>
     <span class="pt"><span class="ptt">${esc(p.title)}</span>${p.label?`<span class="fmt">${esc(p.label)}</span>`:''}</span>
     <span>${stepChip(p)}</span>
     <span class="wl-due ${late?'late-d':'muted'}">${showWho ? esc(ownerName(p)||'Done') : esc(dueText(p))}</span>
@@ -1317,7 +1332,7 @@ async function renderPost(el){
   <div class="box" style="padding:20px 22px">
     <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px">
       <div><h2 style="font-family:Georgia,serif;font-size:22px;font-weight:700">${esc(p.title)}</h2>
-        <p class="meta" style="font-size:13px;margin-top:2px">${p.post_date?'Posts '+fmtShort(p.post_date):'No date yet'}${p.post_time?', '+esc(p.post_time):''} · Reviewer ${esc(nameOf(p.pic)||'not set')}${p.label?' · '+esc(p.label):''}${p.needs_thai?'':' · English only'}</p></div>
+        <p class="meta" style="font-size:13px;margin-top:2px">${dateChip(p, (p.post_date?'Posts '+fmtShort(p.post_date):'No date yet') + (p.post_time?', '+p.post_time:''))} · Reviewer ${esc(nameOf(p.pic)||'not set')}${p.label?' · '+esc(p.label):''}${p.needs_thai?'':' · English only'}</p></div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${openStep(p)&&dueOf(p)?`<span class="chip ${isLate(p)?'rust':''}">${esc(dueText(p))}</span>`:''}${stepChip(p)}${schedTag}${canTopic?`<button class="btn-outline sm" onclick="editTopic('${p.id}')">Edit topic</button><button class="btn-outline sm" style="color:#A23F1C" onclick="cancelPost('${p.id}')">Delete</button>`:''}</div>
     </div>
     <div class="stepbar">${bar}</div>

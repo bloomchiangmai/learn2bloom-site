@@ -607,6 +607,7 @@ const STEP_FG = {english:'#3C3489', thai:'#633806', review:'#0C447C', post:'#085
 let LABELS = [];
 const IMG_BUCKET = 'marketing-media';
 
+let BOTS = new Set();
 let POSTS = [], STAFF = {}, TEAM = {}, NO_ACCESS = new Set(), LEVEL = {}, EVENTS = {}, PLAN = null, DATA = {}, loaded = false;
 let canEdit = false, canDelete = false, ME = null, LANGS = {};
 // Item 86: managers kept informed see approved posts in My turn.
@@ -785,7 +786,7 @@ async function loadAll(){
   const [posts, staff, team, labels, ent, sch, spec, hid, ais, acc, ads, bud] = await Promise.all([
     sb.from('marketing_posts').select('*').order('post_date', {ascending:true, nullsFirst:false}),
     sb.from('staff').select('id,name,status'),
-    sb.from('marketing_team').select('staff_id,duty,langs,informed,fyi_read_at'),
+    sb.from('marketing_team').select('staff_id,duty,langs,informed,fyi_read_at,is_bot'),
     sb.from('marketing_labels').select('name,default_pic,sort').order('sort'),
     sb.from('marketing_entries').select('id,collection,data,updated_at,updated_by').neq('collection','content').order('created_at'),
     sb.rpc('mkt_school_dates'),
@@ -803,6 +804,7 @@ async function loadAll(){
   LANGS = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, t.langs || '']));
   INFORMED = Object.fromEntries((team.data||[]).map(t=>[t.staff_id, !!t.informed]));
   FYI_READ = ((team.data||[]).find(t=>t.staff_id===ME) || {}).fyi_read_at || null;
+  BOTS = new Set((team.data||[]).filter(t=>t.is_bot).map(t=>t.staff_id));
   await loadFyi();
   // Team members who cannot open the HQ (no Marketing edit). Unknown if the check failed.
   NO_ACCESS = new Set(((acc && acc.data) || []).filter(x=>!x.can_edit).map(x=>x.staff_id));
@@ -1251,7 +1253,8 @@ async function renderPost(el){
     sb.from('marketing_post_versions').select('id,field,body,source,actor,created_at').eq('post_id', id).order('created_at', {ascending:false}).then(({data})=>{ VERSIONS[id] = data || []; if(postId()===id && !dirty() && !AI_SUG) renderPost($('#view')); });
   }
   const mine = isMine(p), pic = p.pic === ME, adm = isAdmin() && openStep(p), bk = backupFor(p);
-  const W = isWriterOf(p), T = isTranslatorOf(p);
+  // Everyone on the marketing team can edit a Draft (and an approved post, which goes back for approval). Every edit is logged.
+  const W = isWriterOf(p) || !!TEAM[ME], T = isTranslatorOf(p);
   const canEn = (W && ['english','post'].includes(p.step)) || (pic && p.step==='review') || adm;
   const canTh = p.needs_thai && ((T && p.step==='thai') || adm);
   const canTags = (W && ['english','post'].includes(p.step)) || (pic && p.step==='review') || adm;
@@ -1270,7 +1273,7 @@ async function renderPost(el){
   const cur = {english:0, review:0, thai:1, post:1, posted:3}[p.step] ?? 0;
   const bar = stages.map(([l, who], i)=>`<span class="sb ${i<cur?'done':i===cur?'now':''}"><span class="sd">${i<cur?'&#10003;':i+1}</span>${l} · ${who}</span>`).join('<span class="sl"></span>');
   const imgs = (p.images||[]);
-  const canAct = mine || bk || adm;
+  const canAct = mine || bk || adm || (p.step==='english' && !!TEAM[ME] && !(p.writer===p.pic && p.pic!==ME));
   const asAdmin = !mine && !bk && adm ? ' <span class="adm">(as admin)</span>' : '';
   let actions = '';
   if(canAct){
@@ -2024,7 +2027,7 @@ function topicForm(p, withBrief){
 }
 // Item 91: people are name chips. First names; a small grey number shows posts in progress. Click again to clear.
 function chipField(name, label, sel, first, last){
-  const ids = members(), fn = id => { const f = firstName(STAFF[id].name); return ids.filter(x=>firstName(STAFF[x].name)===f).length > 1 ? STAFF[id].name : f; };
+  const ids = members().filter(id => name !== 'pic' || !BOTS.has(id)), fn = id => { const f = firstName(STAFF[id].name); return ids.filter(x=>firstName(STAFF[x].name)===f).length > 1 ? STAFF[id].name : f; };
   const chip = (v, text, extra, dis) => `<button type="button" class="nchip ${String(sel)===String(v)?'on':''}" data-f="${name}" data-v="${esc(v)}" ${dis?'disabled title="No HQ access yet"':''} onclick="pickChip(this)">${text}${extra||''}</button>`;
   let out = first ? chip(first[0], first[1]) + '<span class="nchip-sep"></span>' : '';
   out += ids.map(id => { const n = openLoad(id); return chip(id, esc(fn(id)), n ? `<span class="nchip-n"> · ${n} open</span>` : '', NO_ACCESS.has(id) && String(sel)!==id); }).join('');

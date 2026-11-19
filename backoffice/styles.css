@@ -31,7 +31,7 @@ h3 { font-size: 14px; }
 .faint { color: var(--ink-3); }
 .mono { font-family: var(--mono); font-size: 13px; }
 .num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
-.boot { padding: 40px; color: var(--ink-3); }
+.boot { padding: 40px; color: var(--ink-3); display: flex; gap: 10px; align-items: center; justify-content: center; min-height: 50vh; }
 [hidden] { display: none !important; }
 
 /* Layout */
@@ -1091,3 +1091,6 @@ table.roster:not(.ro-phone) th.ro-stick { width: 132px; }
 @media print { .pf-note { display: none !important; } }
 .wht-how:not([hidden]) { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin-top: 6px; font-size: 13px; }
 .wht-how label { display: flex; gap: 6px; align-items: center; color: var(--ink); }
+.cosw-btn { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; padding: 8px 10px; border: 1px solid var(--line, #e3dfd6); border-radius: 8px; background: var(--paper, #fff); color: var(--ink, #222); font-size: 13px; font-weight: 500; text-decoration: none; }
+.cosw-btn:hover { border-color: var(--ink-3, #8a867d); }
+.cosw-btn span:nth-of-type(2) { flex: 1; }

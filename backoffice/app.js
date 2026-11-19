@@ -13,22 +13,46 @@ const bloomHubCookieStorage = {
 // When someone moves to another page, reads still running for the old page are cancelled, so it can never
 // draw over the new one. Only reads (GET) are cancelled: saves always finish.
 const NAV = { ctl: new AbortController() };
-const navFetch = (url, opts = {}) => {
+const navFetch = async (url, opts = {}) => {
   const method = String(opts.method || 'GET').toUpperCase();
   // only reads asked for while a page is loading can be cancelled by moving to another page;
   // reads made by a save or a click (a duplicate check while saving a line, say) always finish
-  const p = (method !== 'GET' || !/\/rest\/v1\//.test(String(url)) || opts.signal || !NAV.loading) ? fetch(url, opts) : fetch(url, { ...opts, signal: NAV.ctl.signal });
-  // 401 from the database, files or receipt reading while signed in: the session has ended
-  return p.then((r) => { if (r.status === 401 && !/\/auth\/v1\//.test(String(url))) sessionLost(); return r; });
+  const r = await ((method !== 'GET' || !/\/rest\/v1\//.test(String(url)) || opts.signal || !NAV.loading) ? fetch(url, opts) : fetch(url, { ...opts, signal: NAV.ctl.signal }));
+  if (r.status !== 401 || /\/auth\/v1\//.test(String(url)) || typeof S === 'undefined' || !S.user) return r;
+  // 401: the sign-in token ran out or was renewed elsewhere (another tab or the staff site). Renew it and send
+  // the same request once more, so the person never notices. Only if renewing fails is the sign-in shown.
+  const sent = new Headers(opts.headers || {}).get('Authorization') || '';
+  const tok = await renewSession(sent);
+  if (!tok) { sessionLost(true); return r; }
+  const h = new Headers(opts.headers || {}); h.set('Authorization', 'Bearer ' + tok);
+  return fetch(url, { ...opts, headers: h });
 };
+// One renewal at a time for all requests that failed together
+let renewing = null;
+function renewSession(sent) {
+  if (renewing) return renewing;
+  renewing = (async () => {
+    // the shared sign-in cookie may already hold a newer token (the staff site or another tab renewed it)
+    try {
+      const c = JSON.parse(bloomHubCookieStorage.getItem('bloom-hub-auth') || 'null');
+      if (c?.access_token && sent !== 'Bearer ' + c.access_token && (c.expires_at || 0) * 1000 > Date.now() + 30000) {
+        const { data, error } = await sb.auth.setSession({ access_token: c.access_token, refresh_token: c.refresh_token });
+        if (!error && data?.session) return data.session.access_token;
+      }
+    } catch { /* try a refresh below */ }
+    try { const { data, error } = await sb.auth.refreshSession(); if (!error && data?.session) return data.session.access_token; } catch { /* below */ }
+    return null;
+  })().finally(() => { setTimeout(() => { renewing = null; }, 3000); });
+  return renewing;
+}
 // The sign-in ran out (or was ended elsewhere). Try to renew it once; if that fails, say so and go to the
 // staff sign-in, which brings them back here.
 let lostBusy = null;
-function sessionLost() {
+function sessionLost(renewFailed = false) {
   if (lostBusy || typeof S === 'undefined' || !S.user) return;
   lostBusy = (async () => {
     let ok = false;
-    try { const { data, error } = await sb.auth.refreshSession(); ok = !error && !!data?.session; } catch { ok = false; }
+    if (!renewFailed) try { const { data, error } = await sb.auth.refreshSession(); ok = !error && !!data?.session; } catch { ok = false; }
     if (ok) { toast('Your sign-in was renewed. Please try that again.'); return; }
     S.user = null; ++ROUTE_SEQ;
     toast('Your sign-in has ended. Taking you to sign in again; nothing you saved is lost.', true);
@@ -96,10 +120,12 @@ const canCheck = (r) => r.staff_id !== S.user?.id && r.checker_id === S.user?.id
 const myTodo = (r) => canActOn(r) || (canPay(r) && r.status === 'approved') || (isDataEntry() && ['approved', 'paid'].includes(r.status) && !r.fa_entered_at);
 const todoHint = () => ['check forms you are picked for (step 1)', isAdmin() ? 'give final approval' : isMgr() ? `give final approval up to ${MGR_LIMIT.toLocaleString('en-US')} THB` : '', isAdmin() ? 'pay approved forms' : isMgr() ? `pay them (not your own)` : '', isDataEntry() ? 'enter approved forms in FlowAccount' : ''].filter(Boolean).join(', ').replace(/^./, (c) => c.toUpperCase()) + '.';
 // Step 1 first, admin included: the PIC (project) or an office approver (Petty Cash). Admin skips it only when nobody else can check
-const canActOn = (r) => r.staff_id !== S.user?.id && ((r.status === 'submitted' && canCheck(r)) || (r.status === 'checked' && canFinal(r) && r.checked_by !== S.user?.id));
+const testOwn = (r) => !!S.testOwn && isAdmin() && r.staff_id === S.user?.id;
+const canActOn = (r) => (r.staff_id !== S.user?.id && ((r.status === 'submitted' && canCheck(r)) || (r.status === 'checked' && canFinal(r) && r.checked_by !== S.user?.id)))
+  || (testOwn(r) && r.status === 'checked'); // TEMPORARY: admin decides on own forms while testing
 // BCM: the sender picks who checks each form. "No checker" sends it straight to an admin.
 const noChkKey = (id) => 'bo_nochk_' + id;
-const chkChosen = (r) => !!r.checker_id || (() => { try { return !!sessionStorage.getItem(noChkKey(r.id)); } catch { return false; } })();
+const chkChosen = (r) => !!r.checker_id || !!r.no_checker || (() => { try { return !!localStorage.getItem(noChkKey(r.id)) || !!sessionStorage.getItem(noChkKey(r.id)); } catch { return false; } })();
 const firstName = (n) => String(n || '').trim().split(/\s+/)[0];
 // Short name for chips: first name, plus the last initial when 2 people share a first name (Paul, Paul P.)
 const chipName = (p) => { const f = firstName(p.full_name), parts = String(p.full_name || '').trim().split(/\s+/); const twin = (S.people || []).filter((x) => firstName(x.full_name) === f).length > 1; return twin && parts.length > 1 ? `${f} ${parts[parts.length - 1][0]}.` : f; };
@@ -112,8 +138,8 @@ function checkerPicker(r) {
 function wireChecker(root, r, after) {
   root.querySelectorAll('[data-chk]').forEach((b) => (b.onclick = async () => {
     const v = b.dataset.chk;
-    try { if (v === 'none') sessionStorage.setItem(noChkKey(r.id), '1'); else sessionStorage.removeItem(noChkKey(r.id)); } catch { /* ignore */ }
-    try { await run(async () => must(await sb.from('expense_reports').update({ checker_id: v === 'none' ? null : v }).eq('id', r.id))); } catch { return; }
+    try { if (v === 'none') localStorage.setItem(noChkKey(r.id), '1'); else localStorage.removeItem(noChkKey(r.id)); } catch { /* ignore */ }
+    try { await run(async () => must(await sb.from('expense_reports').update({ checker_id: v === 'none' ? null : v, no_checker: v === 'none' }).eq('id', r.id))); } catch { return; }
     after();
   }));
 }
@@ -340,10 +366,14 @@ async function loadMe() {
   const { data: { session } } = await sb.auth.getSession();
   S.user = session?.user || null;
   if (!S.user) { S.profile = null; return; }
-  const { data: p } = await sb.from('profiles').select('*').eq('id', S.user.id).maybeSingle();
+  // profile and hub asked together
+  const [{ data: p }, hubR] = await Promise.all([
+    sb.from('profiles').select('*').eq('id', S.user.id).maybeSingle(),
+    sb.schema('public').from('staff').select('hub_id').eq('auth_user_id', S.user.id).maybeSingle().then((r) => r, () => ({ data: null })),
+  ]);
   S.profile = p;
   if (!p || !p.active) { S.noAccess = true; S.profile = null; return; }
-  try { S.hubId = (await sb.schema('public').from('staff').select('hub_id').eq('auth_user_id', S.user.id).maybeSingle()).data?.hub_id || null; } catch { S.hubId = null; }
+  S.hubId = hubR?.data?.hub_id || null;
   // all at once, not one after another
   loadFAVendors();
   const [cats, mine, pics, ppl] = await Promise.all([
@@ -352,6 +382,8 @@ async function loadMe() {
     sb.from('project_pics').select('project_id'),
     sb.from('profiles').select('id, full_name, staff_no').eq('active', true).order('full_name'),
     refreshCounts(),
+    // TEMPORARY testing switch: an admin may check, approve or return their own forms (bo.app_settings)
+    sb.from('app_settings').select('value').eq('key', 'admin_approves_own').maybeSingle().then((r) => { S.testOwn = r.data?.value === 'on'; }, () => { S.testOwn = false; }),
   ]);
   S.categories = must(cats);
   S.myPics = (mine.data || []).map((x) => x.project_id);
@@ -427,7 +459,15 @@ function bindPinForm(forced) {
     if (forced) await start(); else f.reset();
   };
 }
-async function signOut() { await sb.auth.signOut(); S.user = null; S.profile = null; location.href = '/staff-login.html'; }
+// Sign out: say so at once, then end the shared sign-in (staff site and back office) before leaving.
+// If the server is slow, the shared cookie is cleared here after 4 seconds so it never hangs.
+async function signOut() {
+  ++ROUTE_SEQ; S.user = null; S.profile = null;
+  document.getElementById('app').innerHTML = '<div class="boot"><span class="spin"></span><span>Signing you out</span></div>';
+  await Promise.race([sb.auth.signOut().catch(() => {}), new Promise((r) => setTimeout(r, 4000))]);
+  bloomHubCookieStorage.removeItem('bloom-hub-auth');
+  location.href = '/staff-login.html';
+}
 
 /* ---------- shell and router ---------- */
 const SETTINGS = [['#/admin/access', 'Projects', () => isApprover()], ['#/admin/categories', 'Categories', () => isApprover()], ['#/admin/ot', 'Timesheet', () => STAGE >= 2 && (isAdmin() || isHR())], ['#/admin/cash', 'Cash advances', () => isAdmin()], ['#/fa-lists', 'FlowAccount', () => STAGE >= 3 && canFA()]];
@@ -467,7 +507,8 @@ const coTarget = () => CO_OTHER.url + '#/' + (((location.hash || '').split('/')[
 function coSwitch() {
   if (!inBoth()) return '';
   const dot = (c) => `<span class="cosw-dot" style="background:${c}"></span>`;
-  return `<details class="cosw"><summary>${dot(CO_HERE.color)}<span class="cosw-n">${CO_HERE.name}</span><span class="cosw-c" aria-hidden="true">&#9662;</span></summary><div class="cosw-menu"><div class="cosw-h">Your companies</div><a class="cosw-i on" href="#/home">${dot(CO_HERE.color)}${CO_HERE.name}<span class="cosw-k">&#10003;</span></a><a class="cosw-i" href="${CO_OTHER.url}" data-cosw>${dot(CO_OTHER.color)}${CO_OTHER.name}</a></div></details>`;
+  // a plain, always-visible button (it was a small menu that people missed)
+  return `<a class="cosw-btn" href="${CO_OTHER.url}" data-cosw title="Same sign-in, opens the same page there">${dot(CO_OTHER.color)}<span>Switch to ${CO_OTHER.name}</span><span aria-hidden="true">&#8594;</span></a>`;
 }
 document.addEventListener('click', (e) => {
   const a = e.target.closest && e.target.closest('a[data-cosw]'); if (a) { e.preventDefault(); coGo(); return; }
@@ -832,7 +873,7 @@ async function newFormDialog(defaultKey = monthKey()) {
           <span class="hint" id="fthint">Petty Cash: leftover cash advance carries to your next Petty Cash form.</span></div>
         <div class="field" id="projf" hidden><label>Project</label><select class="input" name="project"><option value="">Choose the project</option></select><span class="hint" id="projpic"></span>
           <div id="newproj" class="row" style="gap:6px;margin-top:6px" hidden><input class="input" id="npn" placeholder="Project name" style="flex:1"><input class="input mono" id="npc" placeholder="Code e.g. IGAADHK26" style="width:150px;text-transform:uppercase"><button type="button" class="btn" id="npok">Add</button></div><span class="hint" id="npmsg"></span></div>
-        <div class="field"><label>Reference</label><input class="input mono" name="ref" required><span class="hint">Suggested automatically. You can change it.</span></div>
+        <div class="field"><label>Reference</label><input class="input mono" name="ref" required readonly tabindex="-1"><span class="hint">Given automatically, the next free number. It cannot be changed.</span></div>
         <div class="error" id="nferr"></div>
       </form></div>
       <div class="modal-foot"><span></span><div class="row"><button class="btn ghost" data-x>Cancel</button><button class="btn primary" id="nfok">Create form</button></div></div></div>`;
@@ -880,7 +921,7 @@ async function newFormDialog(defaultKey = monthKey()) {
     f.querySelectorAll('[name=ftype]').forEach((r) => r.onchange = () => {
       const proj = f.ftype.value === 'project';
       back.querySelector('#projf').hidden = !proj; f.project.required = proj;
-      if (!proj && f.ref.readOnly) { f.ref.readOnly = false; suggest(); }
+      if (!proj) suggest();
       back.querySelector('#fthint').textContent = proj ? 'Project: leftover cash advance is returned to the company.' : 'Petty Cash: leftover cash advance carries to your next Petty Cash form.';
     });
     back.querySelector('#nfok').onclick = async () => {
@@ -889,7 +930,10 @@ async function newFormDialog(defaultKey = monthKey()) {
       if (f.ftype.value === 'project' && (!f.project.value || f.project.value === '__new')) { err.textContent = 'Choose the project (or add it first).'; return; }
       const key = f.month.value;
       const proj = f.ftype.value === 'project';
-      const { data, error } = await sb.from('expense_reports').insert({ staff_id: S.user.id, ref_no: f.ref.value.trim().toUpperCase().replace(/\s+/g, ''), period_month: monthStart(key), form_type: proj ? 'project' : 'personal', project: proj ? (PROJ.find((y) => y.id === f.project.value)?.name || null) : null, project_id: proj ? f.project.value || null : null }).select().single();
+      // Who checks it: the same person as on this person's last form, or "No checker" if they used none (or have no form yet)
+      const { data: lastF } = await sb.from('expense_reports').select('checker_id, no_checker').eq('staff_id', S.user.id).order('created_at', { ascending: false }).limit(1);
+      const lastChk = lastF?.[0]?.checker_id && (S.people || []).some((p) => p.id === lastF[0].checker_id) ? lastF[0].checker_id : null;
+      const { data, error } = await sb.from('expense_reports').insert({ staff_id: S.user.id, checker_id: lastChk, no_checker: !lastChk, ref_no: f.ref.value.trim().toUpperCase().replace(/\s+/g, ''), period_month: monthStart(key), form_type: proj ? 'project' : 'personal', project: proj ? (PROJ.find((y) => y.id === f.project.value)?.name || null) : null, project_id: proj ? f.project.value || null : null }).select().single();
       if (error) { err.textContent = /duplicate|unique/i.test(error.message) ? 'That reference is already used. Please change it.' : friendly(error); return; }
       chooseForm(data.id);
       toast(`${monthLabel(key)} ${proj ? 'project' : 'personal'} form created`);
@@ -908,7 +952,7 @@ async function loadReportBundle(report) {
 
 function statsHtml(report, totals, canEditRef = false) {
   return `<div class="stats">
-    <div class="stat" id="refcell"><label>Reference</label><div class="mono" id="refval">${esc(report.ref_no)}${canEditRef ? ' <button class="btn small ghost" id="eref" title="Edit reference" style="font-family:var(--font)">Edit</button>' : ''}</div><small>${pill(report.status)}</small></div>
+    <div class="stat" id="refcell"><label>Reference</label><div class="mono" id="refval">${esc(report.ref_no)}${false && canEditRef ? ' <button class="btn small ghost" id="eref" title="Edit reference" style="font-family:var(--font)">Edit</button>' : ''}</div><small>${pill(report.status)}</small></div>
     <div class="stat"><label>Carried forward</label><div>${money(report.opening_advance)}</div><small>${report.form_type === 'project' ? 'project forms start at 0' : (report.staff_id === S.user.id ? 'from your last personal form' : 'from the last personal form')}</small></div>
     <div class="stat"><label>Cash advance</label>${canEditRef && !canAdv(report) ? `<div>${money(0)}</div><small>you pay with your own money and are paid back</small>` : canEditRef ? `<div class="advbox"><input class="input num" id="advin" type="number" step="0.01" min="0" inputmode="decimal" value="${Number(report.advance_topup) || ''}" placeholder="0.00"></div><small>cash the company gave you for this form</small>` : `<div>${money(report.advance_topup)}</div><small>for this form</small>`}</div>
     <div class="stat"><label>Spent</label><div>${money(totals.total_spent)}</div><small>THB</small></div>
@@ -1350,7 +1394,7 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
         const b = e.currentTarget; b.disabled = true; b.textContent = 'Adding';
         const name = v2;
         if (!(S.faVendorSet || new Set()).has(name.toLowerCase())) {
-          const { error } = await sb.from('fa_new_vendors').insert({ name, business_type: guessType(name), created_by: S.user.id, created_by_name: S.profile.full_name });
+          const { error } = await sb.from('fa_new_vendors').insert({ name, business_type: 'Corporation', created_by: S.user.id, created_by_name: S.profile.full_name });
           if (error && !/duplicate|unique/i.test(error.message)) { b.disabled = false; b.textContent = `+ Add "${name}" as a new supplier`; toast(friendly(error), true); return; }
           S.faVendors = S.faVendors || []; S.faVendorSet = S.faVendorSet || new Set();
           S.faVendors.push(name); S.faVendorSet.add(name.toLowerCase());
@@ -1581,7 +1625,7 @@ async function openEditor({ report, item = null, receiptIds = [], onDone, startP
   }
   async function startCrop(cur, url, rot) {
     const pv = back.querySelector('#pv');
-    pv.innerHTML = '<div class="none">Loading</div>';
+    pv.innerHTML = '<div class="none"><span class="spin"></span></div>';
     let c;
     try { c = await rotatedCanvas(url, rot); } catch { toast('Could not open the photo for cropping', true); return drawPreview(); }
     pv.innerHTML = `<div class="crop-stage"><canvas id="cc"></canvas><div class="crop-box" id="cb" hidden></div></div>
@@ -1913,18 +1957,21 @@ async function pageHome() {
 // Admins: only what is waiting for them
 async function pageHomeAdmin() {
   const pageHash = location.hash; // left before it loaded? then draw nothing
-  const { forms } = await currentForm();
-  const [chk, appr, sub, ots, otsAll] = await Promise.all([
+  // everything Home needs is asked at the same time
+  const [{ forms }, chk, appr, sub, ots, otsAll, hrR] = await Promise.all([
+    currentForm(),
     sb.from('expense_reports').select('id, staff_id, checked_by', { count: 'exact' }).eq('status', 'checked'),
     sb.from('expense_reports').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
     sb.from('expense_reports').select('id', { count: 'exact', head: true }).eq('status', 'submitted'),
     sb.from('ot_forms').select('id', { count: 'exact', head: true }).eq('status', 'checked'),
     sb.from('ot_forms').select('id', { count: 'exact', head: true }).eq('status', 'submitted'),
+    sb.from('profiles').select('id').eq('is_hr', true).eq('active', true),
   ]);
-  const hasHR = ((await sb.from('profiles').select('id').eq('is_hr', true).eq('active', true)).data || []).length > 0;
+  const hasHR = (hrR.data || []).length > 0;
   const finalN = (chk.data || []).filter((r) => r.staff_id !== S.user.id && r.checked_by !== S.user.id).length;
   const tsN = (ots.count || 0) + (hasHR ? 0 : otsAll.count || 0);
-  const tile = (href, n, title, sub) => `<a class="card card-pad home-card" href="${href}"><div style="font-size:34px;font-weight:600;line-height:1;${n ? '' : 'color:var(--ink-3)'}">${n}</div><h2 style="margin-top:8px">${title}</h2><p class="muted" style="margin:4px 0 0">${sub}</p></a>`;
+  // a tile with nothing waiting is left out; "Nothing is waiting for you" says it once
+  const tile = (href, n, title, sub) => !n ? '' : `<a class="card card-pad home-card" href="${href}"><div style="font-size:34px;font-weight:600;line-height:1;${n ? '' : 'color:var(--ink-3)'}">${n}</div><h2 style="margin-top:8px">${title}</h2><p class="muted" style="margin:4px 0 0">${sub}</p></a>`;
   if (location.hash !== pageHash) return;
   shell(`<div class="page-head"><div><h1>Hello, ${esc(S.profile.full_name || S.profile.staff_no)}</h1><p>${finalN + tsN + (appr.count || 0) + (S.pendingCount || 0) ? 'Here is what is waiting.' : 'Nothing is waiting for you.'}</p></div></div>
   <div class="home-grid">
@@ -2035,7 +2082,7 @@ async function pageReport(id) {
       </div>
     </div>
     ${isApprover() ? `<div class="card card-pad stack"><h2>Approver notes</h2><textarea class="input" id="anote" rows="2" placeholder="Only approvers and admins see this. e.g. Checked the Wi-Fi purchase with Mary by phone.">${esc(x.note?.note || '')}</textarea><span class="faint" style="font-size:12px" id="anotes">${x.note?.updated_by_name ? `Last edited by ${esc(x.note.updated_by_name)}, ${dateLabel(x.note.updated_at)}` : 'Saved when you click outside the box.'}</span></div>` : ''}
-    ${canDecide ? `<div class="card card-pad spread"><span class="muted">Check the notes above, then decide. <a href="#/print/${report.id}">Form view</a> shows every receipt.</span><span class="row"><button class="btn danger" id="no">Return</button><button class="btn primary" id="ok">${report.status === 'checked' ? 'Final approve' : 'Approve (step 1)'}</button></span></div>` : ''}
+    ${canDecide ? `<div class="card card-pad spread"><span class="muted">Check the notes above, then decide. <a href="#/print/${report.id}">Form view</a> shows every receipt.${testOwn(report) ? ' <b>Testing: you can decide on your own form.</b>' : ''}</span><span class="row"><button class="btn danger" id="no">Return</button><button class="btn primary" id="ok">${report.status === 'checked' ? 'Final approve' : 'Approve (step 1)'}</button></span></div>` : ''}
     ${report.checked_at ? `<div class="faint" style="font-size:13px">Step 1: ${esc(report.checked_by_name || '')}${report.checked_by ? ` · ${esc(dateLabel(report.checked_at))}` : ''}</div>` : ''}
     
     ${canPay(report) && report.status === 'approved' ? `<div class="card card-pad spread"><span class="muted">${Number(totals.balance) < 0 ? `Company owes ${thb(-totals.balance)}. Mark paid once transferred.` : `Nothing to reimburse. ${thb(totals.balance)} ${report.form_type === 'project' ? 'to be returned to the company' : 'carries to the next personal form'}.`}</span><button class="btn primary" id="paid">Mark as paid</button></div>` : ''}
@@ -2267,7 +2314,7 @@ async function pagePrint(id) {
   const rcPages = rcPagesFor();
   // Approvers review the form here: Form / Lines switch, flags, Return and Approve stay in the bar
   const mineF = report.staff_id === S.user.id;
-  const reviewing = isReviewer() && !mineF && !['draft', 'rejected'].includes(report.status);
+  const reviewing = isReviewer() && (!mineF || testOwn(report)) && !['draft', 'rejected'].includes(report.status);
   await loadOverLimit();
   const canDecide = reviewing && canActOn(report);
   if (canDecide) sb.rpc('mark_seen', { p_report: report.id }).then(pollPending);
@@ -2959,7 +3006,7 @@ async function phoneCheck(pos = 0) {
         // Not in the list: add it as a new supplier in one tap
         const box = document.getElementById('pnew');
         if (!box.dataset.ask) { box.dataset.ask = '1'; box.innerHTML = `<div class="pnote" style="margin:6px 0 0">"${esc(m)}" is not in the list. Tap Save again to add it as a new supplier.</div>`; return; }
-        const { error } = await sb.from('fa_new_vendors').insert({ name: m, business_type: /(co\.?,?\s*ltd|company|limited|inc|บริษัท|จำกัด)/i.test(m) ? 'Corporation' : 'Individual', created_by: S.user.id, created_by_name: S.profile.full_name });
+        const { error } = await sb.from('fa_new_vendors').insert({ name: m, business_type: 'Corporation', created_by: S.user.id, created_by_name: S.profile.full_name });
         if (error && !/duplicate|unique/i.test(error.message)) { err.textContent = error.message; return; }
         S.faVendors.push(m); S.faVendorSet.add(m.toLowerCase());
       }
@@ -4402,7 +4449,7 @@ const guessVendor = (party) => { const p = vNorm(party); if (!p) return ''; cons
   return hit.length === 1 ? hit[0] : ''; };
 // New supplier box, filled from the file: goes into the new suppliers file for FlowAccount
 const newSupplier = (d) => new Promise((res) => {
-  const t = /(co\.?,?\s*ltd|company|limited|inc\.?|corp|part|บริษัท|ห้างหุ้นส่วน|หจก|จำกัด)/i.test(d.name || '') ? 'Corporation' : 'Individual';
+  const t = 'Corporation'; // new suppliers start as Company; change it here if it is a person
   const back = document.createElement('div'); back.className = 'modal-back';
   back.innerHTML = `<div class="modal narrow"><div class="modal-head"><h2>New supplier</h2><button class="btn ghost" data-x>Cancel</button></div><div class="modal-body"><div class="card-pad stack">
     <div class="faint" style="font-size:12px">Filled from the file. Check, then add. It goes to FlowAccount with this month's new suppliers file.</div>
@@ -5309,7 +5356,7 @@ async function pageFAExport() {
   // Unknown suppliers on finished lines go into the new suppliers file by themselves
   if (unknown.size) {
     const have = new Set(must(await sb.from('fa_new_vendors').select('name')).map((x) => vKey(x.name)));
-    const add = [...unknown.entries()].filter(([k]) => !have.has(k)).map(([, name]) => ({ name, business_type: /(co\.?,?\s*ltd|company|limited|inc\.?|corp|part|บริษัท|ห้างหุ้นส่วน|หจก|จำกัด)/i.test(name) ? 'Corporation' : 'Individual', created_by: S.user.id, created_by_name: 'Back office (from the lines)' }));
+    const add = [...unknown.entries()].filter(([k]) => !have.has(k)).map(([, name]) => ({ name, business_type: 'Corporation', created_by: S.user.id, created_by_name: 'Back office (from the lines)' }));
     if (add.length) await sb.from('fa_new_vendors').insert(add); // all in one go
   }
   const newV = must(await sb.from('fa_new_vendors').select('*').is('exported_at', null).order('created_at'));

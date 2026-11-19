@@ -1,0 +1,6 @@
+-- Applied 19 Nov via MCP (s30_admin_test_approve, s31_no_checker_and_ref_lock):
+-- * bo.app_settings with admin_approves_own = 'on' (TEMPORARY: admin decides on own forms while testing).
+--   Switch off: update bo.app_settings set value = 'off' where key = 'admin_approves_own';
+-- * bo_private.test_self_approve(); bo_private.no_self_approval() skips while the switch is on.
+-- * bo.expense_reports.no_checker boolean (the "No checker" choice is saved on the form).
+-- * trg_lock_ref_no: the form number cannot be changed (admins can correct one).

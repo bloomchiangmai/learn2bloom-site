@@ -484,7 +484,7 @@ function navLinks() {
     ${isAdmin() ? `${keepsTS() ? `<a href="#/ot?u=${S.user.id}" class="${r === '#/ot' && params().u === S.user.id ? 'on' : ''}">My timesheet</a>` : ''}<a href="#/ot" class="${r === '#/ot' && params().u !== S.user.id ? 'on' : ''}">Staff timesheets</a>` : !keepsTS() ? '' : `${isHR() ? `<a href="#/ot" class="${r === '#/ot' && !params().all && !params().u ? 'on' : ''}">My timesheet</a><a href="#/ot?all=1" class="${r === '#/ot' && (params().all || params().u) ? 'on' : ''}">Staff timesheets</a>` : L('#/ot', 'My timesheet')}`}
     ${L('#/roster', 'Roster')}${isAdmin() || isHR() || isAccountant() ? L('#/payroll', 'Timesheet summary') : ''}`}`;
   if (isReviewer()) h += `<div class="nav-label">Review</div>${L('#/approvals', 'Approvals')}`;
-  if (STAGE >= 3 && canFA()) h += `<div class="nav-label">Accounting</div>${L('#/card', 'Card payments')}${L('#/bills', 'Bank transfers')}${L('#/subs', 'Subscriptions')}${canEnterFA() ? L('#/fa-export', 'Month close', 0, ['#/fa/']) : ''}`;
+  if (STAGE >= 3 && canFA()) h += `<div class="nav-label">Accounting</div>${L('#/upload', 'Upload documents')}${L('#/card', 'Card payments')}${L('#/bills', 'Bank transfers')}${L('#/subs', 'Subscriptions')}${canEnterFA() ? L('#/fa-export', 'Month close', 0, ['#/fa/']) : ''}`;
   if (isAdmin()) h += `<div class="nav-label">Admin</div>${L('#/admin/advances', 'Cash advances')}`;
   if (sets.length) h += `${isAdmin() ? '' : '<div class="nav-label">Settings</div>'}${L(sets[0][0], 'Settings', 0, sets.map((x) => x[0]))}`;
   h += `<div class="nav-sep"></div>${L('#/messages', 'Messages', S.msgCount)}`;
@@ -628,6 +628,7 @@ async function routeInner(seq) {
     if (path === '/card' && canFA()) return await pageCard();
     if (path === '/subs' && canFA()) return await pageSubs();
     if (path === '/bills' && canFA()) return await pageBills();
+    if (path === '/upload' && canFA()) return await pageUpload();
     if (path.startsWith('/sheet/') && canFA()) return await pageSheet(path.split('/')[2]);
     if (path.startsWith('/ot/review/') && (isAdmin() || isHR())) return await pageOTReview(path.split('/')[3]);
     if (path === '/admin/ot' && (isAdmin() || isHR())) return await pageOTSettings();
@@ -4946,6 +4947,115 @@ async function pageSheet(kind) {
   document.getElementById('pp').onclick = () => window.print();
 }
 // Supplier bills: bills and K BIZ slips for transfers to suppliers, paired into one line per payment
+/* ---------- one upload page for card invoices, supplier bills and bank slips ---------- */
+// Each file is read once, then placed by itself:
+//   bank slip                                  -> Bank transfers
+//   bill matching one open card charge         -> attached to that card charge
+//   bill, card statement for its month is in,
+//     and no card charge matches               -> Bank transfers (bill)
+//   anything else (no statement yet, foreign
+//     currency with no match, unreadable)      -> the person picks Card or Bank
+async function pageUpload() {
+  const pageHash = location.hash;
+  if (!S.faVendors) await loadFAVendors();
+  shell(`<div class="page-head"><div><h1>Upload documents</h1><p>Card invoices, supplier bills and K BIZ payment slips, all in one place. Each file is read and goes to Card payments or Bank transfers by itself. You only choose when it cannot tell.</p></div></div>
+  <label class="sb-drop" id="updrop"><input type="file" hidden multiple accept="image/*,application/pdf" id="upin"><b>Drop files here</b><span>PDF or photo, many at once. Keep this page open while they are read.</span></label>
+  <div id="upprog"></div>
+  <div class="card" id="upres" hidden><div class="card-head"><h2>Results</h2></div><div class="card-pad" id="uprows"></div></div>`);
+  if (location.hash !== pageHash) return;
+  const when = (d) => (d ? new Date(`${d}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '');
+  const rows = [];
+  const draw = () => {
+    const box = document.getElementById('uprows'); if (!box) return;
+    document.getElementById('upres').hidden = !rows.length;
+    box.innerHTML = rows.map((r, k) => `<div class="cc-r"><div class="cc-m"><b>${esc(r.f.name)}</b><small>${r.x ? `${esc(r.x.kind === 'slip' ? 'Payment slip' : r.x.kind === 'bill' ? 'Bill' : 'Not clear')} · ${esc(r.x.party || '')} · ${esc(String(r.x.currency || 'THB').toUpperCase())} ${r.x.amount != null ? money(r.x.amount) : ''} · ${esc(r.x.date || '')}` : esc(r.err || 'Reading')}</small></div>
+      <div class="cc-a">${r.done ? `<span class="ln-c ok">${esc(r.done)}</span>` : r.busy ? '<span class="spin sm"></span>' : r.ask ? `${r.cands?.length ? `<select class="input" data-upc="${k}" style="width:auto;font-size:12px"><option value="">Card charge</option>${r.cands.map((c) => `<option value="${c.id}">${esc(when(c.trans_date))} · ${esc(c.description.slice(0, 24))} · ${money(c.amount)}</option>`).join('')}</select>` : ''}<button class="btn small" data-upb="${k}">Bank transfers</button><button class="btn small ghost" data-ups="${k}">Skip</button>` : ''}</div></div>
+      ${r.ask && r.why ? `<div class="faint" style="font-size:12px;margin:-4px 0 8px">${esc(r.why)}</div>` : ''}`).join('');
+    box.querySelectorAll('[data-upc]').forEach((sel) => (sel.onchange = () => sel.value && toCard(rows[Number(sel.dataset.upc)], sel.value)));
+    box.querySelectorAll('[data-upb]').forEach((b) => (b.onclick = () => toBank(rows[Number(b.dataset.upb)])));
+    box.querySelectorAll('[data-ups]').forEach((b) => (b.onclick = async () => { const r = rows[Number(b.dataset.ups)]; r.ask = false; r.done = 'Skipped'; draw(); if (r.path) await sb.storage.from(BUCKET).remove([r.path]); }));
+  };
+  // open card charges (no file yet) on statements that are ready, and which months have a statement
+  let cardOpen = [], cardMonths = new Set(), lastCat = [];
+  const loadCard = async () => {
+    const sts = must(await sb.from('card_statements').select('id, period_month, status').eq('status', 'ready'));
+    cardMonths = new Set(sts.map((x) => x.period_month.slice(0, 7)));
+    cardOpen = sts.length ? must(await sb.from('card_charges').select('id, statement_id, trans_date, description, amount, foreign_amount, doc_path, no_doc, item_id').in('statement_id', sts.map((x) => x.id)).is('doc_path', null).is('item_id', null).eq('no_doc', false)) : [];
+    lastCat = must(await sb.from('card_charges').select('merchant, category_id').not('category_id', 'is', null).order('created_at', { ascending: false }).limit(500));
+  };
+  const toCard = async (r, chargeId) => {
+    r.busy = true; r.ask = false; draw();
+    try {
+      const sup = r.x?.supplier || null, last = lastCat.find((y) => sup && y.merchant === sup);
+      await lineUpd('card_charges', chargeId, { doc_path: r.path, doc_name: r.f.name, merchant: sup, category_id: last?.category_id || null, purpose: r.x?.item || null, vat_amount: Number(r.x?.vat_amount) || 0 }, () => {});
+      const c = cardOpen.find((y) => y.id === chargeId); cardOpen = cardOpen.filter((y) => y.id !== chargeId);
+      r.done = `Card payments: ${c ? `${when(c.trans_date)} · ${c.description.slice(0, 28)}` : 'placed'}`;
+    } catch (e) { r.ask = true; r.err = friendly(e); }
+    r.busy = false; draw();
+  };
+  const toBank = async (r) => {
+    r.busy = true; r.ask = false; draw();
+    try {
+      const d = must(await sb.from('kbiz_docs').insert({ file_path: r.path, file_name: r.f.name, mime: r.f.type || null }).select().single());
+      const known = r.x && (r.x.kind === 'slip' || r.x.kind === 'bill') ? r.x : r.x ? { ...r.x, kind: 'bill' } : null;
+      const { data, error } = await sb.functions.invoke('bo-read-kbiz-doc', { body: { doc_id: d.id, known } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      await sb.rpc('pair_kbiz');
+      r.done = data?.status === 'duplicate' ? 'Already saved in Bank transfers (same slip)' : `Bank transfers: ${data?.kind === 'slip' ? 'payment slip' : 'bill'}${data?.admin_only ? ' (staff payment, admin only)' : ''}`;
+    } catch (e) { r.ask = true; r.err = friendly(e); }
+    r.busy = false; draw();
+  };
+  const place = async (r) => {
+    const x = r.x;
+    if (!x || (x.kind !== 'slip' && x.kind !== 'bill')) { r.ask = true; r.cands = cardOpen.slice(0, 40); r.why = 'Could not tell if this is a bill or a slip. Pick the card charge it belongs to, or send it to Bank transfers.'; return; }
+    if (x.kind === 'slip') return toBank(r);
+    const amt = Number(x.amount) || 0, cur = String(x.currency || 'THB').toUpperCase(), dt = x.date ? new Date(`${x.date}T00:00:00`) : null;
+    const score = (c) => { let k = 0;
+      if (amt && cur !== 'THB' && c.foreign_amount && Math.abs(Number(c.foreign_amount) - amt) <= 0.02) k += 3;
+      else if (amt && cur === 'THB' && (Math.abs(Number(c.amount) - amt) <= 5 || Math.abs(Number(c.amount) - amt) <= Number(c.amount) * 0.03)) k += 3;
+      if (dt && Math.abs(new Date(`${c.trans_date}T00:00:00`) - dt) <= 4 * 86400000) k += 1;
+      const w = vNorm(x.party || '').split(' ')[0]; if (w && w.length >= 3 && vNorm(c.description).includes(w)) k += 2;
+      return k; };
+    const cand = cardOpen.map((c) => ({ c, k: score(c) })).filter((y) => y.k >= 3).sort((a, b) => b.k - a.k);
+    if (cand.length && (cand.length === 1 || cand[0].k > cand[1].k)) return toCard(r, cand[0].c.id);
+    const month = (x.date || '').slice(0, 7);
+    if (cur === 'THB' && month && cardMonths.has(month) && !cand.length) return toBank(r);
+    r.ask = true; r.cands = (cand.length ? cand.map((y) => y.c) : cardOpen).slice(0, 40);
+    r.why = cand.length > 1 ? 'More than one card charge could match. Pick it, or send it to Bank transfers.'
+      : cur !== 'THB' ? 'A foreign-currency bill with no matching card charge yet. Pick the card charge, or send it to Bank transfers.'
+      : 'No card statement for this month yet, so it could be either. Pick the card charge, or send it to Bank transfers.';
+  };
+  const many = async (fs) => {
+    const prog = document.getElementById('upprog');
+    try { await loadCard(); } catch (e) { toast(friendly(e), true); }
+    const start = rows.length; fs.forEach((f) => rows.push({ f })); draw();
+    for (let k = 0; k < fs.length; k++) {
+      const r = rows[start + k];
+      if (prog) prog.innerHTML = `<div class="banner info" style="margin:10px 0">Reading ${k + 1} of ${fs.length}… keep this page open.</div>`;
+      r.busy = true; draw();
+      try {
+        r.path = `${S.user.id}/inbox/${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${r.f.name.replace(/[^\w.-]+/g, '_')}`;
+        must(await sb.storage.from(BUCKET).upload(r.path, r.f, { contentType: r.f.type || 'application/octet-stream' }));
+        const { data: x, error } = await sb.functions.invoke('bo-read-kbiz-doc', { body: { peek_path: r.path, mime: r.f.type || null } });
+        if (error) throw error;
+        r.x = x?.error ? null : x; if (x?.error) r.err = x.error;
+        r.busy = false;
+        await place(r);
+      } catch (e) { r.busy = false; r.err = friendly(e); r.ask = !!r.path; r.cands = cardOpen.slice(0, 40); r.why = 'Could not be read. Pick the card charge, send it to Bank transfers, or skip it.'; }
+      draw();
+    }
+    if (prog) prog.innerHTML = '';
+    const done = rows.slice(start).filter((r) => r.done).length, ask = rows.slice(start).filter((r) => r.ask).length;
+    toast(`${done} placed${ask ? ` · ${ask} for you to choose` : ''}`);
+  };
+  const inp = document.getElementById('upin'), drop = document.getElementById('updrop');
+  inp.onchange = (e) => { if (e.target.files.length) many([...e.target.files]); e.target.value = ''; };
+  drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('on'); };
+  drop.ondragleave = () => drop.classList.remove('on');
+  drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove('on'); if (e.dataTransfer.files.length) many([...e.dataTransfer.files]); };
+}
+
 async function pageBills() {
   if (!params().m) return pageMonths('bills');
   const all = keepRev(must(await sb.from('kbiz_payments').select('*, kbiz_docs(*)').order('created_at')));
